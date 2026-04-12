@@ -1,0 +1,32 @@
+# Change: ダンジョンUI
+
+## Summary
+
+ダンジョン画面に必要なUI要素（オートマッピングのミニマップ、パーティメンバー表示枠）を追加する。
+
+## Scope
+
+- オートマッピング（ミニマップ）
+  - 画面右上に探索済み領域を上から見た2Dマップとして表示
+  - 現在位置と向きの表示
+  - 未探索領域はマスクされる
+  - 壁・ドア・部屋の区別表示
+- パーティ表示枠
+  - 画面下部に前列3名・後列3名のレイアウト
+  - 仮データでの表示（名前、HP等の基本情報）
+  - character-and-party-system 完了後に実データに差し替え
+
+## Non-goals
+
+- パーティメンバーの実データ連携（character-and-party-system で対応）
+- 戦闘UI
+- 設定メニュー
+
+## Dependencies
+
+- dungeon-3d-rendering-and-movement: ダンジョン3D描画 + 移動（ダンジョンシーンの基本構成）
+
+## Risks
+
+- ミニマップの描画方式（TextureRect + Image vs TileMap vs カスタム描画）
+- UI配置とダンジョン3D描画領域のバランス調整
