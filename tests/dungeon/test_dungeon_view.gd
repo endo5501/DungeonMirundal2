@@ -91,6 +91,23 @@ func test_door_does_not_block_view():
 	assert_true(cells.has(Vector2i(5, 4)), "cell through door visible")
 	assert_true(cells.has(Vector2i(5, 3)), "cell beyond door visible")
 
+func test_door_blocks_view_when_block_doors():
+	var wm = WizMap.new(10)
+	wm.set_edge(5, 5, Direction.NORTH, EdgeType.DOOR)
+	wm.set_edge(5, 4, Direction.NORTH, EdgeType.OPEN)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, true)
+	assert_false(cells.has(Vector2i(5, 4)), "cell through door not visible with block_doors")
+	assert_false(cells.has(Vector2i(5, 3)), "cell beyond door not visible with block_doors")
+
+func test_door_blocks_lateral_when_block_doors():
+	var wm = _create_open_map(10)
+	wm.set_edge(5, 5, Direction.WEST, EdgeType.DOOR)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, true)
+	assert_false(cells.has(Vector2i(4, 5)), "lateral cell through door blocked")
+	assert_true(cells.has(Vector2i(6, 5)), "other side still visible")
+
 func test_lateral_cells_at_player_position():
 	var wm = _create_open_map(10)
 	var dv = DungeonView.new()

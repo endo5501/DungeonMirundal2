@@ -3,11 +3,16 @@ extends Control
 
 var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
+var _minimap_display: MinimapDisplay
+var _party_display: PartyDisplay
 var _player_state: PlayerState
 var _wiz_map: WizMap
+var _explored_map: ExploredMap
+var _dungeon_view: DungeonView
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_dungeon_view = DungeonView.new()
 
 	var container := SubViewportContainer.new()
 	container.stretch = true
@@ -21,12 +26,36 @@ func _ready() -> void:
 	_dungeon_scene = DungeonScene.new()
 	_sub_viewport.add_child(_dungeon_scene)
 
+	# Minimap overlay
+	_minimap_display = MinimapDisplay.new()
+	add_child(_minimap_display)
+
+	# Party display overlay
+	_party_display = PartyDisplay.new()
+	add_child(_party_display)
+
 func setup(wiz_map: WizMap, player_state: PlayerState) -> void:
 	_wiz_map = wiz_map
 	_player_state = player_state
+	_explored_map = ExploredMap.new()
+
 	_dungeon_scene.wiz_map = wiz_map
 	_dungeon_scene.player_state = player_state
+
+	_minimap_display.setup(wiz_map, _explored_map, player_state)
+
+	var party_data := PartyData.create_placeholder()
+	_party_display.setup(party_data)
+
+	# Mark initial visible cells as explored
+	_update_explored()
 	_dungeon_scene.refresh()
+
+func _update_explored() -> void:
+	var visible_cells := _dungeon_view.get_visible_cells(
+		_wiz_map, _player_state.position, _player_state.facing, true)
+	_explored_map.mark_visible(visible_cells)
+	_minimap_display.refresh()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_state == null or _wiz_map == null:
@@ -50,4 +79,5 @@ func _unhandled_input(event: InputEvent) -> void:
 			moved = true
 
 	if moved:
+		_update_explored()
 		_dungeon_scene.refresh()
