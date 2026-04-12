@@ -7,9 +7,11 @@ var _player_state: PlayerState
 var _wiz_map: WizMap
 
 func _ready() -> void:
+	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+
 	var container := SubViewportContainer.new()
 	container.stretch = true
-	container.set_anchors_preset(PRESET_FULL_RECT)
+	container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(container)
 
 	_sub_viewport = SubViewport.new()
