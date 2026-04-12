@@ -11,7 +11,7 @@ func mark_visited(pos: Vector2i) -> void:
 
 func mark_visible(cells: Array) -> void:
 	for cell in cells:
-		_visited[cell] = true
+		mark_visited(cell)
 
 func is_visited(pos: Vector2i) -> bool:
 	return _visited.has(pos)

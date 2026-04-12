@@ -20,17 +20,15 @@ func _ready() -> void:
 	add_child(container)
 
 	_sub_viewport = SubViewport.new()
-	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	container.add_child(_sub_viewport)
 
 	_dungeon_scene = DungeonScene.new()
 	_sub_viewport.add_child(_dungeon_scene)
 
-	# Minimap overlay
 	_minimap_display = MinimapDisplay.new()
 	add_child(_minimap_display)
 
-	# Party display overlay
 	_party_display = PartyDisplay.new()
 	add_child(_party_display)
 
@@ -47,14 +45,16 @@ func setup(wiz_map: WizMap, player_state: PlayerState) -> void:
 	var party_data := PartyData.create_placeholder()
 	_party_display.setup(party_data)
 
-	# Mark initial visible cells as explored
-	_update_explored()
-	_dungeon_scene.refresh()
+	_refresh_all()
 
-func _update_explored() -> void:
-	var visible_cells := _dungeon_view.get_visible_cells(
+func _refresh_all() -> void:
+	var render_cells := _dungeon_view.get_visible_cells(
+		_wiz_map, _player_state.position, _player_state.facing)
+	var explore_cells := _dungeon_view.get_visible_cells(
 		_wiz_map, _player_state.position, _player_state.facing, true)
-	_explored_map.mark_visible(visible_cells)
+	_explored_map.mark_visible(explore_cells)
+	_dungeon_scene.refresh(render_cells)
+	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	_minimap_display.refresh()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -79,5 +79,4 @@ func _unhandled_input(event: InputEvent) -> void:
 			moved = true
 
 	if moved:
-		_update_explored()
-		_dungeon_scene.refresh()
+		_refresh_all()

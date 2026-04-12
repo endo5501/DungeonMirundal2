@@ -10,22 +10,23 @@ const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const HP_COLOR := Color(0.2, 0.8, 0.2)
 const MP_COLOR := Color(0.3, 0.4, 0.9)
 
+var _data: PartyMemberData
+
 func _init() -> void:
 	custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 func set_member(data: PartyMemberData) -> void:
+	_data = data
 	queue_redraw()
-	set_meta("member_data", data)
 
 func _draw() -> void:
-	# Background
 	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), BG_COLOR)
 
-	if not has_meta("member_data") or get_meta("member_data") == null:
+	if _data == null:
 		return
 
-	var data: PartyMemberData = get_meta("member_data")
+	var data := _data
 
 	# Placeholder icon
 	var icon_rect := Rect2(4, 4, ICON_SIZE, ICON_SIZE)

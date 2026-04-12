@@ -11,6 +11,7 @@ var _renderer: MinimapRenderer
 var _wiz_map: WizMap
 var _explored_map: ExploredMap
 var _player_state: PlayerState
+var _texture: ImageTexture
 
 func _ready() -> void:
 	_renderer = MinimapRenderer.new()
@@ -57,5 +58,8 @@ func refresh() -> void:
 	if _wiz_map == null or _explored_map == null or _player_state == null:
 		return
 	var img := _renderer.render(_wiz_map, _explored_map, _player_state)
-	var tex := ImageTexture.create_from_image(img)
-	_texture_rect.texture = tex
+	if _texture == null:
+		_texture = ImageTexture.create_from_image(img)
+		_texture_rect.texture = _texture
+	else:
+		_texture.update(img)

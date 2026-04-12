@@ -19,10 +19,10 @@ func _pad_row(row: Array) -> Array:
 	return result
 
 func get_front_row() -> Array:
-	return _front_row
+	return _front_row.duplicate()
 
 func get_back_row() -> Array:
-	return _back_row
+	return _back_row.duplicate()
 
 static func create_placeholder() -> PartyData:
 	var front := [

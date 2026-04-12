@@ -37,14 +37,12 @@ func render(wiz_map: WizMap, explored_map: ExploredMap, player_state: PlayerStat
 
 func _draw_cell(img: Image, wiz_map: WizMap, explored_map: ExploredMap,
 		cx: int, cy: int, vx: int, vy: int) -> void:
-	# Fill 3x3 floor area
 	var fx := vx * STRIDE + WALL_PX
 	var fy := vy * STRIDE + WALL_PX
 	for dy in range(CELL_PX):
 		for dx in range(CELL_PX):
 			img.set_pixel(fx + dx, fy + dy, COLOR_FLOOR)
 
-	# Draw edge lines (CELL_PX pixels each, no corners)
 	for dir in Direction.ALL:
 		var edge := wiz_map.get_edge(cx, cy, dir)
 		var color := _edge_color(edge, cx, cy, dir, explored_map)
@@ -92,7 +90,6 @@ func _draw_edge_line(img: Image, vx: int, vy: int, dir: int, color: Color) -> vo
 				img.set_pixel(ex, fy + dy, color)
 
 func _fill_corners(img: Image) -> void:
-	# Post-process: fill corner pixels based on adjacent edge pixels
 	for cy in range(VIEW_SIZE + 1):
 		for cx in range(VIEW_SIZE + 1):
 			var px := cx * STRIDE
@@ -104,8 +101,6 @@ func _fill_corners(img: Image) -> void:
 				img.set_pixel(px, py, color)
 
 func _corner_color_from_neighbors(img: Image, px: int, py: int) -> Color:
-	# Check 4 adjacent pixels (the edge line pixels)
-	# Only fill corner if at least 2 neighbors are non-background
 	var has_wall := false
 	var has_door := false
 	var has_floor := false
@@ -137,14 +132,10 @@ func _corner_color_from_neighbors(img: Image, px: int, py: int) -> Color:
 	return COLOR_BG
 
 func _draw_player(img: Image, player_state: PlayerState) -> void:
-	# Player at center cell
-	var fx := VIEW_RADIUS * STRIDE + WALL_PX  # 13
-	var fy := VIEW_RADIUS * STRIDE + WALL_PX  # 13
-
-	# Fill floor area with player color
+	var fx := VIEW_RADIUS * STRIDE + WALL_PX
+	var fy := VIEW_RADIUS * STRIDE + WALL_PX
 	for dy in range(CELL_PX):
 		for dx in range(CELL_PX):
 			img.set_pixel(fx + dx, fy + dy, COLOR_PLAYER)
 
-	# Direction indicator: fill the edge gap
 	_draw_edge_line(img, VIEW_RADIUS, VIEW_RADIUS, player_state.facing, COLOR_PLAYER)
