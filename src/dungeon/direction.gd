@@ -19,3 +19,9 @@ static func offset(dir: int) -> Vector2i:
 
 static func opposite(dir: int) -> int:
 	return (dir + 2) % 4
+
+static func turn_right(dir: int) -> int:
+	return (dir + 1) % 4
+
+static func turn_left(dir: int) -> int:
+	return (dir + 3) % 4

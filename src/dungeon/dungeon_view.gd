@@ -6,8 +6,8 @@ const VIEW_DEPTH := 4
 func get_visible_cells(wiz_map: WizMap, pos: Vector2i, facing: int) -> Array[Vector2i]:
 	var result: Array[Vector2i] = [pos]
 	var forward := Direction.offset(facing)
-	var left_dir := (facing + 3) % 4
-	var right_dir := (facing + 1) % 4
+	var left_dir := Direction.turn_left(facing)
+	var right_dir := Direction.turn_right(facing)
 	var left_offset := Direction.offset(left_dir)
 	var right_offset := Direction.offset(right_dir)
 

@@ -9,10 +9,10 @@ func _init(pos: Vector2i, dir: int) -> void:
 	facing = dir
 
 func turn_right() -> void:
-	facing = (facing + 1) % 4
+	facing = Direction.turn_right(facing)
 
 func turn_left() -> void:
-	facing = (facing + 3) % 4
+	facing = Direction.turn_left(facing)
 
 func move_forward(wiz_map: WizMap) -> bool:
 	if not wiz_map.can_move(position.x, position.y, facing):
