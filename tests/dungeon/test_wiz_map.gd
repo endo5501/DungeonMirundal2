@@ -1,13 +1,8 @@
 extends GutTest
 
-func test_minimum_size_constraint():
-	var map = WizMap.new(7)
-	assert_false(map.is_valid(), "size 7 should not be valid")
-
 func test_valid_size_creates_grid():
 	var map = WizMap.new(8)
 	assert_eq(map.map_size, 8)
-	assert_true(map.is_valid())
 
 func test_all_edges_are_walls_initially():
 	var map = WizMap.new(8)

@@ -4,20 +4,12 @@ extends RefCounted
 var map_size: int
 var _grid: Array  # Array[Array[Cell]]
 var rooms: Array[MapRect]
-var _valid: bool
 
 func _init(size: int) -> void:
-	if size < 8:
-		push_warning("size must be >= 8")
-		_valid = false
-		return
+	assert(size >= 8, "WizMap size must be >= 8, got %d" % size)
 	map_size = size
 	rooms = []
-	_valid = true
 	_init_all_walls()
-
-func is_valid() -> bool:
-	return _valid
 
 func _init_all_walls() -> void:
 	_grid = []
@@ -223,9 +215,9 @@ func generate(
 	if room_attempts < 0:
 		room_attempts = maxi(20, map_size * 3)
 	if max_room_size < 0:
-		max_room_size = maxi(5, mini(8, map_size / 3 + 1))
+		max_room_size = maxi(5, mini(8, map_size / 3 + 1) as int)
 	if extra_links < 0:
-		extra_links = maxi(2, map_size / 4)
+		extra_links = maxi(2, (map_size / 4) as int)
 
 	carve_perfect_maze(rng)
 	generate_rooms(rng, room_attempts, min_room_size, max_room_size)
