@@ -35,3 +35,15 @@ func test_all_directions():
 	assert_has(dirs, Direction.EAST)
 	assert_has(dirs, Direction.SOUTH)
 	assert_has(dirs, Direction.WEST)
+
+func test_turn_right():
+	assert_eq(Direction.turn_right(Direction.NORTH), Direction.EAST)
+	assert_eq(Direction.turn_right(Direction.EAST), Direction.SOUTH)
+	assert_eq(Direction.turn_right(Direction.SOUTH), Direction.WEST)
+	assert_eq(Direction.turn_right(Direction.WEST), Direction.NORTH)
+
+func test_turn_left():
+	assert_eq(Direction.turn_left(Direction.NORTH), Direction.WEST)
+	assert_eq(Direction.turn_left(Direction.EAST), Direction.NORTH)
+	assert_eq(Direction.turn_left(Direction.SOUTH), Direction.EAST)
+	assert_eq(Direction.turn_left(Direction.WEST), Direction.SOUTH)

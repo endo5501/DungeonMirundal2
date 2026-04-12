@@ -20,6 +20,28 @@ cd DungeonMirundal2
 godot --headless --import
 ```
 
+## セットアップ:AI
+
+Claude Code/Codex等コーディングエージェントを準備してください
+
+```bash
+# OpenSpec
+npm install -g @fission-ai/openspec@latest
+
+# Codex CLI
+npm i -g @openai/codex
+
+# superpowers (in Claude Code)
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+
+# Codex plugin for Claude Code
+/plugin marketplace add openai/codex-plugin-cc
+/plugin install codex@openai-codex
+/reload-plugins
+/codex:setup
+```
+
 ## エディタで開く
 
 ```bash
