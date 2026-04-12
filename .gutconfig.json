@@ -1,0 +1,6 @@
+{
+	"dirs": ["res://tests/dungeon/"],
+	"prefix": "test_",
+	"suffix": ".gd",
+	"should_exit": true
+}

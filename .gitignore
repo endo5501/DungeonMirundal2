@@ -1,0 +1,5 @@
+# Godot editor cache
+.godot/
+
+# Claude Code local settings
+.claude/settings.local.json
