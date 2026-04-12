@@ -44,16 +44,16 @@ func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 		[Vector3(x0, y0, z1), Vector3(x0, y0, z0), Vector3(x0, y1, z0), Vector3(x0, y1, z1)],
 		Vector3(1, 0, 0))
 
-	# floor
+	# floor (visible from above, CCW winding when viewed from +Y)
 	var floor_verts: Array[Vector3] = [
-		Vector3(x0, y0, z0), Vector3(x1, y0, z0),
-		Vector3(x1, y0, z1), Vector3(x0, y0, z1)]
+		Vector3(x0, y0, z1), Vector3(x1, y0, z1),
+		Vector3(x1, y0, z0), Vector3(x0, y0, z0)]
 	faces.append(Face.new("floor", floor_verts, Vector3(0, 1, 0), FLOOR_COLOR))
 
-	# ceiling
+	# ceiling (visible from below, CCW winding when viewed from -Y)
 	var ceil_verts: Array[Vector3] = [
-		Vector3(x0, y1, z1), Vector3(x1, y1, z1),
-		Vector3(x1, y1, z0), Vector3(x0, y1, z0)]
+		Vector3(x0, y1, z0), Vector3(x1, y1, z0),
+		Vector3(x1, y1, z1), Vector3(x0, y1, z1)]
 	faces.append(Face.new("ceiling", ceil_verts, Vector3(0, -1, 0), CEILING_COLOR))
 
 	return faces

@@ -41,9 +41,9 @@ project-foundation-and-dungeon-generation で WizMap（迷路生成）、Cell、
 src/dungeon/
   player_state.gd       # RefCounted: プレイヤー位置・向き・移動ロジック
   dungeon_view.gd       # RefCounted: 視野内セル計算ロジック
+  cell_mesh_builder.gd  # RefCounted: セルのメッシュデータ生成
 src/dungeon_scene/
   dungeon_scene.gd      # Node3D: 3Dシーン構築・更新
-  cell_mesh_builder.gd  # RefCounted: セルのメッシュデータ生成
   dungeon_screen.gd     # Control: SubViewport + UI レイアウト
 tests/dungeon/
   test_player_state.gd  # PlayerState のテスト

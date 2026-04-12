@@ -90,3 +90,25 @@ func test_door_does_not_block_view():
 	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
 	assert_true(cells.has(Vector2i(5, 4)), "cell through door visible")
 	assert_true(cells.has(Vector2i(5, 3)), "cell beyond door visible")
+
+func test_near_side_wall_occludes_deeper_side_cells():
+	var wm = _create_open_map(10)
+	# wall on left at depth 1 should block left at depth 2+
+	wm.set_edge(5, 4, Direction.WEST, EdgeType.WALL)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
+	assert_false(cells.has(Vector2i(4, 4)), "depth 1 left blocked")
+	assert_false(cells.has(Vector2i(4, 3)), "depth 2 left also blocked by nearer wall")
+	assert_false(cells.has(Vector2i(4, 2)), "depth 3 left also blocked")
+	# right side unaffected
+	assert_true(cells.has(Vector2i(6, 4)), "depth 1 right still visible")
+	assert_true(cells.has(Vector2i(6, 3)), "depth 2 right still visible")
+
+func test_near_right_wall_occludes_deeper_right_cells():
+	var wm = _create_open_map(10)
+	wm.set_edge(5, 4, Direction.EAST, EdgeType.WALL)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
+	assert_false(cells.has(Vector2i(6, 4)), "depth 1 right blocked")
+	assert_false(cells.has(Vector2i(6, 3)), "depth 2 right also blocked")
+	assert_true(cells.has(Vector2i(4, 4)), "depth 1 left still visible")

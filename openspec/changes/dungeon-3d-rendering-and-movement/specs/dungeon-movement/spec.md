@@ -72,7 +72,7 @@ PlayerState SHALL use WizMap.can_move() to determine if movement is allowed. Mov
 - **THEN** move_forward SHALL return true
 
 ### Requirement: Keyboard input controls movement
-DungeonScreen SHALL accept keyboard input to control player movement. Up arrow or W SHALL trigger move forward. Down arrow or S SHALL trigger move backward. Left arrow or A SHALL trigger turn left. Right arrow or Q SHALL trigger turn right.
+DungeonScreen SHALL accept keyboard input to control player movement. Up arrow or W SHALL trigger move forward. Down arrow or S SHALL trigger move backward. Left arrow or A SHALL trigger turn left. Right arrow or D SHALL trigger turn right.
 
 #### Scenario: Up arrow moves forward
 - **WHEN** user presses the Up arrow key
