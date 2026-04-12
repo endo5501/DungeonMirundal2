@@ -29,14 +29,14 @@
 
 ## Non-goals
 
-- 本番アイテムデータ（Change 8）
+- 本番アイテムデータ（items-and-economy）
 - 魔法・スキルシステム（必要であれば別changeで）
 - 戦闘バランスの最終調整
 
 ## Dependencies
 
-- Change 5: 地上画面 + 画面遷移（ダンジョンからの遷移管理）
-- Change 4: キャラクター＆パーティシステム（戦闘参加キャラクターのデータ）
+- town-screen-and-navigation: 地上画面 + 画面遷移（ダンジョンからの遷移管理）
+- character-and-party-system: キャラクター＆パーティシステム（戦闘参加キャラクターのデータ）
 
 ## Risks
 

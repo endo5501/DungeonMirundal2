@@ -28,12 +28,12 @@
 
 ## Non-goals
 
-- アイテム操作・装備管理の実ロジック（Change 8）
+- アイテム操作・装備管理の実ロジック（items-and-economy）
 - 設定項目の詳細（音量、キー設定等は後続で必要に応じて）
 
 ## Dependencies
 
-- Change 5: 地上画面 + 画面遷移（スタート画面、画面遷移管理）
+- town-screen-and-navigation: 地上画面 + 画面遷移（スタート画面、画面遷移管理）
 
 ## Risks
 

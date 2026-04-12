@@ -24,12 +24,12 @@
 
 ## Non-goals
 
-- レベルアップ・経験値（戦闘システムと連動するため Change 7 以降）
-- アイテム・装備の実装（Change 8）
+- レベルアップ・経験値（戦闘システムと連動するため combat-system 以降）
+- アイテム・装備の実装（items-and-economy）
 
 ## Dependencies
 
-- Change 1: プロジェクト基盤（Godotプロジェクト、GUT）
+- project-foundation-and-dungeon-generation: プロジェクト基盤（Godotプロジェクト、GUT）
 
 ## Risks
 

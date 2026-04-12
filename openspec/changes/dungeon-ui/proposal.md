@@ -14,17 +14,17 @@
 - パーティ表示枠
   - 画面下部に前列3名・後列3名のレイアウト
   - 仮データでの表示（名前、HP等の基本情報）
-  - Change 4 完了後に実データに差し替え
+  - character-and-party-system 完了後に実データに差し替え
 
 ## Non-goals
 
-- パーティメンバーの実データ連携（Change 4 で対応）
+- パーティメンバーの実データ連携（character-and-party-system で対応）
 - 戦闘UI
 - 設定メニュー
 
 ## Dependencies
 
-- Change 2: ダンジョン3D描画 + 移動（ダンジョンシーンの基本構成）
+- dungeon-3d-rendering-and-movement: ダンジョン3D描画 + 移動（ダンジョンシーンの基本構成）
 
 ## Risks
 
