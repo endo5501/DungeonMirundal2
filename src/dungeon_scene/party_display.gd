@@ -51,7 +51,5 @@ func setup(party_data: PartyData) -> void:
 	var front := party_data.get_front_row()
 	var back := party_data.get_back_row()
 	for i in range(3):
-		if front[i] != null:
-			_front_panels[i].set_member(front[i])
-		if back[i] != null:
-			_back_panels[i].set_member(back[i])
+		_front_panels[i].set_member(front[i])
+		_back_panels[i].set_member(back[i])
