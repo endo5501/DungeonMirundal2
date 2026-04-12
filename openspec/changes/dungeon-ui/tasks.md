@@ -35,6 +35,6 @@
 
 ## 7. 最終確認
 
-- [ ] 7.1 `/simplify`スキルを使用してコードレビューを実施
-- [ ] 7.2 `/codex:review --scope branch --background` スキルを使用して現在開発中のコードレビューを実施
-- [ ] 7.3 `/opsx:verify`でchangeを検証
+- [x] 7.1 `/simplify`スキルを使用してコードレビューを実施
+- [x] 7.2 `/codex:review --scope branch --background` スキルを使用して現在開発中のコードレビューを実施
+- [x] 7.3 `/opsx:verify`でchangeを検証
