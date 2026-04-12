@@ -16,10 +16,10 @@ class Face:
 		normal = n
 		color = c
 
-static var WALL_COLOR := Color(0.5, 0.5, 0.5)
-static var DOOR_COLOR := Color(0.55, 0.35, 0.15)
-static var FLOOR_COLOR := Color(0.3, 0.3, 0.35)
-static var CEILING_COLOR := Color(0.25, 0.25, 0.3)
+static var WALL_COLOR := Color(0.7, 0.7, 0.65)
+static var DOOR_COLOR := Color(0.6, 0.35, 0.1)
+static var FLOOR_COLOR := Color(0.15, 0.15, 0.2)
+static var CEILING_COLOR := Color(0.1, 0.1, 0.15)
 
 func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 	var faces: Array = []

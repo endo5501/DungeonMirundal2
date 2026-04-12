@@ -24,24 +24,12 @@ func _ready() -> void:
 	_mesh = ImmediateMesh.new()
 	_material = StandardMaterial3D.new()
 	_material.vertex_color_use_as_albedo = true
-	_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+	_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 	_mesh_instance = MeshInstance3D.new()
 	_mesh_instance.mesh = _mesh
 	add_child(_mesh_instance)
-
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-45, 30, 0)
-	add_child(light)
-
-	var ambient := WorldEnvironment.new()
-	var env := Environment.new()
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.4, 0.4, 0.4)
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.05, 0.05, 0.1)
-	ambient.environment = env
-	add_child(ambient)
 
 func refresh() -> void:
 	if wiz_map == null or player_state == null:

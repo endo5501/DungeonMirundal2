@@ -91,6 +91,22 @@ func test_door_does_not_block_view():
 	assert_true(cells.has(Vector2i(5, 4)), "cell through door visible")
 	assert_true(cells.has(Vector2i(5, 3)), "cell beyond door visible")
 
+func test_lateral_cells_at_player_position():
+	var wm = _create_open_map(10)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
+	# player cell laterals should be included when edges are open
+	assert_true(cells.has(Vector2i(4, 5)), "left cell at player depth")
+	assert_true(cells.has(Vector2i(6, 5)), "right cell at player depth")
+
+func test_lateral_cells_at_player_blocked_by_wall():
+	var wm = _create_open_map(10)
+	wm.set_edge(5, 5, Direction.WEST, EdgeType.WALL)
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
+	assert_false(cells.has(Vector2i(4, 5)), "left blocked at player depth")
+	assert_true(cells.has(Vector2i(6, 5)), "right still open at player depth")
+
 func test_near_side_wall_occludes_deeper_side_cells():
 	var wm = _create_open_map(10)
 	# wall on left at depth 1 should block left at depth 2+

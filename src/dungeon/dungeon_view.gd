@@ -11,6 +11,16 @@ func get_visible_cells(wiz_map: WizMap, pos: Vector2i, facing: int) -> Array[Vec
 	var left_offset := Direction.offset(left_dir)
 	var right_offset := Direction.offset(right_dir)
 
+	# lateral cells at player position (depth 0)
+	if wiz_map.can_move(pos.x, pos.y, left_dir):
+		var left_cell := pos + left_offset
+		if wiz_map.in_bounds(left_cell.x, left_cell.y):
+			result.append(left_cell)
+	if wiz_map.can_move(pos.x, pos.y, right_dir):
+		var right_cell := pos + right_offset
+		if wiz_map.in_bounds(right_cell.x, right_cell.y):
+			result.append(right_cell)
+
 	var center := pos
 	var left_visible := true
 	var right_visible := true
