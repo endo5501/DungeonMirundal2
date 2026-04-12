@@ -12,6 +12,7 @@ var _cell_mesh_builder: CellMeshBuilder
 
 var wiz_map: WizMap
 var player_state: PlayerState
+var _cached_visible_cells: Array[Vector2i] = []
 
 func _ready() -> void:
 	_dungeon_view = DungeonView.new()
@@ -31,9 +32,14 @@ func _ready() -> void:
 	_mesh_instance.mesh = _mesh
 	add_child(_mesh_instance)
 
-func refresh() -> void:
+func refresh(visible_cells: Array[Vector2i] = []) -> void:
 	if wiz_map == null or player_state == null:
 		return
+	if visible_cells.size() > 0:
+		_cached_visible_cells = visible_cells
+	else:
+		_cached_visible_cells = _dungeon_view.get_visible_cells(
+			wiz_map, player_state.position, player_state.facing)
 	_update_camera()
 	_rebuild_mesh()
 
@@ -45,8 +51,7 @@ func _update_camera() -> void:
 	_camera.rotation_degrees = Vector3(0, player_state.facing * -90.0, 0)
 
 func _rebuild_mesh() -> void:
-	var visible_cells := _dungeon_view.get_visible_cells(
-		wiz_map, player_state.position, player_state.facing)
+	var visible_cells := _cached_visible_cells
 
 	_mesh.clear_surfaces()
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
