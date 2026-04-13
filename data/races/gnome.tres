@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RaceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/race_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+race_name = "Gnome"
+base_str = 7
+base_int = 7
+base_pie = 10
+base_vit = 8
+base_agi = 10
+base_luc = 7
