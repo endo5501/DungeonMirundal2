@@ -33,10 +33,10 @@
 ## 7. 統合・既存コードとの接続
 
 - [x] 7.1 DungeonScreen で Guild.get_party_data() からパーティ表示に接続できることを確認（手動テストまたは統合テスト）
-- [ ] 7.2 全テストが通過することを確認し、コミット
+- [x] 7.2 全テストが通過することを確認し、コミット
 
 ## 8. 最終確認
 
-- [ ] 8.1 `/simplify` スキルを使用してコードレビューを実施
-- [ ] 8.2 `/codex:review --scope branch --background` スキルを使用して現在開発中のコードレビューを実施
-- [ ] 8.3 `/opsx:verify` で change を検証
+- [x] 8.1 `/simplify` スキルを使用してコードレビューを実施
+- [x] 8.2 `/codex:review --scope branch --background` スキルを使用して現在開発中のコードレビューを実施
+- [x] 8.3 `/opsx:verify` で change を検証
