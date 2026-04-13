@@ -1,5 +1,5 @@
 {
-	"dirs": ["res://tests/dungeon/"],
+	"dirs": ["res://tests/dungeon/", "res://tests/guild_scene/"],
 	"prefix": "test_",
 	"suffix": ".gd",
 	"should_exit": true
