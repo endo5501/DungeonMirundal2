@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RaceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/race_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+race_name = "Hobbit"
+base_str = 5
+base_int = 7
+base_pie = 7
+base_vit = 6
+base_agi = 10
+base_luc = 15

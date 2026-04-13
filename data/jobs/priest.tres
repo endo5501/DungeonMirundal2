@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="JobData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/job_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+job_name = "Priest"
+base_hp = 6
+has_magic = true
+base_mp = 5
+required_str = 0
+required_int = 0
+required_pie = 11
+required_vit = 0
+required_agi = 0
+required_luc = 0
