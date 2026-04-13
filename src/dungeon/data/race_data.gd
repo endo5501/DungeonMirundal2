@@ -8,3 +8,13 @@ extends Resource
 @export var base_vit: int
 @export var base_agi: int
 @export var base_luc: int
+
+func get_base_stats() -> Dictionary:
+	return {
+		&"STR": base_str,
+		&"INT": base_int,
+		&"PIE": base_pie,
+		&"VIT": base_vit,
+		&"AGI": base_agi,
+		&"LUC": base_luc,
+	}

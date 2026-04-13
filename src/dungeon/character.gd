@@ -27,14 +27,10 @@ static func create(
 	if bonus_total >= 0 and alloc_sum != bonus_total:
 		return null
 
-	# Calculate final stats
+	var race_base := p_race.get_base_stats()
 	var stats: Dictionary = {}
-	stats[&"STR"] = p_race.base_str + allocation.get(&"STR", 0)
-	stats[&"INT"] = p_race.base_int + allocation.get(&"INT", 0)
-	stats[&"PIE"] = p_race.base_pie + allocation.get(&"PIE", 0)
-	stats[&"VIT"] = p_race.base_vit + allocation.get(&"VIT", 0)
-	stats[&"AGI"] = p_race.base_agi + allocation.get(&"AGI", 0)
-	stats[&"LUC"] = p_race.base_luc + allocation.get(&"LUC", 0)
+	for key in STAT_KEYS:
+		stats[key] = race_base[key] + allocation.get(key, 0)
 
 	# Check job qualification
 	if not p_job.can_qualify(stats):

@@ -2,8 +2,8 @@ class_name Guild
 extends RefCounted
 
 var _characters: Array[Character] = []
-var _front_row: Array = [null, null, null]  # Character or null
-var _back_row: Array = [null, null, null]   # Character or null
+var _front_row: Array = [null, null, null]
+var _back_row: Array = [null, null, null]
 
 func register(character: Character) -> void:
 	_characters.append(character)
@@ -38,19 +38,7 @@ func remove_from_party(row: int, position: int) -> void:
 	target_row[position] = null
 
 func get_party_data() -> PartyData:
-	var front: Array = []
-	var back: Array = []
-	for i in range(3):
-		if _front_row[i] != null:
-			front.append((_front_row[i] as Character).to_party_member_data())
-		else:
-			front.append(null)
-	for i in range(3):
-		if _back_row[i] != null:
-			back.append((_back_row[i] as Character).to_party_member_data())
-		else:
-			back.append(null)
-	return PartyData.new(front, back)
+	return PartyData.new(_row_to_party_member_data(_front_row), _row_to_party_member_data(_back_row))
 
 func _is_in_party(character: Character) -> bool:
 	for i in range(3):
@@ -60,3 +48,12 @@ func _is_in_party(character: Character) -> bool:
 
 func _get_row(row: int) -> Array:
 	return _front_row if row == 0 else _back_row
+
+func _row_to_party_member_data(row: Array) -> Array:
+	var result: Array = []
+	for i in range(3):
+		if row[i] != null:
+			result.append((row[i] as Character).to_party_member_data())
+		else:
+			result.append(null)
+	return result
