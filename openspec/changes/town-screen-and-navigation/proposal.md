@@ -1,41 +1,37 @@
 # Change: 地上画面 + 画面遷移
 
-## Summary
+## Why
 
-スタート画面、地上画面（施設選択）、および画面遷移管理を実装する。ダンジョンの選択・新規生成・破棄の管理もここで行う。
+現在のゲームはmain.gdがダンジョン画面を直接生成するだけで、タイトル画面・地上画面・画面遷移の仕組みが存在しない。ゲームとして成立させるためにはタイトル→地上→ダンジョンの画面フロー、施設への導線、複数ダンジョンの管理が必要である。
 
-## Scope
+## What Changes
 
-- スタート画面
-  - 新規ゲーム
-  - 前回から（最後のセーブデータ）
-  - ロード（セーブデータ選択）※UI枠のみ、実ロジックはsave-load
-  - ゲーム終了
-- 地上画面
-  - 画面左側に施設選択ボタン
-  - 画面右側にイラスト表示エリア（選択中の施設に応じて変化）
-  - 冒険者ギルド → character-and-party-system のUI呼び出し
-  - 商店・教会 → プレースホルダ（items-and-economy で実装）
-- ダンジョン入口
-  - ダンジョン選択
-  - ダンジョン新規生成（project-foundation-and-dungeon-generation の生成アルゴリズム呼び出し）
-  - ダンジョン破棄
-- 画面遷移管理
-  - スタート → 地上 → ダンジョン の遷移フロー
-  - 地上に戻ったらHP全回復、状態異常解除
+- タイトル画面の新設（新規ゲーム / 前回から / ロード / ゲーム終了）
+- 地上画面の新設（施設選択ボタン + イラストエリアプレースホルダ）
+- ダンジョン入口画面の新設（ダンジョン一覧・選択・新規生成・破棄）
+- ダンジョン新規生成（サイズカテゴリ選択 + ランダム名生成 + 名前編集）
+- GameState autoloadシングルトン（Guild, DungeonRegistryを画面間で共有）
+- main.gdをトップレベル画面管理者に拡張（signal + _switch_screen方式）
+- ダンジョン帰還機能（STARTタイルで確認ダイアログ→地上帰還+HP全回復）
+- GuildScreenの地上画面への接続（「立ち去る」→TownScreenに戻る）
 
-## Non-goals
+## Capabilities
 
-- セーブ/ロードの実ロジック（save-load）
-- 商店・教会の実機能（items-and-economy）
-- 戦闘関連の遷移
+### New Capabilities
+- `game-state`: ゲーム全体の状態管理シングルトン（Guild, DungeonRegistry保持、new_game/heal_party）
+- `dungeon-management`: 複数ダンジョンのデータ管理（DungeonData, DungeonRegistry, DungeonNameGenerator）
+- `title-screen`: タイトル画面（新規ゲーム / 前回から / ロード / ゲーム終了）
+- `town-screen`: 地上画面（施設選択メニュー + イラストエリア）
+- `dungeon-entrance`: ダンジョン入口画面（一覧・選択・新規生成・破棄）
+- `screen-navigation`: 画面遷移管理（main.gdによるトップレベル画面切り替え）
+- `dungeon-return`: ダンジョンからの帰還（STARTタイル検出 + 確認ダイアログ + HP全回復）
 
-## Dependencies
+### Modified Capabilities
+（なし）
 
-- dungeon-ui: ダンジョンUI（ダンジョン画面への遷移先）
-- character-and-party-system: キャラクター＆パーティシステム（ギルドUIの呼び出し）
+## Impact
 
-## Risks
-
-- 画面遷移の設計（SceneTree.change_scene vs シーン管理シングルトン）
-- 地上画面のイラスト素材の調達・仮置き
+- `src/main.gd`: 直接DungeonScreen生成からトップレベル画面管理者に全面改修
+- `src/dungeon_scene/dungeon_screen.gd`: STARTタイル検出と帰還ダイアログの追加
+- `project.godot`: GameState autoload登録
+- 新規ファイル: GameState, DungeonData, DungeonRegistry, DungeonNameGenerator, TitleScreen, TownScreen, DungeonEntrance, DungeonCreateDialog
