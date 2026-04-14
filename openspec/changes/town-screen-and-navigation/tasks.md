@@ -29,10 +29,10 @@
 
 ## 7. 画面遷移統合
 
-- [ ] 7.1 main.gd を画面管理者に改修する（_switch_screen、TitleScreen初期表示）
-- [ ] 7.2 TitleScreen → TownScreen 遷移を接続する（new_game呼び出し含む）
-- [ ] 7.3 TownScreen → GuildScreen / DungeonEntrance 遷移を接続する
-- [ ] 7.4 GuildScreen → TownScreen 帰還遷移を接続する（back_requested）
-- [ ] 7.5 DungeonEntrance → DungeonScreen 遷移を接続する（enter_dungeon）
-- [ ] 7.6 DungeonScreen → TownScreen 帰還遷移を接続する（return_to_town + heal_party）
-- [ ] 7.7 全画面フローの結合テスト（タイトル→地上→ギルド→地上→ダンジョン入口→ダンジョン→帰還→地上）
+- [x] 7.1 main.gd を画面管理者に改修する（_switch_screen、TitleScreen初期表示）
+- [x] 7.2 TitleScreen → TownScreen 遷移を接続する（new_game呼び出し含む）
+- [x] 7.3 TownScreen → GuildScreen / DungeonEntrance 遷移を接続する
+- [x] 7.4 GuildScreen → TownScreen 帰還遷移を接続する（back_requested）
+- [x] 7.5 DungeonEntrance → DungeonScreen 遷移を接続する（enter_dungeon）
+- [x] 7.6 DungeonScreen → TownScreen 帰還遷移を接続する（return_to_town + heal_party）
+- [x] 7.7 全画面フローの結合テスト（タイトル→地上→ギルド→地上→ダンジョン入口→ダンジョン→帰還→地上）

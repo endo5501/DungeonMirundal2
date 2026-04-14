@@ -38,17 +38,18 @@ func _ready() -> void:
 	_party_display = PartyDisplay.new()
 	add_child(_party_display)
 
-func setup(wiz_map: WizMap, player_state: PlayerState) -> void:
+func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap = null, party_data: PartyData = null) -> void:
 	_wiz_map = wiz_map
 	_player_state = player_state
-	_explored_map = ExploredMap.new()
+	_explored_map = explored_map if explored_map else ExploredMap.new()
 
 	_dungeon_scene.wiz_map = wiz_map
 	_dungeon_scene.player_state = player_state
 
 	_minimap_display.setup(wiz_map, _explored_map, player_state)
 
-	var party_data := PartyData.create_placeholder()
+	if party_data == null:
+		party_data = PartyData.create_placeholder()
 	_party_display.setup(party_data)
 
 	_refresh_all()
