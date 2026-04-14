@@ -10,13 +10,11 @@ var _guild: Guild
 var _party_slots: Array = []
 var _waiting: Array[Character] = []
 
-# UI state
 var _mode: int = 0  # 0=party grid, 1=waiting list
 var _grid_index: int = 0  # 0-5
 var _wait_index: int = 0
 var _editing_name: bool = false
 
-# UI nodes
 var _content: VBoxContainer
 var _name_edit: LineEdit
 
@@ -53,7 +51,9 @@ func _ready() -> void:
 	_rebuild_display()
 
 func _rebuild_display() -> void:
-	for child in _content.get_children():
+	while _content.get_child_count() > 0:
+		var child := _content.get_child(0)
+		_content.remove_child(child)
 		child.queue_free()
 
 	_add_section_label("パーティ")
@@ -181,8 +181,6 @@ func _input_waiting(event: InputEvent) -> void:
 		_mode = 0
 		_rebuild_display()
 		get_viewport().set_input_as_handled()
-
-# --- Logic ---
 
 func refresh() -> void:
 	_waiting = _guild.get_unassigned()

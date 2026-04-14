@@ -22,12 +22,12 @@ var _selected_job_index: int = -1
 var _bonus_total: int = 0
 var _allocation: Dictionary = {}
 var _bonus_generator: BonusPointGenerator
+var _cached_character: Character
 
-# UI nodes
 var _content: VBoxContainer
 var _name_edit: LineEdit
 var _step_label: Label
-var _cursor_index: int = 0  # for list selections in steps 2/4
+var _cursor_index: int = 0
 
 func setup(guild: Guild, races: Array[RaceData], jobs: Array[JobData]) -> void:
 	_guild = guild
@@ -57,7 +57,9 @@ func _ready() -> void:
 	_build_step_ui()
 
 func _build_step_ui() -> void:
-	for child in _content.get_children():
+	while _content.get_child_count() > 0:
+		var child := _content.get_child(0)
+		_content.remove_child(child)
 		child.queue_free()
 	_cursor_index = 0
 
@@ -69,18 +71,18 @@ func _build_step_ui() -> void:
 		5: _build_step5()
 
 func _build_step1() -> void:
-	_step_label.text = "Step 1/5 - 名前入力"
+	_step_label.text = "Step %d/%d - 名前入力" % [current_step, total_steps]
 	_add_label("名前を入力してください:")
 	_name_edit = LineEdit.new()
 	_name_edit.text = _name_input
 	_name_edit.custom_minimum_size.x = 200
-	_name_edit.text_changed.connect(func(t: String): _name_input = t; set_name_input(t))
+	_name_edit.text_changed.connect(func(t: String): set_name_input(t))
 	_content.add_child(_name_edit)
 	_name_edit.grab_focus()
 	_add_nav_hint("[Enter] 次へ  [Esc] やめる")
 
 func _build_step2() -> void:
-	_step_label.text = "Step 2/5 - 種族選択"
+	_step_label.text = "Step %d/%d - 種族選択" % [current_step, total_steps]
 	for i in range(_races.size()):
 		var race := _races[i]
 		var stats := race.get_base_stats()
@@ -94,7 +96,7 @@ func _build_step2() -> void:
 	_add_nav_hint("[↑↓] 選択  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる")
 
 func _build_step3() -> void:
-	_step_label.text = "Step 3/5 - ボーナスポイント配分"
+	_step_label.text = "Step %d/%d - ボーナスポイント配分" % [current_step, total_steps]
 	_add_label("ボーナスポイント: %d  残り: %d" % [_bonus_total, get_remaining_points()])
 	_add_label("")
 	for key in Character.STAT_KEYS:
@@ -103,7 +105,7 @@ func _build_step3() -> void:
 	_add_nav_hint("[↑↓] 選択  [→] +1  [←] -1  [R] 振り直し  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる")
 
 func _build_step4() -> void:
-	_step_label.text = "Step 4/5 - 職業選択"
+	_step_label.text = "Step %d/%d - 職業選択" % [current_step, total_steps]
 	var qualified := get_qualified_jobs()
 	for i in range(_jobs.size()):
 		var job := _jobs[i]
@@ -122,7 +124,7 @@ func _build_step4() -> void:
 	_add_nav_hint("[↑↓] 選択  [Enter] 決定  [Backspace] 戻る  [Esc] やめる")
 
 func _build_step5() -> void:
-	_step_label.text = "Step 5/5 - 確認"
+	_step_label.text = "Step %d/%d - 確認" % [current_step, total_steps]
 	var s := get_summary()
 	if s.is_empty():
 		_add_label("エラー: キャラクターを作成できません")
@@ -298,8 +300,6 @@ func _input_step5(event: InputEvent) -> void:
 func _is_back_pressed(event: InputEvent) -> bool:
 	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE
 
-# --- Logic (unchanged) ---
-
 func set_name_input(value: String) -> void:
 	_name_input = value
 
@@ -351,17 +351,17 @@ func get_qualified_jobs() -> Dictionary:
 func get_summary() -> Dictionary:
 	var race := _races[_selected_race_index]
 	var job := _jobs[_selected_job_index]
-	var ch := Character.create(_name_input, race, job, _allocation, _bonus_total)
-	if ch == null:
+	_cached_character = Character.create(_name_input, race, job, _allocation, _bonus_total)
+	if _cached_character == null:
 		return {}
 	return {
-		"name": ch.character_name,
+		"name": _cached_character.character_name,
 		"race": race,
 		"job": job,
-		"level": ch.level,
-		"hp": ch.max_hp,
-		"mp": ch.max_mp,
-		"stats": ch.base_stats.duplicate(),
+		"level": _cached_character.level,
+		"hp": _cached_character.max_hp,
+		"mp": _cached_character.max_mp,
+		"stats": _cached_character.base_stats.duplicate(),
 	}
 
 func advance() -> void:
@@ -408,11 +408,12 @@ func cancel() -> void:
 	back_requested.emit()
 
 func confirm_creation() -> void:
-	var race := _races[_selected_race_index]
-	var job := _jobs[_selected_job_index]
-	var ch := Character.create(_name_input, race, job, _allocation, _bonus_total)
-	if ch != null:
-		_guild.register(ch)
+	if _cached_character == null:
+		var race := _races[_selected_race_index]
+		var job := _jobs[_selected_job_index]
+		_cached_character = Character.create(_name_input, race, job, _allocation, _bonus_total)
+	if _cached_character != null:
+		_guild.register(_cached_character)
 		character_created.emit()
 	back_requested.emit()
 

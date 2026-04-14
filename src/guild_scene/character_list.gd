@@ -10,12 +10,10 @@ var _guild: Guild
 var _characters: Array[Character] = []
 var _pending_delete_index: int = -1
 
-# UI state
 var _view_mode: int = 0  # 0=list, 1=detail, 2=delete confirm
 var _cursor_index: int = 0
 var _confirm_cursor: int = 0  # 0=いいえ, 1=はい
 
-# UI nodes
 var _content: VBoxContainer
 var _title_label: Label
 
@@ -45,7 +43,9 @@ func _ready() -> void:
 	_rebuild_display()
 
 func _rebuild_display() -> void:
-	for child in _content.get_children():
+	while _content.get_child_count() > 0:
+		var child := _content.get_child(0)
+		_content.remove_child(child)
 		child.queue_free()
 
 	match _view_mode:
@@ -171,8 +171,6 @@ func _input_delete_confirm(event: InputEvent) -> void:
 
 func _is_back_pressed(event: InputEvent) -> bool:
 	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE
-
-# --- Logic ---
 
 func refresh() -> void:
 	_characters = _guild.get_all_characters()
