@@ -77,6 +77,7 @@ func _build_step1() -> void:
 	_name_edit.text = _name_input
 	_name_edit.custom_minimum_size.x = 200
 	_name_edit.text_changed.connect(func(t: String): set_name_input(t))
+	_name_edit.text_submitted.connect(_on_name_submitted)
 	_content.add_child(_name_edit)
 	_name_edit.grab_focus()
 	_add_nav_hint("[Enter] 次へ  [Esc] やめる")
@@ -180,12 +181,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func _input_step1(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept") and _name_edit and not _name_edit.has_focus():
 		_name_edit.grab_focus()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept") and _name_edit and _name_edit.has_focus():
-		_name_input = _name_edit.text
-		advance()
-		if current_step == 2:
-			_build_step_ui()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		cancel()
@@ -299,6 +294,12 @@ func _input_step5(event: InputEvent) -> void:
 
 func _is_back_pressed(event: InputEvent) -> bool:
 	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE
+
+func _on_name_submitted(_text: String) -> void:
+	_name_input = _name_edit.text
+	advance()
+	if current_step == 2:
+		_build_step_ui()
 
 func set_name_input(value: String) -> void:
 	_name_input = value
