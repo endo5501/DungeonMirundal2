@@ -86,17 +86,19 @@ func _ready() -> void:
 	btn_hbox.add_child(cancel_btn)
 
 	_update_size_label()
+	_name_edit.grab_focus()
 
 func _update_size_label() -> void:
 	if _size_label:
 		_size_label.text = "< %s >" % get_size_label()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_left"):
+	var name_focused := _name_edit and _name_edit.has_focus()
+	if not name_focused and event.is_action_pressed("ui_left"):
 		cycle_size(-1)
 		_update_size_label()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
+	elif not name_focused and event.is_action_pressed("ui_right"):
 		cycle_size(1)
 		_update_size_label()
 		get_viewport().set_input_as_handled()

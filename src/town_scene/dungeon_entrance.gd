@@ -21,6 +21,9 @@ var _button_menu: CursorMenu
 var _button_labels: Array[Label] = []
 var _vbox: VBoxContainer
 var _create_dialog: DungeonCreateDialog
+var _delete_confirm_container: PanelContainer
+var _delete_confirm_labels: Array[Label] = []
+var _delete_confirm_selected: int = 1  # default to いいえ
 
 func _init() -> void:
 	_button_menu = CursorMenu.new(BUTTON_ITEMS)
@@ -136,12 +139,63 @@ func _unhandled_input(event: InputEvent) -> void:
 			do_back()
 		get_viewport().set_input_as_handled()
 
+func _show_delete_confirm() -> void:
+	_mode = Mode.DELETE_CONFIRM
+	_delete_confirm_selected = 1  # default to いいえ
+	_delete_confirm_labels.clear()
+
+	_delete_confirm_container = PanelContainer.new()
+	_delete_confirm_container.set_anchors_and_offsets_preset(PRESET_CENTER)
+	_delete_confirm_container.custom_minimum_size = Vector2(350, 140)
+	add_child(_delete_confirm_container)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	_delete_confirm_container.add_child(vbox)
+
+	var dd := _registry.get_dungeon(selected_index)
+	var msg := Label.new()
+	msg.text = "「%s」を破棄しますか？" % dd.dungeon_name
+	msg.add_theme_font_size_override("font_size", 18)
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(msg)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 4
+	vbox.add_child(spacer)
+
+	for option in ["はい", "いいえ"]:
+		var label := Label.new()
+		label.add_theme_font_size_override("font_size", FONT_SIZE)
+		vbox.add_child(label)
+		_delete_confirm_labels.append(label)
+	_update_delete_confirm_labels()
+
+func _update_delete_confirm_labels() -> void:
+	var options := ["はい", "いいえ"]
+	for i in range(_delete_confirm_labels.size()):
+		var prefix := CursorMenu.CURSOR_PREFIX if i == _delete_confirm_selected else CursorMenu.NO_CURSOR_PREFIX
+		_delete_confirm_labels[i].text = prefix + options[i]
+
+func _close_delete_confirm() -> void:
+	if _delete_confirm_container:
+		_delete_confirm_container.queue_free()
+		_delete_confirm_container = null
+	_delete_confirm_labels.clear()
+	_mode = Mode.LIST
+
 func _handle_delete_confirm_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept"):
-		_confirm_delete()
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+		_delete_confirm_selected = 1 - _delete_confirm_selected
+		_update_delete_confirm_labels()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		if _delete_confirm_selected == 0:
+			_confirm_delete()
+		_close_delete_confirm()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.LIST
+		_close_delete_confirm()
 		get_viewport().set_input_as_handled()
 
 func _activate_button() -> void:
@@ -150,7 +204,7 @@ func _activate_button() -> void:
 	match _button_menu.selected_index:
 		0: do_enter()
 		1: _open_create_dialog()
-		2: _mode = Mode.DELETE_CONFIRM
+		2: _show_delete_confirm()
 		3: do_back()
 
 func _open_create_dialog() -> void:
@@ -182,7 +236,6 @@ func _confirm_delete() -> void:
 		if selected_index >= _registry.size():
 			selected_index = _registry.size() - 1
 		_build_ui()
-	_mode = Mode.LIST
 
 func get_dungeon_count() -> int:
 	if _registry == null:
