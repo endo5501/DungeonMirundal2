@@ -5,6 +5,7 @@ signal back_requested
 
 var _guild: Guild
 var _characters: Array[Character] = []
+var _pending_delete_index: int = -1
 
 func setup(guild: Guild) -> void:
 	_guild = guild
@@ -47,6 +48,22 @@ func can_delete(index: int) -> bool:
 func delete_character(index: int) -> void:
 	var ch := _characters[index]
 	_guild.remove(ch)
+
+func request_delete(index: int) -> void:
+	if can_delete(index):
+		_pending_delete_index = index
+
+func confirm_delete() -> void:
+	if _pending_delete_index < 0:
+		return
+	delete_character(_pending_delete_index)
+	_pending_delete_index = -1
+
+func cancel_delete() -> void:
+	_pending_delete_index = -1
+
+func get_pending_delete_index() -> int:
+	return _pending_delete_index
 
 func go_back() -> void:
 	back_requested.emit()

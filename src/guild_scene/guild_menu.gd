@@ -13,8 +13,18 @@ const MENU_ITEMS: Array[String] = [
 	"立ち去る",
 ]
 
+var selected_index: int = 0
+
 func get_menu_items() -> Array[String]:
 	return MENU_ITEMS
+
+func move_cursor(direction: int) -> void:
+	selected_index = (selected_index + direction) % MENU_ITEMS.size()
+	if selected_index < 0:
+		selected_index += MENU_ITEMS.size()
+
+func confirm_selection() -> void:
+	select_item(selected_index)
 
 func select_item(index: int) -> void:
 	match index:

@@ -33,7 +33,7 @@ func _make_job(p_name: String, hp: int, req_str: int = 0) -> JobData:
 func before_each():
 	_guild = Guild.new()
 	_races = [_make_race("Human", 8), _make_race("Elf", 7)]
-	_jobs = [_make_job("Fighter", 10), _make_job("Ninja", 8, 15)]
+	_jobs = [_make_job("Fighter", 10), _make_job("Ninja", 8, 99)]
 	_creation = CharacterCreation.new()
 	_creation.setup(_guild, _races, _jobs)
 	add_child_autofree(_creation)
@@ -224,11 +224,8 @@ func test_step4_unqualified_jobs():
 		_creation.increment_stat(&"STR")
 	_creation.advance()  # -> step 4
 	var qualified = _creation.get_qualified_jobs()
-	# Ninja requires STR 15, unlikely with just 8+bonus
-	# With bonus (5-9 typically) + 8 base + all in STR: 8+5..9 = 13..17
-	# May or may not qualify depending on bonus. Let's test the logic differently.
-	# Just verify that get_qualified_jobs returns a dictionary
-	assert_typeof(qualified, TYPE_DICTIONARY)
+	# Ninja requires STR 99, impossible to reach
+	assert_false(qualified[1])
 
 func test_step4_select_qualified_job():
 	_creation.set_name_input("Hero")
@@ -265,7 +262,7 @@ func test_back_from_step4_to_step3_clears_job_selection():
 	_creation.advance()  # should stay at 4
 	assert_eq(_creation.current_step, 4)
 
-func test_step4_advance_validates_job_qualification():
+func test_step4_advance_rejects_unqualified_job():
 	_creation.set_name_input("Hero")
 	_creation.advance()
 	_creation.select_race(0)
@@ -274,15 +271,61 @@ func test_step4_advance_validates_job_qualification():
 	for i in range(total):
 		_creation.increment_stat(&"STR")
 	_creation.advance()  # -> step 4
-	# Select Ninja (index 1, requires STR 15)
+	# Select Ninja (index 1, requires STR 99 - impossible)
 	_creation.select_job(1)
-	# Check if Ninja qualifies - if not, advance should fail
-	var qualified = _creation.get_qualified_jobs()
-	if not qualified.get(1, false):
-		_creation.advance()
-		assert_eq(_creation.current_step, 4)
+	_creation.advance()
+	assert_eq(_creation.current_step, 4)
 
 # --- Step 5: Confirmation ---
+
+func test_get_summary_returns_all_fields():
+	_creation.set_name_input("Hero")
+	_creation.advance()
+	_creation.select_race(0)  # Human base 8
+	_creation.advance()
+	var total = _creation.get_bonus_total()
+	for i in range(total):
+		_creation.increment_stat(&"STR")
+	_creation.advance()
+	_creation.select_job(0)  # Fighter
+	_creation.advance()  # -> step 5
+	var summary = _creation.get_summary()
+	assert_eq(summary["name"], "Hero")
+	assert_eq(summary["level"], 1)
+	assert_true(summary["hp"] > 0)
+	assert_true(summary.has("stats"))
+	assert_true(summary["stats"].has(&"STR"))
+
+# --- Cancel from multiple steps ---
+
+func test_cancel_from_step2():
+	_creation.set_name_input("Hero")
+	_creation.advance()  # -> step 2
+	watch_signals(_creation)
+	_creation.cancel()
+	assert_signal_emitted(_creation, "back_requested")
+
+func test_cancel_from_step3():
+	_creation.set_name_input("Hero")
+	_creation.advance()
+	_creation.select_race(0)
+	_creation.advance()  # -> step 3
+	watch_signals(_creation)
+	_creation.cancel()
+	assert_signal_emitted(_creation, "back_requested")
+
+func test_cancel_from_step4():
+	_creation.set_name_input("Hero")
+	_creation.advance()
+	_creation.select_race(0)
+	_creation.advance()
+	var total = _creation.get_bonus_total()
+	for i in range(total):
+		_creation.increment_stat(&"STR")
+	_creation.advance()  # -> step 4
+	watch_signals(_creation)
+	_creation.cancel()
+	assert_signal_emitted(_creation, "back_requested")
 
 # --- Bonus generator randomness ---
 
@@ -330,4 +373,5 @@ func test_step5_confirm_creates_character():
 	watch_signals(_creation)
 	_creation.confirm_creation()
 	assert_eq(_guild.get_all_characters().size(), 1)
+	assert_signal_emitted(_creation, "character_created")
 	assert_signal_emitted(_creation, "back_requested")

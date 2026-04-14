@@ -86,6 +86,13 @@ func test_add_character_to_slot():
 	assert_eq(slots[0].character_name, "Hero")
 	assert_eq(_formation.get_waiting_characters().size(), 0)
 
+func test_add_to_slot_with_no_waiting_does_nothing():
+	_formation.refresh()
+	_formation.add_to_slot(0, 0, 0)  # no waiting characters
+	_formation.refresh()
+	var slots = _formation.get_party_slots()
+	assert_null(slots[0])
+
 # --- Remove from party ---
 
 func test_remove_from_slot():

@@ -53,11 +53,14 @@ func test_list_registered_characters():
 	_list.refresh()
 	assert_eq(_list.get_character_entries().size(), 2)
 
-func test_list_entry_has_name():
+func test_list_entry_has_all_fields():
 	_guild.register(_make_character("Hero"))
 	_list.refresh()
 	var entries = _list.get_character_entries()
 	assert_eq(entries[0].character_name, "Hero")
+	assert_eq(entries[0].level, 1)
+	assert_eq(entries[0].race_name, "Human")
+	assert_eq(entries[0].job_name, "Fighter")
 
 func test_list_entry_has_status_waiting():
 	_guild.register(_make_character("Hero"))
@@ -84,7 +87,12 @@ func test_get_character_detail():
 	assert_eq(detail.race_name, "Human")
 	assert_eq(detail.job_name, "Fighter")
 	assert_eq(detail.level, 1)
-	assert_true(detail.has("stats"))
+	assert_true(detail.current_hp > 0)
+	assert_eq(detail.current_hp, detail.max_hp)
+	assert_eq(detail.current_mp, 0)
+	assert_eq(detail.max_mp, 0)
+	assert_true(detail.stats.has(&"STR"))
+	assert_eq(detail.stats[&"STR"], 13)  # Human base 8 + allocation 5
 
 # --- Deletion ---
 
@@ -100,13 +108,34 @@ func test_cannot_delete_party_character():
 	_list.refresh()
 	assert_false(_list.can_delete(0))
 
-func test_delete_character():
+func test_request_delete_sets_pending():
 	_guild.register(_make_character("Hero"))
 	_list.refresh()
-	_list.delete_character(0)
+	_list.request_delete(0)
+	assert_eq(_list.get_pending_delete_index(), 0)
+
+func test_confirm_delete_removes_character():
+	_guild.register(_make_character("Hero"))
+	_list.refresh()
+	_list.request_delete(0)
+	_list.confirm_delete()
 	_list.refresh()
 	assert_eq(_list.get_character_entries().size(), 0)
 	assert_eq(_guild.get_all_characters().size(), 0)
+
+func test_cancel_delete_keeps_character():
+	_guild.register(_make_character("Hero"))
+	_list.refresh()
+	_list.request_delete(0)
+	_list.cancel_delete()
+	assert_eq(_list.get_pending_delete_index(), -1)
+	assert_eq(_list.get_character_entries().size(), 1)
+
+func test_confirm_delete_without_request_does_nothing():
+	_guild.register(_make_character("Hero"))
+	_list.refresh()
+	_list.confirm_delete()
+	assert_eq(_list.get_character_entries().size(), 1)
 
 # --- Back ---
 

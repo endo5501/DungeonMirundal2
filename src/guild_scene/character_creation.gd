@@ -2,6 +2,7 @@ class_name CharacterCreation
 extends Control
 
 signal back_requested
+signal character_created
 
 var current_step: int = 1
 var total_steps: int = 5
@@ -137,6 +138,7 @@ func confirm_creation() -> void:
 	var ch := Character.create(_name_input, race, job, _allocation, _bonus_total)
 	if ch != null:
 		_guild.register(ch)
+		character_created.emit()
 	back_requested.emit()
 
 func _reset_allocation() -> void:

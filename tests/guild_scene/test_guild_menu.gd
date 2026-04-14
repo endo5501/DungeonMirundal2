@@ -32,6 +32,37 @@ func test_menu_item_labels():
 	assert_eq(items[2], "キャラクター一覧")
 	assert_eq(items[3], "立ち去る")
 
+# --- Cursor selection ---
+
+func test_initial_selected_index_is_zero():
+	assert_eq(_menu.selected_index, 0)
+
+func test_move_cursor_down():
+	_menu.move_cursor(1)
+	assert_eq(_menu.selected_index, 1)
+
+func test_move_cursor_up():
+	_menu.move_cursor(1)
+	_menu.move_cursor(-1)
+	assert_eq(_menu.selected_index, 0)
+
+func test_cursor_wraps_down():
+	_menu.move_cursor(1)
+	_menu.move_cursor(1)
+	_menu.move_cursor(1)
+	_menu.move_cursor(1)  # past end
+	assert_eq(_menu.selected_index, 0)
+
+func test_cursor_wraps_up():
+	_menu.move_cursor(-1)  # from 0, wrap to 3
+	assert_eq(_menu.selected_index, 3)
+
+func test_confirm_emits_selected_signal():
+	watch_signals(_menu)
+	_menu.move_cursor(1)  # -> index 1 (party formation)
+	_menu.confirm_selection()
+	assert_signal_emitted(_menu, "party_formation_selected")
+
 # --- Selection emits signals ---
 
 func test_select_create_character_emits_signal():
