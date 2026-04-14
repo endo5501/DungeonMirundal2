@@ -53,7 +53,7 @@ func _on_guild_back() -> void:
 # --- Dungeon Entrance ---
 
 func _on_open_dungeon_entrance() -> void:
-	var has_party := _has_party_members()
+	var has_party := GameState.guild.has_party_members()
 	var screen := DungeonEntrance.new()
 	screen.setup(GameState.dungeon_registry, has_party)
 	screen.enter_dungeon.connect(_on_enter_dungeon)
@@ -70,28 +70,10 @@ func _on_enter_dungeon(index: int) -> void:
 	var screen := DungeonScreen.new()
 	screen.return_to_town.connect(_on_return_to_town)
 	_switch_screen(screen)
-	screen.setup(
-		_current_dungeon_data.wiz_map,
-		_current_dungeon_data.player_state,
-		_current_dungeon_data.explored_map,
-		GameState.guild.get_party_data()
-	)
+	screen.setup_from_data(_current_dungeon_data, GameState.guild.get_party_data())
 
 func _on_return_to_town() -> void:
 	GameState.heal_party()
 	_current_dungeon_data = null
 	_show_town_screen()
 
-# --- Helpers ---
-
-func _has_party_members() -> bool:
-	if GameState.guild == null:
-		return false
-	var pd := GameState.guild.get_party_data()
-	for member in pd.get_front_row():
-		if member != null:
-			return true
-	for member in pd.get_back_row():
-		if member != null:
-			return true
-	return false

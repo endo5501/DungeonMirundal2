@@ -4,22 +4,26 @@ extends Control
 signal enter_dungeon(index: int)
 signal back_requested
 
+enum Mode { LIST, CREATE_DIALOG, DELETE_CONFIRM }
+enum Focus { DUNGEON_LIST, BUTTONS }
+
+const BUTTON_ITEMS: Array[String] = ["潜入する", "新規生成", "破棄", "戻る"]
+const FONT_SIZE := 18
+
 var _registry: DungeonRegistry
 var _has_party: bool
 var selected_index: int = -1
-var _mode: int = 0  # 0=list, 1=create_dialog, 2=delete_confirm
+var _mode: Mode = Mode.LIST
+var _focus: Focus = Focus.DUNGEON_LIST
 
 var _list_labels: Array[Label] = []
+var _button_menu: CursorMenu
 var _button_labels: Array[Label] = []
 var _vbox: VBoxContainer
 var _create_dialog: DungeonCreateDialog
 
-const FONT_SIZE := 18
-const CURSOR := "> "
-const BUTTON_ITEMS := ["潜入する", "新規生成", "破棄", "戻る"]
-
-var _button_index: int = 0
-var _focus: int = 0  # 0=list, 1=buttons
+func _init() -> void:
+	_button_menu = CursorMenu.new(BUTTON_ITEMS)
 
 func setup(registry: DungeonRegistry, has_party: bool) -> void:
 	_registry = registry
@@ -50,10 +54,8 @@ func _build_ui() -> void:
 	spacer1.custom_minimum_size.y = 12
 	_vbox.add_child(spacer1)
 
-	# Dungeon list
 	if _registry and _registry.size() > 0:
 		for i in range(_registry.size()):
-			var dd := _registry.get_dungeon(i)
 			var label := Label.new()
 			label.add_theme_font_size_override("font_size", FONT_SIZE)
 			_vbox.add_child(label)
@@ -62,74 +64,73 @@ func _build_ui() -> void:
 		var empty := Label.new()
 		empty.text = "  (ダンジョンがありません)"
 		empty.add_theme_font_size_override("font_size", FONT_SIZE)
-		empty.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+		empty.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
 		_vbox.add_child(empty)
 
 	var spacer2 := Control.new()
 	spacer2.custom_minimum_size.y = 16
 	_vbox.add_child(spacer2)
 
-	# Action buttons
 	for i in range(BUTTON_ITEMS.size()):
 		var label := Label.new()
 		label.add_theme_font_size_override("font_size", FONT_SIZE)
 		_vbox.add_child(label)
 		_button_labels.append(label)
 
+	_update_button_disabled()
 	_update_labels()
+
+func _update_button_disabled() -> void:
+	var disabled: Array[int] = []
+	if is_enter_disabled():
+		disabled.append(0)
+	if is_delete_disabled():
+		disabled.append(2)
+	_button_menu.disabled_indices = disabled
 
 func _update_labels() -> void:
 	for i in range(_list_labels.size()):
 		var dd := _registry.get_dungeon(i)
-		var prefix := CURSOR if _focus == 0 and i == selected_index else "  "
+		var prefix := CursorMenu.CURSOR_PREFIX if _focus == Focus.DUNGEON_LIST and i == selected_index else CursorMenu.NO_CURSOR_PREFIX
 		var rate := int(dd.get_exploration_rate() * 100)
 		_list_labels[i].text = "%s%s  %dx%d  探索%d%%" % [prefix, dd.dungeon_name, dd.map_size, dd.map_size, rate]
 
-	for i in range(_button_labels.size()):
-		var prefix := CURSOR if _focus == 1 and i == _button_index else "  "
-		var disabled := _is_button_disabled(i)
-		_button_labels[i].text = prefix + BUTTON_ITEMS[i]
-		_button_labels[i].add_theme_color_override(
-			"font_color",
-			Color(0.5, 0.5, 0.5) if disabled else Color(1.0, 1.0, 1.0)
-		)
-
-func _is_button_disabled(index: int) -> bool:
-	match index:
-		0: return is_enter_disabled()  # 潜入する
-		2: return is_delete_disabled()  # 破棄
-		_: return false
+	_button_menu.update_labels(_button_labels)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _mode == 2:
-		_handle_delete_confirm_input(event)
+	if _mode != Mode.LIST:
+		if _mode == Mode.DELETE_CONFIRM:
+			_handle_delete_confirm_input(event)
 		return
 
 	if event.is_action_pressed("ui_down"):
-		if _focus == 0 and _registry.size() > 0:
+		if _focus == Focus.DUNGEON_LIST and _registry.size() > 0:
 			move_list_cursor(1)
-		elif _focus == 1:
-			_move_button_cursor(1)
+		elif _focus == Focus.BUTTONS:
+			_button_menu.move_cursor(1)
+		_update_button_disabled()
 		_update_labels()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		if _focus == 0 and _registry.size() > 0:
+		if _focus == Focus.DUNGEON_LIST and _registry.size() > 0:
 			move_list_cursor(-1)
-		elif _focus == 1:
-			_move_button_cursor(-1)
+		elif _focus == Focus.BUTTONS:
+			_button_menu.move_cursor(-1)
+		_update_button_disabled()
 		_update_labels()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		if _focus == 1:
+		if _focus == Focus.BUTTONS:
 			_activate_button()
 		else:
-			_focus = 1
-			_button_index = 0
+			_focus = Focus.BUTTONS
+			_button_menu.selected_index = 0
+			_update_button_disabled()
 			_update_labels()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
-		if _focus == 1:
-			_focus = 0
+		if _focus == Focus.BUTTONS:
+			_focus = Focus.DUNGEON_LIST
 			_update_labels()
 		else:
 			do_back()
@@ -140,25 +141,16 @@ func _handle_delete_confirm_input(event: InputEvent) -> void:
 		_confirm_delete()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
-		_mode = 0
+		_mode = Mode.LIST
 		get_viewport().set_input_as_handled()
 
-func _move_button_cursor(direction: int) -> void:
-	var count := BUTTON_ITEMS.size()
-	for _i in range(count):
-		_button_index = (_button_index + direction) % count
-		if _button_index < 0:
-			_button_index += count
-		if not _is_button_disabled(_button_index):
-			return
-
 func _activate_button() -> void:
-	if _is_button_disabled(_button_index):
+	if _button_menu.is_disabled(_button_menu.selected_index):
 		return
-	match _button_index:
+	match _button_menu.selected_index:
 		0: do_enter()
 		1: _open_create_dialog()
-		2: _mode = 2  # delete confirm
+		2: _mode = Mode.DELETE_CONFIRM
 		3: do_back()
 
 func _open_create_dialog() -> void:
@@ -166,7 +158,7 @@ func _open_create_dialog() -> void:
 	_create_dialog.confirmed.connect(_on_create_confirmed)
 	_create_dialog.cancelled.connect(_on_create_cancelled)
 	add_child(_create_dialog)
-	_mode = 1
+	_mode = Mode.CREATE_DIALOG
 
 func _on_create_confirmed(dungeon_name: String, size_category: int) -> void:
 	_registry.create(dungeon_name, size_category)
@@ -182,7 +174,7 @@ func _close_create_dialog() -> void:
 	if _create_dialog:
 		_create_dialog.queue_free()
 		_create_dialog = null
-	_mode = 0
+	_mode = Mode.LIST
 
 func _confirm_delete() -> void:
 	if selected_index >= 0 and selected_index < _registry.size():
@@ -190,9 +182,7 @@ func _confirm_delete() -> void:
 		if selected_index >= _registry.size():
 			selected_index = _registry.size() - 1
 		_build_ui()
-	_mode = 0
-
-# --- Public API for testing ---
+	_mode = Mode.LIST
 
 func get_dungeon_count() -> int:
 	if _registry == null:

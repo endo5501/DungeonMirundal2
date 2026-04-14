@@ -30,4 +30,4 @@ func get_exploration_rate() -> float:
 	var total := map_size * map_size
 	if total == 0:
 		return 0.0
-	return float(explored_map.get_visited_cells().size()) / float(total)
+	return float(explored_map.get_visited_count()) / float(total)

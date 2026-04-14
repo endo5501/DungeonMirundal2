@@ -11,8 +11,10 @@ var _player_state: PlayerState
 var _wiz_map: WizMap
 var _explored_map: ExploredMap
 var _dungeon_view: DungeonView
+const RETURN_OPTIONS: Array[String] = ["はい", "いいえ"]
+
 var _showing_return_dialog: bool = false
-var _return_dialog_selected: int = 0  # 0=はい, 1=いいえ
+var _return_dialog_selected: int = 0
 var _return_dialog_labels: Array[Label] = []
 var _return_dialog_container: Control
 
@@ -37,6 +39,9 @@ func _ready() -> void:
 
 	_party_display = PartyDisplay.new()
 	add_child(_party_display)
+
+func setup_from_data(dungeon_data: DungeonData, party_data: PartyData = null) -> void:
+	setup(dungeon_data.wiz_map, dungeon_data.player_state, dungeon_data.explored_map, party_data)
 
 func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap = null, party_data: PartyData = null) -> void:
 	_wiz_map = wiz_map
@@ -123,8 +128,7 @@ func _show_return_dialog() -> void:
 	spacer.custom_minimum_size.y = 8
 	vbox.add_child(spacer)
 
-	var options := ["はい", "いいえ"]
-	for i in range(options.size()):
+	for i in range(RETURN_OPTIONS.size()):
 		var label := Label.new()
 		label.add_theme_font_size_override("font_size", 18)
 		vbox.add_child(label)
@@ -132,10 +136,9 @@ func _show_return_dialog() -> void:
 	_update_return_dialog_labels()
 
 func _update_return_dialog_labels() -> void:
-	var options := ["はい", "いいえ"]
 	for i in range(_return_dialog_labels.size()):
-		var prefix := "> " if i == _return_dialog_selected else "  "
-		_return_dialog_labels[i].text = prefix + options[i]
+		var prefix := CursorMenu.CURSOR_PREFIX if i == _return_dialog_selected else CursorMenu.NO_CURSOR_PREFIX
+		_return_dialog_labels[i].text = prefix + RETURN_OPTIONS[i]
 
 func _handle_return_dialog_input(event: InputEventKey) -> void:
 	match event.keycode:

@@ -14,13 +14,16 @@ const MENU_ITEMS: Array[String] = [
 ]
 
 const DISABLED_INDICES: Array[int] = [1, 2]
-const FONT_SIZE := 20
-const CURSOR := "> "
-const DISABLED_COLOR := Color(0.5, 0.5, 0.5)
-const ENABLED_COLOR := Color(1.0, 1.0, 1.0)
 
-var selected_index: int = 0
+var selected_index: int:
+	get: return _menu.selected_index
+	set(v): _menu.selected_index = v
+
+var _menu: CursorMenu
 var _labels: Array[Label] = []
+
+func _init() -> void:
+	_menu = CursorMenu.new(MENU_ITEMS, DISABLED_INDICES)
 
 func _ready() -> void:
 	var vbox := VBoxContainer.new()
@@ -40,29 +43,20 @@ func _ready() -> void:
 
 	for i in range(MENU_ITEMS.size()):
 		var label := Label.new()
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
+		label.add_theme_font_size_override("font_size", 20)
 		vbox.add_child(label)
 		_labels.append(label)
 
-	_update_labels()
-
-func _update_labels() -> void:
-	for i in range(_labels.size()):
-		var prefix := CURSOR if i == selected_index else "  "
-		_labels[i].text = prefix + MENU_ITEMS[i]
-		_labels[i].add_theme_color_override(
-			"font_color",
-			DISABLED_COLOR if is_item_disabled(i) else ENABLED_COLOR
-		)
+	_menu.update_labels(_labels)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
-		move_cursor(1)
-		_update_labels()
+		_menu.move_cursor(1)
+		_menu.update_labels(_labels)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		move_cursor(-1)
-		_update_labels()
+		_menu.move_cursor(-1)
+		_menu.update_labels(_labels)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		confirm_selection()
@@ -72,24 +66,16 @@ func get_menu_items() -> Array[String]:
 	return MENU_ITEMS
 
 func is_item_disabled(index: int) -> bool:
-	return index in DISABLED_INDICES
+	return _menu.is_disabled(index)
 
 func move_cursor(direction: int) -> void:
-	var start := selected_index
-	var count := MENU_ITEMS.size()
-	for _i in range(count):
-		selected_index = (selected_index + direction) % count
-		if selected_index < 0:
-			selected_index += count
-		if not is_item_disabled(selected_index):
-			return
-	selected_index = start
+	_menu.move_cursor(direction)
 
 func confirm_selection() -> void:
-	select_item(selected_index)
+	select_item(_menu.selected_index)
 
 func select_item(index: int) -> void:
-	if is_item_disabled(index):
+	if _menu.is_disabled(index):
 		return
 	match index:
 		0: start_new_game.emit()
