@@ -1,14 +1,22 @@
 class_name GuildScreen
 extends Control
 
+signal back_requested
+
 var guild: Guild
 var data_loader: DataLoader
 var _current_view: Control
 
 func _ready() -> void:
-	guild = Guild.new()
-	data_loader = DataLoader.new()
+	if guild == null:
+		guild = Guild.new()
+	if data_loader == null:
+		data_loader = DataLoader.new()
 	_show_menu()
+
+func setup(p_guild: Guild) -> void:
+	guild = p_guild
+	data_loader = DataLoader.new()
 
 func _show_menu() -> void:
 	var menu := GuildMenu.new()
@@ -37,7 +45,7 @@ func _on_character_list() -> void:
 	_switch_view(char_list)
 
 func _on_leave() -> void:
-	pass
+	back_requested.emit()
 
 func _switch_view(new_view: Control) -> void:
 	if _current_view != null:

@@ -16,6 +16,9 @@ func mark_visible(cells: Array) -> void:
 func is_visited(pos: Vector2i) -> bool:
 	return _visited.has(pos)
 
+func get_visited_count() -> int:
+	return _visited.size()
+
 func get_visited_cells() -> Array:
 	return _visited.keys()
 

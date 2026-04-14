@@ -45,6 +45,12 @@ func get_character_at(row: int, position: int) -> Character:
 	var target_row := _get_row(row)
 	return target_row[position]
 
+func has_party_members() -> bool:
+	for i in range(3):
+		if _front_row[i] != null or _back_row[i] != null:
+			return true
+	return false
+
 func is_in_party(character: Character) -> bool:
 	return _is_in_party(character)
 
