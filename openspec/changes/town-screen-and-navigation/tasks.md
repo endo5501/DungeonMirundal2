@@ -6,8 +6,8 @@
 
 ## 2. GameState autoload
 
-- [ ] 2.1 GameState を実装する（guild, dungeon_registry, new_game, heal_party）
-- [ ] 2.2 project.godot に GameState を autoload として登録する
+- [x] 2.1 GameState を実装する（guild, dungeon_registry, new_game, heal_party）
+- [x] 2.2 project.godot に GameState を autoload として登録する
 
 ## 3. タイトル画面
 

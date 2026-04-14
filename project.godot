@@ -22,6 +22,10 @@ config/features=PackedStringArray("4.6")
 
 project/assembly_name="DungeonMirundal2"
 
+[autoload]
+
+GameState="*res://src/game_state.gd"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
