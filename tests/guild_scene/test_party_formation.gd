@@ -110,6 +110,18 @@ func test_set_party_name():
 
 # --- Back ---
 
+# --- Party name persisted in Guild ---
+
+func test_party_name_persists_across_instances():
+	_formation.set_party_name("勇者たち")
+	# Create a new PartyFormation with the same guild
+	var formation2 = PartyFormation.new()
+	formation2.setup(_guild)
+	add_child_autofree(formation2)
+	assert_eq(formation2.get_party_name(), "勇者たち")
+
+# --- Back ---
+
 func test_go_back_emits_signal():
 	watch_signals(_formation)
 	_formation.go_back()

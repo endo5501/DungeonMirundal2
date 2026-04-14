@@ -4,6 +4,7 @@ extends RefCounted
 var _characters: Array[Character] = []
 var _front_row: Array = [null, null, null]
 var _back_row: Array = [null, null, null]
+var party_name: String = ""
 
 func register(character: Character) -> void:
 	_characters.append(character)

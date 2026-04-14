@@ -243,7 +243,78 @@ func test_step4_select_qualified_job():
 	_creation.advance()  # -> step 5
 	assert_eq(_creation.current_step, 5)
 
+# --- Step 4 revalidation on back from step 3 ---
+
+func test_back_from_step4_to_step3_clears_job_selection():
+	_creation.set_name_input("Hero")
+	_creation.advance()
+	_creation.select_race(0)
+	_creation.advance()
+	var total = _creation.get_bonus_total()
+	for i in range(total):
+		_creation.increment_stat(&"STR")
+	_creation.advance()  # -> step 4
+	_creation.select_job(0)  # select Fighter
+	_creation.go_back()  # -> step 3
+	# Re-allocate all to STR again
+	total = _creation.get_bonus_total()
+	for i in range(total):
+		_creation.increment_stat(&"STR")
+	_creation.advance()  # -> step 4 again
+	# Job selection should be cleared, cannot advance without re-selecting
+	_creation.advance()  # should stay at 4
+	assert_eq(_creation.current_step, 4)
+
+func test_step4_advance_validates_job_qualification():
+	_creation.set_name_input("Hero")
+	_creation.advance()
+	_creation.select_race(0)
+	_creation.advance()
+	var total = _creation.get_bonus_total()
+	for i in range(total):
+		_creation.increment_stat(&"STR")
+	_creation.advance()  # -> step 4
+	# Select Ninja (index 1, requires STR 15)
+	_creation.select_job(1)
+	# Check if Ninja qualifies - if not, advance should fail
+	var qualified = _creation.get_qualified_jobs()
+	if not qualified.get(1, false):
+		_creation.advance()
+		assert_eq(_creation.current_step, 4)
+
 # --- Step 5: Confirmation ---
+
+# --- Bonus generator randomness ---
+
+func test_bonus_generator_not_deterministic_across_instances():
+	# Create two separate CharacterCreation instances and check they can produce different bonuses
+	var creation2 = CharacterCreation.new()
+	creation2.setup(_guild, _races, _jobs)
+	add_child_autofree(creation2)
+	# Both advance to step 3
+	_creation.set_name_input("A")
+	_creation.advance()
+	_creation.select_race(0)
+	_creation.advance()
+	creation2.set_name_input("B")
+	creation2.advance()
+	creation2.select_race(0)
+	creation2.advance()
+	# Collect several rerolls from each
+	var totals_1 := []
+	var totals_2 := []
+	for i in range(5):
+		_creation.reroll_bonus()
+		creation2.reroll_bonus()
+		totals_1.append(_creation.get_bonus_total())
+		totals_2.append(creation2.get_bonus_total())
+	# At least one pair should differ (extremely unlikely to be all identical with random seeds)
+	var all_same := true
+	for i in range(5):
+		if totals_1[i] != totals_2[i]:
+			all_same = false
+			break
+	assert_false(all_same, "Two instances should not produce identical bonus sequences")
 
 func test_step5_confirm_creates_character():
 	_creation.set_name_input("Hero")

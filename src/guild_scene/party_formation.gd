@@ -4,7 +4,6 @@ extends Control
 signal back_requested
 
 var _guild: Guild
-var _party_name: String = ""
 var _party_slots: Array = []  # Array of 6: Character or null
 var _waiting: Array[Character] = []
 
@@ -35,10 +34,10 @@ func remove_from_slot(row: int, position: int) -> void:
 	_guild.remove_from_party(row, position)
 
 func get_party_name() -> String:
-	return _party_name
+	return _guild.party_name
 
 func set_party_name(value: String) -> void:
-	_party_name = value
+	_guild.party_name = value
 
 func go_back() -> void:
 	back_requested.emit()

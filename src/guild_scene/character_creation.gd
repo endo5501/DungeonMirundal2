@@ -22,7 +22,7 @@ func setup(guild: Guild, races: Array[RaceData], jobs: Array[JobData]) -> void:
 	_guild = guild
 	_races = races
 	_jobs = jobs
-	_bonus_generator = BonusPointGenerator.new()
+	_bonus_generator = BonusPointGenerator.new(randi())
 
 func set_name_input(value: String) -> void:
 	_name_input = value
@@ -107,6 +107,9 @@ func advance() -> void:
 		4:
 			if _selected_job_index < 0:
 				return
+			var stats := _build_current_stats()
+			if not _jobs[_selected_job_index].can_qualify(stats):
+				return
 			current_step = 5
 		5:
 			pass
@@ -119,6 +122,9 @@ func go_back() -> void:
 			_reset_allocation()
 			_selected_race_index = -1
 			current_step = 2
+		4:
+			_selected_job_index = -1
+			current_step = 3
 		_:
 			current_step -= 1
 
