@@ -43,4 +43,5 @@ func _switch_view(new_view: Control) -> void:
 	if _current_view != null:
 		_current_view.queue_free()
 	_current_view = new_view
+	new_view.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(new_view)
