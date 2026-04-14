@@ -11,11 +11,11 @@
 
 ## 3. タイトル画面
 
-- [ ] 3.1 TitleScreen を実装する（4項目メニュー、カーソル選択、disabled項目のグレーアウト、start_new_game シグナル）
+- [x] 3.1 TitleScreen を実装する（4項目メニュー、カーソル選択、disabled項目のグレーアウト、start_new_game シグナル）
 
 ## 4. 地上画面
 
-- [ ] 4.1 TownScreen を実装する（左カラム施設ボタン、右カラムイラストプレースホルダ、disabled項目スキップ、open_guild / open_dungeon_entrance シグナル）
+- [x] 4.1 TownScreen を実装する（左カラム施設ボタン、右カラムイラストプレースホルダ、disabled項目スキップ、open_guild / open_dungeon_entrance シグナル）
 
 ## 5. ダンジョン入口
 
