@@ -359,6 +359,16 @@ func test_bonus_generator_not_deterministic_across_instances():
 			break
 	assert_false(all_same, "Two instances should not produce identical bonus sequences")
 
+func test_step1_text_submitted_advances_to_step2():
+	_creation._name_edit.text = "Hero"
+	_creation._name_edit.text_submitted.emit("Hero")
+	assert_eq(_creation.current_step, 2)
+
+func test_step1_text_submitted_with_empty_name_stays():
+	_creation._name_edit.text = ""
+	_creation._name_edit.text_submitted.emit("")
+	assert_eq(_creation.current_step, 1)
+
 func test_step5_confirm_creates_character():
 	_creation.set_name_input("Hero")
 	_creation.advance()
