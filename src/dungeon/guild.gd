@@ -40,6 +40,13 @@ func remove_from_party(row: int, position: int) -> void:
 func get_party_data() -> PartyData:
 	return PartyData.new(_row_to_party_member_data(_front_row), _row_to_party_member_data(_back_row))
 
+func get_character_at(row: int, position: int) -> Character:
+	var target_row := _get_row(row)
+	return target_row[position]
+
+func is_in_party(character: Character) -> bool:
+	return _is_in_party(character)
+
 func _is_in_party(character: Character) -> bool:
 	for i in range(3):
 		if _front_row[i] == character or _back_row[i] == character:

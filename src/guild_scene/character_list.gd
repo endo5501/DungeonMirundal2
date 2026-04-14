@@ -42,7 +42,7 @@ func get_character_detail(index: int) -> Dictionary:
 
 func can_delete(index: int) -> bool:
 	var ch := _characters[index]
-	return _is_unassigned(ch)
+	return not _guild.is_in_party(ch)
 
 func delete_character(index: int) -> void:
 	var ch := _characters[index]
@@ -51,13 +51,7 @@ func delete_character(index: int) -> void:
 func go_back() -> void:
 	back_requested.emit()
 
-func _is_unassigned(ch: Character) -> bool:
-	for unassigned in _guild.get_unassigned():
-		if unassigned == ch:
-			return true
-	return false
-
 func _get_status(ch: Character) -> String:
-	if _is_unassigned(ch):
-		return "待機中"
-	return "パーティ"
+	if _guild.is_in_party(ch):
+		return "パーティ"
+	return "待機中"

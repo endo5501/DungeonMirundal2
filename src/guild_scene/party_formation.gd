@@ -14,16 +14,10 @@ func setup(guild: Guild) -> void:
 
 func refresh() -> void:
 	_waiting = _guild.get_unassigned()
-	_party_slots.clear()
-	var party_data := _guild.get_party_data()
-	var front := party_data.get_front_row()
-	var back := party_data.get_back_row()
-	# Store Character references, not PartyMemberData
-	var all_chars := _guild.get_all_characters()
 	_party_slots.resize(6)
 	for i in range(3):
-		_party_slots[i] = _find_character_at(0, i, all_chars)
-		_party_slots[i + 3] = _find_character_at(1, i, all_chars)
+		_party_slots[i] = _guild.get_character_at(0, i)
+		_party_slots[i + 3] = _guild.get_character_at(1, i)
 
 func get_party_slots() -> Array:
 	return _party_slots.duplicate()
@@ -49,20 +43,3 @@ func set_party_name(value: String) -> void:
 func go_back() -> void:
 	back_requested.emit()
 
-func _find_character_at(row: int, position: int, all_chars: Array[Character]) -> Character:
-	# Check which character is at this party position by testing assignment
-	# We need to look at the guild's internal state
-	# Use get_party_data to get PartyMemberData and match by name
-	var party_data := _guild.get_party_data()
-	var row_data: Array
-	if row == 0:
-		row_data = party_data.get_front_row()
-	else:
-		row_data = party_data.get_back_row()
-	var member_data = row_data[position]
-	if member_data == null:
-		return null
-	for ch in all_chars:
-		if ch.character_name == member_data.member_name:
-			return ch
-	return null

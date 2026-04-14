@@ -75,17 +75,17 @@ func get_qualified_jobs() -> Dictionary:
 func get_summary() -> Dictionary:
 	var race := _races[_selected_race_index]
 	var job := _jobs[_selected_job_index]
-	var stats := _build_current_stats()
-	var hp: int = job.base_hp + stats.get(&"VIT", 0) / 3
-	var mp: int = job.base_mp if job.has_magic else 0
+	var ch := Character.create(_name_input, race, job, _allocation, _bonus_total)
+	if ch == null:
+		return {}
 	return {
-		"name": _name_input,
+		"name": ch.character_name,
 		"race": race,
 		"job": job,
-		"level": 1,
-		"hp": hp,
-		"mp": mp,
-		"stats": stats,
+		"level": ch.level,
+		"hp": ch.max_hp,
+		"mp": ch.max_mp,
+		"stats": ch.base_stats.duplicate(),
 	}
 
 func advance() -> void:
@@ -140,7 +140,6 @@ func _reset_allocation() -> void:
 
 func _build_current_stats() -> Dictionary:
 	var stats := {}
-	var base_stats := _races[_selected_race_index].get_base_stats()
 	for key in Character.STAT_KEYS:
-		stats[key] = base_stats.get(key, 0) + _allocation.get(key, 0)
+		stats[key] = get_stat_value(key)
 	return stats
