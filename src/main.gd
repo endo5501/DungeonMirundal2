@@ -26,13 +26,31 @@ func _switch_screen(new_screen: Control) -> void:
 
 func _show_title_screen() -> void:
 	var screen := TitleScreen.new()
+	screen.setup_save_state(GameState.save_manager)
 	screen.start_new_game.connect(_on_start_new_game)
+	screen.continue_game.connect(_on_continue_game)
+	screen.load_game.connect(_on_load_from_title)
 	screen.quit_game.connect(_on_quit_game)
 	_switch_screen(screen)
 
 func _on_start_new_game() -> void:
 	GameState.new_game()
 	_show_town_screen()
+
+func _on_continue_game() -> void:
+	var slot := GameState.save_manager.get_last_slot()
+	if slot >= 0:
+		_load_game(slot)
+
+func _on_load_from_title() -> void:
+	var screen := LoadScreen.new()
+	screen.setup(GameState.save_manager)
+	screen.load_requested.connect(_on_load_slot_selected)
+	screen.back_requested.connect(_on_load_title_back)
+	_switch_screen(screen)
+
+func _on_load_title_back() -> void:
+	_show_title_screen()
 
 func _on_quit_game() -> void:
 	get_tree().quit()
