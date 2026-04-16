@@ -1,7 +1,5 @@
-## ADDED Requirements
-
 ### Requirement: main.gd manages top-level screen switching
-main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child.
+main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child. main.gd SHALL handle game state loading and restore the appropriate screen based on game_location.
 
 #### Scenario: Initial screen is TitleScreen
 - **WHEN** the game starts
@@ -25,7 +23,7 @@ main.gd SHALL manage a single current screen as a child node. Switching screens 
 
 #### Scenario: Switch from dungeon entrance to dungeon
 - **WHEN** DungeonEntrance emits enter_dungeon with a dungeon index
-- **THEN** main.gd SHALL remove DungeonEntrance and display DungeonScreen initialized with the selected DungeonData's wiz_map, player_state, and explored_map
+- **THEN** main.gd SHALL set GameState.current_dungeon_index, set GameState.game_location to "dungeon", remove DungeonEntrance and display DungeonScreen initialized with the selected DungeonData's wiz_map, player_state, and explored_map
 
 #### Scenario: Switch from dungeon entrance back to town
 - **WHEN** DungeonEntrance emits back_requested
@@ -33,7 +31,39 @@ main.gd SHALL manage a single current screen as a child node. Switching screens 
 
 #### Scenario: Switch from dungeon to town on return
 - **WHEN** DungeonScreen emits return_to_town
-- **THEN** main.gd SHALL call GameState.heal_party(), save the player's position to DungeonData, remove DungeonScreen, and display TownScreen
+- **THEN** main.gd SHALL call GameState.heal_party(), set GameState.game_location to "town", set GameState.current_dungeon_index to -1, save the player's position to DungeonData, remove DungeonScreen, and display TownScreen
+
+#### Scenario: ESCメニューからタイトルに戻る
+- **WHEN** ESCメニューがquit_to_titleシグナルを発行する
+- **THEN** main.gd SHALL ESCメニューを閉じ、現在の画面を破棄し、TitleScreenを表示する
+
+#### Scenario: ESCキーでメニューを表示
+- **WHEN** タイトル画面以外の画面でESCキーが_unhandled_inputに到達する
+- **THEN** main.gd SHALL ESCメニューオーバーレイを表示する
+
+#### Scenario: タイトル画面ではESCメニューを開かない
+- **WHEN** タイトル画面が表示されている状態でESCキーが押される
+- **THEN** main.gd SHALL ESCメニューを開かない
+
+#### Scenario: Switch from title to town via continue
+- **WHEN** TitleScreen emits continue_game
+- **THEN** main.gd SHALL load the last save slot via SaveManager, and display the appropriate screen based on GameState.game_location
+
+#### Scenario: Load game restores town screen
+- **WHEN** a save file with game_location="town" is loaded
+- **THEN** main.gd SHALL display TownScreen
+
+#### Scenario: Load game restores dungeon screen
+- **WHEN** a save file with game_location="dungeon" is loaded
+- **THEN** main.gd SHALL retrieve DungeonData from GameState.dungeon_registry using current_dungeon_index, regenerate WizMap from seed, and display DungeonScreen initialized with the restored data
+
+#### Scenario: Load game from title screen via load screen
+- **WHEN** a save slot is selected in the load screen opened from TitleScreen
+- **THEN** main.gd SHALL load the selected save slot and display the appropriate screen based on GameState.game_location
+
+#### Scenario: Load game from ESC menu via load screen
+- **WHEN** a save slot is selected in the load screen opened from ESCメニュー
+- **THEN** main.gd SHALL close ESCメニュー, load the selected save slot, and display the appropriate screen based on GameState.game_location
 
 ### Requirement: Quit game from title screen
 main.gd SHALL exit the application when TitleScreen indicates quit.
@@ -41,3 +71,14 @@ main.gd SHALL exit the application when TitleScreen indicates quit.
 #### Scenario: Quit from title
 - **WHEN** TitleScreen triggers game quit
 - **THEN** the application SHALL call get_tree().quit()
+
+### Requirement: main.gd updates game_location on screen transitions
+main.gd SHALL update GameState.game_location whenever screen transitions occur to keep the location state current.
+
+#### Scenario: 町画面に遷移時
+- **WHEN** main.gdが町画面を表示する
+- **THEN** GameState.game_location が "town" に設定される
+
+#### Scenario: ダンジョン画面に遷移時
+- **WHEN** main.gdがダンジョン画面を表示する
+- **THEN** GameState.game_location が "dungeon" に設定される

@@ -1,5 +1,3 @@
-## ADDED Requirements
-
 ### Requirement: GameState is an autoload singleton
 GameState SHALL be registered as an autoload in project.godot and SHALL be accessible from any script via the name `GameState`.
 
@@ -22,11 +20,11 @@ GameState SHALL hold a `dungeon_registry` property of type DungeonRegistry that 
 - **THEN** the dungeon SHALL still exist in GameState.dungeon_registry
 
 ### Requirement: GameState initializes new game
-GameState SHALL provide a `new_game()` method that creates fresh Guild and DungeonRegistry instances.
+GameState SHALL provide a `new_game()` method that creates fresh Guild and DungeonRegistry instances, and resets game_location to "town" and current_dungeon_index to -1.
 
 #### Scenario: New game resets state
 - **WHEN** `new_game()` is called
-- **THEN** guild SHALL be a new empty Guild and dungeon_registry SHALL be a new empty DungeonRegistry
+- **THEN** guild SHALL be a new empty Guild, dungeon_registry SHALL be a new empty DungeonRegistry, game_location SHALL be "town", and current_dungeon_index SHALL be -1
 
 ### Requirement: GameState heals party on town return
 GameState SHALL provide a `heal_party()` method that restores all party members' HP to max_hp and MP to max_mp.
@@ -38,3 +36,32 @@ GameState SHALL provide a `heal_party()` method that restores all party members'
 #### Scenario: Heal party affects all party members
 - **WHEN** the party has 3 members with reduced HP and `heal_party()` is called
 - **THEN** all 3 members SHALL have current_hp equal to max_hp
+
+### Requirement: GameState holds game_location
+GameState SHALL hold a `game_location` property of type String that tracks the current game screen. Valid values are "title", "town", "dungeon".
+
+#### Scenario: game_locationが画面遷移に応じて更新される
+- **WHEN** main.gdが町画面に遷移する
+- **THEN** GameState.game_location が "town" に設定される
+
+#### Scenario: ダンジョン入場時にgame_locationが更新される
+- **WHEN** main.gdがダンジョン画面に遷移する
+- **THEN** GameState.game_location が "dungeon" に設定される
+
+### Requirement: GameState holds current_dungeon_index
+GameState SHALL hold a `current_dungeon_index` property of type int that tracks which dungeon the player is currently in. Value is -1 when not in a dungeon.
+
+#### Scenario: ダンジョン入場時にインデックスが設定される
+- **WHEN** ダンジョンインデックス2のダンジョンに入場する
+- **THEN** GameState.current_dungeon_index が 2 に設定される
+
+#### Scenario: 町に戻った時にインデックスがリセットされる
+- **WHEN** ダンジョンから町に戻る
+- **THEN** GameState.current_dungeon_index が -1 に設定される
+
+### Requirement: GameState holds SaveManager
+GameState SHALL hold a `save_manager` property of type SaveManager.
+
+#### Scenario: SaveManagerにアクセスできる
+- **WHEN** any script references `GameState.save_manager`
+- **THEN** SaveManagerインスタンスにアクセスできる

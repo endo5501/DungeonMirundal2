@@ -1,0 +1,76 @@
+## MODIFIED Requirements
+
+### Requirement: main.gd manages top-level screen switching
+main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child. main.gd SHALL handle game state loading and restore the appropriate screen based on game_location.
+
+#### Scenario: Initial screen is TitleScreen
+- **WHEN** the game starts
+- **THEN** TitleScreen SHALL be displayed as the first screen
+
+#### Scenario: Switch from title to town
+- **WHEN** TitleScreen emits start_new_game
+- **THEN** main.gd SHALL call GameState.new_game(), remove TitleScreen, and display TownScreen
+
+#### Scenario: Switch from town to guild
+- **WHEN** TownScreen emits open_guild
+- **THEN** main.gd SHALL remove TownScreen and display GuildScreen initialized with GameState.guild
+
+#### Scenario: Switch from guild to town
+- **WHEN** GuildScreen emits back_requested
+- **THEN** main.gd SHALL remove GuildScreen and display TownScreen
+
+#### Scenario: Switch from town to dungeon entrance
+- **WHEN** TownScreen emits open_dungeon_entrance
+- **THEN** main.gd SHALL remove TownScreen and display DungeonEntrance initialized with GameState.dungeon_registry
+
+#### Scenario: Switch from dungeon entrance to dungeon
+- **WHEN** DungeonEntrance emits enter_dungeon with a dungeon index
+- **THEN** main.gd SHALL set GameState.current_dungeon_index, set GameState.game_location to "dungeon", remove DungeonEntrance and display DungeonScreen initialized with the selected DungeonData's wiz_map, player_state, and explored_map
+
+#### Scenario: Switch from dungeon entrance back to town
+- **WHEN** DungeonEntrance emits back_requested
+- **THEN** main.gd SHALL remove DungeonEntrance and display TownScreen
+
+#### Scenario: Switch from dungeon to town on return
+- **WHEN** DungeonScreen emits return_to_town
+- **THEN** main.gd SHALL call GameState.heal_party(), set GameState.game_location to "town", set GameState.current_dungeon_index to -1, save the player's position to DungeonData, remove DungeonScreen, and display TownScreen
+
+#### Scenario: Switch from title to town via continue
+- **WHEN** TitleScreen emits continue_game
+- **THEN** main.gd SHALL load the last save slot via SaveManager, and display the appropriate screen based on GameState.game_location
+
+#### Scenario: Load game restores town screen
+- **WHEN** a save file with game_location="town" is loaded
+- **THEN** main.gd SHALL display TownScreen
+
+#### Scenario: Load game restores dungeon screen
+- **WHEN** a save file with game_location="dungeon" is loaded
+- **THEN** main.gd SHALL retrieve DungeonData from GameState.dungeon_registry using current_dungeon_index, regenerate WizMap from seed, and display DungeonScreen initialized with the restored data
+
+#### Scenario: Load game from title screen via load screen
+- **WHEN** a save slot is selected in the load screen opened from TitleScreen
+- **THEN** main.gd SHALL load the selected save slot and display the appropriate screen based on GameState.game_location
+
+#### Scenario: Load game from ESC menu via load screen
+- **WHEN** a save slot is selected in the load screen opened from ESCメニュー
+- **THEN** main.gd SHALL close ESCメニュー, load the selected save slot, and display the appropriate screen based on GameState.game_location
+
+### Requirement: Quit game from title screen
+main.gd SHALL exit the application when TitleScreen indicates quit.
+
+#### Scenario: Quit from title
+- **WHEN** TitleScreen triggers game quit
+- **THEN** the application SHALL call get_tree().quit()
+
+## ADDED Requirements
+
+### Requirement: main.gd updates game_location on screen transitions
+main.gd SHALL update GameState.game_location whenever screen transitions occur to keep the location state current.
+
+#### Scenario: 町画面に遷移時
+- **WHEN** main.gdが町画面を表示する
+- **THEN** GameState.game_location が "town" に設定される
+
+#### Scenario: ダンジョン画面に遷移時
+- **WHEN** main.gdがダンジョン画面を表示する
+- **THEN** GameState.game_location が "dungeon" に設定される

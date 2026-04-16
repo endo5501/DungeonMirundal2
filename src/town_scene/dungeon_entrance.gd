@@ -21,7 +21,7 @@ var _button_menu: CursorMenu
 var _button_labels: Array[Label] = []
 var _vbox: VBoxContainer
 var _create_dialog: DungeonCreateDialog
-var _delete_confirm_container: PanelContainer
+var _delete_confirm_container: CenterContainer
 var _delete_confirm_labels: Array[Label] = []
 var _delete_confirm_selected: int = 1  # default to いいえ
 
@@ -144,14 +144,17 @@ func _show_delete_confirm() -> void:
 	_delete_confirm_selected = 1  # default to いいえ
 	_delete_confirm_labels.clear()
 
-	_delete_confirm_container = PanelContainer.new()
-	_delete_confirm_container.set_anchors_and_offsets_preset(PRESET_CENTER)
-	_delete_confirm_container.custom_minimum_size = Vector2(350, 140)
+	_delete_confirm_container = CenterContainer.new()
+	_delete_confirm_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_delete_confirm_container)
+
+	var confirm_panel := PanelContainer.new()
+	confirm_panel.custom_minimum_size = Vector2(350, 140)
+	_delete_confirm_container.add_child(confirm_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
-	_delete_confirm_container.add_child(vbox)
+	confirm_panel.add_child(vbox)
 
 	var dd := _registry.get_dungeon(selected_index)
 	var msg := Label.new()

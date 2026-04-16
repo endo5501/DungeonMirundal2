@@ -52,6 +52,40 @@ static func create(
 		ch.current_mp = 0
 	return ch
 
+func to_dict() -> Dictionary:
+	var stats_str := {}
+	for key in STAT_KEYS:
+		stats_str[String(key)] = base_stats.get(key, 0)
+	return {
+		"character_name": character_name,
+		"race_id": race.resource_path.get_file().get_basename(),
+		"job_id": job.resource_path.get_file().get_basename(),
+		"level": level,
+		"base_stats": stats_str,
+		"current_hp": current_hp,
+		"max_hp": max_hp,
+		"current_mp": current_mp,
+		"max_mp": max_mp,
+	}
+
+static func from_dict(data: Dictionary) -> Character:
+	var ch := Character.new()
+	ch.character_name = data.get("character_name", "")
+	ch.level = data.get("level", 1)
+	ch.current_hp = data.get("current_hp", 0)
+	ch.max_hp = data.get("max_hp", 0)
+	ch.current_mp = data.get("current_mp", 0)
+	ch.max_mp = data.get("max_mp", 0)
+	var race_id: String = data.get("race_id", "human")
+	ch.race = load("res://data/races/" + race_id + ".tres") as RaceData
+	var job_id: String = data.get("job_id", "fighter")
+	ch.job = load("res://data/jobs/" + job_id + ".tres") as JobData
+	var stats_raw: Dictionary = data.get("base_stats", {})
+	ch.base_stats = {}
+	for key in STAT_KEYS:
+		ch.base_stats[key] = int(stats_raw.get(String(key), 0))
+	return ch
+
 func to_party_member_data() -> PartyMemberData:
 	return PartyMemberData.new(
 		character_name, level, current_hp, max_hp, current_mp, max_mp

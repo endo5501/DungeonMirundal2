@@ -26,3 +26,15 @@ func move_backward(wiz_map: WizMap) -> bool:
 		return false
 	position += Direction.offset(back_dir)
 	return true
+
+func to_dict() -> Dictionary:
+	return {
+		"position": [position.x, position.y],
+		"facing": facing,
+	}
+
+static func from_dict(data: Dictionary) -> PlayerState:
+	var pos_arr: Array = data.get("position", [0, 0])
+	var pos := Vector2i(int(pos_arr[0]), int(pos_arr[1]))
+	var dir: int = data.get("facing", Direction.NORTH)
+	return PlayerState.new(pos, dir)

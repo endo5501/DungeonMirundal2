@@ -13,7 +13,7 @@ const MENU_ITEMS: Array[String] = [
 	"ゲーム終了",
 ]
 
-const DISABLED_INDICES: Array[int] = [1, 2]
+var _disabled_indices: Array[int] = [1, 2]
 
 var selected_index: int:
 	get: return _menu.selected_index
@@ -23,7 +23,17 @@ var _menu: CursorMenu
 var _labels: Array[Label] = []
 
 func _init() -> void:
-	_menu = CursorMenu.new(MENU_ITEMS, DISABLED_INDICES)
+	_menu = CursorMenu.new(MENU_ITEMS, _disabled_indices)
+
+func setup_save_state(save_manager: SaveManager) -> void:
+	_disabled_indices = []
+	if save_manager.get_last_slot() < 0:
+		_disabled_indices.append(1)
+	if not save_manager.has_saves():
+		_disabled_indices.append(2)
+	_menu = CursorMenu.new(MENU_ITEMS, _disabled_indices)
+	if _labels.size() > 0:
+		_menu.update_labels(_labels)
 
 func _ready() -> void:
 	var center := CenterContainer.new()

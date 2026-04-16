@@ -79,6 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if _showing_return_dialog:
 		_handle_return_dialog_input(event)
+		get_viewport().set_input_as_handled()
 		return
 
 	var moved := false
@@ -109,14 +110,17 @@ func _show_return_dialog() -> void:
 	_return_dialog_selected = 1  # default to いいえ (safer)
 	_return_dialog_labels.clear()
 
-	_return_dialog_container = PanelContainer.new()
-	_return_dialog_container.set_anchors_and_offsets_preset(PRESET_CENTER)
-	_return_dialog_container.custom_minimum_size = Vector2(300, 120)
+	_return_dialog_container = CenterContainer.new()
+	_return_dialog_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_return_dialog_container)
+
+	var dialog_panel := PanelContainer.new()
+	dialog_panel.custom_minimum_size = Vector2(300, 120)
+	_return_dialog_container.add_child(dialog_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
-	_return_dialog_container.add_child(vbox)
+	dialog_panel.add_child(vbox)
 
 	var msg := Label.new()
 	msg.text = "地上に戻りますか？"
