@@ -2,12 +2,16 @@ class_name EscMenu
 extends CanvasLayer
 
 signal quit_to_title
+signal save_requested
+signal load_requested
 
 enum View { MAIN_MENU, PARTY_MENU, STATUS, QUIT_DIALOG }
 
 const MAIN_MENU_ITEMS: Array[String] = ["パーティ", "ゲームを保存", "ゲームをロード", "設定", "終了"]
-const MAIN_MENU_DISABLED: Array[int] = [1, 2, 3]
+const MAIN_MENU_DISABLED: Array[int] = [3]
 const MAIN_IDX_PARTY := 0
+const MAIN_IDX_SAVE := 1
+const MAIN_IDX_LOAD := 2
 const MAIN_IDX_QUIT := 4
 
 const PARTY_MENU_ITEMS: Array[String] = ["ステータス", "アイテム", "装備"]
@@ -207,8 +211,17 @@ func _handle_main_menu_select() -> void:
 	match _main_menu.selected_index:
 		MAIN_IDX_PARTY:
 			_switch_view(View.PARTY_MENU)
+		MAIN_IDX_SAVE:
+			hide_menu()
+			save_requested.emit()
+		MAIN_IDX_LOAD:
+			hide_menu()
+			load_requested.emit()
 		MAIN_IDX_QUIT:
 			_switch_view(View.QUIT_DIALOG)
+
+func on_save_completed() -> void:
+	hide_menu()
 
 func _handle_party_menu_select() -> void:
 	match _party_menu.selected_index:

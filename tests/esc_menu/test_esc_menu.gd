@@ -52,8 +52,8 @@ func test_main_menu_disabled_indices():
 	menu.show_menu()
 	var main := menu.get_main_menu()
 	assert_false(main.is_disabled(0), "パーティ should be enabled")
-	assert_true(main.is_disabled(1), "ゲームを保存 should be disabled")
-	assert_true(main.is_disabled(2), "ゲームをロード should be disabled")
+	assert_false(main.is_disabled(1), "ゲームを保存 should be enabled")
+	assert_false(main.is_disabled(2), "ゲームをロード should be enabled")
 	assert_true(main.is_disabled(3), "設定 should be disabled")
 	assert_false(main.is_disabled(4), "終了 should be enabled")
 
@@ -176,8 +176,8 @@ func test_handle_input_down_moves_cursor():
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.handle_input(_make_key_event(KEY_DOWN))
-	# Should skip disabled items 1,2,3 and land on 4 (終了)
-	assert_eq(menu.get_main_menu().selected_index, 4)
+	# Should move to index 1 (ゲームを保存, now enabled)
+	assert_eq(menu.get_main_menu().selected_index, 1)
 
 func test_handle_input_enter_selects():
 	var menu := EscMenu.new()
