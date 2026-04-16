@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "godot": {
+      "source": "Randroids-Dojo/skills",
+      "sourceType": "github",
+      "computedHash": "474c5f87df88635eb88c037552635f1b302b27df7106a523d1efa3e2e1b79760"
+    }
+  }
+}
