@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: GameState is an autoload singleton
 GameState SHALL be registered as an autoload in project.godot and SHALL be accessible from any script via the name `GameState`.
 
@@ -36,6 +38,8 @@ GameState SHALL provide a `heal_party()` method that restores all party members'
 #### Scenario: Heal party affects all party members
 - **WHEN** the party has 3 members with reduced HP and `heal_party()` is called
 - **THEN** all 3 members SHALL have current_hp equal to max_hp
+
+## ADDED Requirements
 
 ### Requirement: GameState holds game_location
 GameState SHALL hold a `game_location` property of type String that tracks the current game screen. Valid values are "title", "town", "dungeon".

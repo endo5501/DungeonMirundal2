@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: main.gd manages top-level screen switching
 main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child. main.gd SHALL handle game state loading and restore the appropriate screen based on game_location.
 
@@ -33,18 +35,6 @@ main.gd SHALL manage a single current screen as a child node. Switching screens 
 - **WHEN** DungeonScreen emits return_to_town
 - **THEN** main.gd SHALL call GameState.heal_party(), set GameState.game_location to "town", set GameState.current_dungeon_index to -1, save the player's position to DungeonData, remove DungeonScreen, and display TownScreen
 
-#### Scenario: ESCメニューからタイトルに戻る
-- **WHEN** ESCメニューがquit_to_titleシグナルを発行する
-- **THEN** main.gd SHALL ESCメニューを閉じ、現在の画面を破棄し、TitleScreenを表示する
-
-#### Scenario: ESCキーでメニューを表示
-- **WHEN** タイトル画面以外の画面でESCキーが_unhandled_inputに到達する
-- **THEN** main.gd SHALL ESCメニューオーバーレイを表示する
-
-#### Scenario: タイトル画面ではESCメニューを開かない
-- **WHEN** タイトル画面が表示されている状態でESCキーが押される
-- **THEN** main.gd SHALL ESCメニューを開かない
-
 #### Scenario: Switch from title to town via continue
 - **WHEN** TitleScreen emits continue_game
 - **THEN** main.gd SHALL load the last save slot via SaveManager, and display the appropriate screen based on GameState.game_location
@@ -71,6 +61,8 @@ main.gd SHALL exit the application when TitleScreen indicates quit.
 #### Scenario: Quit from title
 - **WHEN** TitleScreen triggers game quit
 - **THEN** the application SHALL call get_tree().quit()
+
+## ADDED Requirements
 
 ### Requirement: main.gd updates game_location on screen transitions
 main.gd SHALL update GameState.game_location whenever screen transitions occur to keep the location state current.

@@ -1,31 +1,4 @@
-### Requirement: Title screen displays menu options
-TitleScreen SHALL display a text-based menu with 4 options: "新規ゲーム", "前回から", "ロード", "ゲーム終了".
-
-#### Scenario: All options are displayed
-- **WHEN** the title screen is shown
-- **THEN** all 4 menu options SHALL be displayed in order
-
-### Requirement: Title screen has cursor selection
-TitleScreen SHALL provide keyboard-based cursor navigation. Up/Down arrow keys SHALL move the cursor between options. Enter/Space SHALL select the current option.
-
-#### Scenario: Cursor starts at first option
-- **WHEN** the title screen is first shown
-- **THEN** the cursor SHALL be on "新規ゲーム"
-
-#### Scenario: Cursor moves down
-- **WHEN** the cursor is on "新規ゲーム" and the Down key is pressed
-- **THEN** the cursor SHALL move to "前回から"
-
-#### Scenario: Cursor wraps around
-- **WHEN** the cursor is on "ゲーム終了" and the Down key is pressed
-- **THEN** the cursor SHALL wrap to "新規ゲーム"
-
-### Requirement: New game starts a fresh game
-TitleScreen SHALL emit a `start_new_game` signal when "新規ゲーム" is selected.
-
-#### Scenario: Select new game
-- **WHEN** the user selects "新規ゲーム"
-- **THEN** the `start_new_game` signal SHALL be emitted
+## MODIFIED Requirements
 
 ### Requirement: Continue and Load are conditionally enabled
 "前回から" SHALL be enabled when SaveManager.get_last_slot() returns a valid slot number (>= 0). "ロード" SHALL be enabled when SaveManager.has_saves() returns true. When disabled, they SHALL be visually grayed out and not selectable.
@@ -42,12 +15,7 @@ TitleScreen SHALL emit a `start_new_game` signal when "新規ゲーム" is selec
 - **WHEN** タイトル画面を表示し、last_slot.txtが無効（ファイル削除済み等）だがセーブファイルは存在する
 - **THEN** 「前回から」はdisabled、「ロード」は有効で表示される
 
-### Requirement: Quit game exits the application
-TitleScreen SHALL call `get_tree().quit()` when "ゲーム終了" is selected.
-
-#### Scenario: Select quit
-- **WHEN** the user selects "ゲーム終了"
-- **THEN** the application SHALL exit
+## ADDED Requirements
 
 ### Requirement: 「前回から」は最後のセーブデータをロードする
 TitleScreen SHALL emit a `continue_game` signal when "前回から" is selected. main.gd SHALL load the save file indicated by SaveManager.get_last_slot().
