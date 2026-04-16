@@ -1,7 +1,8 @@
 extends GutTest
 
-# DungeonScreen ESC key behavior: ESC should only close return dialog,
-# not consume ESC when no dialog is showing (so it propagates to main.gd)
+# DungeonScreen ESC key behavior:
+# - Dialog showing: ESC closes dialog AND consumes the event (blocks propagation)
+# - No dialog: ESC is NOT consumed (propagates to main.gd for ESC menu)
 
 func _make_key_event(keycode: int) -> InputEventKey:
 	var event := InputEventKey.new()

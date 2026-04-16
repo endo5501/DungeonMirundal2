@@ -79,6 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if _showing_return_dialog:
 		_handle_return_dialog_input(event)
+		get_viewport().set_input_as_handled()
 		return
 
 	var moved := false
