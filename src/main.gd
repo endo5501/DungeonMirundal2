@@ -57,6 +57,8 @@ func _on_quit_to_title() -> void:
 # --- Town Screen ---
 
 func _show_town_screen() -> void:
+	GameState.game_location = "town"
+	GameState.current_dungeon_index = -1
 	var screen := TownScreen.new()
 	screen.open_guild.connect(_on_open_guild)
 	screen.open_dungeon_entrance.connect(_on_open_dungeon_entrance)
@@ -89,6 +91,8 @@ func _on_dungeon_entrance_back() -> void:
 # --- Dungeon Screen ---
 
 func _on_enter_dungeon(index: int) -> void:
+	GameState.game_location = "dungeon"
+	GameState.current_dungeon_index = index
 	_current_dungeon_data = GameState.dungeon_registry.get_dungeon(index)
 	var screen := DungeonScreen.new()
 	screen.return_to_town.connect(_on_return_to_town)

@@ -37,3 +37,16 @@ func get_all() -> Array[DungeonData]:
 
 func size() -> int:
 	return _dungeons.size()
+
+func to_dict() -> Dictionary:
+	var arr: Array = []
+	for dd in _dungeons:
+		arr.append(dd.to_dict())
+	return {"dungeons": arr}
+
+static func from_dict(data: Dictionary) -> DungeonRegistry:
+	var reg := DungeonRegistry.new()
+	var arr: Array = data.get("dungeons", [])
+	for dd_data in arr:
+		reg._dungeons.append(DungeonData.from_dict(dd_data))
+	return reg

@@ -26,6 +26,26 @@ static func _find_start(wiz_map: WizMap) -> Vector2i:
 				return Vector2i(x, y)
 	return Vector2i(0, 0)
 
+func to_dict() -> Dictionary:
+	return {
+		"dungeon_name": dungeon_name,
+		"seed_value": seed_value,
+		"map_size": map_size,
+		"explored_map": explored_map.to_dict(),
+		"player_state": player_state.to_dict(),
+	}
+
+static func from_dict(data: Dictionary) -> DungeonData:
+	var dd := DungeonData.new()
+	dd.dungeon_name = data.get("dungeon_name", "")
+	dd.seed_value = int(data.get("seed_value", 0))
+	dd.map_size = int(data.get("map_size", 8))
+	dd.wiz_map = WizMap.new(dd.map_size)
+	dd.wiz_map.generate(dd.seed_value)
+	dd.explored_map = ExploredMap.from_dict(data.get("explored_map", {"visited": []}))
+	dd.player_state = PlayerState.from_dict(data.get("player_state", {"position": [0, 0], "facing": 0}))
+	return dd
+
 func get_exploration_rate() -> float:
 	var total := map_size * map_size
 	if total == 0:
