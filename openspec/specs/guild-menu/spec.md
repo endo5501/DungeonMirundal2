@@ -11,6 +11,10 @@ The guild menu screen SHALL display a text-based menu with the following options
 - **WHEN** the guild menu is displayed
 - **THEN** one menu item SHALL be highlighted as the current selection
 
+#### Scenario: Menu is centered on screen
+- **WHEN** the guild menu is displayed
+- **THEN** the menu content SHALL be centered both horizontally and vertically within the screen
+
 ### Requirement: Guild menu navigates to character creation
 The guild menu SHALL navigate to the character creation wizard when "キャラクターを作成する" is selected.
 

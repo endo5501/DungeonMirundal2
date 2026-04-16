@@ -28,6 +28,7 @@ var _content: VBoxContainer
 var _name_edit: LineEdit
 var _step_label: Label
 var _cursor_index: int = 0
+var _step_changed_frame: int = -1
 
 func setup(guild: Guild, races: Array[RaceData], jobs: Array[JobData]) -> void:
 	_guild = guild
@@ -36,10 +37,13 @@ func setup(guild: Guild, races: Array[RaceData], jobs: Array[JobData]) -> void:
 	_bonus_generator = BonusPointGenerator.new(randi())
 
 func _ready() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var root := VBoxContainer.new()
-	root.set_anchors_and_offsets_preset(PRESET_CENTER)
 	root.add_theme_constant_override("separation", 6)
-	add_child(root)
+	center.add_child(root)
 
 	_step_label = Label.new()
 	_step_label.add_theme_font_size_override("font_size", TITLE_SIZE)
@@ -57,6 +61,7 @@ func _ready() -> void:
 	_build_step_ui()
 
 func _build_step_ui() -> void:
+	_step_changed_frame = Engine.get_process_frames()
 	while _content.get_child_count() > 0:
 		var child := _content.get_child(0)
 		_content.remove_child(child)
@@ -171,6 +176,8 @@ func _update_list_cursor(count: int, offset: int = 0) -> void:
 			label.text = prefix + raw
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _step_changed_frame == Engine.get_process_frames():
+		return
 	match current_step:
 		1: _input_step1(event)
 		2: _input_step2(event)

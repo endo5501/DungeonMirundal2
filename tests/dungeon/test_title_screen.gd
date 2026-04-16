@@ -77,3 +77,24 @@ func test_cursor_up_skips_disabled():
 	_screen.selected_index = 3
 	_screen.move_cursor(-1)  # From 3 should skip 2,1 to 0
 	assert_eq(_screen.selected_index, 0)
+
+# --- Layout centering ---
+
+func _find_center_container(node: Node) -> CenterContainer:
+	for child in node.get_children():
+		if child is CenterContainer:
+			return child as CenterContainer
+	return null
+
+func test_uses_center_container_for_layout():
+	var screen := TitleScreen.new()
+	add_child_autofree(screen)
+	assert_not_null(_find_center_container(screen), "TitleScreen should use CenterContainer for centering")
+
+func test_center_container_covers_full_rect():
+	var screen := TitleScreen.new()
+	add_child_autofree(screen)
+	var center := _find_center_container(screen)
+	assert_not_null(center)
+	assert_eq(center.anchor_right, 1.0, "CenterContainer should span full width")
+	assert_eq(center.anchor_bottom, 1.0, "CenterContainer should span full height")

@@ -20,10 +20,13 @@ var selected_index: int = 0
 var _labels: Array[Label] = []
 
 func _ready() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var vbox := VBoxContainer.new()
-	vbox.set_anchors_and_offsets_preset(PRESET_CENTER)
 	vbox.add_theme_constant_override("separation", 8)
-	add_child(vbox)
+	center.add_child(vbox)
 
 	var title := Label.new()
 	title.text = "冒険者ギルド"

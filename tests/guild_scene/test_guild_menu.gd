@@ -84,3 +84,20 @@ func test_select_leave_emits_signal():
 	watch_signals(_menu)
 	_menu.select_item(3)
 	assert_signal_emitted(_menu, "leave_selected")
+
+# --- Layout centering ---
+
+func _find_center_container(node: Node) -> CenterContainer:
+	for child in node.get_children():
+		if child is CenterContainer:
+			return child as CenterContainer
+	return null
+
+func test_menu_uses_center_container_for_layout():
+	assert_not_null(_find_center_container(_menu), "GuildMenu should use CenterContainer for centering")
+
+func test_center_container_covers_full_rect():
+	var center := _find_center_container(_menu)
+	assert_not_null(center)
+	assert_eq(center.anchor_right, 1.0, "CenterContainer should span full width")
+	assert_eq(center.anchor_bottom, 1.0, "CenterContainer should span full height")

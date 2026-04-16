@@ -23,10 +23,13 @@ func setup(guild: Guild) -> void:
 	refresh()
 
 func _ready() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var root := VBoxContainer.new()
-	root.set_anchors_and_offsets_preset(PRESET_CENTER)
 	root.add_theme_constant_override("separation", 4)
-	add_child(root)
+	center.add_child(root)
 
 	var name_row := HBoxContainer.new()
 	root.add_child(name_row)
