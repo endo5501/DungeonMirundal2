@@ -2,9 +2,14 @@ extends Control
 
 var _current_screen: Control
 var _current_dungeon_data: DungeonData
+var _esc_menu: EscMenu
+var _is_title_screen: bool = true
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_esc_menu = EscMenu.new()
+	_esc_menu.quit_to_title.connect(_on_quit_to_title)
+	add_child(_esc_menu)
 	_show_title_screen()
 
 # --- Screen switching ---
@@ -19,6 +24,7 @@ func _switch_screen(new_screen: Control) -> void:
 # --- Title Screen ---
 
 func _show_title_screen() -> void:
+	_is_title_screen = true
 	var screen := TitleScreen.new()
 	screen.start_new_game.connect(_on_start_new_game)
 	screen.quit_game.connect(_on_quit_game)
@@ -31,9 +37,31 @@ func _on_start_new_game() -> void:
 func _on_quit_game() -> void:
 	get_tree().quit()
 
+# --- ESC Menu ---
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	if not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_ESCAPE and not _is_title_screen and not _esc_menu.is_menu_visible():
+		_on_esc_key_pressed()
+		get_viewport().set_input_as_handled()
+
+func _on_esc_key_pressed() -> void:
+	if _is_title_screen:
+		return
+	_esc_menu.show_menu()
+
+func _on_quit_to_title() -> void:
+	_esc_menu.hide_menu()
+	_current_dungeon_data = null
+	_show_title_screen()
+
 # --- Town Screen ---
 
 func _show_town_screen() -> void:
+	_is_title_screen = false
 	var screen := TownScreen.new()
 	screen.open_guild.connect(_on_open_guild)
 	screen.open_dungeon_entrance.connect(_on_open_dungeon_entrance)
