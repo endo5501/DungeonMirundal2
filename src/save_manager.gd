@@ -30,17 +30,20 @@ func save(slot_number: int) -> void:
 	}
 	var json_str := JSON.stringify(data, "\t")
 	var f := FileAccess.open(_slot_path(slot_number), FileAccess.WRITE)
+	if f == null:
+		return
 	f.store_string(json_str)
 	f.close()
 	var lf := FileAccess.open(_last_slot_path(), FileAccess.WRITE)
+	if lf == null:
+		return
 	lf.store_string(str(slot_number))
 	lf.close()
 
 func load(slot_number: int) -> bool:
-	var path := _slot_path(slot_number)
-	if not FileAccess.file_exists(path):
+	var f := FileAccess.open(_slot_path(slot_number), FileAccess.READ)
+	if f == null:
 		return false
-	var f := FileAccess.open(path, FileAccess.READ)
 	var json := JSON.new()
 	var err := json.parse(f.get_as_text())
 	f.close()
@@ -51,7 +54,7 @@ func load(slot_number: int) -> bool:
 		return false
 	GameState.guild = Guild.from_dict(data.get("guild", {}))
 	GameState.dungeon_registry = DungeonRegistry.from_dict({"dungeons": data.get("dungeons", [])})
-	GameState.game_location = data.get("game_location", "town")
+	GameState.game_location = data.get("game_location", GameState.LOCATION_TOWN)
 	GameState.current_dungeon_index = int(data.get("current_dungeon_index", -1))
 	return true
 
@@ -98,14 +101,15 @@ func _read_save_meta(path: String) -> Dictionary:
 	}
 
 func get_last_slot() -> int:
-	var path := _last_slot_path()
-	if not FileAccess.file_exists(path):
+	var f := FileAccess.open(_last_slot_path(), FileAccess.READ)
+	if f == null:
 		return -1
-	var f := FileAccess.open(path, FileAccess.READ)
 	var slot := int(f.get_as_text().strip_edges())
 	f.close()
-	if not FileAccess.file_exists(_slot_path(slot)):
+	var sf := FileAccess.open(_slot_path(slot), FileAccess.READ)
+	if sf == null:
 		return -1
+	sf.close()
 	return slot
 
 func get_next_slot_number() -> int:
@@ -144,6 +148,4 @@ func has_saves() -> bool:
 	return false
 
 func delete_save(slot_number: int) -> void:
-	var path := _slot_path(slot_number)
-	if FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(_slot_path(slot_number))

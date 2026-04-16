@@ -77,7 +77,7 @@ func _on_quit_to_title() -> void:
 # --- Town Screen ---
 
 func _show_town_screen() -> void:
-	GameState.game_location = "town"
+	GameState.game_location = GameState.LOCATION_TOWN
 	GameState.current_dungeon_index = -1
 	var screen := TownScreen.new()
 	screen.open_guild.connect(_on_open_guild)
@@ -111,13 +111,16 @@ func _on_dungeon_entrance_back() -> void:
 # --- Dungeon Screen ---
 
 func _on_enter_dungeon(index: int) -> void:
-	GameState.game_location = "dungeon"
+	GameState.game_location = GameState.LOCATION_DUNGEON
 	GameState.current_dungeon_index = index
 	_current_dungeon_data = GameState.dungeon_registry.get_dungeon(index)
+	_show_dungeon_screen(_current_dungeon_data)
+
+func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 	var screen := DungeonScreen.new()
 	screen.return_to_town.connect(_on_return_to_town)
 	_switch_screen(screen)
-	screen.setup_from_data(_current_dungeon_data, GameState.guild.get_party_data())
+	screen.setup_from_data(dungeon_data, GameState.guild.get_party_data())
 
 func _on_return_to_town() -> void:
 	GameState.heal_party()
@@ -135,7 +138,7 @@ func _on_save_requested() -> void:
 
 func _on_save_completed() -> void:
 	_esc_menu.on_save_completed()
-	_show_town_screen() if GameState.game_location == "town" else _load_game_screen()
+	_restore_current_screen()
 
 func _on_save_back() -> void:
 	_restore_current_screen()
@@ -156,23 +159,11 @@ func _on_load_back() -> void:
 
 func _restore_current_screen() -> void:
 	match GameState.game_location:
-		"town":
+		GameState.LOCATION_TOWN:
 			_show_town_screen()
-		"dungeon":
+		GameState.LOCATION_DUNGEON:
 			if _current_dungeon_data:
-				var screen := DungeonScreen.new()
-				screen.return_to_town.connect(_on_return_to_town)
-				_switch_screen(screen)
-				screen.setup_from_data(_current_dungeon_data, GameState.guild.get_party_data())
-
-func _load_game_screen() -> void:
-	match GameState.game_location:
-		"dungeon":
-			_current_dungeon_data = GameState.dungeon_registry.get_dungeon(GameState.current_dungeon_index)
-			var screen := DungeonScreen.new()
-			screen.return_to_town.connect(_on_return_to_town)
-			_switch_screen(screen)
-			screen.setup_from_data(_current_dungeon_data, GameState.guild.get_party_data())
+				_show_dungeon_screen(_current_dungeon_data)
 
 # --- Load Game ---
 
@@ -181,11 +172,8 @@ func _load_game(slot_number: int) -> void:
 	if not ok:
 		return
 	match GameState.game_location:
-		"town":
+		GameState.LOCATION_TOWN:
 			_show_town_screen()
-		"dungeon":
+		GameState.LOCATION_DUNGEON:
 			_current_dungeon_data = GameState.dungeon_registry.get_dungeon(GameState.current_dungeon_index)
-			var screen := DungeonScreen.new()
-			screen.return_to_town.connect(_on_return_to_town)
-			_switch_screen(screen)
-			screen.setup_from_data(_current_dungeon_data, GameState.guild.get_party_data())
+			_show_dungeon_screen(_current_dungeon_data)

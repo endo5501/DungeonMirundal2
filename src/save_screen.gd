@@ -38,7 +38,7 @@ func _build_ui() -> void:
 	_slots.append({"slot_number": -1, "label": NEW_SAVE_LABEL})
 	var saves := _save_manager.list_saves()
 	for s in saves:
-		var loc_text: String = "町" if s.get("game_location", "") == "town" else str(s.get("game_location", ""))
+		var loc_text: String = "町" if s.get("game_location", "") == GameState.LOCATION_TOWN else str(s.get("game_location", ""))
 		_slots.append({
 			"slot_number": s["slot_number"],
 			"label": "No.%d  %s  %s" % [s["slot_number"], s.get("last_saved", ""), loc_text],
@@ -160,12 +160,6 @@ func _handle_overwrite_input(event: InputEventKey) -> void:
 				cancel_overwrite()
 		KEY_ESCAPE:
 			cancel_overwrite()
-
-func confirm_overwrite() -> void:
-	if _overwrite_slot >= 0:
-		_save_manager.save(_overwrite_slot)
-		_overwrite_visible = false
-		save_completed.emit()
 
 func cancel_overwrite() -> void:
 	_overwrite_visible = false
