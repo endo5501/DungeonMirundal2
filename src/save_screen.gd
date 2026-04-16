@@ -38,10 +38,9 @@ func _build_ui() -> void:
 	_slots.append({"slot_number": -1, "label": NEW_SAVE_LABEL})
 	var saves := _save_manager.list_saves()
 	for s in saves:
-		var loc_text: String = "町" if s.get("game_location", "") == GameState.LOCATION_TOWN else str(s.get("game_location", ""))
 		_slots.append({
 			"slot_number": s["slot_number"],
-			"label": "No.%d  %s  %s" % [s["slot_number"], s.get("last_saved", ""), loc_text],
+			"label": _format_slot_label(s),
 		})
 
 	var items: Array[String] = []
@@ -160,6 +159,24 @@ func _handle_overwrite_input(event: InputEventKey) -> void:
 				cancel_overwrite()
 		KEY_ESCAPE:
 			cancel_overwrite()
+
+static func _format_slot_label(s: Dictionary) -> String:
+	var loc: String
+	if s.get("game_location", "") == GameState.LOCATION_TOWN:
+		loc = "町"
+	else:
+		var dn: String = s.get("dungeon_name", "")
+		loc = dn if dn != "" else str(s.get("game_location", ""))
+	var party: String = s.get("party_name", "")
+	var lv: int = s.get("max_level", 0)
+	var parts: Array[String] = ["No.%d" % s.get("slot_number", 0)]
+	parts.append(s.get("last_saved", ""))
+	if party != "":
+		parts.append(party)
+	if lv > 0:
+		parts.append("Lv.%d" % lv)
+	parts.append(loc)
+	return "  ".join(parts)
 
 func cancel_overwrite() -> void:
 	_overwrite_visible = false

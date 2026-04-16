@@ -94,10 +94,28 @@ func _read_save_meta(path: String) -> Dictionary:
 		return {}
 	var data: Dictionary = json.data
 	var slot_str := path.get_file().get_basename().trim_prefix("save_")
+	var guild_data: Dictionary = data.get("guild", {})
+	var party_name: String = guild_data.get("party_name", "")
+	var max_level := 0
+	var chars: Array = guild_data.get("characters", [])
+	for ch in chars:
+		var lv: int = ch.get("level", 1)
+		if lv > max_level:
+			max_level = lv
+	var dungeon_name := ""
+	var game_loc: String = data.get("game_location", "")
+	if game_loc == GameState.LOCATION_DUNGEON:
+		var idx: int = data.get("current_dungeon_index", -1)
+		var dungeons: Array = data.get("dungeons", [])
+		if idx >= 0 and idx < dungeons.size():
+			dungeon_name = dungeons[idx].get("dungeon_name", "")
 	return {
 		"slot_number": int(slot_str),
 		"last_saved": data.get("last_saved", ""),
-		"game_location": data.get("game_location", ""),
+		"game_location": game_loc,
+		"party_name": party_name,
+		"max_level": max_level,
+		"dungeon_name": dungeon_name,
 	}
 
 func get_last_slot() -> int:

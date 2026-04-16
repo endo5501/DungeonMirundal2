@@ -58,10 +58,9 @@ func _build_ui() -> void:
 
 	_no_saves = false
 	for s in saves:
-		var loc_text: String = "町" if s.get("game_location", "") == GameState.LOCATION_TOWN else str(s.get("game_location", ""))
 		_slots.append({
 			"slot_number": s["slot_number"],
-			"label": "No.%d  %s  %s" % [s["slot_number"], s.get("last_saved", ""), loc_text],
+			"label": SaveScreen._format_slot_label(s),
 		})
 
 	var items: Array[String] = []

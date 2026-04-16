@@ -142,6 +142,25 @@ func test_list_saves_returns_metadata():
 	assert_eq(saves[0]["slot_number"], 1)
 	assert_true(saves[0].has("last_saved"))
 	assert_eq(saves[0]["game_location"], "town")
+	assert_true(saves[0].has("party_name"))
+	assert_true(saves[0].has("max_level"))
+
+func test_list_saves_metadata_party_info():
+	_setup_game_with_character()
+	GameState.guild.party_name = "勇者の一行"
+	_save_manager.save(1)
+	var saves := _save_manager.list_saves()
+	assert_eq(saves[0]["party_name"], "勇者の一行")
+	assert_eq(saves[0]["max_level"], 1)
+
+func test_list_saves_metadata_dungeon_info():
+	_setup_game_with_character()
+	GameState.dungeon_registry.create("暗黒の迷宮", DungeonRegistry.SIZE_SMALL)
+	GameState.game_location = "dungeon"
+	GameState.current_dungeon_index = 0
+	_save_manager.save(1)
+	var saves := _save_manager.list_saves()
+	assert_eq(saves[0]["dungeon_name"], "暗黒の迷宮")
 
 func test_list_saves_sorted_newest_first():
 	_save_manager.save(1)
