@@ -5,32 +5,333 @@ signal quit_to_title
 
 enum View { MAIN_MENU, PARTY_MENU, STATUS, QUIT_DIALOG }
 
+const MAIN_MENU_ITEMS: Array[String] = ["パーティ", "ゲームを保存", "ゲームをロード", "設定", "終了"]
+const MAIN_MENU_DISABLED: Array[int] = [1, 2, 3]
+
+const PARTY_MENU_ITEMS: Array[String] = ["ステータス", "アイテム", "装備"]
+const PARTY_MENU_DISABLED: Array[int] = [1, 2]
+
+const QUIT_ITEMS: Array[String] = ["はい", "いいえ"]
+
+var _current_view: View = View.MAIN_MENU
+var _is_visible: bool = false
+
+var _main_menu: CursorMenu
+var _party_menu: CursorMenu
+var _quit_menu: CursorMenu
+
+var _overlay: ColorRect
+var _panel: PanelContainer
+var _main_menu_container: VBoxContainer
+var _party_menu_container: VBoxContainer
+var _status_container: VBoxContainer
+var _quit_dialog_container: VBoxContainer
+
+var _main_menu_labels: Array[Label] = []
+var _party_menu_labels: Array[Label] = []
+var _quit_labels: Array[Label] = []
+
+func _init() -> void:
+	layer = 10
+	_main_menu = CursorMenu.new(MAIN_MENU_ITEMS, MAIN_MENU_DISABLED)
+	_party_menu = CursorMenu.new(PARTY_MENU_ITEMS, PARTY_MENU_DISABLED)
+	_quit_menu = CursorMenu.new(QUIT_ITEMS)
+
+func _ready() -> void:
+	_build_ui()
+	visible = false
+
+func _build_ui() -> void:
+	_overlay = ColorRect.new()
+	_overlay.color = Color(0, 0, 0, 0.6)
+	_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_overlay)
+
+	_panel = PanelContainer.new()
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.custom_minimum_size = Vector2(350, 200)
+	_overlay.add_child(_panel)
+
+	var root_vbox := VBoxContainer.new()
+	_panel.add_child(root_vbox)
+
+	_main_menu_container = _build_main_menu_view()
+	root_vbox.add_child(_main_menu_container)
+
+	_party_menu_container = _build_party_menu_view()
+	root_vbox.add_child(_party_menu_container)
+
+	_status_container = _build_status_view()
+	root_vbox.add_child(_status_container)
+
+	_quit_dialog_container = _build_quit_dialog_view()
+	root_vbox.add_child(_quit_dialog_container)
+
+func _build_menu_labels(menu: CursorMenu, labels_out: Array[Label], parent: VBoxContainer) -> void:
+	for i in range(menu.size()):
+		var label := Label.new()
+		label.add_theme_font_size_override("font_size", 20)
+		parent.add_child(label)
+		labels_out.append(label)
+	menu.update_labels(labels_out)
+
+func _build_main_menu_view() -> VBoxContainer:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var title := Label.new()
+	title.text = "メニュー"
+	title.add_theme_font_size_override("font_size", 24)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 8
+	vbox.add_child(spacer)
+
+	_build_menu_labels(_main_menu, _main_menu_labels, vbox)
+	return vbox
+
+func _build_party_menu_view() -> VBoxContainer:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var title := Label.new()
+	title.text = "パーティ"
+	title.add_theme_font_size_override("font_size", 24)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 8
+	vbox.add_child(spacer)
+
+	_build_menu_labels(_party_menu, _party_menu_labels, vbox)
+	return vbox
+
+func _build_status_view() -> VBoxContainer:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	var title := Label.new()
+	title.text = "ステータス"
+	title.add_theme_font_size_override("font_size", 24)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 8
+	vbox.add_child(spacer)
+
+	return vbox
+
+func _build_quit_dialog_view() -> VBoxContainer:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	var msg := Label.new()
+	msg.text = "タイトルに戻りますか？"
+	msg.add_theme_font_size_override("font_size", 20)
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(msg)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 8
+	vbox.add_child(spacer)
+
+	_build_menu_labels(_quit_menu, _quit_labels, vbox)
+	return vbox
+
+# --- Public API ---
+
 func is_menu_visible() -> bool:
-	return false
+	return _is_visible
 
 func show_menu() -> void:
-	pass
+	_is_visible = true
+	visible = true
+	_main_menu.selected_index = 0
+	_switch_view(View.MAIN_MENU)
 
 func hide_menu() -> void:
-	pass
+	_is_visible = false
+	visible = false
 
 func get_current_view() -> View:
-	return View.MAIN_MENU
+	return _current_view
 
 func get_main_menu() -> CursorMenu:
-	return null
+	return _main_menu
 
 func get_party_menu() -> CursorMenu:
-	return null
+	return _party_menu
 
 func get_quit_menu() -> CursorMenu:
-	return null
+	return _quit_menu
 
 func select_current_item() -> void:
-	pass
+	match _current_view:
+		View.MAIN_MENU:
+			_handle_main_menu_select()
+		View.PARTY_MENU:
+			_handle_party_menu_select()
+		View.QUIT_DIALOG:
+			_handle_quit_dialog_select()
 
 func go_back() -> void:
-	pass
+	match _current_view:
+		View.MAIN_MENU:
+			hide_menu()
+		View.PARTY_MENU:
+			_switch_view(View.MAIN_MENU)
+		View.STATUS:
+			_switch_view(View.PARTY_MENU)
+		View.QUIT_DIALOG:
+			_switch_view(View.MAIN_MENU)
 
-func handle_input(_event: InputEventKey) -> void:
-	pass
+func handle_input(event: InputEventKey) -> void:
+	var current_menu := _get_current_menu()
+	match event.keycode:
+		KEY_UP, KEY_W:
+			if current_menu:
+				current_menu.move_cursor(-1)
+				_update_current_labels()
+		KEY_DOWN, KEY_S:
+			if current_menu:
+				current_menu.move_cursor(1)
+				_update_current_labels()
+		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+			select_current_item()
+		KEY_ESCAPE:
+			go_back()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _is_visible:
+		return
+	if not event is InputEventKey:
+		return
+	if not event.pressed or event.echo:
+		return
+	handle_input(event as InputEventKey)
+	get_viewport().set_input_as_handled()
+
+# --- Internal ---
+
+func _switch_view(view: View) -> void:
+	_current_view = view
+	_main_menu_container.visible = (view == View.MAIN_MENU)
+	_party_menu_container.visible = (view == View.PARTY_MENU)
+	_status_container.visible = (view == View.STATUS)
+	_quit_dialog_container.visible = (view == View.QUIT_DIALOG)
+
+	match view:
+		View.PARTY_MENU:
+			_party_menu.selected_index = 0
+			_party_menu.update_labels(_party_menu_labels)
+		View.QUIT_DIALOG:
+			_quit_menu.selected_index = 1  # default to いいえ
+			_quit_menu.update_labels(_quit_labels)
+		View.STATUS:
+			_refresh_status_view()
+		View.MAIN_MENU:
+			_main_menu.update_labels(_main_menu_labels)
+
+func _get_current_menu() -> CursorMenu:
+	match _current_view:
+		View.MAIN_MENU:
+			return _main_menu
+		View.PARTY_MENU:
+			return _party_menu
+		View.QUIT_DIALOG:
+			return _quit_menu
+	return null
+
+func _update_current_labels() -> void:
+	match _current_view:
+		View.MAIN_MENU:
+			_main_menu.update_labels(_main_menu_labels)
+		View.PARTY_MENU:
+			_party_menu.update_labels(_party_menu_labels)
+		View.QUIT_DIALOG:
+			_quit_menu.update_labels(_quit_labels)
+
+func _handle_main_menu_select() -> void:
+	match _main_menu.selected_index:
+		0:  # パーティ
+			_switch_view(View.PARTY_MENU)
+		4:  # 終了
+			_switch_view(View.QUIT_DIALOG)
+
+func _handle_party_menu_select() -> void:
+	match _party_menu.selected_index:
+		0:  # ステータス
+			_switch_view(View.STATUS)
+
+func _handle_quit_dialog_select() -> void:
+	match _quit_menu.selected_index:
+		0:  # はい
+			quit_to_title.emit()
+		1:  # いいえ
+			_switch_view(View.MAIN_MENU)
+
+func _refresh_status_view() -> void:
+	# Remove old character entries (keep title + spacer)
+	while _status_container.get_child_count() > 2:
+		var child := _status_container.get_child(_status_container.get_child_count() - 1)
+		_status_container.remove_child(child)
+		child.queue_free()
+
+	var guild: Guild = GameState.guild if GameState != null else null
+	if guild == null:
+		var empty := Label.new()
+		empty.text = "パーティが編成されていません"
+		empty.add_theme_font_size_override("font_size", 16)
+		_status_container.add_child(empty)
+		return
+
+	var has_member := false
+	for row in range(2):
+		for pos in range(3):
+			var ch: Character = guild.get_character_at(row, pos)
+			if ch == null:
+				continue
+			has_member = true
+			var row_label := "前列" if row == 0 else "後列"
+			var entry := _build_character_entry(ch, row_label, pos)
+			_status_container.add_child(entry)
+
+	if not has_member:
+		var empty := Label.new()
+		empty.text = "パーティが編成されていません"
+		empty.add_theme_font_size_override("font_size", 16)
+		_status_container.add_child(empty)
+
+func _build_character_entry(ch: Character, row_label: String, pos: int) -> VBoxContainer:
+	var entry := VBoxContainer.new()
+	entry.add_theme_constant_override("separation", 2)
+
+	var separator := HSeparator.new()
+	entry.add_child(separator)
+
+	var name_label := Label.new()
+	name_label.text = "%s  %s / %s  Lv.%d" % [ch.character_name, ch.race.race_name, ch.job.job_name, ch.level]
+	name_label.add_theme_font_size_override("font_size", 18)
+	entry.add_child(name_label)
+
+	var hp_mp := Label.new()
+	hp_mp.text = "  HP: %d/%d  MP: %d/%d" % [ch.current_hp, ch.max_hp, ch.current_mp, ch.max_mp]
+	hp_mp.add_theme_font_size_override("font_size", 16)
+	entry.add_child(hp_mp)
+
+	var stats := ch.base_stats
+	var stats_label := Label.new()
+	stats_label.text = "  STR:%d INT:%d PIE:%d VIT:%d AGI:%d LUC:%d" % [
+		stats.get(&"STR", 0), stats.get(&"INT", 0), stats.get(&"PIE", 0),
+		stats.get(&"VIT", 0), stats.get(&"AGI", 0), stats.get(&"LUC", 0)
+	]
+	stats_label.add_theme_font_size_override("font_size", 14)
+	stats_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+	entry.add_child(stats_label)
+
+	return entry
