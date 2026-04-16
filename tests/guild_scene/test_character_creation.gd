@@ -385,3 +385,36 @@ func test_step5_confirm_creates_character():
 	assert_eq(_guild.get_all_characters().size(), 1)
 	assert_signal_emitted(_creation, "character_created")
 	assert_signal_emitted(_creation, "back_requested")
+
+# --- Step 2 skip bug ---
+
+func test_text_submitted_does_not_skip_step2():
+	# Simulate: Enter key triggers text_submitted AND _unhandled_input in same frame
+	_creation._name_edit.text = "Hero"
+	_creation._name_edit.text_submitted.emit("Hero")
+	# At this point, step should be 2
+	assert_eq(_creation.current_step, 2, "Should be on step 2 after name submission")
+	# Now simulate the same Enter key arriving as _unhandled_input
+	var event := InputEventKey.new()
+	event.keycode = KEY_ENTER
+	event.pressed = true
+	_creation._unhandled_input(event)
+	# Step 2 should NOT have been advanced - race was not selected by user
+	assert_eq(_creation.current_step, 2, "Step 2 should not be skipped by Enter key propagation")
+
+# --- Layout centering ---
+
+func _find_center_container(node: Node) -> CenterContainer:
+	for child in node.get_children():
+		if child is CenterContainer:
+			return child as CenterContainer
+	return null
+
+func test_creation_uses_center_container_for_layout():
+	assert_not_null(_find_center_container(_creation), "CharacterCreation should use CenterContainer for centering")
+
+func test_creation_center_container_covers_full_rect():
+	var center := _find_center_container(_creation)
+	assert_not_null(center)
+	assert_eq(center.anchor_right, 1.0, "CenterContainer should span full width")
+	assert_eq(center.anchor_bottom, 1.0, "CenterContainer should span full height")
