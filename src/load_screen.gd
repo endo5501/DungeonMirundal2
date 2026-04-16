@@ -28,10 +28,13 @@ func _build_ui() -> void:
 	_slots.clear()
 	var saves := _save_manager.list_saves()
 
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(500, 300)
-	add_child(panel)
+	center.add_child(panel)
 
 	_container = VBoxContainer.new()
 	_container.add_theme_constant_override("separation", 4)

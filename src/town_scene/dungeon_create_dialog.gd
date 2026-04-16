@@ -20,10 +20,13 @@ func _init() -> void:
 	dungeon_name = _name_generator.generate()
 
 func _ready() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(400, 250)
-	add_child(panel)
+	center.add_child(panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 12)

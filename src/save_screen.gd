@@ -18,7 +18,7 @@ var _overwrite_visible := false
 var _overwrite_slot: int = -1
 var _overwrite_menu: CursorMenu
 var _overwrite_labels: Array[Label] = []
-var _overwrite_container: PanelContainer
+var _overwrite_container: CenterContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -48,10 +48,13 @@ func _build_ui() -> void:
 		items.append(s["label"])
 	_menu = CursorMenu.new(items)
 
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(center)
+
 	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(500, 300)
-	add_child(panel)
+	center.add_child(panel)
 
 	_container = VBoxContainer.new()
 	_container.add_theme_constant_override("separation", 4)
@@ -79,14 +82,17 @@ func _build_overwrite_dialog() -> void:
 	_overwrite_menu = CursorMenu.new(OVERWRITE_OPTIONS)
 	_overwrite_menu.selected_index = 1  # default to いいえ
 
-	_overwrite_container = PanelContainer.new()
-	_overwrite_container.set_anchors_and_offsets_preset(PRESET_CENTER)
-	_overwrite_container.custom_minimum_size = Vector2(300, 120)
+	_overwrite_container = CenterContainer.new()
+	_overwrite_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_overwrite_container)
+
+	var overwrite_panel := PanelContainer.new()
+	overwrite_panel.custom_minimum_size = Vector2(300, 120)
+	_overwrite_container.add_child(overwrite_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 8)
-	_overwrite_container.add_child(vbox)
+	overwrite_panel.add_child(vbox)
 
 	var msg := Label.new()
 	msg.text = "上書きしますか？"

@@ -56,10 +56,13 @@ func _build_ui() -> void:
 	_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_overlay)
 
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_overlay.add_child(center)
+
 	_panel = PanelContainer.new()
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_panel.custom_minimum_size = Vector2(350, 200)
-	_overlay.add_child(_panel)
+	center.add_child(_panel)
 
 	var root_vbox := VBoxContainer.new()
 	_panel.add_child(root_vbox)

@@ -21,6 +21,7 @@ func _switch_screen(new_screen: Control) -> void:
 	_current_screen = new_screen
 	new_screen.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(new_screen)
+	move_child(_esc_menu, -1)
 
 # --- Title Screen ---
 
