@@ -17,38 +17,38 @@
 
 ## 3. EncounterTableData / EncounterPattern
 
-- [ ] 3.1 `tests/dungeon/test_encounter_pattern.gd` でグループ展開・個体数範囲をテスト
-- [ ] 3.2 `src/dungeon/data/monster_group_spec.gd` と `src/dungeon/data/encounter_pattern.gd` を実装
-- [ ] 3.3 `tests/dungeon/test_encounter_table_data.gd` でフィールド・重みリスト検証
-- [ ] 3.4 `src/dungeon/data/encounter_table_data.gd` と `src/dungeon/data/encounter_entry.gd` を実装
-- [ ] 3.5 `data/encounter_tables/` に階層 1 用サンプル `.tres` を作成
-- [ ] 3.6 `DataLoader.load_all_encounter_tables()` を追加
-- [ ] 3.7 全テスト green を確認
+- [x] 3.1 `tests/dungeon/test_encounter_pattern.gd` でグループ展開・個体数範囲をテスト
+- [x] 3.2 `src/dungeon/data/monster_group_spec.gd` と `src/dungeon/data/encounter_pattern.gd` を実装
+- [x] 3.3 `tests/dungeon/test_encounter_table_data.gd` でフィールド・重みリスト検証
+- [x] 3.4 `src/dungeon/data/encounter_table_data.gd` と `src/dungeon/data/encounter_entry.gd` を実装
+- [x] 3.5 `data/encounter_tables/` に階層 1 用サンプル `.tres` を作成
+- [x] 3.6 `DataLoader.load_all_encounter_tables()` を追加
+- [x] 3.7 全テスト green を確認
 
 ## 4. EncounterManager（判定 + 生成）
 
-- [ ] 4.1 `tests/dungeon/test_encounter_manager.gd` を作成し、以下のテストを書く:
+- [x] 4.1 `tests/dungeon/test_encounter_manager.gd` を作成し、以下のテストを書く:
   - 閾値直下/直上で `should_trigger` が期待通り
   - 同一シードでのシーケンス決定論性
   - 連続エンカウント抑止（cooldown）
-- [ ] 4.2 `src/dungeon/encounter_manager.gd` (`extends RefCounted`) を実装し、should_trigger を通す
-- [ ] 4.3 生成ロジックのテストを追加: 重み選択の決定論性、MonsterGroupSpec 個体数範囲、未知 monster_id のエラー
-- [ ] 4.4 `generate(floor, rng) -> MonsterParty` を実装
-- [ ] 4.5 `src/dungeon/monster_party.gd` (`extends RefCounted`) を最小実装（Monster 配列の保持と by_species 集計）
-- [ ] 4.6 全テスト green を確認
+- [x] 4.2 `src/dungeon/encounter_manager.gd` (`extends RefCounted`) を実装し、should_trigger を通す
+- [x] 4.3 生成ロジックのテストを追加: 重み選択の決定論性、MonsterGroupSpec 個体数範囲、未知 monster_id のエラー
+- [x] 4.4 `generate(floor, rng) -> MonsterParty` を実装
+- [x] 4.5 `src/dungeon/monster_party.gd` (`extends RefCounted`) を最小実装（Monster 配列の保持と by_species 集計）
+- [x] 4.6 全テスト green を確認
 
 ## 5. EncounterOutcome + EncounterOverlay（スタブ）
 
-- [ ] 5.1 `tests/dungeon/test_encounter_outcome.gd` で enum・デフォルト値・拡張フィールドの動作を確認
-- [ ] 5.2 `src/dungeon/encounter_outcome.gd` (`extends RefCounted`) を実装
-- [ ] 5.3 `tests/dungeon_scene/test_encounter_overlay.gd` を作成:
+- [x] 5.1 `tests/dungeon/test_encounter_outcome.gd` で enum・デフォルト値・拡張フィールドの動作を確認
+- [x] 5.2 `src/dungeon/encounter_outcome.gd` (`extends RefCounted`) を実装
+- [x] 5.3 `tests/dungeon/test_encounter_overlay.gd` を作成:
   - 初期は非表示
   - `start_encounter(party)` で可視化、名前表示
   - 確認入力で `encounter_resolved` 発火、CLEARED 返却
   - 二重発火しないこと
-- [ ] 5.4 `src/dungeon_scene/encounter_overlay.gd` (`extends CanvasLayer`) を実装（`EscMenu` と同じ layer 方針）
-- [ ] 5.5 モンスターグループ表示フォーマット（「スライム x2」）を実装
-- [ ] 5.6 全テスト green を確認
+- [x] 5.4 `src/dungeon_scene/encounter_overlay.gd` (`extends CanvasLayer`) を実装（`EscMenu` と同じ layer 方針）
+- [x] 5.5 モンスターグループ表示フォーマット（「スライム x2」）を実装
+- [x] 5.6 全テスト green を確認
 
 ## 6. DungeonScreen 統合
 

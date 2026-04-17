@@ -100,3 +100,21 @@ func test_loaded_slime_has_correct_fields():
 	assert_eq(slime.max_hp_max, 10)
 	assert_eq(slime.attack, 3)
 	assert_true(slime.is_valid())
+
+
+func test_load_all_encounter_tables_returns_at_least_one():
+	var tables := _loader.load_all_encounter_tables()
+	assert_gte(tables.size(), 1)
+
+
+func test_loaded_floor_1_table_is_valid():
+	var tables := _loader.load_all_encounter_tables()
+	var floor_1: EncounterTableData
+	for t in tables:
+		if t.floor == 1:
+			floor_1 = t
+			break
+	assert_not_null(floor_1)
+	assert_true(floor_1.is_valid())
+	assert_gt(floor_1.entries.size(), 0)
+	assert_gt(floor_1.probability_per_step, 0.0)
