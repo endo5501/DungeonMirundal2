@@ -32,22 +32,22 @@
 
 ## 5. TurnOrder とターンエンジン
 
-- [ ] 5.1 `tests/combat/test_turn_order.gd` を新規作成し、agility 降順ソート、死亡者除外、同値タイブレークの決定論性をテスト
-- [ ] 5.2 `src/combat/turn_order.gd` (`class_name TurnOrder extends RefCounted`) を実装
-- [ ] 5.3 `tests/combat/test_turn_engine.gd` で状態遷移テストを書く: `IDLE → COMMAND_INPUT`（`start_battle`）、`COMMAND_INPUT → RESOLVING`（全員コマンド投入）、`RESOLVING → COMMAND_INPUT`（戦闘継続）、`RESOLVING → FINISHED(CLEARED/WIPED/ESCAPED)`
-- [ ] 5.4 `src/combat/turn_engine.gd` (`class_name TurnEngine extends RefCounted`) の状態機械部分を実装
-- [ ] 5.5 `test_turn_engine.gd` に TurnReport（アクション順記録）・被撃対象選択・防御ダメージ半減・逃走判定（成功/失敗）のテストを追加
-- [ ] 5.6 `TurnEngine.resolve_turn(rng)` で行動順ループ、AttackCommand の target 再選定（死亡時）、モンスター側のランダム対象選択、TurnReport 生成を実装
-- [ ] 5.7 `EncounterOutcome` 生成（CLEARED / WIPED / ESCAPED）を `TurnEngine.outcome()` で返す実装を追加、全テスト green 確認
+- [x] 5.1 `tests/combat/test_turn_order.gd` を新規作成し、agility 降順ソート、死亡者除外、同値タイブレークの決定論性をテスト
+- [x] 5.2 `src/combat/turn_order.gd` (`class_name TurnOrder extends RefCounted`) を実装
+- [x] 5.3 `tests/combat/test_turn_engine.gd` で状態遷移テストを書く: `IDLE → COMMAND_INPUT`（`start_battle`）、`COMMAND_INPUT → RESOLVING`（全員コマンド投入）、`RESOLVING → COMMAND_INPUT`（戦闘継続）、`RESOLVING → FINISHED(CLEARED/WIPED/ESCAPED)`
+- [x] 5.4 `src/combat/turn_engine.gd` (`class_name TurnEngine extends RefCounted`) の状態機械部分を実装
+- [x] 5.5 `test_turn_engine.gd` に TurnReport（アクション順記録）・被撃対象選択・防御ダメージ半減・逃走判定（成功/失敗）のテストを追加
+- [x] 5.6 `TurnEngine.resolve_turn(rng)` で行動順ループ、AttackCommand の target 再選定（死亡時）、モンスター側のランダム対象選択、TurnReport 生成を実装
+- [x] 5.7 `EncounterOutcome` 生成（CLEARED / WIPED / ESCAPED）を `TurnEngine.outcome()` で返す実装を追加、全テスト green 確認
 
 ## 6. 経験値・レベルアップ
 
-- [ ] 6.1 `tests/combat/test_experience_calculator.gd` を新規作成し、`sum_experience(dead_monsters)` の合計、参加メンバー均等配布（生存・死亡含む）、余り切捨てをテスト
-- [ ] 6.2 `src/combat/experience_calculator.gd` (`class_name ExperienceCalculator extends RefCounted`) を実装
-- [ ] 6.3 `tests/dungeon/test_character_level_up.gd` を新規作成し、`Character.gain_experience(amount)` の累積、閾値跨ぎによる `level_up()` 発火、多段レベルアップ、HP/MP 増加（職業別 `hp_per_level + VIT/3`、`mp_per_level` は has_magic のみ、最小 1）、ステータス不変をテスト
-- [ ] 6.4 `src/dungeon/character.gd` に `accumulated_exp: int` フィールド（または内部保持）、`gain_experience(amount)`、`level_up()` を実装（`to_dict` / `from_dict` への反映を含む）
-- [ ] 6.5 `tests/combat/test_experience_calculator.gd` に `EncounterOutcome.gained_experience` への反映テストを追加（CLEARED 時のみ非ゼロ、WIPED / ESCAPED 時は 0）
-- [ ] 6.6 `ExperienceCalculator.award(party_characters, dead_monsters) -> int` を実装し、Character.gain_experience 呼び出しと per-member share 返却を両立
+- [x] 6.1 `tests/combat/test_experience_calculator.gd` を新規作成し、`sum_experience(dead_monsters)` の合計、参加メンバー均等配布（生存・死亡含む）、余り切捨てをテスト
+- [x] 6.2 `src/combat/experience_calculator.gd` (`class_name ExperienceCalculator extends RefCounted`) を実装
+- [x] 6.3 `tests/dungeon/test_character_level_up.gd` を新規作成し、`Character.gain_experience(amount)` の累積、閾値跨ぎによる `level_up()` 発火、多段レベルアップ、HP/MP 増加（職業別 `hp_per_level + VIT/3`、`mp_per_level` は has_magic のみ、最小 1）、ステータス不変をテスト
+- [x] 6.4 `src/dungeon/character.gd` に `accumulated_exp: int` フィールド（または内部保持）、`gain_experience(amount)`、`level_up()` を実装（`to_dict` / `from_dict` への反映を含む）
+- [x] 6.5 `tests/combat/test_experience_calculator.gd` に `EncounterOutcome.gained_experience` への反映テストを追加（CLEARED 時のみ非ゼロ、WIPED / ESCAPED 時は 0）
+- [x] 6.6 `ExperienceCalculator.award(party_characters, dead_monsters) -> int` を実装し、Character.gain_experience 呼び出しと per-member share 返却を両立
 
 ## 7. CombatOverlay 骨組み（EncounterOverlay 継承）
 
