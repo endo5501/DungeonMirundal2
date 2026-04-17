@@ -96,8 +96,8 @@
 
 ## 12. 統合テストと手動検証
 
-- [ ] 12.1 `tests/combat/test_battle_integration.gd` を新規作成し、ダミー Guild + ダミー MonsterParty で 1 戦闘を最後まで流して CLEARED になることを検証（固定シード）
-- [ ] 12.2 `test_battle_integration.gd` に WIPED・ESCAPED パスのテストを追加（低 HP パーティで WIPED、RNG で Escape 成功を強制）
-- [ ] 12.3 Godot エディタで起動し、実際にダンジョンを歩いてエンカウント→戦闘→勝利/敗北/逃走を一通り確認し、UI レイアウトと挙動の違和感を記録
-- [ ] 12.4 `openspec validate combat-system` が pass することを確認
-- [ ] 12.5 GUT 全テスト green の最終確認
+- [x] 12.1 `tests/combat/test_battle_integration.gd` を新規作成し、ダミー Guild + ダミー MonsterParty で 1 戦闘を最後まで流して CLEARED になることを検証（固定シード）
+- [x] 12.2 `test_battle_integration.gd` に WIPED・ESCAPED パスのテストを追加（低 HP パーティで WIPED、RNG で Escape 成功を強制）
+- [ ] 12.3 Godot エディタで起動し、実際にダンジョンを歩いてエンカウント→戦闘→勝利/敗北/逃走を一通り確認し、UI レイアウトと挙動の違和感を記録（**手動検証**。自動化では未実施）
+- [x] 12.4 `openspec validate combat-system` が pass することを確認
+- [x] 12.5 GUT 全テスト green の最終確認（776/776）
