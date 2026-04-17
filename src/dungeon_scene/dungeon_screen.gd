@@ -87,30 +87,36 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	var position_changed := false
-	var facing_changed := false
 	match event.keycode:
 		KEY_UP, KEY_W:
-			position_changed = _player_state.move_forward(_wiz_map)
+			if _player_state.move_forward(_wiz_map):
+				_on_position_changed()
 		KEY_DOWN, KEY_S:
-			position_changed = _player_state.move_backward(_wiz_map)
+			if _player_state.move_backward(_wiz_map):
+				_on_position_changed()
 		KEY_LEFT, KEY_A:
 			_player_state.turn_left()
-			facing_changed = true
+			_refresh_all()
 		KEY_RIGHT, KEY_D:
 			_player_state.turn_right()
-			facing_changed = true
+			_refresh_all()
 
-	if position_changed:
-		_refresh_all()
-		step_taken.emit(_player_state.position)
-		if not _encounter_active and is_on_start_tile():
-			_show_return_dialog()
-	elif facing_changed:
-		_refresh_all()
+func _on_position_changed() -> void:
+	_refresh_all()
+	# step_taken listeners may set_encounter_active(true) synchronously,
+	# so re-check the flag before showing the return dialog.
+	step_taken.emit(_player_state.position)
+	if not _encounter_active and is_on_start_tile():
+		_show_return_dialog()
 
 func set_encounter_active(active: bool) -> void:
 	_encounter_active = active
+
+func is_encounter_active() -> bool:
+	return _encounter_active
+
+func is_showing_return_dialog() -> bool:
+	return _showing_return_dialog
 
 func check_start_tile_return() -> void:
 	if _encounter_active or _showing_return_dialog:

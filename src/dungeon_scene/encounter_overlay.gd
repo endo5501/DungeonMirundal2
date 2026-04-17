@@ -9,7 +9,6 @@ var _message_label: Label
 var _hint_label: Label
 var _display_text: String = ""
 var _is_active: bool = false
-var _is_resolved: bool = false
 
 
 func _init() -> void:
@@ -65,13 +64,11 @@ func start_encounter(party: MonsterParty) -> void:
 		_message_label.text = _display_text
 	visible = true
 	_is_active = true
-	_is_resolved = false
 
 
 func resolve() -> void:
-	if _is_resolved:
+	if not _is_active:
 		return
-	_is_resolved = true
 	_is_active = false
 	visible = false
 	encounter_resolved.emit(EncounterOutcome.new(EncounterOutcome.Result.CLEARED))
@@ -102,12 +99,15 @@ func _unhandled_input(event: InputEvent) -> void:
 func _format_party(party: MonsterParty) -> String:
 	if party == null or party.is_empty():
 		return ""
-	var counts := party.counts_by_species()
-	var name_lookup: Dictionary = {}
+	var entries: Dictionary = {}  # id -> {"name": String, "count": int}
+	var ordered_ids: Array[StringName] = []
 	for member in party.members:
-		name_lookup[member.monster_id] = member.monster_name
+		var id := member.data.monster_id
+		if not entries.has(id):
+			entries[id] = {"name": member.data.monster_name, "count": 0}
+			ordered_ids.append(id)
+		entries[id]["count"] += 1
 	var lines: Array[String] = []
-	for id in counts.keys():
-		var display_name: String = name_lookup.get(id, String(id))
-		lines.append("%s x%d" % [display_name, counts[id]])
+	for id in ordered_ids:
+		lines.append("%s x%d" % [entries[id]["name"], entries[id]["count"]])
 	return "\n".join(lines)

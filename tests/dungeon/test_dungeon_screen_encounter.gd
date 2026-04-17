@@ -174,7 +174,7 @@ func test_start_tile_return_dialog_suppressed_when_encounter_activates_during_st
 		screen.set_encounter_active(true))
 	screen._unhandled_input(_make_key_event(KEY_UP))
 	assert_true(screen.is_on_start_tile())
-	assert_false(screen._showing_return_dialog,
+	assert_false(screen.is_showing_return_dialog(),
 		"return dialog must be suppressed while encounter is active")
 
 
@@ -187,4 +187,4 @@ func test_check_start_tile_return_shows_dialog_after_encounter_resolves():
 	assert_true(screen.is_on_start_tile())
 	screen.set_encounter_active(false)
 	screen.check_start_tile_return()
-	assert_true(screen._showing_return_dialog)
+	assert_true(screen.is_showing_return_dialog())

@@ -133,7 +133,7 @@ func test_encounter_activates_screen_guard():
 	var screen := _make_screen()
 	coord.attach_screen(screen)
 	screen.step_taken.emit(Vector2i(4, 4))
-	assert_true(screen._encounter_active)
+	assert_true(screen.is_encounter_active())
 
 
 # --- resolution ---
@@ -147,7 +147,7 @@ func test_overlay_resolve_clears_encounter_state():
 	screen.step_taken.emit(Vector2i(4, 4))
 	coord.get_overlay().resolve()
 	assert_false(coord.is_encounter_active())
-	assert_false(screen._encounter_active)
+	assert_false(screen.is_encounter_active())
 
 
 func test_resolve_emits_encounter_finished_signal():

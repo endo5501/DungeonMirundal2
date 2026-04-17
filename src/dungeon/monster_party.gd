@@ -19,6 +19,6 @@ func is_empty() -> bool:
 func counts_by_species() -> Dictionary:
 	var counts: Dictionary = {}
 	for member in members:
-		var id := member.monster_id
+		var id := member.data.monster_id
 		counts[id] = counts.get(id, 0) + 1
 	return counts

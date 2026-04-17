@@ -31,8 +31,8 @@ func test_monster_is_refcounted():
 func test_monster_exposes_source_data():
 	var monster := Monster.new(_slime_data, _make_rng(TEST_SEED))
 	assert_eq(monster.data, _slime_data)
-	assert_eq(monster.monster_id, &"slime")
-	assert_eq(monster.monster_name, "Slime")
+	assert_eq(monster.data.monster_id, &"slime")
+	assert_eq(monster.data.monster_name, "Slime")
 
 
 func test_rolled_hp_within_range():

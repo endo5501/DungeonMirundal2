@@ -4,13 +4,13 @@ extends RefCounted
 var _repository: MonsterRepository
 var _cooldown_steps: int
 var _table: EncounterTableData
-var _steps_since_last_encounter: int = 0
-var _has_triggered_once: bool = false
+var _steps_since_last_encounter: int
 
 
 func _init(repository: MonsterRepository, cooldown_steps: int = 3) -> void:
 	_repository = repository
 	_cooldown_steps = cooldown_steps
+	_steps_since_last_encounter = cooldown_steps
 
 
 func set_table(table: EncounterTableData) -> void:
@@ -20,18 +20,17 @@ func set_table(table: EncounterTableData) -> void:
 func should_trigger(rng: RandomNumberGenerator) -> bool:
 	if _table == null:
 		return false
-	if _has_triggered_once and _steps_since_last_encounter < _cooldown_steps:
+	if _steps_since_last_encounter < _cooldown_steps:
 		_steps_since_last_encounter += 1
 		return false
-	var roll := rng.randf()
-	if roll < _table.probability_per_step:
+	if rng.randf() < _table.probability_per_step:
+		_steps_since_last_encounter = 0
 		return true
 	_steps_since_last_encounter += 1
 	return false
 
 
 func notify_encounter_occurred() -> void:
-	_has_triggered_once = true
 	_steps_since_last_encounter = 0
 
 
