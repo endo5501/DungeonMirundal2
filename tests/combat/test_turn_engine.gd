@@ -245,8 +245,8 @@ func test_escape_failure_forfeits_party_attacks_but_monsters_act():
 	var monsters := [_StubMonsterActor.new("M1", 5, 0, 1, 20)]  # present
 	engine.start_battle(party, monsters)
 	engine.submit_command(0, EscapeCommand.new())
-	var m_hp_before := monsters[0].current_hp
-	var p_hp_before := party[0].current_hp
+	var m_hp_before: int = monsters[0].current_hp
+	var p_hp_before: int = party[0].current_hp
 	engine.resolve_turn(_make_rng())
 	# Monster should have taken no damage from party (escape forfeit)
 	assert_eq(monsters[0].current_hp, m_hp_before)

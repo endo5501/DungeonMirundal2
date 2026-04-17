@@ -169,3 +169,42 @@ func test_empty_party():
 	for i in range(3):
 		assert_null(pd.get_front_row()[i])
 		assert_null(pd.get_back_row()[i])
+
+
+# --- combat-system: get_party_characters ---
+
+func test_get_party_characters_returns_two_rows():
+	var rows: Array = _guild.get_party_characters()
+	assert_eq(rows.size(), 2)
+
+
+func test_get_party_characters_rows_have_three_slots_each():
+	var rows: Array = _guild.get_party_characters()
+	assert_eq(rows[0].size(), 3)
+	assert_eq(rows[1].size(), 3)
+
+
+func test_get_party_characters_contains_assigned_members_and_nulls():
+	var a := _make_character("A")
+	var b := _make_character("B")
+	_guild.register(a)
+	_guild.register(b)
+	_guild.assign_to_party(a, 0, 0)
+	_guild.assign_to_party(b, 1, 1)
+	var rows: Array = _guild.get_party_characters()
+	assert_eq(rows[0][0], a)
+	assert_null(rows[0][1])
+	assert_null(rows[0][2])
+	assert_null(rows[1][0])
+	assert_eq(rows[1][1], b)
+	assert_null(rows[1][2])
+
+
+func test_get_party_characters_returns_duplicate_not_live_reference():
+	var a := _make_character("A")
+	_guild.register(a)
+	_guild.assign_to_party(a, 0, 0)
+	var rows: Array = _guild.get_party_characters()
+	rows[0][0] = null
+	# Original guild state unchanged
+	assert_eq(_guild.get_character_at(0, 0), a)

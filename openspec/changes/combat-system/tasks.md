@@ -51,48 +51,48 @@
 
 ## 7. CombatOverlay 骨組み（EncounterOverlay 継承）
 
-- [ ] 7.1 `tests/dungeon/test_combat_overlay.gd` を新規作成し、以下を網羅:
+- [x] 7.1 `tests/dungeon/test_combat_overlay.gd` を新規作成し、以下を網羅:
   - `CombatOverlay` が `EncounterOverlay` のサブクラスである
   - `CanvasLayer`、`layer == 10`、初期非表示
   - `start_encounter(party)` で可視化し、内部 `TurnEngine` が `COMMAND_INPUT` 状態に入る
-- [ ] 7.2 `src/dungeon_scene/combat_overlay.gd` (`class_name CombatOverlay extends EncounterOverlay`) の骨組み（`start_encounter` override、内部 TurnEngine 初期化、空のサブパネル追加）を実装
-- [ ] 7.3 `test_combat_overlay.gd` に MonsterPanel の内容検証（種別別生存数表示、個体 HP 非表示、モンスター死亡で表示更新）を追加
-- [ ] 7.4 `src/dungeon_scene/combat/monster_panel.gd` を実装
-- [ ] 7.5 `test_combat_overlay.gd` に PartyStatusPanel の検証（Character 参照から HP が描画、ダメージ後に HP 表示更新）を追加
-- [ ] 7.6 `src/dungeon_scene/combat/party_status_panel.gd` を実装（既存 `PartyDisplay` を再利用せず、戦闘中専用として Character 参照）
+- [x] 7.2 `src/dungeon_scene/combat_overlay.gd` (`class_name CombatOverlay extends EncounterOverlay`) の骨組み（`start_encounter` override、内部 TurnEngine 初期化、空のサブパネル追加）を実装
+- [x] 7.3 `test_combat_overlay.gd` に MonsterPanel の内容検証（種別別生存数表示、個体 HP 非表示、モンスター死亡で表示更新）を追加
+- [x] 7.4 `src/dungeon_scene/combat/combat_monster_panel.gd` を実装（class_name `CombatMonsterPanel`）
+- [x] 7.5 `test_combat_overlay.gd` に PartyStatusPanel の検証（Character 参照から HP が描画、ダメージ後に HP 表示更新）を追加
+- [x] 7.6 `src/dungeon_scene/combat/combat_party_status_panel.gd` を実装（class_name `CombatPartyStatusPanel`、戦闘中専用として Character 参照）
 
 ## 8. コマンド入力 UI
 
-- [ ] 8.1 `test_combat_overlay.gd` に CommandMenu のテストを追加:
+- [x] 8.1 `test_combat_overlay.gd` に CommandMenu のテストを追加:
   - 生存 PartyCombatant ごとに 1 人ずつ入力を求める
   - 死亡者をスキップして次に進む
   - 「こうげき」/「ぼうぎょ」/「にげる」の 3 オプションを表示
   - 「こうげき」選択で生存モンスターから対象選択画面に進む
   - 全員入力完了で `TurnEngine.resolve_turn` が呼ばれる
-- [ ] 8.2 `src/dungeon_scene/combat/command_menu.gd` を実装
-- [ ] 8.3 `src/dungeon_scene/combat/target_selector.gd` を実装（生存モンスター一覧から 1 体選択）
+- [x] 8.2 `src/dungeon_scene/combat/combat_command_menu.gd` を実装
+- [x] 8.3 `src/dungeon_scene/combat/combat_target_selector.gd` を実装（生存モンスター一覧から 1 体選択）
 
 ## 9. CombatLog と ResultPanel
 
-- [ ] 9.1 `test_combat_overlay.gd` に CombatLog のテスト（直近 4 行保持、古い行の押し出し、攻撃/被弾のログ文言）を追加
-- [ ] 9.2 `src/dungeon_scene/combat/combat_log.gd` を実装（`TurnReport` から行を生成して追記）
-- [ ] 9.3 `test_combat_overlay.gd` に ResultPanel のテスト（CLEARED: 獲得 EXP と LvUp 通知、WIPED: 敗北メッセージ、ESCAPED: 逃走メッセージ、確認入力で `encounter_resolved` 発火）を追加
-- [ ] 9.4 `src/dungeon_scene/combat/result_panel.gd` を実装
+- [x] 9.1 `test_combat_overlay.gd` に CombatLog のテスト（直近 4 行保持、古い行の押し出し、攻撃/被弾のログ文言）を追加
+- [x] 9.2 `src/dungeon_scene/combat/combat_log.gd` を実装（`TurnReport` から行を生成して追記）
+- [x] 9.3 `test_combat_overlay.gd` に ResultPanel のテスト（CLEARED: 獲得 EXP と LvUp 通知、WIPED: 敗北メッセージ、ESCAPED: 逃走メッセージ、確認入力で `encounter_resolved` 発火）を追加
+- [x] 9.4 `src/dungeon_scene/combat/combat_result_panel.gd` を実装（class_name `CombatResultPanel`）
 
 ## 10. 入力制御と既存オーバーレイ契約回帰
 
-- [ ] 10.1 `test_combat_overlay.gd` に入力遮断テスト（戦闘中の移動キーは Dungeon に届かない、ESC で ESC メニューが開かない）を追加
-- [ ] 10.2 `src/dungeon_scene/combat_overlay.gd` の `_unhandled_input` を整備（親クラスの入力処理を override/拡張）
-- [ ] 10.3 既存 `tests/dungeon/test_encounter_overlay.gd` が引き続き green（スタブ契約の回帰）であることを確認
+- [x] 10.1 `test_combat_overlay.gd` に入力遮断テスト（戦闘中の移動キーは Dungeon に届かない、ESC で ESC メニューが開かない）を追加
+- [x] 10.2 `src/dungeon_scene/combat_overlay.gd` の `_unhandled_input` を整備（親クラスの入力処理を override/拡張）
+- [x] 10.3 既存 `tests/dungeon/test_encounter_overlay.gd` が引き続き green（スタブ契約の回帰）であることを確認
 
 ## 11. EncounterCoordinator への注入と main.gd 配線
 
-- [ ] 11.1 `tests/dungeon/test_encounter_coordinator.gd` に「コンストラクタ引数（または setter）で EncounterOverlay サブクラスを注入できる」テストを追加
-- [ ] 11.2 `src/dungeon/encounter_coordinator.gd` の `_init` / `_ready` を修正し、overlay インスタンスを外部注入可能にする（省略時は現行の `EncounterOverlay` スタブ）
-- [ ] 11.3 `src/dungeon/guild.gd` に `get_party_characters() -> Array[Array[Character]]`（front/back 2 次元配列、`null` を含む）を追加し、`tests/dungeon/test_guild.gd` に取得テストを追加
-- [ ] 11.4 `src/main.gd` の `_setup_encounter_coordinator()` を修正し、`CombatOverlay` を生成して `EncounterCoordinator` に渡す。`CombatOverlay.setup_dependencies(guild, equipment_provider, rng)` 相当のセッターで Guild 参照と `DummyEquipmentProvider` を渡す
-- [ ] 11.5 `src/main.gd` で `EncounterOutcome.WIPED` を受けた際の町強制送還フローを実装（`encounter_finished` シグナルの後に outcome を参照する経路を追加、または `encounter_finished(outcome)` に拡張してハンドラで分岐）
-- [ ] 11.6 `GameState.heal_party()` が町帰還時に呼ばれていることを確認し、WIPED 後の HP 全快を担保
+- [x] 11.1 `tests/dungeon/test_encounter_coordinator.gd` に「コンストラクタ引数（または setter）で EncounterOverlay サブクラスを注入できる」テストを追加
+- [x] 11.2 `src/dungeon/encounter_coordinator.gd` の `_init` / `_ready` を修正し、overlay インスタンスを外部注入可能にする（省略時は現行の `EncounterOverlay` スタブ）
+- [x] 11.3 `src/dungeon/guild.gd` に `get_party_characters() -> Array[Array[Character]]`（front/back 2 次元配列、`null` を含む）を追加し、`tests/dungeon/test_guild.gd` に取得テストを追加
+- [x] 11.4 `src/main.gd` の `_setup_encounter_coordinator()` を修正し、`CombatOverlay` を生成して `EncounterCoordinator` に渡す。`CombatOverlay.setup_dependencies(guild, equipment_provider, rng)` 相当のセッターで Guild 参照と `DummyEquipmentProvider` を渡す（タイミングの関係で、依存注入は `_attach_encounter_coordinator_to_screen` からの再注入で実施）
+- [x] 11.5 `src/main.gd` で `EncounterOutcome.WIPED` を受けた際の町強制送還フローを実装（`encounter_finished(outcome)` に拡張してハンドラで分岐）
+- [x] 11.6 `GameState.heal_party()` が町帰還時に呼ばれていることを確認し、WIPED 後の HP 全快を担保（既存の `_on_return_to_town` 経由）
 
 ## 12. 統合テストと手動検証
 

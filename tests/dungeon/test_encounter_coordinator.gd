@@ -228,3 +228,36 @@ func test_cooldown_suppresses_consecutive_encounters():
 		screen.step_taken.emit(Vector2i(4, 4))
 		assert_false(coord.is_encounter_active(),
 			"step %d should be suppressed by cooldown" % i)
+
+
+# --- combat-system: overlay injection ---
+
+class _TestOverlay extends EncounterOverlay:
+	pass
+
+
+func test_set_overlay_substitutes_default_stub():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	var custom := _TestOverlay.new()
+	coord.set_overlay(custom)
+	add_child_autofree(coord)
+	assert_eq(coord.get_overlay(), custom)
+
+
+func test_default_overlay_is_stub_when_none_injected():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	assert_is(coord.get_overlay(), EncounterOverlay)
+
+
+func test_encounter_finished_carries_outcome():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_always_trigger_table())
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	watch_signals(coord)
+	screen.step_taken.emit(Vector2i(4, 4))
+	coord.get_overlay().resolve()
+	assert_signal_emitted(coord, "encounter_finished")
+	assert_not_null(coord.last_outcome())

@@ -5,6 +5,9 @@ var _current_dungeon_data: DungeonData
 var _esc_menu: EscMenu
 var _encounter_coordinator: EncounterCoordinator
 var _encounter_tables_by_floor: Dictionary = {}
+var _encounter_rng: RandomNumberGenerator
+var _combat_overlay: CombatOverlay
+var _equipment_provider: EquipmentProvider
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -23,10 +26,19 @@ func _setup_encounter_coordinator() -> void:
 	for table in loader.load_all_encounter_tables():
 		if table != null and table.is_valid():
 			_encounter_tables_by_floor[table.floor] = table
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-	_encounter_coordinator = EncounterCoordinator.new(repository, rng)
+	_encounter_rng = RandomNumberGenerator.new()
+	_encounter_rng.randomize()
+	_equipment_provider = DummyEquipmentProvider.new()
+	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
+	_combat_overlay = CombatOverlay.new()
+	_encounter_coordinator.set_overlay(_combat_overlay)
+	_encounter_coordinator.encounter_finished.connect(_on_encounter_finished)
 	add_child(_encounter_coordinator)
+
+
+func _on_encounter_finished(outcome: EncounterOutcome) -> void:
+	if outcome != null and outcome.result == EncounterOutcome.Result.WIPED:
+		_on_return_to_town()
 
 # --- Screen switching ---
 
@@ -146,12 +158,19 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	if _encounter_coordinator == null:
 		return
+	_refresh_combat_overlay_dependencies()
 	# TODO: use the dungeon's current floor once multi-floor dungeons land.
 	var table: EncounterTableData = _encounter_tables_by_floor.get(1, null)
 	if table == null:
 		return
 	_encounter_coordinator.set_table(table)
 	_encounter_coordinator.attach_screen(screen)
+
+
+func _refresh_combat_overlay_dependencies() -> void:
+	if _combat_overlay == null or GameState.guild == null:
+		return
+	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 
 func _on_return_to_town() -> void:
 	GameState.heal_party()
