@@ -3,5 +3,8 @@
     "codex@openai-codex": true,
     "superpowers@claude-plugins-official": true
   },
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "permissions": {
+    "defaultMode": "auto"
+  }
 }
