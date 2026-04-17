@@ -3,6 +3,8 @@ extends RefCounted
 
 const RACES_DIR := "res://data/races/"
 const JOBS_DIR := "res://data/jobs/"
+const MONSTERS_DIR := "res://data/monsters/"
+const ENCOUNTER_TABLES_DIR := "res://data/encounter_tables/"
 
 func load_all_races() -> Array[RaceData]:
 	var results: Array[RaceData] = []
@@ -14,6 +16,18 @@ func load_all_jobs() -> Array[JobData]:
 	var results: Array[JobData] = []
 	for res in _load_resources(JOBS_DIR):
 		results.append(res as JobData)
+	return results
+
+func load_all_monsters() -> Array[MonsterData]:
+	var results: Array[MonsterData] = []
+	for res in _load_resources(MONSTERS_DIR):
+		results.append(res as MonsterData)
+	return results
+
+func load_all_encounter_tables() -> Array[EncounterTableData]:
+	var results: Array[EncounterTableData] = []
+	for res in _load_resources(ENCOUNTER_TABLES_DIR):
+		results.append(res as EncounterTableData)
 	return results
 
 func _load_resources(dir_path: String) -> Array:

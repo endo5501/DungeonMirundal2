@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EncounterTableData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_group_spec.gd" id="1_group"]
+[ext_resource type="Script" path="res://src/dungeon/data/encounter_pattern.gd" id="2_pattern"]
+[ext_resource type="Script" path="res://src/dungeon/data/encounter_entry.gd" id="3_entry"]
+[ext_resource type="Script" path="res://src/dungeon/data/encounter_table_data.gd" id="4_table"]
+
+[sub_resource type="Resource" id="group_slime"]
+script = ExtResource("1_group")
+monster_id = &"slime"
+count_min = 2
+count_max = 4
+
+[sub_resource type="Resource" id="group_goblin"]
+script = ExtResource("1_group")
+monster_id = &"goblin"
+count_min = 1
+count_max = 2
+
+[sub_resource type="Resource" id="group_bat"]
+script = ExtResource("1_group")
+monster_id = &"bat"
+count_min = 2
+count_max = 3
+
+[sub_resource type="Resource" id="pattern_slimes"]
+script = ExtResource("2_pattern")
+groups = Array[Resource]([SubResource("group_slime")])
+
+[sub_resource type="Resource" id="pattern_goblins"]
+script = ExtResource("2_pattern")
+groups = Array[Resource]([SubResource("group_goblin")])
+
+[sub_resource type="Resource" id="pattern_bats"]
+script = ExtResource("2_pattern")
+groups = Array[Resource]([SubResource("group_bat")])
+
+[sub_resource type="Resource" id="pattern_mixed"]
+script = ExtResource("2_pattern")
+groups = Array[Resource]([SubResource("group_slime"), SubResource("group_goblin")])
+
+[sub_resource type="Resource" id="entry_slimes"]
+script = ExtResource("3_entry")
+pattern = SubResource("pattern_slimes")
+weight = 3
+
+[sub_resource type="Resource" id="entry_goblins"]
+script = ExtResource("3_entry")
+pattern = SubResource("pattern_goblins")
+weight = 2
+
+[sub_resource type="Resource" id="entry_bats"]
+script = ExtResource("3_entry")
+pattern = SubResource("pattern_bats")
+weight = 2
+
+[sub_resource type="Resource" id="entry_mixed"]
+script = ExtResource("3_entry")
+pattern = SubResource("pattern_mixed")
+weight = 1
+
+[resource]
+script = ExtResource("4_table")
+floor = 1
+probability_per_step = 0.1
+entries = Array[Resource]([SubResource("entry_slimes"), SubResource("entry_goblins"), SubResource("entry_bats"), SubResource("entry_mixed")])

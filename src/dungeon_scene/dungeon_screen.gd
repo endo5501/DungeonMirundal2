@@ -2,6 +2,7 @@ class_name DungeonScreen
 extends Control
 
 signal return_to_town
+signal step_taken(new_position: Vector2i)
 
 var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
@@ -17,6 +18,7 @@ var _showing_return_dialog: bool = false
 var _return_dialog_selected: int = 0
 var _return_dialog_labels: Array[Label] = []
 var _return_dialog_container: Control
+var _encounter_active: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -77,28 +79,50 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.pressed or event.echo:
 		return
 
+	if _encounter_active:
+		return
+
 	if _showing_return_dialog:
 		_handle_return_dialog_input(event)
 		get_viewport().set_input_as_handled()
 		return
 
-	var moved := false
 	match event.keycode:
 		KEY_UP, KEY_W:
-			moved = _player_state.move_forward(_wiz_map)
+			if _player_state.move_forward(_wiz_map):
+				_on_position_changed()
 		KEY_DOWN, KEY_S:
-			moved = _player_state.move_backward(_wiz_map)
+			if _player_state.move_backward(_wiz_map):
+				_on_position_changed()
 		KEY_LEFT, KEY_A:
 			_player_state.turn_left()
-			moved = true
+			_refresh_all()
 		KEY_RIGHT, KEY_D:
 			_player_state.turn_right()
-			moved = true
+			_refresh_all()
 
-	if moved:
-		_refresh_all()
-		if is_on_start_tile():
-			_show_return_dialog()
+func _on_position_changed() -> void:
+	_refresh_all()
+	# step_taken listeners may set_encounter_active(true) synchronously,
+	# so re-check the flag before showing the return dialog.
+	step_taken.emit(_player_state.position)
+	if not _encounter_active and is_on_start_tile():
+		_show_return_dialog()
+
+func set_encounter_active(active: bool) -> void:
+	_encounter_active = active
+
+func is_encounter_active() -> bool:
+	return _encounter_active
+
+func is_showing_return_dialog() -> bool:
+	return _showing_return_dialog
+
+func check_start_tile_return() -> void:
+	if _encounter_active or _showing_return_dialog:
+		return
+	if is_on_start_tile():
+		_show_return_dialog()
 
 func is_on_start_tile() -> bool:
 	if _wiz_map == null or _player_state == null:

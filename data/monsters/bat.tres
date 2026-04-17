@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+monster_id = &"bat"
+monster_name = "Bat"
+max_hp_min = 3
+max_hp_max = 6
+attack = 2
+defense = 0
+agility = 7
+experience = 3
