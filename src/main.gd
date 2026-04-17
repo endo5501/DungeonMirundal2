@@ -3,15 +3,30 @@ extends Control
 var _current_screen: Control
 var _current_dungeon_data: DungeonData
 var _esc_menu: EscMenu
+var _encounter_coordinator: EncounterCoordinator
+var _encounter_tables_by_floor: Dictionary = {}
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_setup_encounter_coordinator()
 	_esc_menu = EscMenu.new()
 	_esc_menu.quit_to_title.connect(_on_quit_to_title)
 	_esc_menu.save_requested.connect(_on_save_requested)
 	_esc_menu.load_requested.connect(_on_load_requested)
 	add_child(_esc_menu)
 	_show_title_screen()
+
+func _setup_encounter_coordinator() -> void:
+	var loader := DataLoader.new()
+	var repository := MonsterRepository.new()
+	repository.register_all(loader.load_all_monsters())
+	for table in loader.load_all_encounter_tables():
+		if table != null and table.is_valid():
+			_encounter_tables_by_floor[table.floor] = table
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	_encounter_coordinator = EncounterCoordinator.new(repository, rng)
+	add_child(_encounter_coordinator)
 
 # --- Screen switching ---
 
@@ -64,6 +79,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.pressed or event.echo:
 		return
 	if event.keycode == KEY_ESCAPE and not _current_screen is TitleScreen and not _esc_menu.is_menu_visible():
+		if _encounter_coordinator != null and _encounter_coordinator.is_encounter_active():
+			return
 		_on_esc_key_pressed()
 		get_viewport().set_input_as_handled()
 
@@ -122,8 +139,20 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 	screen.return_to_town.connect(_on_return_to_town)
 	_switch_screen(screen)
 	screen.setup_from_data(dungeon_data, GameState.guild.get_party_data())
+	_attach_encounter_coordinator_to_screen(screen)
+
+func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
+	if _encounter_coordinator == null:
+		return
+	var table: EncounterTableData = _encounter_tables_by_floor.get(1, null)
+	if table == null:
+		return
+	_encounter_coordinator.set_table(table)
+	_encounter_coordinator.attach_screen(screen)
 
 func _on_return_to_town() -> void:
+	if _encounter_coordinator != null:
+		_encounter_coordinator.detach_screen()
 	GameState.heal_party()
 	_current_dungeon_data = null
 	_show_town_screen()

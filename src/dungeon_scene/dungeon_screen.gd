@@ -2,6 +2,7 @@ class_name DungeonScreen
 extends Control
 
 signal return_to_town
+signal step_taken(new_position: Vector2i)
 
 var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
@@ -17,6 +18,7 @@ var _showing_return_dialog: bool = false
 var _return_dialog_selected: int = 0
 var _return_dialog_labels: Array[Label] = []
 var _return_dialog_container: Control
+var _encounter_active: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -77,28 +79,44 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.pressed or event.echo:
 		return
 
+	if _encounter_active:
+		return
+
 	if _showing_return_dialog:
 		_handle_return_dialog_input(event)
 		get_viewport().set_input_as_handled()
 		return
 
-	var moved := false
+	var position_changed := false
+	var facing_changed := false
 	match event.keycode:
 		KEY_UP, KEY_W:
-			moved = _player_state.move_forward(_wiz_map)
+			position_changed = _player_state.move_forward(_wiz_map)
 		KEY_DOWN, KEY_S:
-			moved = _player_state.move_backward(_wiz_map)
+			position_changed = _player_state.move_backward(_wiz_map)
 		KEY_LEFT, KEY_A:
 			_player_state.turn_left()
-			moved = true
+			facing_changed = true
 		KEY_RIGHT, KEY_D:
 			_player_state.turn_right()
-			moved = true
+			facing_changed = true
 
-	if moved:
+	if position_changed:
 		_refresh_all()
-		if is_on_start_tile():
+		step_taken.emit(_player_state.position)
+		if not _encounter_active and is_on_start_tile():
 			_show_return_dialog()
+	elif facing_changed:
+		_refresh_all()
+
+func set_encounter_active(active: bool) -> void:
+	_encounter_active = active
+
+func check_start_tile_return() -> void:
+	if _encounter_active or _showing_return_dialog:
+		return
+	if is_on_start_tile():
+		_show_return_dialog()
 
 func is_on_start_tile() -> bool:
 	if _wiz_map == null or _player_state == null:
