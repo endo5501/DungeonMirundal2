@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+monster_id = &"slime"
+monster_name = "Slime"
+max_hp_min = 5
+max_hp_max = 10
+attack = 3
+defense = 1
+agility = 2
+experience = 4

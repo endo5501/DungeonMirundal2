@@ -1,25 +1,25 @@
 ## 1. データリソース基盤（MonsterData）
 
-- [ ] 1.1 `tests/dungeon/data/test_monster_data.gd` を作成し、フィールド定義・HP 範囲バリデーションの失敗するテストを書く
-- [ ] 1.2 `src/dungeon/data/monster_data.gd` (`extends Resource`) を作成し、テストを通す（`@export` フィールド、`is_valid()` 的なバリデータ）
-- [ ] 1.3 `tests/dungeon/data/test_monster_data.gd` にサンプル `.tres` 読み込みテストを追加
-- [ ] 1.4 `data/monsters/` ディレクトリ作成とサンプル 2〜3 体（例: slime, goblin, bat）を `.tres` で作成
-- [ ] 1.5 テスト実行しすべて green になることを確認
+- [x] 1.1 `tests/dungeon/test_monster_data.gd` を作成し、フィールド定義・HP 範囲バリデーションの失敗するテストを書く
+- [x] 1.2 `src/dungeon/data/monster_data.gd` (`extends Resource`) を作成し、テストを通す（`@export` フィールド、`is_valid()` 的なバリデータ）
+- [x] 1.3 `tests/dungeon/test_monster_data.gd` にサンプル `.tres` 読み込みテストを追加
+- [x] 1.4 `data/monsters/` ディレクトリ作成とサンプル 2〜3 体（例: slime, goblin, bat）を `.tres` で作成
+- [x] 1.5 テスト実行しすべて green になることを確認
 
 ## 2. Monster インスタンスと MonsterRepository
 
-- [ ] 2.1 `tests/dungeon/test_monster.gd` を作成し、MonsterData + RNG から HP をロールするテストを書く（決定論性含む）
-- [ ] 2.2 `src/dungeon/monster.gd` (`extends RefCounted`) を実装、テストを通す
-- [ ] 2.3 `tests/dungeon/test_monster_repository.gd` を作成し、`get(monster_id)` のヒット/ミス、一括ロードをテスト
-- [ ] 2.4 `src/dungeon/monster_repository.gd` を実装
-- [ ] 2.5 `src/dungeon/data/data_loader.gd` に `load_all_monsters()` を追加し、既存 `test_data_loader.gd` を拡張
-- [ ] 2.6 全テスト green を確認
+- [x] 2.1 `tests/dungeon/test_monster.gd` を作成し、MonsterData + RNG から HP をロールするテストを書く（決定論性含む）
+- [x] 2.2 `src/dungeon/monster.gd` (`extends RefCounted`) を実装、テストを通す
+- [x] 2.3 `tests/dungeon/test_monster_repository.gd` を作成し、`find(monster_id)` のヒット/ミス、一括ロードをテスト
+- [x] 2.4 `src/dungeon/monster_repository.gd` を実装
+- [x] 2.5 `src/dungeon/data/data_loader.gd` に `load_all_monsters()` を追加し、既存 `test_data_loader.gd` を拡張
+- [x] 2.6 全テスト green を確認
 
 ## 3. EncounterTableData / EncounterPattern
 
-- [ ] 3.1 `tests/dungeon/data/test_encounter_pattern.gd` でグループ展開・個体数範囲をテスト
+- [ ] 3.1 `tests/dungeon/test_encounter_pattern.gd` でグループ展開・個体数範囲をテスト
 - [ ] 3.2 `src/dungeon/data/monster_group_spec.gd` と `src/dungeon/data/encounter_pattern.gd` を実装
-- [ ] 3.3 `tests/dungeon/data/test_encounter_table_data.gd` でフィールド・重みリスト検証
+- [ ] 3.3 `tests/dungeon/test_encounter_table_data.gd` でフィールド・重みリスト検証
 - [ ] 3.4 `src/dungeon/data/encounter_table_data.gd` と `src/dungeon/data/encounter_entry.gd` を実装
 - [ ] 3.5 `data/encounter_tables/` に階層 1 用サンプル `.tres` を作成
 - [ ] 3.6 `DataLoader.load_all_encounter_tables()` を追加

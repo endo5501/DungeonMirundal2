@@ -16,15 +16,15 @@ The system SHALL provide a `MonsterData` Custom Resource that defines a monster 
 - **THEN** validation SHALL report an error and the monster SHALL NOT be usable
 
 ### Requirement: MonsterRepository loads and provides monsters by id
-The system SHALL provide a `MonsterRepository` that loads all MonsterData resources at startup and exposes lookup by `monster_id`.
+The system SHALL provide a `MonsterRepository` that loads all MonsterData resources at startup and exposes lookup by `monster_id` via `find(monster_id)`.
 
 #### Scenario: Lookup existing monster
 - **WHEN** a MonsterRepository is populated with a MonsterData whose `monster_id` is `&"slime"`
-- **THEN** `get(&"slime")` SHALL return that MonsterData
+- **THEN** `find(&"slime")` SHALL return that MonsterData
 
 #### Scenario: Lookup missing monster
 - **WHEN** a MonsterRepository is queried for `monster_id` `&"nonexistent"`
-- **THEN** `get(&"nonexistent")` SHALL return `null`
+- **THEN** `find(&"nonexistent")` SHALL return `null`
 
 #### Scenario: Bulk load from data directory
 - **WHEN** `DataLoader.load_all_monsters()` is invoked
