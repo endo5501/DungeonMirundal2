@@ -175,6 +175,44 @@ func test_detach_screen_disconnects_step_taken():
 	assert_false(coord.get_overlay().visible, "detached screen must not trigger overlay")
 
 
+func _make_unmanaged_screen() -> DungeonScreen:
+	# Screen that is NOT autofreed; caller is responsible for lifecycle.
+	var screen := DungeonScreen.new()
+	add_child(screen)
+	var wiz_map := _make_map(Vector2i(7, 7))
+	var ps := PlayerState.new(Vector2i(3, 3), Direction.NORTH)
+	screen.setup(wiz_map, ps)
+	return screen
+
+
+func test_detach_after_screen_freed_does_not_error():
+	# Simulates leaving the dungeon through paths that free the screen
+	# without calling detach (ESC quit, save/load while in dungeon).
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	var screen := _make_unmanaged_screen()
+	coord.attach_screen(screen)
+	screen.free()  # screen reference now invalid
+	coord.detach_screen()  # must not touch the freed object
+	assert_false(coord.is_encounter_active())
+
+
+func test_attach_after_previous_screen_freed_does_not_error():
+	# New DungeonScreen enters while coordinator still holds a stale
+	# reference to a freed previous screen. attach_screen must not error.
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_always_trigger_table())
+	var old_screen := _make_unmanaged_screen()
+	coord.attach_screen(old_screen)
+	old_screen.free()
+	var new_screen := _make_screen()
+	coord.attach_screen(new_screen)
+	new_screen.step_taken.emit(Vector2i(4, 4))
+	assert_true(coord.is_encounter_active(),
+		"new screen must be wired correctly after freed-predecessor recovery")
+
+
 # --- cooldown propagation ---
 
 func test_cooldown_suppresses_consecutive_encounters():

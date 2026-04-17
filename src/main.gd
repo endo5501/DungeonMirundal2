@@ -32,6 +32,8 @@ func _setup_encounter_coordinator() -> void:
 
 func _switch_screen(new_screen: Control) -> void:
 	if _current_screen:
+		if _current_screen is DungeonScreen and _encounter_coordinator != null:
+			_encounter_coordinator.detach_screen()
 		_current_screen.queue_free()
 	_current_screen = new_screen
 	new_screen.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -152,8 +154,6 @@ func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	_encounter_coordinator.attach_screen(screen)
 
 func _on_return_to_town() -> void:
-	if _encounter_coordinator != null:
-		_encounter_coordinator.detach_screen()
 	GameState.heal_party()
 	_current_dungeon_data = null
 	_show_town_screen()
