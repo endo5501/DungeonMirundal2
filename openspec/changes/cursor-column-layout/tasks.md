@@ -58,11 +58,11 @@
 
 ## 10. 画面移行: dungeon_entrance（複合ケース）
 
-- [ ] 10.1 dungeon_entrance のテストを新 API に更新。対象: (a) ダンジョンリスト行（マルチカラム: 名前・サイズ・探索率）(b) ボタン列 4 項目 (c) 削除確認ダイアログの「はい/いいえ」
-- [ ] 10.2 `src/town_scene/dungeon_entrance.gd` の `_build_ui` と `_update_labels` を行ベースに書き換え、リスト行は `CursorMenuRow.add_extra_label` でマルチカラム化
-- [ ] 10.3 削除確認ダイアログ（line 180 付近の直接プレフィックス参照）も行ベースに移行
-- [ ] 10.4 フォーカス切替（DUNGEON_LIST ↔ BUTTONS）と連動したカーソル可視性がテストで緑
-- [ ] 10.5 テストが通過することを確認
+- [x] 10.1 dungeon_entrance のテストを新 API に更新。対象: (a) ダンジョンリスト行（マルチカラム: 名前・サイズ・探索率）(b) ボタン列 4 項目 (c) 削除確認ダイアログの「はい/いいえ」
+- [x] 10.2 `src/town_scene/dungeon_entrance.gd` の `_build_ui` と `_update_labels` を行ベースに書き換え、リスト行は `CursorMenuRow.add_extra_label` でマルチカラム化
+- [x] 10.3 削除確認ダイアログ（line 180 付近の直接プレフィックス参照）も行ベースに移行
+- [x] 10.4 フォーカス切替（DUNGEON_LIST ↔ BUTTONS）と連動したカーソル可視性がテストで緑
+- [x] 10.5 テストが通過することを確認
 
 ## 11. 旧 API の削除
 

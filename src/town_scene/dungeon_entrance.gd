@@ -16,13 +16,13 @@ var selected_index: int = -1
 var _mode: Mode = Mode.LIST
 var _focus: Focus = Focus.DUNGEON_LIST
 
-var _list_labels: Array[Label] = []
+var _list_rows: Array[CursorMenuRow] = []
 var _button_menu: CursorMenu
-var _button_labels: Array[Label] = []
+var _button_rows: Array[CursorMenuRow] = []
 var _vbox: VBoxContainer
 var _create_dialog: DungeonCreateDialog
 var _delete_confirm_container: CenterContainer
-var _delete_confirm_labels: Array[Label] = []
+var _delete_confirm_rows: Array[CursorMenuRow] = []
 var _delete_confirm_selected: int = 1  # default to いいえ
 
 func _init() -> void:
@@ -47,8 +47,8 @@ func _ready() -> void:
 func _build_ui() -> void:
 	for child in _vbox.get_children():
 		child.queue_free()
-	_list_labels.clear()
-	_button_labels.clear()
+	_list_rows.clear()
+	_button_rows.clear()
 
 	var title := Label.new()
 	title.text = "ダンジョン入口"
@@ -62,10 +62,20 @@ func _build_ui() -> void:
 
 	if _registry and _registry.size() > 0:
 		for i in range(_registry.size()):
-			var label := Label.new()
-			label.add_theme_font_size_override("font_size", FONT_SIZE)
-			_vbox.add_child(label)
-			_list_labels.append(label)
+			var dd := _registry.get_dungeon(i)
+			var row := CursorMenuRow.new()
+			row.set_text(dd.dungeon_name)
+			row.set_text_font_size(FONT_SIZE)
+			var size_label := Label.new()
+			size_label.text = "%dx%d" % [dd.map_size, dd.map_size]
+			size_label.add_theme_font_size_override("font_size", FONT_SIZE)
+			row.add_extra_label(size_label)
+			var rate_label := Label.new()
+			rate_label.text = "探索%d%%" % int(dd.get_exploration_rate() * 100)
+			rate_label.add_theme_font_size_override("font_size", FONT_SIZE)
+			row.add_extra_label(rate_label)
+			_vbox.add_child(row)
+			_list_rows.append(row)
 	else:
 		var empty := Label.new()
 		empty.text = "まず「新規生成」でダンジョンを作成してください"
@@ -77,10 +87,11 @@ func _build_ui() -> void:
 	_vbox.add_child(spacer2)
 
 	for i in range(BUTTON_ITEMS.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		_vbox.add_child(label)
-		_button_labels.append(label)
+		var row := CursorMenuRow.new()
+		row.set_text(BUTTON_ITEMS[i])
+		row.set_text_font_size(FONT_SIZE)
+		_vbox.add_child(row)
+		_button_rows.append(row)
 
 	_update_button_disabled()
 	_update_labels()
@@ -94,13 +105,10 @@ func _update_button_disabled() -> void:
 	_button_menu.disabled_indices = disabled
 
 func _update_labels() -> void:
-	for i in range(_list_labels.size()):
-		var dd := _registry.get_dungeon(i)
-		var prefix := CursorMenu.CURSOR_PREFIX if _focus == Focus.DUNGEON_LIST and i == selected_index else CursorMenu.NO_CURSOR_PREFIX
-		var rate := int(dd.get_exploration_rate() * 100)
-		_list_labels[i].text = "%s%s  %dx%d  探索%d%%" % [prefix, dd.dungeon_name, dd.map_size, dd.map_size, rate]
+	for i in range(_list_rows.size()):
+		_list_rows[i].set_selected(_focus == Focus.DUNGEON_LIST and i == selected_index)
 
-	_button_menu.update_labels(_button_labels)
+	_button_menu.update_rows(_button_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _mode != Mode.LIST:
@@ -144,7 +152,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _show_delete_confirm() -> void:
 	_mode = Mode.DELETE_CONFIRM
 	_delete_confirm_selected = 1  # default to いいえ
-	_delete_confirm_labels.clear()
+	_delete_confirm_rows.clear()
 
 	_delete_confirm_container = CenterContainer.new()
 	_delete_confirm_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -170,23 +178,22 @@ func _show_delete_confirm() -> void:
 	vbox.add_child(spacer)
 
 	for option in ["はい", "いいえ"]:
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		vbox.add_child(label)
-		_delete_confirm_labels.append(label)
+		var row := CursorMenuRow.new()
+		row.set_text(option)
+		row.set_text_font_size(FONT_SIZE)
+		vbox.add_child(row)
+		_delete_confirm_rows.append(row)
 	_update_delete_confirm_labels()
 
 func _update_delete_confirm_labels() -> void:
-	var options := ["はい", "いいえ"]
-	for i in range(_delete_confirm_labels.size()):
-		var prefix := CursorMenu.CURSOR_PREFIX if i == _delete_confirm_selected else CursorMenu.NO_CURSOR_PREFIX
-		_delete_confirm_labels[i].text = prefix + options[i]
+	for i in range(_delete_confirm_rows.size()):
+		_delete_confirm_rows[i].set_selected(i == _delete_confirm_selected)
 
 func _close_delete_confirm() -> void:
 	if _delete_confirm_container:
 		_delete_confirm_container.queue_free()
 		_delete_confirm_container = null
-	_delete_confirm_labels.clear()
+	_delete_confirm_rows.clear()
 	_mode = Mode.LIST
 
 func _handle_delete_confirm_input(event: InputEvent) -> void:
