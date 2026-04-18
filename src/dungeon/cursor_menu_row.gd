@@ -24,6 +24,7 @@ func _init() -> void:
 	_cursor_slot.add_child(_cursor_icon)
 
 	_text_label = Label.new()
+	_text_label.add_theme_color_override("font_color", CursorMenu.ENABLED_COLOR)
 	add_child(_text_label)
 
 static func create(parent: Node, text: String, font_size: int) -> CursorMenuRow:
@@ -58,8 +59,8 @@ func set_disabled(disabled: bool) -> void:
 func add_extra_label(label: Label) -> void:
 	add_child(label)
 	_extra_labels.append(label)
-	if _disabled:
-		label.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
+	var color: Color = CursorMenu.DISABLED_COLOR if _disabled else CursorMenu.ENABLED_COLOR
+	label.add_theme_color_override("font_color", color)
 
 func get_cursor_slot() -> Control:
 	return _cursor_slot
