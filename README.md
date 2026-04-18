@@ -10,7 +10,7 @@ Wizardry風一人称ダンジョン探索RPG（Godot 4.x）
 ## セットアップ
 
 ```bash
-git clone <repository-url>
+git clone git@github.com:endo5501/DungeonMirundal2.git
 cd DungeonMirundal2
 ```
 
@@ -27,7 +27,8 @@ Claude Code/Codex等コーディングエージェントを準備してくださ
 ```bash
 # OpenSpec
 npm install -g @fission-ai/openspec@latest
-
+openspec init
+openspec config profile
 # Codex CLI
 npm i -g @openai/codex
 
