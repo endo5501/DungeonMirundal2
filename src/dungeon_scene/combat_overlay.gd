@@ -9,6 +9,8 @@ enum Phase {
 	RESULT,
 }
 
+signal party_state_changed
+
 var _guild: Guild
 var _equipment_provider: EquipmentProvider
 var _rng: RandomNumberGenerator
@@ -19,7 +21,6 @@ var _current_phase: Phase = Phase.IDLE
 var _current_actor_index: int = 0
 
 var _monster_panel: CombatMonsterPanel
-var _party_status_panel: CombatPartyStatusPanel
 var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
 var _combat_log: CombatLog
@@ -48,6 +49,11 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	_turn_engine.start_battle(party_combatants, monster_combatants)
 	_is_active = true
 	visible = true
+	_last_outcome = null
+	if _combat_log != null:
+		_combat_log.clear_log()
+	if _result_panel != null:
+		_result_panel.visible = false
 	_refresh_panels()
 	_begin_command_phase()
 
@@ -180,7 +186,7 @@ func _finalize_battle() -> void:
 			var ch: Character = participant_characters[i]
 			if ch.level > int(levels_before[i]):
 				level_ups.append({"name": ch.character_name, "new_level": ch.level})
-		refresh_party_status_panel()
+		party_state_changed.emit()
 	show_result(outcome, level_ups)
 
 
@@ -355,9 +361,6 @@ func _build_combat_ui() -> void:
 	_monster_panel = CombatMonsterPanel.new()
 	_root_container.add_child(_monster_panel)
 
-	_party_status_panel = CombatPartyStatusPanel.new()
-	_root_container.add_child(_party_status_panel)
-
 	_command_menu = CombatCommandMenu.new()
 	_command_menu.visible = false
 	_root_container.add_child(_command_menu)
@@ -377,7 +380,7 @@ func _build_combat_ui() -> void:
 
 func _refresh_panels() -> void:
 	refresh_monster_panel()
-	refresh_party_status_panel()
+	party_state_changed.emit()
 
 
 func refresh_monster_panel() -> void:
@@ -385,18 +388,7 @@ func refresh_monster_panel() -> void:
 		_monster_panel.refresh(_turn_engine.monsters if _turn_engine != null else [], _initial_monster_counts)
 
 
-func refresh_party_status_panel() -> void:
-	if _party_status_panel != null:
-		_party_status_panel.refresh(_turn_engine.party if _turn_engine != null else [])
-
-
 func get_monster_panel_text() -> String:
 	if _monster_panel == null:
 		return ""
 	return _monster_panel.get_display_text()
-
-
-func get_party_status_text() -> String:
-	if _party_status_panel == null:
-		return ""
-	return _party_status_panel.get_display_text()

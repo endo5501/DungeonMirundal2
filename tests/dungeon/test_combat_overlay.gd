@@ -176,29 +176,29 @@ func test_monster_panel_does_not_show_per_individual_hp():
 	assert_false(text.contains("8/8"), "text should not show individual HP: %s" % text)
 
 
-# --- PartyStatusPanel content ---
+# --- party_state_changed signal (replaces PartyStatusPanel; dungeon UI refreshes instead) ---
 
-func test_party_status_shows_each_character_name_level_and_hp():
+func test_start_encounter_emits_party_state_changed():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	watch_signals(overlay)
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	assert_signal_emitted(overlay, "party_state_changed")
+
+
+# --- combat log reset on new encounter ---
+
+func test_combat_log_clears_on_new_encounter():
 	var overlay := CombatOverlay.new()
 	add_child_autofree(overlay)
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
-	var text := overlay.get_party_status_text()
-	assert_true(text.contains("P1"), "text should contain P1: %s" % text)
-	assert_true(text.contains("P2"), "text should contain P2: %s" % text)
-	assert_true(text.contains("20"), "text should contain HP 20: %s" % text)
-
-
-func test_party_status_reflects_damage_after_refresh():
-	var overlay := CombatOverlay.new()
-	add_child_autofree(overlay)
-	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.get_combat_log().append_line("Previous-battle noise")
+	assert_gte(overlay.get_combat_log_lines().size(), 1)
+	# New encounter must start with an empty log.
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
-	# Damage P1 by 5
-	overlay.get_turn_engine().party[0].take_damage(5)
-	overlay.refresh_party_status_panel()
-	var text := overlay.get_party_status_text()
-	assert_true(text.contains("15"), "text should show HP 15 after damage: %s" % text)
+	assert_eq(overlay.get_combat_log_lines().size(), 0)
 
 
 # --- Command phase routing ---

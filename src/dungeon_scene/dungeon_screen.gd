@@ -118,6 +118,11 @@ func is_encounter_active() -> bool:
 func is_showing_return_dialog() -> bool:
 	return _showing_return_dialog
 
+
+func refresh_party_display(party_data: PartyData) -> void:
+	if _party_display != null and party_data != null:
+		_party_display.setup(party_data)
+
 func check_start_tile_return() -> void:
 	if _encounter_active or _showing_return_dialog:
 		return

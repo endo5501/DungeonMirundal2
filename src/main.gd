@@ -31,9 +31,15 @@ func _setup_encounter_coordinator() -> void:
 	_equipment_provider = DummyEquipmentProvider.new()
 	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
 	_combat_overlay = CombatOverlay.new()
+	_combat_overlay.party_state_changed.connect(_on_combat_party_state_changed)
 	_encounter_coordinator.set_overlay(_combat_overlay)
 	_encounter_coordinator.encounter_finished.connect(_on_encounter_finished)
 	add_child(_encounter_coordinator)
+
+
+func _on_combat_party_state_changed() -> void:
+	if _current_screen is DungeonScreen and GameState.guild != null:
+		(_current_screen as DungeonScreen).refresh_party_display(GameState.guild.get_party_data())
 
 
 func _on_encounter_finished(outcome: EncounterOutcome) -> void:
