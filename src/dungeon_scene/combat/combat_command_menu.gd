@@ -31,7 +31,7 @@ func _build_ui() -> void:
 	vbox.add_child(_options_vbox)
 	for i in range(OPTIONS.size()):
 		_rows.append(CursorMenuRow.create(_options_vbox, OPTIONS[i], 16))
-	_refresh_label()
+	_refresh_rows()
 
 
 func show_for(actor: CombatActor) -> void:
@@ -41,7 +41,7 @@ func show_for(actor: CombatActor) -> void:
 	_ensure_ready()
 	if _title_label != null:
 		_title_label.text = "%s のコマンド:" % (actor.actor_name if actor != null else "")
-	_refresh_label()
+	_refresh_rows()
 
 
 func hide_menu() -> void:
@@ -50,12 +50,12 @@ func hide_menu() -> void:
 
 func move_up() -> void:
 	_selected_index = (_selected_index - 1 + OPTIONS.size()) % OPTIONS.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func move_down() -> void:
 	_selected_index = (_selected_index + 1) % OPTIONS.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func select_at(index: int) -> void:
@@ -82,7 +82,7 @@ func _ensure_ready() -> void:
 		_build_ui()
 
 
-func _refresh_label() -> void:
+func _refresh_rows() -> void:
 	if _rows.is_empty():
 		return
 	for i in range(_rows.size()):

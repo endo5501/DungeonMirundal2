@@ -163,9 +163,9 @@ func _show_return_dialog() -> void:
 
 	for i in range(RETURN_OPTIONS.size()):
 		_return_dialog_rows.append(CursorMenuRow.create(vbox, RETURN_OPTIONS[i], 18))
-	_update_return_dialog_labels()
+	_update_return_dialog_rows()
 
-func _update_return_dialog_labels() -> void:
+func _update_return_dialog_rows() -> void:
 	for i in range(_return_dialog_rows.size()):
 		_return_dialog_rows[i].set_selected(i == _return_dialog_selected)
 
@@ -173,10 +173,10 @@ func _handle_return_dialog_input(event: InputEventKey) -> void:
 	match event.keycode:
 		KEY_UP, KEY_W:
 			_return_dialog_selected = 0
-			_update_return_dialog_labels()
+			_update_return_dialog_rows()
 		KEY_DOWN, KEY_S:
 			_return_dialog_selected = 1
-			_update_return_dialog_labels()
+			_update_return_dialog_rows()
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			if _return_dialog_selected == 0:
 				return_to_town.emit()

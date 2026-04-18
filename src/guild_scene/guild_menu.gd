@@ -40,20 +40,20 @@ func _ready() -> void:
 	for i in range(MENU_ITEMS.size()):
 		_rows.append(CursorMenuRow.create(vbox, MENU_ITEMS[i], FONT_SIZE))
 
-	_update_labels()
+	_update_rows()
 
-func _update_labels() -> void:
+func _update_rows() -> void:
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == selected_index)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
 		move_cursor(1)
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		move_cursor(-1)
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		confirm_selection()

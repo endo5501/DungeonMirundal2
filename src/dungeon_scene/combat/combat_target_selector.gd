@@ -39,7 +39,7 @@ func show_with(monsters: Array) -> void:
 	_selected_index = 0
 	visible = true
 	_rebuild_rows()
-	_refresh_label()
+	_refresh_rows()
 
 
 func hide_selector() -> void:
@@ -50,14 +50,14 @@ func move_up() -> void:
 	if _targets.is_empty():
 		return
 	_selected_index = (_selected_index - 1 + _targets.size()) % _targets.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func move_down() -> void:
 	if _targets.is_empty():
 		return
 	_selected_index = (_selected_index + 1) % _targets.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func confirm_current() -> void:
@@ -95,6 +95,6 @@ func _rebuild_rows() -> void:
 		_rows.append(CursorMenuRow.create(_options_vbox, _targets[i].actor_name, 16))
 
 
-func _refresh_label() -> void:
+func _refresh_rows() -> void:
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)

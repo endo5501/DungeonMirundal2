@@ -87,7 +87,7 @@ func _build_ui() -> void:
 		_button_rows.append(CursorMenuRow.create(_vbox, BUTTON_ITEMS[i], FONT_SIZE))
 
 	_update_button_disabled()
-	_update_labels()
+	_update_rows()
 
 func _update_button_disabled() -> void:
 	var disabled: Array[int] = []
@@ -97,7 +97,7 @@ func _update_button_disabled() -> void:
 		disabled.append(2)
 	_button_menu.disabled_indices = disabled
 
-func _update_labels() -> void:
+func _update_rows() -> void:
 	for i in range(_list_rows.size()):
 		_list_rows[i].set_selected(_focus == Focus.DUNGEON_LIST and i == selected_index)
 
@@ -115,7 +115,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif _focus == Focus.BUTTONS:
 			_button_menu.move_cursor(1)
 		_update_button_disabled()
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		if _focus == Focus.DUNGEON_LIST and _registry.size() > 0:
@@ -123,7 +123,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif _focus == Focus.BUTTONS:
 			_button_menu.move_cursor(-1)
 		_update_button_disabled()
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _focus == Focus.BUTTONS:
@@ -132,12 +132,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			_focus = Focus.BUTTONS
 			_button_menu.selected_index = 0
 			_update_button_disabled()
-			_update_labels()
+			_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		if _focus == Focus.BUTTONS:
 			_focus = Focus.DUNGEON_LIST
-			_update_labels()
+			_update_rows()
 		else:
 			do_back()
 		get_viewport().set_input_as_handled()
@@ -172,9 +172,9 @@ func _show_delete_confirm() -> void:
 
 	for option in ["はい", "いいえ"]:
 		_delete_confirm_rows.append(CursorMenuRow.create(vbox, option, FONT_SIZE))
-	_update_delete_confirm_labels()
+	_update_delete_confirm_rows()
 
-func _update_delete_confirm_labels() -> void:
+func _update_delete_confirm_rows() -> void:
 	for i in range(_delete_confirm_rows.size()):
 		_delete_confirm_rows[i].set_selected(i == _delete_confirm_selected)
 
@@ -188,7 +188,7 @@ func _close_delete_confirm() -> void:
 func _handle_delete_confirm_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		_delete_confirm_selected = 1 - _delete_confirm_selected
-		_update_delete_confirm_labels()
+		_update_delete_confirm_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _delete_confirm_selected == 0:
