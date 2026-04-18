@@ -25,8 +25,8 @@ var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
 var _combat_log: CombatLog
 var _result_panel: CombatResultPanel
-var _root_container: VBoxContainer
 var _last_outcome: EncounterOutcome
+var log_line_delay: float = 0.0
 
 
 func _ready() -> void:
@@ -163,8 +163,19 @@ func _resolve_turn_now() -> void:
 		_target_selector.hide_selector()
 	var report := _turn_engine.resolve_turn(_rng)
 	_refresh_panels()
-	if _combat_log != null:
-		_combat_log.append_from_report(report)
+	_play_log_sequentially(report)
+
+
+func _play_log_sequentially(report: TurnReport) -> void:
+	if _combat_log != null and report != null:
+		for action in report.actions:
+			_combat_log.append_from_report_action(action)
+			if log_line_delay > 0.0:
+				await get_tree().create_timer(log_line_delay).timeout
+	_on_log_playback_finished()
+
+
+func _on_log_playback_finished() -> void:
 	if _turn_engine.state == TurnEngine.State.FINISHED:
 		_finalize_battle()
 	else:
@@ -346,36 +357,40 @@ func _capture_initial_monster_counts(monster_party: MonsterParty) -> void:
 
 
 func _build_combat_ui() -> void:
-	_root_container = VBoxContainer.new()
-	_root_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_root_container.add_theme_constant_override("separation", 8)
-	add_child(_root_container)
-
-	var backdrop := ColorRect.new()
-	backdrop.color = Color(0, 0, 0, 0.7)
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(backdrop)
-	move_child(backdrop, 0)
-
 	_monster_panel = CombatMonsterPanel.new()
-	_root_container.add_child(_monster_panel)
-
-	_command_menu = CombatCommandMenu.new()
-	_command_menu.visible = false
-	_root_container.add_child(_command_menu)
-
-	_target_selector = CombatTargetSelector.new()
-	_target_selector.visible = false
-	_root_container.add_child(_target_selector)
+	_place(_monster_panel, 0.05, 0.02, 0.55, 0.28)
+	add_child(_monster_panel)
 
 	_combat_log = CombatLog.new()
-	_root_container.add_child(_combat_log)
+	_place(_combat_log, 0.60, 0.02, 0.98, 0.60)
+	add_child(_combat_log)
+
+	_command_menu = CombatCommandMenu.new()
+	_place(_command_menu, 0.15, 0.32, 0.55, 0.62)
+	_command_menu.visible = false
+	add_child(_command_menu)
+
+	_target_selector = CombatTargetSelector.new()
+	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
+	_target_selector.visible = false
+	add_child(_target_selector)
 
 	_result_panel = CombatResultPanel.new()
+	_place(_result_panel, 0.20, 0.25, 0.80, 0.60)
 	_result_panel.visible = false
 	_result_panel.confirmed.connect(_on_result_confirmed)
-	_root_container.add_child(_result_panel)
+	add_child(_result_panel)
+
+
+func _place(ctrl: Control, left: float, top: float, right: float, bottom: float) -> void:
+	ctrl.anchor_left = left
+	ctrl.anchor_top = top
+	ctrl.anchor_right = right
+	ctrl.anchor_bottom = bottom
+	ctrl.offset_left = 0
+	ctrl.offset_top = 0
+	ctrl.offset_right = 0
+	ctrl.offset_bottom = 0
 
 
 func _refresh_panels() -> void:

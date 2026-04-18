@@ -31,6 +31,7 @@ func _setup_encounter_coordinator() -> void:
 	_equipment_provider = DummyEquipmentProvider.new()
 	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
 	_combat_overlay = CombatOverlay.new()
+	_combat_overlay.log_line_delay = 0.4
 	_combat_overlay.party_state_changed.connect(_on_combat_party_state_changed)
 	_encounter_coordinator.set_overlay(_combat_overlay)
 	_encounter_coordinator.encounter_finished.connect(_on_encounter_finished)
