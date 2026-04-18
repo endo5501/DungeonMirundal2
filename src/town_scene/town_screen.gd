@@ -57,11 +57,7 @@ func _ready() -> void:
 	left.add_child(spacer)
 
 	for i in range(MENU_ITEMS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(MENU_ITEMS[i])
-		row.set_text_font_size(20)
-		left.add_child(row)
-		_rows.append(row)
+		_rows.append(CursorMenuRow.create(left, MENU_ITEMS[i], 20))
 
 	var right := PanelContainer.new()
 	right.size_flags_horizontal = SIZE_EXPAND_FILL

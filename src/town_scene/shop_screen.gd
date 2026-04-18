@@ -150,11 +150,7 @@ func _rebuild() -> void:
 func _render_top_menu() -> void:
 	var rows: Array[CursorMenuRow] = []
 	for i in range(TOP_MENU_ITEMS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(TOP_MENU_ITEMS[i])
-		row.set_text_font_size(FONT_SIZE)
-		_root.add_child(row)
-		rows.append(row)
+		rows.append(CursorMenuRow.create(_root, TOP_MENU_ITEMS[i], FONT_SIZE))
 	_top_menu.update_rows(rows)
 
 
@@ -166,14 +162,12 @@ func _render_buy() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(items.size()):
-		var row := CursorMenuRow.new()
 		var affordable: bool = _inventory != null and _inventory.gold >= items[i].price
-		row.set_text("%s    %d G" % [items[i].item_name, items[i].price])
-		row.set_text_font_size(FONT_SIZE)
+		var row := CursorMenuRow.create(_root,
+			"%s    %d G" % [items[i].item_name, items[i].price], FONT_SIZE)
 		row.set_selected(i == _selected_index)
 		if not affordable:
 			row.set_disabled(true)
-		_root.add_child(row)
 
 
 func _render_sell() -> void:
@@ -184,12 +178,10 @@ func _render_sell() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(instances.size()):
-		var row := CursorMenuRow.new()
 		var price: int = instances[i].item.price / 2
-		row.set_text("%s    %d G" % [instances[i].item.item_name, price])
-		row.set_text_font_size(FONT_SIZE)
+		var row := CursorMenuRow.create(_root,
+			"%s    %d G" % [instances[i].item.item_name, price], FONT_SIZE)
 		row.set_selected(i == _selected_index)
-		_root.add_child(row)
 
 
 # ---- input ----

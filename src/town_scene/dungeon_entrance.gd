@@ -63,9 +63,7 @@ func _build_ui() -> void:
 	if _registry and _registry.size() > 0:
 		for i in range(_registry.size()):
 			var dd := _registry.get_dungeon(i)
-			var row := CursorMenuRow.new()
-			row.set_text(dd.dungeon_name)
-			row.set_text_font_size(FONT_SIZE)
+			var row := CursorMenuRow.create(_vbox, dd.dungeon_name, FONT_SIZE)
 			var size_label := Label.new()
 			size_label.text = "%dx%d" % [dd.map_size, dd.map_size]
 			size_label.add_theme_font_size_override("font_size", FONT_SIZE)
@@ -74,7 +72,6 @@ func _build_ui() -> void:
 			rate_label.text = "探索%d%%" % int(dd.get_exploration_rate() * 100)
 			rate_label.add_theme_font_size_override("font_size", FONT_SIZE)
 			row.add_extra_label(rate_label)
-			_vbox.add_child(row)
 			_list_rows.append(row)
 	else:
 		var empty := Label.new()
@@ -87,11 +84,7 @@ func _build_ui() -> void:
 	_vbox.add_child(spacer2)
 
 	for i in range(BUTTON_ITEMS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(BUTTON_ITEMS[i])
-		row.set_text_font_size(FONT_SIZE)
-		_vbox.add_child(row)
-		_button_rows.append(row)
+		_button_rows.append(CursorMenuRow.create(_vbox, BUTTON_ITEMS[i], FONT_SIZE))
 
 	_update_button_disabled()
 	_update_labels()
@@ -178,11 +171,7 @@ func _show_delete_confirm() -> void:
 	vbox.add_child(spacer)
 
 	for option in ["はい", "いいえ"]:
-		var row := CursorMenuRow.new()
-		row.set_text(option)
-		row.set_text_font_size(FONT_SIZE)
-		vbox.add_child(row)
-		_delete_confirm_rows.append(row)
+		_delete_confirm_rows.append(CursorMenuRow.create(vbox, option, FONT_SIZE))
 	_update_delete_confirm_labels()
 
 func _update_delete_confirm_labels() -> void:

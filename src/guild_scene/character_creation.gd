@@ -155,11 +155,7 @@ func _add_label(text: String) -> Label:
 	return label
 
 func _add_row(text: String) -> CursorMenuRow:
-	var row := CursorMenuRow.new()
-	row.set_text(text)
-	row.set_text_font_size(FONT_SIZE)
-	_content.add_child(row)
-	return row
+	return CursorMenuRow.create(_content, text, FONT_SIZE)
 
 func _add_nav_hint(text: String) -> void:
 	var spacer := Control.new()

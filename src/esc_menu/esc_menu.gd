@@ -130,11 +130,7 @@ func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContaine
 
 func _build_menu_rows(menu: CursorMenu, rows_out: Array[CursorMenuRow], parent: VBoxContainer) -> void:
 	for i in range(menu.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(menu.items[i])
-		row.set_text_font_size(20)
-		parent.add_child(row)
-		rows_out.append(row)
+		rows_out.append(CursorMenuRow.create(parent, menu.items[i], 20))
 	menu.update_rows(rows_out)
 
 func is_menu_visible() -> bool:
@@ -436,11 +432,9 @@ func _refresh_equipment_character_view() -> void:
 		return
 	for i in range(members.size()):
 		var ch: Character = members[i]
-		var row := CursorMenuRow.new()
-		row.set_text("%s (Lv%d %s)" % [ch.character_name, ch.level, ch.job.job_name])
-		row.set_text_font_size(16)
+		var row := CursorMenuRow.create(_equipment_character_container,
+			"%s (Lv%d %s)" % [ch.character_name, ch.level, ch.job.job_name], 16)
 		row.set_selected(i == _equipment_character_index)
-		_equipment_character_container.add_child(row)
 
 
 func _refresh_equipment_slot_view() -> void:
@@ -454,21 +448,16 @@ func _refresh_equipment_slot_view() -> void:
 		var equipped_name := "なし"
 		if equipped != null and equipped.item != null:
 			equipped_name = equipped.item.item_name
-		var row := CursorMenuRow.new()
-		row.set_text("%s: %s" % [EQUIPMENT_SLOT_LABELS[i], equipped_name])
-		row.set_text_font_size(16)
+		var row := CursorMenuRow.create(_equipment_slot_container,
+			"%s: %s" % [EQUIPMENT_SLOT_LABELS[i], equipped_name], 16)
 		row.set_selected(i == _equipment_slot_index)
-		_equipment_slot_container.add_child(row)
 
 
 func _refresh_equipment_candidate_view() -> void:
 	_clear_extra_children(_equipment_candidate_container)
 	var candidates := get_equipment_candidates()
-	var unequip_row := CursorMenuRow.new()
-	unequip_row.set_text("[はずす]")
-	unequip_row.set_text_font_size(16)
+	var unequip_row := CursorMenuRow.create(_equipment_candidate_container, "[はずす]", 16)
 	unequip_row.set_selected(_equipment_candidate_index == 0)
-	_equipment_candidate_container.add_child(unequip_row)
 
 	var equipped_by := _map_equipped_to_character_names()
 	var self_ch := _get_selected_character()
@@ -481,11 +470,9 @@ func _refresh_equipment_candidate_view() -> void:
 				marker = " [装備中]"
 			else:
 				marker = " [装備中: %s]" % holder
-		var row := CursorMenuRow.new()
-		row.set_text("%s%s" % [inst.item.item_name, marker])
-		row.set_text_font_size(16)
+		var row := CursorMenuRow.create(_equipment_candidate_container,
+			"%s%s" % [inst.item.item_name, marker], 16)
 		row.set_selected((i + 1) == _equipment_candidate_index)
-		_equipment_candidate_container.add_child(row)
 
 
 const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view

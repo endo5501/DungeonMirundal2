@@ -162,11 +162,7 @@ func _show_return_dialog() -> void:
 	vbox.add_child(spacer)
 
 	for i in range(RETURN_OPTIONS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(RETURN_OPTIONS[i])
-		row.set_text_font_size(18)
-		vbox.add_child(row)
-		_return_dialog_rows.append(row)
+		_return_dialog_rows.append(CursorMenuRow.create(vbox, RETURN_OPTIONS[i], 18))
 	_update_return_dialog_labels()
 
 func _update_return_dialog_labels() -> void:

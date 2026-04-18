@@ -72,11 +72,7 @@ func _build_ui() -> void:
 
 	_menu_rows.clear()
 	for i in range(_menu.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(_menu.items[i])
-		row.set_text_font_size(18)
-		_container.add_child(row)
-		_menu_rows.append(row)
+		_menu_rows.append(CursorMenuRow.create(_container, _menu.items[i], 18))
 	_menu.update_rows(_menu_rows)
 
 func _build_overwrite_dialog() -> void:
@@ -103,11 +99,7 @@ func _build_overwrite_dialog() -> void:
 
 	_overwrite_rows.clear()
 	for i in range(_overwrite_menu.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(_overwrite_menu.items[i])
-		row.set_text_font_size(18)
-		vbox.add_child(row)
-		_overwrite_rows.append(row)
+		_overwrite_rows.append(CursorMenuRow.create(vbox, _overwrite_menu.items[i], 18))
 	_overwrite_menu.update_rows(_overwrite_rows)
 
 func _unhandled_input(event: InputEvent) -> void:

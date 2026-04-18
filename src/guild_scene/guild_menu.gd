@@ -38,11 +38,7 @@ func _ready() -> void:
 	vbox.add_child(spacer)
 
 	for i in range(MENU_ITEMS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(MENU_ITEMS[i])
-		row.set_text_font_size(FONT_SIZE)
-		vbox.add_child(row)
-		_rows.append(row)
+		_rows.append(CursorMenuRow.create(vbox, MENU_ITEMS[i], FONT_SIZE))
 
 	_update_labels()
 

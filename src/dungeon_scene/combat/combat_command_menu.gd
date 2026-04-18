@@ -30,11 +30,7 @@ func _build_ui() -> void:
 	_options_vbox = VBoxContainer.new()
 	vbox.add_child(_options_vbox)
 	for i in range(OPTIONS.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(OPTIONS[i])
-		row.set_text_font_size(16)
-		_options_vbox.add_child(row)
-		_rows.append(row)
+		_rows.append(CursorMenuRow.create(_options_vbox, OPTIONS[i], 16))
 	_refresh_label()
 
 

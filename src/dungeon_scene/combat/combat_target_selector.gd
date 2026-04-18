@@ -92,15 +92,9 @@ func _rebuild_rows() -> void:
 		_options_vbox.remove_child(child)
 		child.queue_free()
 	for i in range(_targets.size()):
-		var row := CursorMenuRow.new()
-		row.set_text(_targets[i].actor_name)
-		row.set_text_font_size(16)
-		_options_vbox.add_child(row)
-		_rows.append(row)
+		_rows.append(CursorMenuRow.create(_options_vbox, _targets[i].actor_name, 16))
 
 
 func _refresh_label() -> void:
-	if _rows.size() != _targets.size():
-		_rebuild_rows()
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)

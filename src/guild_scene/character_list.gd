@@ -63,13 +63,12 @@ func _build_list_view() -> void:
 		for i in range(_characters.size()):
 			var ch := _characters[i]
 			var status := _get_status(ch)
-			var row := CursorMenuRow.new()
-			row.set_text("%s  LV:%d  %s  %s  [%s]" % [
-				ch.character_name, ch.level,
-				ch.race.race_name, ch.job.job_name, status])
-			row.set_text_font_size(FONT_SIZE)
+			var row := CursorMenuRow.create(_content,
+				"%s  LV:%d  %s  %s  [%s]" % [
+					ch.character_name, ch.level,
+					ch.race.race_name, ch.job.job_name, status],
+				FONT_SIZE)
 			row.set_selected(i == _cursor_index)
-			_content.add_child(row)
 	_add_label("")
 	_add_hint("[↑↓] 選択  [Enter] 詳細  [D] 削除  [Esc] 戻る")
 
@@ -96,16 +95,10 @@ func _build_delete_confirm() -> void:
 	_title_label.text = "削除確認"
 	_add_label("%s を削除しますか？" % ch.character_name)
 	_add_label("")
-	var no_row := CursorMenuRow.new()
-	no_row.set_text("いいえ")
-	no_row.set_text_font_size(FONT_SIZE)
+	var no_row := CursorMenuRow.create(_content, "いいえ", FONT_SIZE)
 	no_row.set_selected(_confirm_cursor == 0)
-	_content.add_child(no_row)
-	var yes_row := CursorMenuRow.new()
-	yes_row.set_text("はい")
-	yes_row.set_text_font_size(FONT_SIZE)
+	var yes_row := CursorMenuRow.create(_content, "はい", FONT_SIZE)
 	yes_row.set_selected(_confirm_cursor == 1)
-	_content.add_child(yes_row)
 	_add_label("")
 	_add_hint("[↑↓] 選択  [Enter] 決定")
 
