@@ -14,10 +14,9 @@ const MENU_ITEMS: Array[String] = [
 ]
 
 const FONT_SIZE := 20
-const CURSOR := "> "
 
 var selected_index: int = 0
-var _labels: Array[Label] = []
+var _rows: Array[CursorMenuRow] = []
 
 func _ready() -> void:
 	var center := CenterContainer.new()
@@ -39,26 +38,22 @@ func _ready() -> void:
 	vbox.add_child(spacer)
 
 	for i in range(MENU_ITEMS.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		vbox.add_child(label)
-		_labels.append(label)
+		_rows.append(CursorMenuRow.create(vbox, MENU_ITEMS[i], FONT_SIZE))
 
-	_update_labels()
+	_update_rows()
 
-func _update_labels() -> void:
-	for i in range(_labels.size()):
-		var prefix := CURSOR if i == selected_index else "  "
-		_labels[i].text = prefix + MENU_ITEMS[i]
+func _update_rows() -> void:
+	for i in range(_rows.size()):
+		_rows[i].set_selected(i == selected_index)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
 		move_cursor(1)
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		move_cursor(-1)
-		_update_labels()
+		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		confirm_selection()

@@ -51,9 +51,9 @@ var _equipment_character_container: VBoxContainer
 var _equipment_slot_container: VBoxContainer
 var _equipment_candidate_container: VBoxContainer
 
-var _main_menu_labels: Array[Label] = []
-var _party_menu_labels: Array[Label] = []
-var _quit_labels: Array[Label] = []
+var _main_menu_rows: Array[CursorMenuRow] = []
+var _party_menu_rows: Array[CursorMenuRow] = []
+var _quit_rows: Array[CursorMenuRow] = []
 
 # Equipment navigation state
 var _equipment_character_index: int = 0
@@ -89,11 +89,11 @@ func _build_ui() -> void:
 	_panel.add_child(root_vbox)
 
 	_main_menu_container = _build_titled_view("メニュー")
-	_build_menu_labels(_main_menu, _main_menu_labels, _main_menu_container)
+	_build_menu_rows(_main_menu, _main_menu_rows, _main_menu_container)
 	root_vbox.add_child(_main_menu_container)
 
 	_party_menu_container = _build_titled_view("パーティ")
-	_build_menu_labels(_party_menu, _party_menu_labels, _party_menu_container)
+	_build_menu_rows(_party_menu, _party_menu_rows, _party_menu_container)
 	root_vbox.add_child(_party_menu_container)
 
 	_status_container = _build_titled_view("ステータス", 4)
@@ -112,7 +112,7 @@ func _build_ui() -> void:
 	root_vbox.add_child(_equipment_candidate_container)
 
 	_quit_dialog_container = _build_titled_view("タイトルに戻りますか？", 8)
-	_build_menu_labels(_quit_menu, _quit_labels, _quit_dialog_container)
+	_build_menu_rows(_quit_menu, _quit_rows, _quit_dialog_container)
 	root_vbox.add_child(_quit_dialog_container)
 
 func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContainer:
@@ -128,13 +128,10 @@ func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContaine
 	vbox.add_child(spacer)
 	return vbox
 
-func _build_menu_labels(menu: CursorMenu, labels_out: Array[Label], parent: VBoxContainer) -> void:
+func _build_menu_rows(menu: CursorMenu, rows_out: Array[CursorMenuRow], parent: VBoxContainer) -> void:
 	for i in range(menu.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 20)
-		parent.add_child(label)
-		labels_out.append(label)
-	menu.update_labels(labels_out)
+		rows_out.append(CursorMenuRow.create(parent, menu.items[i], 20))
+	menu.update_rows(rows_out)
 
 func is_menu_visible() -> bool:
 	return visible
@@ -253,10 +250,10 @@ func _switch_view(view: View) -> void:
 	match view:
 		View.PARTY_MENU:
 			_party_menu.selected_index = 0
-			_party_menu.update_labels(_party_menu_labels)
+			_party_menu.update_rows(_party_menu_rows)
 		View.QUIT_DIALOG:
 			_quit_menu.selected_index = QUIT_IDX_NO
-			_quit_menu.update_labels(_quit_labels)
+			_quit_menu.update_rows(_quit_rows)
 		View.STATUS:
 			_refresh_status_view()
 		View.ITEMS:
@@ -271,7 +268,7 @@ func _switch_view(view: View) -> void:
 			_equipment_candidate_index = 0
 			_refresh_equipment_candidate_view()
 		View.MAIN_MENU:
-			_main_menu.update_labels(_main_menu_labels)
+			_main_menu.update_rows(_main_menu_rows)
 
 func _get_current_menu() -> CursorMenu:
 	match _current_view:
@@ -286,11 +283,11 @@ func _get_current_menu() -> CursorMenu:
 func _update_current_labels() -> void:
 	match _current_view:
 		View.MAIN_MENU:
-			_main_menu.update_labels(_main_menu_labels)
+			_main_menu.update_rows(_main_menu_rows)
 		View.PARTY_MENU:
-			_party_menu.update_labels(_party_menu_labels)
+			_party_menu.update_rows(_party_menu_rows)
 		View.QUIT_DIALOG:
-			_quit_menu.update_labels(_quit_labels)
+			_quit_menu.update_rows(_quit_rows)
 
 func _handle_main_menu_select() -> void:
 	match _main_menu.selected_index:
@@ -435,11 +432,9 @@ func _refresh_equipment_character_view() -> void:
 		return
 	for i in range(members.size()):
 		var ch: Character = members[i]
-		var line := Label.new()
-		var prefix := "> " if i == _equipment_character_index else "  "
-		line.text = "%s%s (Lv%d %s)" % [prefix, ch.character_name, ch.level, ch.job.job_name]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_character_container.add_child(line)
+		var row := CursorMenuRow.create(_equipment_character_container,
+			"%s (Lv%d %s)" % [ch.character_name, ch.level, ch.job.job_name], 16)
+		row.set_selected(i == _equipment_character_index)
 
 
 func _refresh_equipment_slot_view() -> void:
@@ -453,28 +448,21 @@ func _refresh_equipment_slot_view() -> void:
 		var equipped_name := "なし"
 		if equipped != null and equipped.item != null:
 			equipped_name = equipped.item.item_name
-		var line := Label.new()
-		var prefix := "> " if i == _equipment_slot_index else "  "
-		line.text = "%s%s: %s" % [prefix, EQUIPMENT_SLOT_LABELS[i], equipped_name]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_slot_container.add_child(line)
+		var row := CursorMenuRow.create(_equipment_slot_container,
+			"%s: %s" % [EQUIPMENT_SLOT_LABELS[i], equipped_name], 16)
+		row.set_selected(i == _equipment_slot_index)
 
 
 func _refresh_equipment_candidate_view() -> void:
 	_clear_extra_children(_equipment_candidate_container)
 	var candidates := get_equipment_candidates()
-	var unequip_label := Label.new()
-	var unequip_prefix := "> " if _equipment_candidate_index == 0 else "  "
-	unequip_label.text = "%s[はずす]" % unequip_prefix
-	unequip_label.add_theme_font_size_override("font_size", 16)
-	_equipment_candidate_container.add_child(unequip_label)
+	var unequip_row := CursorMenuRow.create(_equipment_candidate_container, "[はずす]", 16)
+	unequip_row.set_selected(_equipment_candidate_index == 0)
 
 	var equipped_by := _map_equipped_to_character_names()
 	var self_ch := _get_selected_character()
 	for i in range(candidates.size()):
 		var inst: ItemInstance = candidates[i]
-		var line := Label.new()
-		var prefix := "> " if (i + 1) == _equipment_candidate_index else "  "
 		var marker := ""
 		if equipped_by.has(inst):
 			var holder: String = equipped_by[inst]
@@ -482,9 +470,9 @@ func _refresh_equipment_candidate_view() -> void:
 				marker = " [装備中]"
 			else:
 				marker = " [装備中: %s]" % holder
-		line.text = "%s%s%s" % [prefix, inst.item.item_name, marker]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_candidate_container.add_child(line)
+		var row := CursorMenuRow.create(_equipment_candidate_container,
+			"%s%s" % [inst.item.item_name, marker], 16)
+		row.set_selected((i + 1) == _equipment_candidate_index)
 
 
 const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view

@@ -6,7 +6,6 @@ signal character_created
 
 const FONT_SIZE := 18
 const TITLE_SIZE := 24
-const CURSOR := "> "
 
 var current_step: int = 1
 var total_steps: int = 5
@@ -95,7 +94,7 @@ func _build_step2() -> void:
 		var text := "%s  STR:%d INT:%d PIE:%d VIT:%d AGI:%d LUC:%d" % [
 			race.race_name, stats[&"STR"], stats[&"INT"], stats[&"PIE"],
 			stats[&"VIT"], stats[&"AGI"], stats[&"LUC"]]
-		_add_label(text)
+		_add_row(text)
 	if _selected_race_index >= 0:
 		_cursor_index = _selected_race_index
 	_update_list_cursor(_races.size())
@@ -106,7 +105,7 @@ func _build_step3() -> void:
 	_add_label("ボーナスポイント: %d  残り: %d" % [_bonus_total, get_remaining_points()])
 	_add_label("")
 	for key in Character.STAT_KEYS:
-		_add_label("  %s: %d" % [key, get_stat_value(key)])
+		_add_row("%s: %d" % [key, get_stat_value(key)])
 	_update_list_cursor(Character.STAT_KEYS.size(), 2)  # offset by 2 for header labels
 	_add_nav_hint("[↑↓] 選択  [→] +1  [←] -1  [R] 振り直し  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる")
 
@@ -123,7 +122,9 @@ func _build_step4() -> void:
 		var text := job.job_name + suffix
 		if not qualified.get(i, false):
 			text += "  (条件未達)"
-		_add_label(text)
+		var row := _add_row(text)
+		if not qualified.get(i, false):
+			row.set_disabled(true)
 	if _selected_job_index >= 0:
 		_cursor_index = _selected_job_index
 	_update_list_cursor(_jobs.size())
@@ -153,6 +154,9 @@ func _add_label(text: String) -> Label:
 	_content.add_child(label)
 	return label
 
+func _add_row(text: String) -> CursorMenuRow:
+	return CursorMenuRow.create(_content, text, FONT_SIZE)
+
 func _add_nav_hint(text: String) -> void:
 	var spacer := Control.new()
 	spacer.custom_minimum_size.y = 8
@@ -167,13 +171,9 @@ func _update_list_cursor(count: int, offset: int = 0) -> void:
 	var children := _content.get_children()
 	for i in range(count):
 		var idx := i + offset
-		if idx < children.size() and children[idx] is Label:
-			var label := children[idx] as Label
-			var raw := label.text
-			if raw.begins_with(CURSOR) or raw.begins_with("  "):
-				raw = raw.substr(2)
-			var prefix := CURSOR if i == _cursor_index else "  "
-			label.text = prefix + raw
+		if idx < children.size() and children[idx] is CursorMenuRow:
+			var row := children[idx] as CursorMenuRow
+			row.set_selected(i == _cursor_index)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _step_changed_frame == Engine.get_process_frames():
@@ -257,10 +257,11 @@ func _rebuild_step3_values() -> void:
 		(children[0] as Label).text = "ボーナスポイント: %d  残り: %d" % [_bonus_total, get_remaining_points()]
 	for i in range(Character.STAT_KEYS.size()):
 		var idx := i + 2
-		if idx < children.size() and children[idx] is Label:
+		if idx < children.size() and children[idx] is CursorMenuRow:
 			var key := Character.STAT_KEYS[i]
-			var prefix := CURSOR if i == _cursor_index else "  "
-			(children[idx] as Label).text = "%s%s: %d" % [prefix, key, get_stat_value(key)]
+			var row := children[idx] as CursorMenuRow
+			row.set_text("%s: %d" % [key, get_stat_value(key)])
+			row.set_selected(i == _cursor_index)
 
 func _input_step4(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):

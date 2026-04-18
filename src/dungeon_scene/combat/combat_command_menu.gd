@@ -5,8 +5,9 @@ const OPTIONS: Array[String] = ["こうげき", "ぼうぎょ", "にげる"]
 
 signal command_selected(index: int)
 
-var _label: Label
+var _rows: Array[CursorMenuRow] = []
 var _title_label: Label
+var _options_vbox: VBoxContainer
 var _selected_index: int = 0
 var _current_actor: CombatActor
 
@@ -16,7 +17,7 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	if _label != null:
+	if _options_vbox != null:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -26,10 +27,11 @@ func _build_ui() -> void:
 	_title_label = Label.new()
 	_title_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(_title_label)
-	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(_label)
-	_refresh_label()
+	_options_vbox = VBoxContainer.new()
+	vbox.add_child(_options_vbox)
+	for i in range(OPTIONS.size()):
+		_rows.append(CursorMenuRow.create(_options_vbox, OPTIONS[i], 16))
+	_refresh_rows()
 
 
 func show_for(actor: CombatActor) -> void:
@@ -39,7 +41,7 @@ func show_for(actor: CombatActor) -> void:
 	_ensure_ready()
 	if _title_label != null:
 		_title_label.text = "%s のコマンド:" % (actor.actor_name if actor != null else "")
-	_refresh_label()
+	_refresh_rows()
 
 
 func hide_menu() -> void:
@@ -48,12 +50,12 @@ func hide_menu() -> void:
 
 func move_up() -> void:
 	_selected_index = (_selected_index - 1 + OPTIONS.size()) % OPTIONS.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func move_down() -> void:
 	_selected_index = (_selected_index + 1) % OPTIONS.size()
-	_refresh_label()
+	_refresh_rows()
 
 
 func select_at(index: int) -> void:
@@ -76,15 +78,12 @@ func get_selected_index() -> int:
 
 
 func _ensure_ready() -> void:
-	if _label == null:
+	if _options_vbox == null:
 		_build_ui()
 
 
-func _refresh_label() -> void:
-	if _label == null:
+func _refresh_rows() -> void:
+	if _rows.is_empty():
 		return
-	var lines: Array = []
-	for i in range(OPTIONS.size()):
-		var prefix: String = "> " if i == _selected_index else "  "
-		lines.append(prefix + OPTIONS[i])
-	_label.text = "\n".join(lines)
+	for i in range(_rows.size()):
+		_rows[i].set_selected(i == _selected_index)

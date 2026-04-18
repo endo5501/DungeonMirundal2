@@ -148,12 +148,10 @@ func _rebuild() -> void:
 
 
 func _render_top_menu() -> void:
+	var rows: Array[CursorMenuRow] = []
 	for i in range(TOP_MENU_ITEMS.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _top_menu.selected_index else "  "
-		label.text = prefix + TOP_MENU_ITEMS[i]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		_root.add_child(label)
+		rows.append(CursorMenuRow.create(_root, TOP_MENU_ITEMS[i], FONT_SIZE))
+	_top_menu.update_rows(rows)
 
 
 func _render_buy() -> void:
@@ -164,14 +162,12 @@ func _render_buy() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(items.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _selected_index else "  "
 		var affordable: bool = _inventory != null and _inventory.gold >= items[i].price
-		label.text = "%s%s    %d G" % [prefix, items[i].item_name, items[i].price]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
+		var row := CursorMenuRow.create(_root,
+			"%s    %d G" % [items[i].item_name, items[i].price], FONT_SIZE)
+		row.set_selected(i == _selected_index)
 		if not affordable:
-			label.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
-		_root.add_child(label)
+			row.set_disabled(true)
 
 
 func _render_sell() -> void:
@@ -182,12 +178,10 @@ func _render_sell() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(instances.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _selected_index else "  "
 		var price: int = instances[i].item.price / 2
-		label.text = "%s%s    %d G" % [prefix, instances[i].item.item_name, price]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		_root.add_child(label)
+		var row := CursorMenuRow.create(_root,
+			"%s    %d G" % [instances[i].item.item_name, price], FONT_SIZE)
+		row.set_selected(i == _selected_index)
 
 
 # ---- input ----

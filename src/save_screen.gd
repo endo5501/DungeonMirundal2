@@ -10,14 +10,14 @@ const OVERWRITE_OPTIONS: Array[String] = ["はい", "いいえ"]
 var _save_manager: SaveManager
 var _slots: Array[Dictionary] = []  # [{slot_number, ...}], first entry is "new save"
 var _menu: CursorMenu
-var _menu_labels: Array[Label] = []
+var _menu_rows: Array[CursorMenuRow] = []
 var _title_label: Label
 var _container: VBoxContainer
 
 var _overwrite_visible := false
 var _overwrite_slot: int = -1
 var _overwrite_menu: CursorMenu
-var _overwrite_labels: Array[Label] = []
+var _overwrite_rows: Array[CursorMenuRow] = []
 var _overwrite_container: CenterContainer
 
 func _ready() -> void:
@@ -70,13 +70,10 @@ func _build_ui() -> void:
 	spacer.custom_minimum_size.y = 8
 	_container.add_child(spacer)
 
-	_menu_labels.clear()
+	_menu_rows.clear()
 	for i in range(_menu.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 18)
-		_container.add_child(label)
-		_menu_labels.append(label)
-	_menu.update_labels(_menu_labels)
+		_menu_rows.append(CursorMenuRow.create(_container, _menu.items[i], 18))
+	_menu.update_rows(_menu_rows)
 
 func _build_overwrite_dialog() -> void:
 	_overwrite_menu = CursorMenu.new(OVERWRITE_OPTIONS)
@@ -100,13 +97,10 @@ func _build_overwrite_dialog() -> void:
 	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(msg)
 
-	_overwrite_labels.clear()
+	_overwrite_rows.clear()
 	for i in range(_overwrite_menu.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 18)
-		vbox.add_child(label)
-		_overwrite_labels.append(label)
-	_overwrite_menu.update_labels(_overwrite_labels)
+		_overwrite_rows.append(CursorMenuRow.create(vbox, _overwrite_menu.items[i], 18))
+	_overwrite_menu.update_rows(_overwrite_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey:
@@ -122,10 +116,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	match (event as InputEventKey).keycode:
 		KEY_UP, KEY_W:
 			_menu.move_cursor(-1)
-			_menu.update_labels(_menu_labels)
+			_menu.update_rows(_menu_rows)
 		KEY_DOWN, KEY_S:
 			_menu.move_cursor(1)
-			_menu.update_labels(_menu_labels)
+			_menu.update_rows(_menu_rows)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			_on_slot_selected()
 		KEY_ESCAPE:
@@ -149,10 +143,10 @@ func _handle_overwrite_input(event: InputEventKey) -> void:
 	match event.keycode:
 		KEY_UP, KEY_W:
 			_overwrite_menu.move_cursor(-1)
-			_overwrite_menu.update_labels(_overwrite_labels)
+			_overwrite_menu.update_rows(_overwrite_rows)
 		KEY_DOWN, KEY_S:
 			_overwrite_menu.move_cursor(1)
-			_overwrite_menu.update_labels(_overwrite_labels)
+			_overwrite_menu.update_rows(_overwrite_rows)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			if _overwrite_menu.selected_index == 0:  # はい
 				_save_manager.save(_overwrite_slot)
