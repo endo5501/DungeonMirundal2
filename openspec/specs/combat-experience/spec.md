@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+戦闘終了時の経験値配分・レベルアップ判定・能力値成長を規定する。生存メンバー配分方式、次レベルまでの経験値テーブル参照、成長後の HP/MP 再計算を対象とする。
+
+## Requirements
 
 ### Requirement: Experience is the sum of defeated monster experience values
 The system SHALL compute post-battle experience by summing the `experience` field of every `MonsterData` whose corresponding `MonsterCombatant` is dead at the end of the battle.

@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+DungeonData と DungeonRegistry による複数ダンジョンの保持と参照を規定する。生成・選択・削除・探索状態の記録と、GameState との統合を対象とする。
+
+## Requirements
 
 ### Requirement: DungeonData holds single dungeon state
 DungeonData SHALL hold dungeon_name (String), seed (int), map_size (int), wiz_map (WizMap), explored_map (ExploredMap), and player_state (PlayerState) for a single dungeon.

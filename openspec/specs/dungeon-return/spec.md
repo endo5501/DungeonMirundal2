@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ダンジョンから地上（町）へ帰還するフローとトリガ条件を規定する。帰還時のセーブ状態更新、パーティ全滅／撤退コマンド／階段復帰など複数ルートを対象とする。
+
+## Requirements
 
 ### Requirement: START tile triggers return dialog
 DungeonScreen SHALL detect when the player moves onto the START tile and display a confirmation dialog asking "地上に戻りますか？" with options "はい" and "いいえ".

@@ -1,3 +1,8 @@
+## Purpose
+GameState および主要ドメインオブジェクトのシリアライズ契約を規定する。to_dict／from_dict の対称性、バージョン互換、未知フィールド検出などの要件を対象とする。
+
+## Requirements
+
 ### Requirement: Character.to_dict()はキャラクターデータをDictionaryに変換する
 Character SHALL provide a `to_dict()` method that returns a Dictionary containing character_name, race_id（ファイル名）, job_id（ファイル名）, level, base_stats, current_hp, max_hp, current_mp, max_mp。
 

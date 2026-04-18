@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ダンジョン内ミニマップ（平面俯瞰図）の描画ルールを規定する。探索済み部分のみ表示、現在位置・向きインジケータ、階段マーカーなどの要素を対象とする。
+
+## Requirements
 
 ### Requirement: MinimapRenderer creates a line-based Image centered on the player
 MinimapRenderer (RefCounted) SHALL generate an Image representing a VIEW_RADIUS (3) cell area around the player (7x7 cells). Each cell SHALL occupy a CELL_PX (3) pixel floor area with WALL_PX (1) pixel gaps between cells for wall lines. The Image size SHALL be STRIDE * VIEW_SIZE + WALL_PX = 29 x 29 pixels. The player SHALL always be centered.

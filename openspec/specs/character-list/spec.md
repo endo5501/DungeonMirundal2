@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ギルドに登録済みのキャラクター一覧画面の表示項目と操作を規定する。名前・職業・レベル・基本能力値の表示と、待機キャラクターの削除フローを対象とする。
+
+## Requirements
 
 ### Requirement: Character list displays all registered characters
 The character list screen SHALL display all characters registered with the Guild, showing name, level, race, job, and current assignment status (party or waiting).

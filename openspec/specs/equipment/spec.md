@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+キャラクター装備スロット（武器・鎧・兜・盾・篭手・装飾品）と ItemInstance の装着／解除を規定する。スロット制約・職業制限・装備変更時の戻り値を対象とする。
+
+## Requirements
 
 ### Requirement: Equipment provides six slots per character
 The system SHALL provide an `Equipment` (RefCounted) object attached to each `Character` via `character.equipment`. `Equipment` SHALL manage six named slots identified by the `EquipSlot` enum (WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY). Each slot SHALL hold at most one `ItemInstance` or `null` when empty.

@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+教会サービス（蘇生・状態異常回復・寄進・祝福など）を規定する。サービス料金、成功／失敗確率、対象キャラクターの状態変化を対象とする。
+
+## Requirements
 
 ### Requirement: TempleScreen is a town sub-screen for resurrection
 The system SHALL provide a `TempleScreen` (Control) that the player enters from TownScreen by selecting 「教会」. TempleScreen SHALL list every party member and SHALL distinguish living (current_hp > 0) from dead (current_hp <= 0) members visually.

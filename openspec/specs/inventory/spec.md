@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+パーティ共有インベントリ（アイテム所持量・ゴールド）の操作を規定する。追加・削除・スタック集約・ゴールド増減と、シリアライズ表現を対象とする。
+
+## Requirements
 
 ### Requirement: Inventory is a party-shared bag of ItemInstance
 The system SHALL provide an `Inventory` (RefCounted) that holds a single list of `ItemInstance` shared across the entire party. Items are added via `add(instance: ItemInstance)`, removed via `remove(instance: ItemInstance) -> bool`, queried for presence via `contains(instance: ItemInstance) -> bool`, and enumerated via `list() -> Array[ItemInstance]` (returning a defensive copy).

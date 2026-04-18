@@ -1,3 +1,8 @@
+## Purpose
+ダンジョンの 1 人称 3D 描画に関する表示ルールを規定する。壁・床・天井のテクスチャ、視野角、カメラ位置、向き変更時のスムージングなどを対象とする。
+
+## Requirements
+
 ### Requirement: DungeonView calculates visible cells
 DungeonView SHALL calculate the set of visible cells from the player's current position and facing direction. The view SHALL extend up to 4 cells forward and 1 cell to each side. Cells behind walls SHALL NOT be included in the visible set.
 

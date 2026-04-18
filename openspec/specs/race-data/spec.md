@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+種族（RaceData）リソースの定義と能力値補正を規定する。人間・エルフ・ドワーフ・ホビット・ノームなど種族ごとの基本補正値・寿命・特性を対象とする。
+
+## Requirements
 
 ### Requirement: RaceData holds base stats for a race
 RaceData SHALL store the race name and base values for all six stats (STR, INT, PIE, VIT, AGI, LUC) as integer values.

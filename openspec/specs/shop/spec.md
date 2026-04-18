@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+商店画面の購入・売却 UI と取引ルールを規定する。固定カタログ表示、所持ゴールドとの突合、購入確認・売却価格計算の挙動を対象とする。
+
+## Requirements
 
 ### Requirement: ShopScreen is a town sub-screen with a fixed single-shop catalog
 The system SHALL provide a `ShopScreen` (Control) that the player enters from TownScreen by selecting 「商店」. ShopScreen SHALL present a fixed, single-shop catalog sourced from a `ShopInventory` (RefCounted) that returns the same list of `Item` definitions for every visit.

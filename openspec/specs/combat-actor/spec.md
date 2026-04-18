@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+戦闘に参加するアクター（プレイヤーキャラクター／モンスター）の状態モデルを定義する。HP・MP・状態異常・行動済みフラグなど、1 ターン内の進行管理に必要な情報を対象とする。
+
+## Requirements
 
 ### Requirement: CombatActor provides a uniform combat-participant interface
 The system SHALL provide a `CombatActor` (RefCounted) abstract type that exposes a unified interface for any battle participant (party member or monster), so that combat logic can treat both kinds identically.

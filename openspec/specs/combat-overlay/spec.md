@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+戦闘中に重ねて表示される UI オーバーレイの構造を規定する。コマンドメニュー・敵情報パネル・ターゲット選択・戦闘結果パネルの表示切替とキーバインドを対象とする。
+
+## Requirements
 
 ### Requirement: CombatOverlay extends EncounterOverlay and preserves the signal contract
 The system SHALL provide a `CombatOverlay` (extends `EncounterOverlay`) that replaces the stub dismissal flow with a full Wizardry-style battle UI while preserving the existing signal/function contract: `start_encounter(monster_party)` and `encounter_resolved(outcome: EncounterOutcome)`.

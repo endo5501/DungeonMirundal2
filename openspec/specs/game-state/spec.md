@@ -1,3 +1,8 @@
+## Purpose
+ゲーム全体の状態を保持するオートロード GameState の責務を規定する。guild・inventory・dungeon_registry・save_manager 参照と、セッション越しのデータ受け渡しを対象とする。
+
+## Requirements
+
 ### Requirement: GameState is an autoload singleton
 GameState SHALL be registered as an autoload in project.godot and SHALL be accessible from any script via the name `GameState`.
 

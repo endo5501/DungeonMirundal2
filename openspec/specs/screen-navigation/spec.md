@@ -1,3 +1,8 @@
+## Purpose
+main.gd を中心とする画面切替の共通仕組みを規定する。Screen の add/remove、前画面ポインタの扱い、ESC キーによる戻る操作の一元化を対象とする。
+
+## Requirements
+
 ### Requirement: main.gd manages top-level screen switching
 main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child. main.gd SHALL handle game state loading and restore the appropriate screen based on game_location.
 

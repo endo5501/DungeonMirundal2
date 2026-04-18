@@ -1,3 +1,8 @@
+## Purpose
+ダンジョン内の移動・回転・壁衝突判定などの操作を規定する。前進・後退・左右旋回・壁接触時の抑止、階段昇降のトリガ条件を対象とする。
+
+## Requirements
+
 ### Requirement: PlayerState tracks position and direction
 PlayerState SHALL maintain the player's current grid position (x, y) and facing direction (NORTH, EAST, SOUTH, WEST).
 

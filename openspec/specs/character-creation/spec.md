@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+キャラクター作成の基本フローと能力値割り当てルールを定義する。種族・職業の選択、ボーナスポイントの分配、最終確定までの一連の振る舞いを規定する。
+
+## Requirements
 
 ### Requirement: Bonus point generation follows Wizardry distribution
 BonusPointGenerator SHALL generate bonus points using a recursive method: a base roll of 5-9 (uniform), then a 10% chance to add 1-3 and re-roll for more bonus (recursively).

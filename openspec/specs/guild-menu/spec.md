@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ギルド（冒険者ギルド）メニュー画面の項目と遷移を規定する。キャラクター作成・一覧・パーティ編成の入口として機能する UI レイヤーを対象とする。
+
+## Requirements
 
 ### Requirement: Guild menu displays selectable options
 The guild menu screen SHALL display a text-based menu with the following options: "キャラクターを作成する", "パーティ編成", "キャラクター一覧", "立ち去る".
