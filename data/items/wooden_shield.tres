@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+item_id = &"wooden_shield"
+item_name = "Wooden Shield"
+unidentified_name = "盾?"
+category = 3
+equip_slot = 4
+allowed_jobs = Array[StringName]([&"Fighter", &"Priest", &"Samurai", &"Lord"])
+attack_bonus = 0
+defense_bonus = 2
+agility_bonus = 0
+price = 80

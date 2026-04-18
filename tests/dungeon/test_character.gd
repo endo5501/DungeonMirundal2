@@ -135,3 +135,42 @@ func test_character_race_and_job_references():
 	var ch := Character.create("Test", _human, _fighter_job, allocation)
 	assert_eq(ch.race, _human)
 	assert_eq(ch.job, _fighter_job)
+
+
+# --- items-and-economy: equipment field ---
+
+func test_new_character_has_empty_equipment():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	assert_not_null(ch.equipment)
+	assert_is(ch.equipment, Equipment)
+	assert_eq(ch.equipment.all_equipped().size(), 0)
+
+
+func test_to_dict_with_inventory_includes_equipment():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+
+	var sword_item := Item.new()
+	sword_item.item_id = &"long_sword"
+	sword_item.equip_slot = Item.EquipSlot.WEAPON
+	sword_item.category = Item.ItemCategory.WEAPON
+	sword_item.allowed_jobs = [&"Fighter"]
+
+	var inv := Inventory.new()
+	var inst := ItemInstance.new(sword_item, true)
+	inv.add(inst)
+	ch.equipment.equip(Equipment.EquipSlot.WEAPON, inst, ch)
+
+	var d := ch.to_dict(inv)
+	assert_true(d.has("equipment"))
+	assert_eq(d["equipment"].get("weapon"), 0)
+
+
+func test_from_dict_without_inventory_yields_empty_equipment():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	var d := ch.to_dict()  # no inventory
+	var restored := Character.from_dict(d)
+	assert_not_null(restored.equipment)
+	assert_eq(restored.equipment.all_equipped().size(), 0)

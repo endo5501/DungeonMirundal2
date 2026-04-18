@@ -5,6 +5,7 @@ const RACES_DIR := "res://data/races/"
 const JOBS_DIR := "res://data/jobs/"
 const MONSTERS_DIR := "res://data/monsters/"
 const ENCOUNTER_TABLES_DIR := "res://data/encounter_tables/"
+const ITEMS_DIR := "res://data/items/"
 
 func load_all_races() -> Array[RaceData]:
 	var results: Array[RaceData] = []
@@ -29,6 +30,13 @@ func load_all_encounter_tables() -> Array[EncounterTableData]:
 	for res in _load_resources(ENCOUNTER_TABLES_DIR):
 		results.append(res as EncounterTableData)
 	return results
+
+
+func load_all_items() -> ItemRepository:
+	var repo := ItemRepository.new()
+	for res in _load_resources(ITEMS_DIR):
+		repo.register(res as Item)
+	return repo
 
 func _load_resources(dir_path: String) -> Array:
 	var results: Array = []

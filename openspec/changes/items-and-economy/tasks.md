@@ -1,35 +1,35 @@
 ## 1. Item データモデル
 
-- [ ] 1.1 `tests/items/test_item.gd` を新規作成し、`Item` リソースが必須フィールド（`item_id`, `item_name`, `unidentified_name`, `category`, `equip_slot`, `allowed_jobs`, `attack_bonus`, `defense_bonus`, `agility_bonus`, `price`）を公開することをテスト
-- [ ] 1.2 `src/items/item.gd` に `class_name Item extends Resource` と `@export` フィールド、および `ItemCategory` / `EquipSlot` enum を実装
-- [ ] 1.3 `tests/items/test_item.gd` に「`category == OTHER` のとき `equip_slot == NONE`」「`category == WEAPON` のとき `equip_slot == WEAPON`」などのカテゴリ/スロット整合性テストを追加
-- [ ] 1.4 `tests/items/test_item_instance.gd` を新規作成し、`ItemInstance` のコンストラクタ（`Item` + `identified: bool`）と `to_dict() / ItemInstance.from_dict()` の round-trip テスト、`from_dict` で `item_id` が見つからない場合は `null` を返すテストを書く
-- [ ] 1.5 `src/items/item_instance.gd` (`class_name ItemInstance extends RefCounted`) を実装
-- [ ] 1.6 `tests/items/test_item_repository.gd` を新規作成し、`find(item_id)` の存在/非存在、`all()` の一覧、モック配列からのロードをテスト
-- [ ] 1.7 `src/items/item_repository.gd` (`class_name ItemRepository extends RefCounted`) を実装
-- [ ] 1.8 `src/dungeon/data_loader.gd`（既存）に `load_all_items() -> ItemRepository` を追加し、`data/items/*.tres` を舐めて Repository を返す実装を書く。併せて `tests/dungeon/test_data_loader.gd` にアイテムロード確認テストを追加
-- [ ] 1.9 `data/items/` ディレクトリを作成し、各 `EquipSlot`（WEAPON / ARMOR / HELMET / SHIELD / GAUNTLET / ACCESSORY）ごとに最低 1 つの `.tres` を整備（例: `long_sword.tres`, `short_sword.tres`, `staff.tres`, `mace.tres`, `leather_armor.tres`, `robe.tres`, `leather_helmet.tres`, `wooden_shield.tres`, `leather_gauntlet.tres`, `ring_of_protection.tres`）。MVP では消耗品カテゴリの `.tres` は作らない
-- [ ] 1.10 `openspec validate items-and-economy` が pass することを確認
+- [x] 1.1 `tests/items/test_item.gd` を新規作成し、`Item` リソースが必須フィールド（`item_id`, `item_name`, `unidentified_name`, `category`, `equip_slot`, `allowed_jobs`, `attack_bonus`, `defense_bonus`, `agility_bonus`, `price`）を公開することをテスト
+- [x] 1.2 `src/items/item.gd` に `class_name Item extends Resource` と `@export` フィールド、および `ItemCategory` / `EquipSlot` enum を実装
+- [x] 1.3 `tests/items/test_item.gd` に「`category == OTHER` のとき `equip_slot == NONE`」「`category == WEAPON` のとき `equip_slot == WEAPON`」などのカテゴリ/スロット整合性テストを追加
+- [x] 1.4 `tests/items/test_item_instance.gd` を新規作成し、`ItemInstance` のコンストラクタ（`Item` + `identified: bool`）と `to_dict() / ItemInstance.from_dict()` の round-trip テスト、`from_dict` で `item_id` が見つからない場合は `null` を返すテストを書く
+- [x] 1.5 `src/items/item_instance.gd` (`class_name ItemInstance extends RefCounted`) を実装
+- [x] 1.6 `tests/items/test_item_repository.gd` を新規作成し、`find(item_id)` の存在/非存在、`all()` の一覧、モック配列からのロードをテスト
+- [x] 1.7 `src/items/item_repository.gd` (`class_name ItemRepository extends RefCounted`) を実装
+- [x] 1.8 `src/dungeon/data_loader.gd`（既存）に `load_all_items() -> ItemRepository` を追加し、`data/items/*.tres` を舐めて Repository を返す実装を書く。併せて `tests/dungeon/test_data_loader.gd` にアイテムロード確認テストを追加
+- [x] 1.9 `data/items/` ディレクトリを作成し、各 `EquipSlot`（WEAPON / ARMOR / HELMET / SHIELD / GAUNTLET / ACCESSORY）ごとに最低 1 つの `.tres` を整備（例: `long_sword.tres`, `short_sword.tres`, `staff.tres`, `mace.tres`, `leather_armor.tres`, `robe.tres`, `leather_helmet.tres`, `wooden_shield.tres`, `leather_gauntlet.tres`, `ring_of_protection.tres`）。MVP では消耗品カテゴリの `.tres` は作らない
+- [x] 1.10 `openspec validate items-and-economy` が pass することを確認
 
 ## 2. Inventory
 
-- [ ] 2.1 `tests/items/test_inventory.gd` を新規作成し、`add` / `remove` / `contains` / `list()` の基本動作、`list()` の defensive copy 性、100 個追加が通ることをテスト
-- [ ] 2.2 `src/items/inventory.gd` (`class_name Inventory extends RefCounted`) を実装（`_items: Array[ItemInstance]`, `add` / `remove` / `contains` / `list` を含む）
-- [ ] 2.3 `test_inventory.gd` に gold のテスト（`add_gold`, `spend_gold` の成功/失敗、負数引数の扱い）を追加
-- [ ] 2.4 `inventory.gd` に `gold: int`, `add_gold` / `spend_gold` を実装
-- [ ] 2.5 `test_inventory.gd` に `to_dict / from_dict` の round-trip テスト（gold と item 順序の保存、欠損キーで空 Inventory が返る）を追加
-- [ ] 2.6 `inventory.gd` に `to_dict / from_dict(repository)` を実装
+- [x] 2.1 `tests/items/test_inventory.gd` を新規作成し、`add` / `remove` / `contains` / `list()` の基本動作、`list()` の defensive copy 性、100 個追加が通ることをテスト
+- [x] 2.2 `src/items/inventory.gd` (`class_name Inventory extends RefCounted`) を実装（`_items: Array[ItemInstance]`, `add` / `remove` / `contains` / `list` を含む）
+- [x] 2.3 `test_inventory.gd` に gold のテスト（`add_gold`, `spend_gold` の成功/失敗、負数引数の扱い）を追加
+- [x] 2.4 `inventory.gd` に `gold: int`, `add_gold` / `spend_gold` を実装
+- [x] 2.5 `test_inventory.gd` に `to_dict / from_dict` の round-trip テスト（gold と item 順序の保存、欠損キーで空 Inventory が返る）を追加
+- [x] 2.6 `inventory.gd` に `to_dict / from_dict(repository)` を実装
 
 ## 3. Equipment
 
-- [ ] 3.1 `tests/items/test_equipment.gd` を新規作成し、`Equipment` の 6 スロット初期値 null、`get_equipped`、`all_equipped` の挙動をテスト
-- [ ] 3.2 `src/items/equipment.gd` (`class_name Equipment extends RefCounted`) と `EquipResult` 型、`SLOT_MISMATCH` / `JOB_NOT_ALLOWED` の reason 列挙を実装
-- [ ] 3.3 `test_equipment.gd` に `equip(slot, instance, character)` のスロット一致・職業許可チェック、成功時の previous 返却、失敗時のスロット不変をテスト
-- [ ] 3.4 `equipment.gd` に `equip` / `unequip` / `all_equipped` を実装
-- [ ] 3.5 `test_equipment.gd` に `to_dict(inventory) / from_dict(data, inventory)` の round-trip テスト、欠損キーで空装備、装備アイテムが Inventory から削除されないことをテスト
-- [ ] 3.6 `equipment.gd` に `to_dict / from_dict` を実装
-- [ ] 3.7 `tests/dungeon/test_character.gd`（既存）に `Character.equipment` が存在し、`Character` の `to_dict / from_dict` で equipment が保存/復元されることをテスト
-- [ ] 3.8 `src/dungeon/character.gd` に `equipment: Equipment` フィールドと `to_dict / from_dict` での永続化を追加
+- [x] 3.1 `tests/items/test_equipment.gd` を新規作成し、`Equipment` の 6 スロット初期値 null、`get_equipped`、`all_equipped` の挙動をテスト
+- [x] 3.2 `src/items/equipment.gd` (`class_name Equipment extends RefCounted`) と `EquipResult` 型、`SLOT_MISMATCH` / `JOB_NOT_ALLOWED` の reason 列挙を実装
+- [x] 3.3 `test_equipment.gd` に `equip(slot, instance, character)` のスロット一致・職業許可チェック、成功時の previous 返却、失敗時のスロット不変をテスト
+- [x] 3.4 `equipment.gd` に `equip` / `unequip` / `all_equipped` を実装
+- [x] 3.5 `test_equipment.gd` に `to_dict(inventory) / from_dict(data, inventory)` の round-trip テスト、欠損キーで空装備、装備アイテムが Inventory から削除されないことをテスト
+- [x] 3.6 `equipment.gd` に `to_dict / from_dict` を実装
+- [x] 3.7 `tests/dungeon/test_character.gd`（既存）に `Character.equipment` が存在し、`Character` の `to_dict / from_dict` で equipment が保存/復元されることをテスト
+- [x] 3.8 `src/dungeon/character.gd` に `equipment: Equipment` フィールドと `to_dict / from_dict` での永続化を追加
 
 ## 4. GameState と ItemRepository の起動時配線
 
