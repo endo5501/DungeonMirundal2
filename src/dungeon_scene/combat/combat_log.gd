@@ -20,6 +20,8 @@ func _build_ui() -> void:
 	_label = Label.new()
 	_label.add_theme_font_size_override("font_size", 14)
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	_label.size_flags_vertical = Control.SIZE_FILL
 	panel.add_child(_label)
 
 

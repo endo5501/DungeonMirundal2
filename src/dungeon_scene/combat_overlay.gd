@@ -362,7 +362,16 @@ func _build_combat_ui() -> void:
 	add_child(_monster_panel)
 
 	_combat_log = CombatLog.new()
-	_place(_combat_log, 0.60, 0.02, 0.98, 0.60)
+	# CombatLog sits below the dungeon minimap (top-right). Use absolute
+	# top offset so it clears the minimap at any viewport height.
+	_combat_log.anchor_left = 0.60
+	_combat_log.anchor_top = 0.0
+	_combat_log.anchor_right = 0.98
+	_combat_log.anchor_bottom = 0.60
+	_combat_log.offset_left = 0
+	_combat_log.offset_top = 160  # minimap 140 + margin 16 + small gap
+	_combat_log.offset_right = 0
+	_combat_log.offset_bottom = 0
 	add_child(_combat_log)
 
 	_command_menu = CombatCommandMenu.new()
