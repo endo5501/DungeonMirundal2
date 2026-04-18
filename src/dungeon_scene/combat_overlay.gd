@@ -29,6 +29,9 @@ var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
 var _combat_log: CombatLog
 var _result_panel: CombatResultPanel
+# Cached separately from TurnEngine._outcome because unit tests call
+# show_result() with a hand-built EncounterOutcome that never passed through
+# a TurnEngine. Revisit if items-and-economy drops that test surface.
 var _last_outcome: EncounterOutcome
 var log_line_delay: float = 0.0
 
