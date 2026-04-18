@@ -225,9 +225,9 @@ func _cursor_move_in_view(direction: int) -> void:
 			_equipment_slot_index = (_equipment_slot_index + direction + EQUIPMENT_SLOT_VALUES.size()) % EQUIPMENT_SLOT_VALUES.size()
 			_refresh_equipment_slot_view()
 		View.EQUIPMENT_CANDIDATE:
-			var candidates := get_equipment_candidates()
-			if candidates.size() == 0: return
-			_equipment_candidate_index = (_equipment_candidate_index + direction + candidates.size()) % candidates.size()
+			# Total rows = candidates + 1 [はずす] entry at index 0
+			var rows := get_equipment_candidates().size() + 1
+			_equipment_candidate_index = (_equipment_candidate_index + direction + rows) % rows
 			_refresh_equipment_candidate_view()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -473,11 +473,20 @@ func _refresh_equipment_candidate_view() -> void:
 	unequip_label.add_theme_font_size_override("font_size", 16)
 	_equipment_candidate_container.add_child(unequip_label)
 
+	var equipped_by := _map_equipped_to_character()
+	var self_ch := _get_selected_character()
 	for i in range(candidates.size()):
 		var inst: ItemInstance = candidates[i]
 		var line := Label.new()
 		var prefix := "> " if (i + 1) == _equipment_candidate_index else "  "
-		line.text = "%s%s" % [prefix, inst.item.item_name]
+		var marker := ""
+		if equipped_by.has(inst):
+			var holder: String = equipped_by[inst]
+			if self_ch != null and holder == self_ch.character_name:
+				marker = " [装備中]"
+			else:
+				marker = " [装備中: %s]" % holder
+		line.text = "%s%s%s" % [prefix, inst.item.item_name, marker]
 		line.add_theme_font_size_override("font_size", 16)
 		_equipment_candidate_container.add_child(line)
 
@@ -541,5 +550,18 @@ func _confirm_equipment_candidate() -> void:
 		var candidates := get_equipment_candidates()
 		var idx := _equipment_candidate_index - 1
 		if idx >= 0 and idx < candidates.size():
-			ch.equipment.equip(slot_value, candidates[idx], ch)
+			var instance: ItemInstance = candidates[idx]
+			_unequip_from_other_holders(instance, ch)
+			ch.equipment.equip(slot_value, instance, ch)
 	_switch_view(View.EQUIPMENT_SLOT)
+
+
+func _unequip_from_other_holders(instance: ItemInstance, exclude: Character) -> void:
+	# If another character currently has this ItemInstance equipped, unequip
+	# it there first so two characters don't share the same instance.
+	for other in _get_guild_members():
+		if other == exclude or other == null or other.equipment == null:
+			continue
+		for slot in Equipment.ALL_SLOTS:
+			if other.equipment.get_equipped(slot) == instance:
+				other.equipment.unequip(slot)
