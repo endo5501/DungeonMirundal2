@@ -5,14 +5,9 @@ extends RefCounted
 static func sum_experience(monsters: Array) -> int:
 	var total := 0
 	for m in monsters:
-		if m == null:
+		if m == null or m.data == null:
 			continue
-		if m is Monster:
-			if m.data != null:
-				total += m.data.experience
-		elif m is MonsterCombatant:
-			if m.monster != null and m.monster.data != null:
-				total += m.monster.data.experience
+		total += m.data.experience
 	return total
 
 

@@ -38,13 +38,6 @@ func append_from_report_action(action: Dictionary) -> void:
 		append_line(text)
 
 
-func append_from_report(report: TurnReport) -> void:
-	if report == null:
-		return
-	for action in report.actions:
-		append_from_report_action(action)
-
-
 func get_lines() -> Array[String]:
 	return _lines.duplicate()
 

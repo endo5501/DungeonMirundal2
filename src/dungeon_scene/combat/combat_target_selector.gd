@@ -76,6 +76,10 @@ func get_targets() -> Array:
 	return _targets.duplicate()
 
 
+func get_selected_index() -> int:
+	return _selected_index
+
+
 func _ensure_ready() -> void:
 	if _label == null:
 		_build_ui()

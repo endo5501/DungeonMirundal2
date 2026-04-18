@@ -9,6 +9,10 @@ enum Phase {
 	RESULT,
 }
 
+const _OPT_ATTACK: int = 0
+const _OPT_DEFEND: int = 1
+const _OPT_ESCAPE: int = 2
+
 signal party_state_changed
 
 var _guild: Guild
@@ -42,7 +46,7 @@ func setup_dependencies(guild: Guild, provider: EquipmentProvider, rng: RandomNu
 
 func start_encounter(monster_party: MonsterParty) -> void:
 	_monster_party = monster_party
-	_capture_initial_monster_counts(monster_party)
+	_initial_monster_counts = monster_party.counts_by_species() if monster_party != null else {}
 	var party_combatants := _build_party_combatants()
 	var monster_combatants := _build_monster_combatants(monster_party)
 	_turn_engine = TurnEngine.new()
@@ -129,17 +133,14 @@ func _prompt_next_actor() -> void:
 
 func _handle_command_choice(option_index: int) -> void:
 	match option_index:
-		0:
-			# Attack → go to target select
+		_OPT_ATTACK:
 			_current_phase = Phase.TARGET_SELECT
 			_command_menu.hide_menu()
 			_target_selector.show_with(_turn_engine.monsters)
-		1:
-			# Defend
+		_OPT_DEFEND:
 			_turn_engine.submit_command(_current_actor_index, DefendCommand.new())
 			_advance_to_next_actor()
-		2:
-			# Escape
+		_OPT_ESCAPE:
 			_turn_engine.submit_command(_current_actor_index, EscapeCommand.new())
 			_advance_to_next_actor()
 
@@ -293,7 +294,6 @@ func _handle_command_menu_key(key: InputEventKey) -> bool:
 			_command_menu.move_down()
 			return true
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			_command_menu.confirm_current()
 			command_menu_select(_command_menu.get_selected_index())
 			return true
 	return false
@@ -308,10 +308,7 @@ func _handle_target_select_key(key: InputEventKey) -> bool:
 			_target_selector.move_down()
 			return true
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			var targets: Array = _target_selector.get_targets()
-			var idx: int = _target_selector._selected_index
-			if idx >= 0 and idx < targets.size():
-				_handle_target_choice(targets[idx])
+			target_select(_target_selector.get_selected_index())
 			return true
 	return false
 
@@ -345,15 +342,6 @@ func _build_monster_combatants(monster_party: MonsterParty) -> Array:
 	for m in monster_party.members:
 		combatants.append(MonsterCombatant.new(m))
 	return combatants
-
-
-func _capture_initial_monster_counts(monster_party: MonsterParty) -> void:
-	_initial_monster_counts.clear()
-	if monster_party == null:
-		return
-	for m in monster_party.members:
-		var id: StringName = m.data.monster_id
-		_initial_monster_counts[id] = _initial_monster_counts.get(id, 0) + 1
 
 
 func _build_combat_ui() -> void:

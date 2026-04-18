@@ -75,7 +75,6 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			_end_turn_cleanup()
 			return report
 
-	# Build turn order of living combatants.
 	var all_actors: Array = []
 	all_actors.append_array(party)
 	all_actors.append_array(monsters)
@@ -95,20 +94,20 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if cmd is AttackCommand:
 				_resolve_attack(actor, cmd.target, rng, report)
 		else:
-			# Monster: pick a random living party member.
 			var target: CombatActor = _pick_living_party(rng)
 			if target != null:
 				_resolve_attack(actor, target, rng, report)
-		# Check terminal condition mid-turn so later dead actors don't act.
+		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
 			break
 
 	_end_turn_cleanup()
 
-	# Terminal check.
-	if _all_monsters_dead():
+	var monsters_dead := _all_monsters_dead()
+	var party_dead := _all_party_dead()
+	if monsters_dead:
 		_finish(EncounterOutcome.Result.CLEARED)
-	elif _all_party_dead():
+	elif party_dead:
 		_finish(EncounterOutcome.Result.WIPED)
 	else:
 		turn_number += 1
