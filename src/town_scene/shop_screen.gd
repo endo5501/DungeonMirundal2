@@ -226,17 +226,21 @@ func _input_buy(event: InputEventKey) -> void:
 	if event.is_action_pressed("ui_down") and count > 0:
 		_selected_index = (_selected_index + 1) % count
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up") and count > 0:
 		_selected_index = (_selected_index - 1 + count) % count
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept") and count > 0:
 		var catalog := get_buy_catalog()
 		buy(catalog[_selected_index])
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.TOP_MENU
 		_selected_index = 0
 		_rebuild()
+		get_viewport().set_input_as_handled()
 
 
 func _input_sell(event: InputEventKey) -> void:
@@ -245,18 +249,22 @@ func _input_sell(event: InputEventKey) -> void:
 	if event.is_action_pressed("ui_down") and count > 0:
 		_selected_index = (_selected_index + 1) % count
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up") and count > 0:
 		_selected_index = (_selected_index - 1 + count) % count
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept") and count > 0:
 		sell(candidates[_selected_index])
 		if _selected_index >= get_sell_candidates().size():
 			_selected_index = maxi(0, get_sell_candidates().size() - 1)
 		_rebuild()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.TOP_MENU
 		_selected_index = 0
 		_rebuild()
+		get_viewport().set_input_as_handled()
 
 
 func enter_buy() -> void:

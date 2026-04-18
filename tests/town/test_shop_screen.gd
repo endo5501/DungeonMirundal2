@@ -148,3 +148,33 @@ func test_sell_candidates_includes_unequipped_items():
 	_inventory.add(inst)
 	var s := _make_screen()
 	assert_true(s.get_sell_candidates().has(inst))
+
+
+# --- input consumption ---
+
+func _make_cancel_event() -> InputEventKey:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ESCAPE
+	ev.pressed = true
+	return ev
+
+
+func test_esc_in_buy_mode_returns_to_top_and_consumes_event():
+	var s := _make_screen()
+	s.enter_buy()
+	assert_eq(s.get_mode(), ShopScreen.Mode.BUY)
+	# Drive the cancel through the public input handler
+	s._input_buy(_make_cancel_event())
+	assert_eq(s.get_mode(), ShopScreen.Mode.TOP_MENU)
+	assert_true(get_viewport().is_input_handled(),
+		"ui_cancel in BUY must consume the event to avoid leaking ESC to the global menu")
+
+
+func test_esc_in_sell_mode_returns_to_top_and_consumes_event():
+	var s := _make_screen()
+	s.enter_sell()
+	assert_eq(s.get_mode(), ShopScreen.Mode.SELL)
+	s._input_sell(_make_cancel_event())
+	assert_eq(s.get_mode(), ShopScreen.Mode.TOP_MENU)
+	assert_true(get_viewport().is_input_handled(),
+		"ui_cancel in SELL must consume the event to avoid leaking ESC to the global menu")
