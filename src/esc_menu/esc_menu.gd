@@ -436,11 +436,11 @@ func _refresh_equipment_character_view() -> void:
 		return
 	for i in range(members.size()):
 		var ch: Character = members[i]
-		var line := Label.new()
-		var prefix := "> " if i == _equipment_character_index else "  "
-		line.text = "%s%s (Lv%d %s)" % [prefix, ch.character_name, ch.level, ch.job.job_name]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_character_container.add_child(line)
+		var row := CursorMenuRow.new()
+		row.set_text("%s (Lv%d %s)" % [ch.character_name, ch.level, ch.job.job_name])
+		row.set_text_font_size(16)
+		row.set_selected(i == _equipment_character_index)
+		_equipment_character_container.add_child(row)
 
 
 func _refresh_equipment_slot_view() -> void:
@@ -454,28 +454,26 @@ func _refresh_equipment_slot_view() -> void:
 		var equipped_name := "なし"
 		if equipped != null and equipped.item != null:
 			equipped_name = equipped.item.item_name
-		var line := Label.new()
-		var prefix := "> " if i == _equipment_slot_index else "  "
-		line.text = "%s%s: %s" % [prefix, EQUIPMENT_SLOT_LABELS[i], equipped_name]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_slot_container.add_child(line)
+		var row := CursorMenuRow.new()
+		row.set_text("%s: %s" % [EQUIPMENT_SLOT_LABELS[i], equipped_name])
+		row.set_text_font_size(16)
+		row.set_selected(i == _equipment_slot_index)
+		_equipment_slot_container.add_child(row)
 
 
 func _refresh_equipment_candidate_view() -> void:
 	_clear_extra_children(_equipment_candidate_container)
 	var candidates := get_equipment_candidates()
-	var unequip_label := Label.new()
-	var unequip_prefix := "> " if _equipment_candidate_index == 0 else "  "
-	unequip_label.text = "%s[はずす]" % unequip_prefix
-	unequip_label.add_theme_font_size_override("font_size", 16)
-	_equipment_candidate_container.add_child(unequip_label)
+	var unequip_row := CursorMenuRow.new()
+	unequip_row.set_text("[はずす]")
+	unequip_row.set_text_font_size(16)
+	unequip_row.set_selected(_equipment_candidate_index == 0)
+	_equipment_candidate_container.add_child(unequip_row)
 
 	var equipped_by := _map_equipped_to_character_names()
 	var self_ch := _get_selected_character()
 	for i in range(candidates.size()):
 		var inst: ItemInstance = candidates[i]
-		var line := Label.new()
-		var prefix := "> " if (i + 1) == _equipment_candidate_index else "  "
 		var marker := ""
 		if equipped_by.has(inst):
 			var holder: String = equipped_by[inst]
@@ -483,9 +481,11 @@ func _refresh_equipment_candidate_view() -> void:
 				marker = " [装備中]"
 			else:
 				marker = " [装備中: %s]" % holder
-		line.text = "%s%s%s" % [prefix, inst.item.item_name, marker]
-		line.add_theme_font_size_override("font_size", 16)
-		_equipment_candidate_container.add_child(line)
+		var row := CursorMenuRow.new()
+		row.set_text("%s%s" % [inst.item.item_name, marker])
+		row.set_text_font_size(16)
+		row.set_selected((i + 1) == _equipment_candidate_index)
+		_equipment_candidate_container.add_child(row)
 
 
 const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view
