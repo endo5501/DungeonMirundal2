@@ -37,6 +37,6 @@ func heal_party() -> void:
 	for row in range(2):
 		for pos in range(3):
 			var ch: Character = guild.get_character_at(row, pos)
-			if ch != null and ch.current_hp > 0:
+			if ch != null and not ch.is_dead():
 				ch.current_hp = ch.max_hp
 				ch.current_mp = ch.max_mp

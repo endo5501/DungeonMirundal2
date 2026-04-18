@@ -23,6 +23,25 @@ const ALL_SLOTS: Array[int] = [
 ]
 
 
+static func slot_from_item_slot(item_slot: int) -> int:
+	match item_slot:
+		Item.EquipSlot.WEAPON: return EquipSlot.WEAPON
+		Item.EquipSlot.ARMOR: return EquipSlot.ARMOR
+		Item.EquipSlot.HELMET: return EquipSlot.HELMET
+		Item.EquipSlot.SHIELD: return EquipSlot.SHIELD
+		Item.EquipSlot.GAUNTLET: return EquipSlot.GAUNTLET
+		Item.EquipSlot.ACCESSORY: return EquipSlot.ACCESSORY
+	return -1
+
+
+static func can_equip(item: Item, slot: int, character: Character) -> bool:
+	if item == null or character == null or character.job == null:
+		return false
+	if slot_from_item_slot(item.equip_slot) != slot:
+		return false
+	return item.allowed_jobs.has(StringName(character.job.job_name))
+
+
 class EquipResult extends RefCounted:
 	var success: bool
 	var previous: ItemInstance
@@ -49,9 +68,10 @@ func get_equipped(slot: int) -> ItemInstance:
 func equip(slot: int, instance: ItemInstance, character: Character) -> EquipResult:
 	if instance == null or instance.item == null:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
-	if not _item_slot_matches(instance.item, slot):
+	if slot_from_item_slot(instance.item.equip_slot) != slot:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
-	if not _job_allowed(instance.item, character):
+	if character == null or character.job == null \
+			or not instance.item.allowed_jobs.has(StringName(character.job.job_name)):
 		return EquipResult.new(false, null, FailReason.JOB_NOT_ALLOWED)
 	var previous: ItemInstance = _slots.get(slot, null)
 	_slots[slot] = instance
@@ -103,19 +123,3 @@ static func from_dict(data: Dictionary, inventory: Inventory) -> Equipment:
 	return eq
 
 
-func _item_slot_matches(item: Item, slot: int) -> bool:
-	match slot:
-		EquipSlot.WEAPON: return item.equip_slot == Item.EquipSlot.WEAPON
-		EquipSlot.ARMOR: return item.equip_slot == Item.EquipSlot.ARMOR
-		EquipSlot.HELMET: return item.equip_slot == Item.EquipSlot.HELMET
-		EquipSlot.SHIELD: return item.equip_slot == Item.EquipSlot.SHIELD
-		EquipSlot.GAUNTLET: return item.equip_slot == Item.EquipSlot.GAUNTLET
-		EquipSlot.ACCESSORY: return item.equip_slot == Item.EquipSlot.ACCESSORY
-	return false
-
-
-func _job_allowed(item: Item, character: Character) -> bool:
-	if character == null or character.job == null:
-		return false
-	var job_name_sn := StringName(character.job.job_name)
-	return item.allowed_jobs.has(job_name_sn)

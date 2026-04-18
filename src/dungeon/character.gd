@@ -54,6 +54,10 @@ static func create(
 		ch.current_mp = 0
 	return ch
 
+func is_dead() -> bool:
+	return current_hp <= 0
+
+
 func gain_experience(amount: int) -> void:
 	if amount <= 0:
 		return

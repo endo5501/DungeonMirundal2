@@ -117,7 +117,7 @@
 
 - [x] 14.1 `openspec validate items-and-economy --strict` が pass することを確認
 - [x] 14.2 全 GUT テストがローカルで pass することを確認 (913/913)（`./addons/gut/gut_cmdln.sh` 等のプロジェクト慣用コマンドを使う）
-- [ ] 14.3 手動確認シナリオを実行: 新規ゲーム → 町 → 商店で装備購入 → ダンジョンで戦闘勝利 → ゴールド加算確認 → ESC メニューで装備変更 → 戻る → セーブ → ロード → 状態復元確認
-- [ ] 14.4 戦闘で死亡キャラを作成し → 町の教会で蘇生 → current_hp == 1 になり、current_mp は変化なし・ゴールドが減っていることを確認
+- [x] 14.3 手動確認シナリオを実行: 新規ゲーム → 町 → 商店で装備購入 → ダンジョンで戦闘勝利 → ゴールド加算確認 → ESC メニューで装備変更 → 戻る → セーブ → ロード → 状態復元確認 (装備候補カーソル / 装備者表示 / クロスキャラ装備の3件を修正後に通過)
+- [x] 14.4 戦闘で死亡キャラを作成し → 町の教会で蘇生 → current_hp == 1 になり、current_mp は変化なし・ゴールドが減っていることを確認
 - [x] 14.5 `DummyEquipmentProvider` がテスト以外で参照されていないことを grep で確認 (src 内の参照は定義ファイル self のみ)
-- [ ] 14.6 `openspec archive items-and-economy` の準備（ `/opsx:verify` 相当）に移れる状態を確認
+- [x] 14.6 `openspec archive items-and-economy` の準備（ `/opsx:verify` 相当）に移れる状態を確認

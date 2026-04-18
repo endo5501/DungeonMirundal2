@@ -225,7 +225,6 @@ func _cursor_move_in_view(direction: int) -> void:
 			_equipment_slot_index = (_equipment_slot_index + direction + EQUIPMENT_SLOT_VALUES.size()) % EQUIPMENT_SLOT_VALUES.size()
 			_refresh_equipment_slot_view()
 		View.EQUIPMENT_CANDIDATE:
-			# Total rows = candidates + 1 [はずす] entry at index 0
 			var rows := get_equipment_candidates().size() + 1
 			_equipment_candidate_index = (_equipment_candidate_index + direction + rows) % rows
 			_refresh_equipment_candidate_view()
@@ -326,10 +325,7 @@ func _handle_quit_dialog_select() -> void:
 			_switch_view(View.MAIN_MENU)
 
 func _refresh_status_view() -> void:
-	while _status_container.get_child_count() > 2:
-		var child := _status_container.get_child(_status_container.get_child_count() - 1)
-		_status_container.remove_child(child)
-		child.queue_free()
+	_clear_extra_children(_status_container)
 
 	var guild: Guild = GameState.guild if GameState != null else null
 	if guild == null or not guild.has_party_members():
@@ -407,7 +403,7 @@ func _refresh_items_view() -> void:
 		_items_container.add_child(empty)
 		return
 
-	var equipped_by := _map_equipped_to_character()
+	var equipped_by := _map_equipped_to_character_names()
 	for inst in inv.list():
 		var line := Label.new()
 		var marker := ""
@@ -419,13 +415,13 @@ func _refresh_items_view() -> void:
 		_items_container.add_child(line)
 
 
-func _map_equipped_to_character() -> Dictionary:
+func _map_equipped_to_character_names() -> Dictionary:
+	if GameState == null or GameState.guild == null:
+		return {}
 	var result: Dictionary = {}
-	for ch in _get_guild_members():
-		if ch.equipment == null:
-			continue
-		for inst in ch.equipment.all_equipped():
-			result[inst] = ch.character_name
+	var owners := GameState.guild.map_equipped_instances()
+	for inst in owners:
+		result[inst] = (owners[inst] as Character).character_name
 	return result
 
 
@@ -473,7 +469,7 @@ func _refresh_equipment_candidate_view() -> void:
 	unequip_label.add_theme_font_size_override("font_size", 16)
 	_equipment_candidate_container.add_child(unequip_label)
 
-	var equipped_by := _map_equipped_to_character()
+	var equipped_by := _map_equipped_to_character_names()
 	var self_ch := _get_selected_character()
 	for i in range(candidates.size()):
 		var inst: ItemInstance = candidates[i]
@@ -491,9 +487,11 @@ func _refresh_equipment_candidate_view() -> void:
 		_equipment_candidate_container.add_child(line)
 
 
+const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view
+
+
 func _clear_extra_children(container: VBoxContainer) -> void:
-	# Keep the first 2 children (title + spacer) and remove the rest.
-	while container.get_child_count() > 2:
+	while container.get_child_count() > _HEADER_CHILD_COUNT:
 		var child := container.get_child(container.get_child_count() - 1)
 		container.remove_child(child)
 		child.queue_free()
@@ -507,35 +505,18 @@ func _get_selected_character() -> Character:
 
 
 func get_equipment_candidates() -> Array[ItemInstance]:
-	# Candidates: inventory items whose equip_slot matches the selected slot
-	# and whose allowed_jobs include the selected character's job.
 	var results: Array[ItemInstance] = []
 	var ch := _get_selected_character()
 	var inv := _get_inventory()
-	if ch == null or inv == null or ch.job == null:
+	if ch == null or inv == null:
 		return results
 	if _equipment_slot_index < 0 or _equipment_slot_index >= EQUIPMENT_SLOT_VALUES.size():
 		return results
 	var slot_value := EQUIPMENT_SLOT_VALUES[_equipment_slot_index]
-	var job_name := StringName(ch.job.job_name)
 	for inst in inv.list():
-		if inst.item == null:
-			continue
-		if _slot_matches_item(slot_value, inst.item):
-			if inst.item.allowed_jobs.has(job_name):
-				results.append(inst)
+		if inst.item != null and Equipment.can_equip(inst.item, slot_value, ch):
+			results.append(inst)
 	return results
-
-
-func _slot_matches_item(equipment_slot: int, item: Item) -> bool:
-	match equipment_slot:
-		Equipment.EquipSlot.WEAPON: return item.equip_slot == Item.EquipSlot.WEAPON
-		Equipment.EquipSlot.ARMOR: return item.equip_slot == Item.EquipSlot.ARMOR
-		Equipment.EquipSlot.HELMET: return item.equip_slot == Item.EquipSlot.HELMET
-		Equipment.EquipSlot.SHIELD: return item.equip_slot == Item.EquipSlot.SHIELD
-		Equipment.EquipSlot.GAUNTLET: return item.equip_slot == Item.EquipSlot.GAUNTLET
-		Equipment.EquipSlot.ACCESSORY: return item.equip_slot == Item.EquipSlot.ACCESSORY
-	return false
 
 
 func _confirm_equipment_candidate() -> void:
@@ -544,7 +525,6 @@ func _confirm_equipment_candidate() -> void:
 		return
 	var slot_value := EQUIPMENT_SLOT_VALUES[_equipment_slot_index]
 	if _equipment_candidate_index == 0:
-		# "はずす"
 		ch.equipment.unequip(slot_value)
 	else:
 		var candidates := get_equipment_candidates()

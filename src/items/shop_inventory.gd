@@ -5,7 +5,6 @@ var _items: Array[Item] = []
 
 
 static func from_repository(repository: ItemRepository) -> ShopInventory:
-	# MVP: shop carries every equippable item defined under data/items/
 	var shop := ShopInventory.new()
 	if repository == null:
 		return shop
@@ -31,8 +30,6 @@ func size() -> int:
 
 
 func purchase(item: Item) -> ItemInstance:
-	# Returns a fresh identified ItemInstance for the given Item.
-	# Gold handling is the caller's responsibility (handled in ShopScreen).
 	if item == null:
 		return null
 	return ItemInstance.new(item, true)

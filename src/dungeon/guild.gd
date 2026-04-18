@@ -59,6 +59,16 @@ func has_party_members() -> bool:
 func is_in_party(character: Character) -> bool:
 	return _is_in_party(character)
 
+
+func map_equipped_instances() -> Dictionary:
+	var result: Dictionary = {}
+	for ch in _characters:
+		if ch == null or ch.equipment == null:
+			continue
+		for inst in ch.equipment.all_equipped():
+			result[inst] = ch
+	return result
+
 func to_dict(inventory: Inventory = null) -> Dictionary:
 	var chars_arr: Array = []
 	for ch in _characters:

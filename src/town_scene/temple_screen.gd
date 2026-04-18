@@ -46,7 +46,7 @@ func revive_cost(character: Character) -> int:
 
 
 func is_dead(character: Character) -> bool:
-	return character != null and character.current_hp <= 0
+	return character != null and character.is_dead()
 
 
 # ---- revive ----
@@ -55,7 +55,7 @@ func revive(character: Character) -> bool:
 	_last_message = ""
 	if character == null or _inventory == null:
 		return false
-	if not is_dead(character):
+	if not character.is_dead():
 		_last_message = "蘇生対象がいません"
 		return false
 	var cost := revive_cost(character)
@@ -66,7 +66,6 @@ func revive(character: Character) -> bool:
 		_last_message = "ゴールドが足りません"
 		return false
 	character.current_hp = 1
-	# MP is NOT restored (MVP per spec).
 	_last_message = "%s を蘇生しました" % character.character_name
 	return true
 

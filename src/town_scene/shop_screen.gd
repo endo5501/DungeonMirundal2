@@ -69,24 +69,17 @@ func get_sell_candidates() -> Array[ItemInstance]:
 	var results: Array[ItemInstance] = []
 	if _inventory == null:
 		return results
-	var equipped := _collect_equipped_instances()
+	var equipped := _equipped_instance_set()
 	for inst in _inventory.list():
 		if not equipped.has(inst):
 			results.append(inst)
 	return results
 
 
-func _collect_equipped_instances() -> Array:
-	var set: Array = []
+func _equipped_instance_set() -> Dictionary:
 	if _guild == null:
-		return set
-	for ch in _guild.get_all_characters():
-		if ch == null or ch.equipment == null:
-			continue
-		for inst in ch.equipment.all_equipped():
-			if not set.has(inst):
-				set.append(inst)
-	return set
+		return {}
+	return _guild.map_equipped_instances()
 
 
 # ---- transactions ----
@@ -95,14 +88,10 @@ func buy(item: Item) -> bool:
 	_last_message = ""
 	if item == null or _inventory == null:
 		return false
-	if _inventory.gold < item.price:
-		_last_message = "ゴールドが足りません"
-		return false
 	if not _inventory.spend_gold(item.price):
 		_last_message = "ゴールドが足りません"
 		return false
-	var instance := _shop_inventory.purchase(item)
-	_inventory.add(instance)
+	_inventory.add(_shop_inventory.purchase(item))
 	_last_message = "%s を購入しました" % item.item_name
 	return true
 
@@ -111,10 +100,10 @@ func sell(instance: ItemInstance) -> bool:
 	_last_message = ""
 	if instance == null or _inventory == null or instance.item == null:
 		return false
-	if _collect_equipped_instances().has(instance):
+	if _equipped_instance_set().has(instance):
 		_last_message = "装備中のアイテムは売却できません"
 		return false
-	var proceeds: int = instance.item.price / 2  # integer floor
+	var proceeds: int = instance.item.price / 2
 	if not _inventory.remove(instance):
 		return false
 	_inventory.add_gold(proceeds)

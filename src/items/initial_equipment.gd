@@ -25,18 +25,7 @@ static func grant(character: Character, inventory: Inventory, repository: ItemRe
 			continue
 		var instance := ItemInstance.new(item, true)
 		inventory.add(instance)
-		var slot := _map_item_slot_to_equipment_slot(item.equip_slot)
+		var slot := Equipment.slot_from_item_slot(item.equip_slot)
 		if slot < 0:
 			continue
 		character.equipment.equip(slot, instance, character)
-
-
-static func _map_item_slot_to_equipment_slot(item_slot: int) -> int:
-	match item_slot:
-		Item.EquipSlot.WEAPON: return Equipment.EquipSlot.WEAPON
-		Item.EquipSlot.ARMOR: return Equipment.EquipSlot.ARMOR
-		Item.EquipSlot.HELMET: return Equipment.EquipSlot.HELMET
-		Item.EquipSlot.SHIELD: return Equipment.EquipSlot.SHIELD
-		Item.EquipSlot.GAUNTLET: return Equipment.EquipSlot.GAUNTLET
-		Item.EquipSlot.ACCESSORY: return Equipment.EquipSlot.ACCESSORY
-	return -1
