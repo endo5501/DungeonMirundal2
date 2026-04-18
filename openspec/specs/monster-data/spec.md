@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+モンスター（MonsterData）リソースの定義と各種バランス数値を規定する。HP・攻撃力・防御力・経験値・ドロップテーブル・出現階層などの項目を対象とする。
+
+## Requirements
 
 ### Requirement: MonsterData defines a monster template
 The system SHALL provide a `MonsterData` Custom Resource that defines a monster template with identifier, display name, stat ranges, and reward values.

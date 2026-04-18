@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ギルドによるキャラクター登録・待機・パーティ編成のデータモデルを規定する。登録・解雇・パーティスロット割り当て、複数パーティ管理の制約を対象とする。
+
+## Requirements
 
 ### Requirement: Guild registers characters
 Guild SHALL allow registering newly created Characters and maintain a list of all registered characters.

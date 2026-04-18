@@ -1,3 +1,8 @@
+## Purpose
+セーブ／ロードの JSON ファイル入出力と last_slot 管理を規定する。スロット採番・上書き・検証・ファイル欠損時のフォールバック挙動を対象とする。
+
+## Requirements
+
 ### Requirement: SaveManagerはゲーム状態をJSONファイルに保存する
 SaveManager SHALL provide a `save(slot_number: int)` method that serializes the current GameState to a JSON file at `user://saves/save_NNN.json` (zero-padded 3 digits).
 

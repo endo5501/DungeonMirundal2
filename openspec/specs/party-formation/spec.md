@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+前衛／後衛スロットの構成とキャラクターの割り当てを規定する。スロット上限・入替え操作・空スロットの扱いなど編成ルールを対象とする。
+
+## Requirements
 
 ### Requirement: Party formation displays party grid and waiting list
 The party formation screen SHALL display the current party composition (front row 3 slots, back row 3 slots) and a list of unassigned (waiting) characters.

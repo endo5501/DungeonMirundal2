@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ItemData リソースと ItemInstance（個別の所持アイテム）のデータモデルを規定する。装備可否・消費型・価格・使用効果・職業制限などメタデータを対象とする。
+
+## Requirements
 
 ### Requirement: Item defines a static item template
 The system SHALL provide an `Item` Custom Resource (`class_name Item extends Resource`) that defines a static, immutable item template loaded from `.tres` files under `data/items/`.

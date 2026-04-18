@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+職業（JobData）リソースの定義と各種バランス数値を規定する。HP/MP 初期値・成長率・装備可能カテゴリ・使用可能魔法系統などの項目を対象とする。
+
+## Requirements
 
 ### Requirement: JobData holds job configuration
 JobData SHALL store the job name, base HP, magic capability (has_magic), base MP, and stat requirements for all six stats.

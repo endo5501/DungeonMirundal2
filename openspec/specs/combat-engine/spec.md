@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ターン制戦闘の全体フローを規定する。コマンド選択・行動順決定・ダメージ算出・勝敗判定・戦闘終了処理までを CombatEngine の責務として定める。
+
+## Requirements
 
 ### Requirement: TurnEngine manages the battle state machine
 The system SHALL provide a `TurnEngine` (RefCounted) that orchestrates a Wizardry-style turn-based battle between a party (array of `PartyCombatant`) and a monster party (array of `MonsterCombatant`), exposing state transitions `IDLE → COMMAND_INPUT → RESOLVING → COMMAND_INPUT` until a terminal `FINISHED` state is reached.

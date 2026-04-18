@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ダンジョン内で既に訪れたセルの記録と永続化を規定する。訪問済みフラグ、探索率計算、ミニマップ描画との連携、セーブファイルへの格納を対象とする。
+
+## Requirements
 
 ### Requirement: ExploredMap tracks visited cells
 ExploredMap (RefCounted) SHALL maintain a set of explored cell positions. A cell is marked as explored when the player visits it or when it enters the player's visible range.

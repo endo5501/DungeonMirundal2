@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ギルドメニューから起動されるキャラクター作成ウィザードの画面構成と遷移を規定する。名前入力・種族選択・職業選択・能力値確認の各ステップの UI と入力要件を対象とする。
+
+## Requirements
 
 ### Requirement: Character creation wizard has 5 sequential steps
 The character creation wizard SHALL guide the user through 5 steps in order: name input, race selection, bonus point allocation, job selection, confirmation. Each step transition SHALL complete fully before the next step accepts input.

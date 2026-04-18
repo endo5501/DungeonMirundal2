@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ダンジョン入口画面の一覧表示・新規生成・破棄および入場フローを規定する。DungeonRegistry との連携、空状態時の誘導表示、パーティ未編成時の入場抑止を対象とする。
+
+## Requirements
 
 ### Requirement: Dungeon entrance displays dungeon list
 DungeonEntrance SHALL display a list of all dungeons from DungeonRegistry, showing each dungeon's name, map size (e.g. "16x16"), and exploration percentage. When DungeonRegistry is empty, the list area SHALL display the guidance message "まず「新規生成」でダンジョンを作成してください" in the normal enabled text color.

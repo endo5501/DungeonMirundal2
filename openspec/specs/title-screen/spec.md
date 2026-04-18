@@ -1,3 +1,8 @@
+## Purpose
+タイトル画面のメニュー項目・初期カーソル・セーブ有無に応じた活性制御を規定する。新規ゲーム／前回から／ロード／ゲーム終了の各項目とキーナビゲーションを対象とする。
+
+## Requirements
+
 ### Requirement: Title screen displays menu options
 TitleScreen SHALL display a text-based menu with 4 options in this order: "前回から", "新規ゲーム", "ロード", "ゲーム終了".
 

@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+画面端に常時表示されるパーティ一覧のミニ UI を規定する。各キャラクターの名前・HP・MP・状態異常アイコンのコンパクト表示を対象とする。
+
+## Requirements
 
 ### Requirement: PartyMemberData holds character display information
 PartyMemberData (RefCounted) SHALL hold the display data for a single party member: name (String), level (int), current_hp (int), max_hp (int), current_mp (int), max_mp (int).

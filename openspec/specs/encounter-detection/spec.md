@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+ダンジョン歩行中のエンカウント判定ルールを規定する。歩数カウント、ランダムシード、フロアごとの出現テーブル、セーフゾーン設定など確率制御の要素を対象とする。
+
+## Requirements
 
 ### Requirement: EncounterTableData defines per-floor encounter rules
 The system SHALL provide an `EncounterTableData` Custom Resource that declares, for a given floor, an encounter probability per step and a weighted list of encounter patterns.

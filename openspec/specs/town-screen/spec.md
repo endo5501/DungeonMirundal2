@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+地上（町）マップ画面と施設選択を規定する。冒険者ギルド・商店・教会・ダンジョン入口の 4 施設への遷移、各施設のイラスト表示、カーソル選択を対象とする。
+
+## Requirements
 
 ### Requirement: Town screen displays facility selection
 TownScreen SHALL display a left column with facility buttons and a right column with an illustration placeholder area.

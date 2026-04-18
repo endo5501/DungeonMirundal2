@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+戦闘時に参照される装備ステータスの供給インターフェース（EquipmentProvider）を規定する。本番・テスト双方で差し替え可能な形で、装備由来のステータス補正を一貫して提供する。
+
+## Requirements
 
 ### Requirement: EquipmentProvider is the single interface for derived combat stats
 The system SHALL define an `EquipmentProvider` (RefCounted) interface with three methods — `get_attack(character) -> int`, `get_defense(character) -> int`, and `get_agility(character) -> int` — so that every combat calculation for a party member goes through a single, swappable source of truth.

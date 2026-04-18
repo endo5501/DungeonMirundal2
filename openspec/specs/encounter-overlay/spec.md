@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+エンカウント発生時に表示される UI オーバーレイの振る舞いを規定する。モンスター出現演出、先制判定結果、戦闘開始ボタンまでの遷移タイミングを対象とする。
+
+## Requirements
 
 ### Requirement: EncounterOverlay presents a monster party and blocks dungeon input
 The system SHALL provide an `EncounterOverlay` (CanvasLayer) that, when started with a MonsterParty, is displayed on top of the dungeon screen and consumes keyboard input until dismissed. A concrete implementation (`CombatOverlay`, ADDED by combat-system) SHALL extend `EncounterOverlay` and present a full Wizardry-style battle UI; the base stub (text-only confirmation) is retained only as a testing baseline for the contract.
