@@ -28,7 +28,7 @@ func _setup_encounter_coordinator() -> void:
 			_encounter_tables_by_floor[table.floor] = table
 	_encounter_rng = RandomNumberGenerator.new()
 	_encounter_rng.randomize()
-	_equipment_provider = DummyEquipmentProvider.new()
+	_equipment_provider = InventoryEquipmentProvider.new()
 	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
 	_combat_overlay = CombatOverlay.new()
 	_combat_overlay.log_line_delay = 0.4
@@ -44,8 +44,11 @@ func _on_combat_party_state_changed() -> void:
 
 
 func _on_encounter_finished(outcome: EncounterOutcome) -> void:
-	if outcome != null and outcome.result == EncounterOutcome.Result.WIPED:
-		_on_return_to_town()
+	if outcome != null:
+		if outcome.gained_gold > 0 and GameState.inventory != null:
+			GameState.inventory.add_gold(outcome.gained_gold)
+		if outcome.result == EncounterOutcome.Result.WIPED:
+			_on_return_to_town()
 
 # --- Screen switching ---
 
@@ -120,8 +123,33 @@ func _show_town_screen() -> void:
 	GameState.current_dungeon_index = -1
 	var screen := TownScreen.new()
 	screen.open_guild.connect(_on_open_guild)
+	screen.open_shop.connect(_on_open_shop)
+	screen.open_temple.connect(_on_open_temple)
 	screen.open_dungeon_entrance.connect(_on_open_dungeon_entrance)
 	_switch_screen(screen)
+
+
+func _on_open_shop() -> void:
+	var screen := ShopScreen.new()
+	var shop_inventory := ShopInventory.from_repository(GameState.item_repository)
+	screen.setup(GameState.inventory, GameState.guild, shop_inventory)
+	screen.back_requested.connect(_on_shop_back)
+	_switch_screen(screen)
+
+
+func _on_shop_back() -> void:
+	_show_town_screen()
+
+
+func _on_open_temple() -> void:
+	var screen := TempleScreen.new()
+	screen.setup(GameState.inventory, GameState.guild)
+	screen.back_requested.connect(_on_temple_back)
+	_switch_screen(screen)
+
+
+func _on_temple_back() -> void:
+	_show_town_screen()
 
 # --- Guild Screen ---
 

@@ -59,10 +59,20 @@ func has_party_members() -> bool:
 func is_in_party(character: Character) -> bool:
 	return _is_in_party(character)
 
-func to_dict() -> Dictionary:
+
+func map_equipped_instances() -> Dictionary:
+	var result: Dictionary = {}
+	for ch in _characters:
+		if ch == null or ch.equipment == null:
+			continue
+		for inst in ch.equipment.all_equipped():
+			result[inst] = ch
+	return result
+
+func to_dict(inventory: Inventory = null) -> Dictionary:
 	var chars_arr: Array = []
 	for ch in _characters:
-		chars_arr.append(ch.to_dict())
+		chars_arr.append(ch.to_dict(inventory))
 	var front: Array = []
 	for i in range(3):
 		if _front_row[i] != null:
@@ -82,12 +92,12 @@ func to_dict() -> Dictionary:
 		"party_name": party_name,
 	}
 
-static func from_dict(data: Dictionary) -> Guild:
+static func from_dict(data: Dictionary, inventory: Inventory = null) -> Guild:
 	var guild := Guild.new()
 	guild.party_name = data.get("party_name", "")
 	var chars_arr: Array = data.get("characters", [])
 	for ch_data in chars_arr:
-		guild.register(Character.from_dict(ch_data))
+		guild.register(Character.from_dict(ch_data, inventory))
 	var all_chars := guild.get_all_characters()
 	var front: Array = data.get("front_row", [null, null, null])
 	for i in range(3):

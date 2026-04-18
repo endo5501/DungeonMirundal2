@@ -422,6 +422,8 @@ func confirm_creation() -> void:
 		_cached_character = Character.create(_name_input, race, job, _allocation, _bonus_total)
 	if _cached_character != null:
 		_guild.register(_cached_character)
+		if GameState.inventory != null and GameState.item_repository != null:
+			InitialEquipment.grant(_cached_character, GameState.inventory, GameState.item_repository)
 		character_created.emit()
 	back_requested.emit()
 

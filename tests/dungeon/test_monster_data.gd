@@ -109,3 +109,66 @@ func test_bat_tres_loads_with_expected_fields():
 	assert_not_null(loaded)
 	assert_eq(loaded.monster_id, &"bat")
 	assert_eq(loaded.agility, 7)
+
+
+# --- items-and-economy: gold range ---
+
+func test_gold_fields_default_to_zero():
+	var md := MonsterData.new()
+	md.monster_id = &"m"
+	md.monster_name = "m"
+	md.max_hp_min = 1
+	md.max_hp_max = 1
+	assert_eq(md.gold_min, 0)
+	assert_eq(md.gold_max, 0)
+	assert_true(md.is_valid())
+
+
+func test_gold_range_valid_when_min_le_max():
+	var md := MonsterData.new()
+	md.monster_id = &"m"
+	md.monster_name = "m"
+	md.max_hp_min = 1
+	md.max_hp_max = 1
+	md.gold_min = 5
+	md.gold_max = 15
+	assert_true(md.is_valid())
+
+
+func test_gold_range_rejects_min_greater_than_max():
+	var md := MonsterData.new()
+	md.monster_id = &"m"
+	md.monster_name = "m"
+	md.max_hp_min = 1
+	md.max_hp_max = 1
+	md.gold_min = 20
+	md.gold_max = 5
+	assert_false(md.is_valid())
+
+
+func test_gold_range_rejects_negative_min():
+	var md := MonsterData.new()
+	md.monster_id = &"m"
+	md.monster_name = "m"
+	md.max_hp_min = 1
+	md.max_hp_max = 1
+	md.gold_min = -1
+	md.gold_max = 0
+	assert_false(md.is_valid())
+
+
+func test_slime_tres_has_gold_range():
+	var loaded := ResourceLoader.load("res://data/monsters/slime.tres") as MonsterData
+	assert_gte(loaded.gold_min, 0)
+	assert_gte(loaded.gold_max, loaded.gold_min)
+
+
+func test_goblin_tres_has_gold_range():
+	var loaded := ResourceLoader.load("res://data/monsters/goblin.tres") as MonsterData
+	assert_eq(loaded.gold_min, 5)
+	assert_eq(loaded.gold_max, 15)
+
+
+func test_bat_tres_has_gold_range():
+	var loaded := ResourceLoader.load("res://data/monsters/bat.tres") as MonsterData
+	assert_gte(loaded.gold_max, loaded.gold_min)

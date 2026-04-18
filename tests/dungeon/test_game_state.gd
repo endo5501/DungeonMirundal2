@@ -120,3 +120,54 @@ func test_heal_party_skips_empty_slots():
 	ch.current_hp = 1
 	gs.heal_party()  # should not crash with empty slots
 	assert_eq(ch.current_hp, ch.max_hp)
+
+
+# --- items-and-economy: inventory and item_repository ---
+
+func test_new_game_creates_inventory_with_starting_gold():
+	var gs := GameStateScript.new()
+	gs.new_game()
+	assert_not_null(gs.inventory)
+	assert_eq(gs.inventory.gold, 500)
+	assert_eq(gs.inventory.list().size(), 0)
+
+
+func test_game_state_has_item_repository_field():
+	var gs := GameStateScript.new()
+	# item_repository is populated by _ready in production. In isolated
+	# tests we just assert the field exists and can be assigned.
+	assert_true("item_repository" in gs)
+	gs.item_repository = ItemRepository.new()
+	assert_not_null(gs.item_repository)
+
+
+func test_new_game_preserves_item_repository():
+	var gs := GameStateScript.new()
+	var repo := ItemRepository.new()
+	gs.item_repository = repo
+	gs.new_game()
+	assert_eq(gs.item_repository, repo)
+
+
+func test_heal_party_skips_dead_members():
+	var gs := GameStateScript.new()
+	gs.new_game()
+	var alive := _make_character("Alive")
+	var dead := _make_character("Dead")
+	gs.guild.register(alive)
+	gs.guild.register(dead)
+	gs.guild.assign_to_party(alive, 0, 0)
+	gs.guild.assign_to_party(dead, 0, 1)
+	alive.current_hp = 3
+	dead.current_hp = 0
+	dead.current_mp = 5
+	var dead_max_mp := dead.max_mp
+	gs.heal_party()
+	assert_eq(alive.current_hp, alive.max_hp)
+	# Dead character stays at 0 HP; MP should not be restored either
+	assert_eq(dead.current_hp, 0)
+	# MP restoration is skipped for dead characters: current_mp should not change
+	# (we preserve whatever value it had pre-heal, which was 5 here — unless
+	# max_mp == 0 in which case it's moot)
+	if dead_max_mp > 0:
+		assert_eq(dead.current_mp, 5)

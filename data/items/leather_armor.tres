@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+item_id = &"leather_armor"
+item_name = "Leather Armor"
+unidentified_name = "鎧?"
+category = 1
+equip_slot = 2
+allowed_jobs = Array[StringName]([&"Fighter", &"Priest", &"Thief", &"Samurai", &"Lord", &"Ninja"])
+attack_bonus = 0
+defense_bonus = 3
+agility_bonus = 0
+price = 120

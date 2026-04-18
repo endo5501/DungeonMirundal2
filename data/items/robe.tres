@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+item_id = &"robe"
+item_name = "Robe"
+unidentified_name = "ローブ?"
+category = 1
+equip_slot = 2
+allowed_jobs = Array[StringName]([&"Mage", &"Priest", &"Bishop"])
+attack_bonus = 0
+defense_bonus = 1
+agility_bonus = 0
+price = 30

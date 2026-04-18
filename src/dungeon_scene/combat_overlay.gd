@@ -197,12 +197,23 @@ func _finalize_battle() -> void:
 			levels_before.append(ch.level)
 		var share := ExperienceCalculator.award(participant_characters, dead_monsters)
 		outcome.gained_experience = share
+		outcome.gained_gold = _compute_gold_drop(dead_monsters)
 		for i in range(participant_characters.size()):
 			var ch: Character = participant_characters[i]
 			if ch.level > int(levels_before[i]):
 				level_ups.append({"name": ch.character_name, "new_level": ch.level})
 		party_state_changed.emit()
 	show_result(outcome, level_ups)
+
+
+func _compute_gold_drop(dead_monsters: Array) -> int:
+	if _rng == null:
+		return 0
+	var total: int = 0
+	for m in dead_monsters:
+		if m is Monster and m.data != null:
+			total += _rng.randi_range(m.data.gold_min, m.data.gold_max)
+	return total
 
 
 func _collect_participant_characters() -> Array:

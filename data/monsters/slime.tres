@@ -12,3 +12,5 @@ attack = 3
 defense = 1
 agility = 2
 experience = 4
+gold_min = 1
+gold_max = 3

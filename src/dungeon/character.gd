@@ -13,6 +13,7 @@ var max_hp: int
 var current_mp: int
 var max_mp: int
 var accumulated_exp: int = 0
+var equipment: Equipment = Equipment.new()
 
 static func create(
 	p_name: String,
@@ -53,6 +54,10 @@ static func create(
 		ch.current_mp = 0
 	return ch
 
+func is_dead() -> bool:
+	return current_hp <= 0
+
+
 func gain_experience(amount: int) -> void:
 	if amount <= 0:
 		return
@@ -82,11 +87,11 @@ func level_up() -> void:
 		current_mp += job.mp_per_level
 
 
-func to_dict() -> Dictionary:
+func to_dict(inventory: Inventory = null) -> Dictionary:
 	var stats_str := {}
 	for key in STAT_KEYS:
 		stats_str[String(key)] = base_stats.get(key, 0)
-	return {
+	var d := {
 		"character_name": character_name,
 		"race_id": race.resource_path.get_file().get_basename(),
 		"job_id": job.resource_path.get_file().get_basename(),
@@ -98,8 +103,11 @@ func to_dict() -> Dictionary:
 		"max_mp": max_mp,
 		"accumulated_exp": accumulated_exp,
 	}
+	if inventory != null:
+		d["equipment"] = equipment.to_dict(inventory)
+	return d
 
-static func from_dict(data: Dictionary) -> Character:
+static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
 	var ch := Character.new()
 	ch.character_name = data.get("character_name", "")
 	ch.level = data.get("level", 1)
@@ -116,6 +124,10 @@ static func from_dict(data: Dictionary) -> Character:
 	ch.base_stats = {}
 	for key in STAT_KEYS:
 		ch.base_stats[key] = int(stats_raw.get(String(key), 0))
+	if inventory != null and data.has("equipment"):
+		ch.equipment = Equipment.from_dict(data.get("equipment", {}), inventory)
+	else:
+		ch.equipment = Equipment.new()
 	return ch
 
 func to_party_member_data() -> PartyMemberData:

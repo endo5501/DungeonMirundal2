@@ -45,6 +45,7 @@ func show_result(outcome: EncounterOutcome, level_ups: Array) -> void:
 		EncounterOutcome.Result.CLEARED:
 			title_text = "勝利！"
 			body_lines.append("獲得経験値: %d" % outcome.gained_experience)
+			body_lines.append("獲得ゴールド: %d" % outcome.gained_gold)
 			for entry in level_ups:
 				var name: String = entry.get("name", "")
 				var new_level: int = int(entry.get("new_level", 0))

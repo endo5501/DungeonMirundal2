@@ -332,6 +332,72 @@ func test_result_panel_shows_cleared_message_and_exp():
 	assert_true(text.contains("40"), "result text should mention exp: %s" % text)
 
 
+# --- items-and-economy: gold drop + result display ---
+
+func test_result_panel_cleared_shows_gold():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var outcome := EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
+	outcome.gained_experience = 10
+	outcome.gained_gold = 25
+	overlay.show_result(outcome, [])
+	var text := overlay.get_result_panel_text()
+	assert_true(text.contains("25"), "result text should mention gold: %s" % text)
+
+
+func test_result_panel_wiped_hides_gold():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var outcome := EncounterOutcome.new(EncounterOutcome.Result.WIPED)
+	outcome.gained_gold = 99  # should still not display anything gold-related on WIPED
+	overlay.show_result(outcome, [])
+	var text := overlay.get_result_panel_text()
+	assert_false(text.contains("99"), "wiped result should not display gold: %s" % text)
+
+
+func test_result_panel_escaped_hides_gold():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var outcome := EncounterOutcome.new(EncounterOutcome.Result.ESCAPED)
+	outcome.gained_gold = 77
+	overlay.show_result(outcome, [])
+	var text := overlay.get_result_panel_text()
+	assert_false(text.contains("77"), "escaped result should not display gold: %s" % text)
+
+
+func test_compute_gold_drop_sums_per_monster_rolls():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = TEST_SEED
+	overlay.setup_dependencies(_guild, _provider, rng)
+	# Build dead monsters with known gold ranges
+	var md_a := MonsterData.new()
+	md_a.monster_id = &"a"
+	md_a.monster_name = "A"
+	md_a.max_hp_min = 1
+	md_a.max_hp_max = 1
+	md_a.gold_min = 3
+	md_a.gold_max = 3  # always 3
+	var md_b := MonsterData.new()
+	md_b.monster_id = &"b"
+	md_b.monster_name = "B"
+	md_b.max_hp_min = 1
+	md_b.max_hp_max = 1
+	md_b.gold_min = 10
+	md_b.gold_max = 10  # always 10
+	var m_a := Monster.new(md_a, rng)
+	var m_b := Monster.new(md_b, rng)
+	var total: int = overlay._compute_gold_drop([m_a, m_b])
+	assert_eq(total, 13)
+
+
 func test_result_panel_shows_wiped_message():
 	var overlay := CombatOverlay.new()
 	add_child_autofree(overlay)

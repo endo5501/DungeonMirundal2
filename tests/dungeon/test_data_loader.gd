@@ -167,3 +167,38 @@ func test_loaded_all_jobs_have_monotonic_exp_table():
 		for i in range(1, job.exp_table.size()):
 			assert_gt(job.exp_table[i], job.exp_table[i - 1],
 				"%s exp_table[%d] > exp_table[%d]" % [job.job_name, i, i - 1])
+
+
+# --- items-and-economy: item loading ---
+
+func test_load_all_items_returns_repository():
+	var repo := _loader.load_all_items()
+	assert_not_null(repo)
+	assert_is(repo, ItemRepository)
+
+
+func test_load_all_items_contains_long_sword():
+	var repo := _loader.load_all_items()
+	var sword := repo.find(&"long_sword")
+	assert_not_null(sword)
+	assert_eq(sword.item_name, "Long Sword")
+	assert_eq(sword.category, Item.ItemCategory.WEAPON)
+
+
+func test_load_all_items_has_every_equip_slot_covered():
+	var repo := _loader.load_all_items()
+	var needed_slots := [
+		Item.EquipSlot.WEAPON,
+		Item.EquipSlot.ARMOR,
+		Item.EquipSlot.HELMET,
+		Item.EquipSlot.SHIELD,
+		Item.EquipSlot.GAUNTLET,
+		Item.EquipSlot.ACCESSORY,
+	]
+	for slot in needed_slots:
+		var covered := false
+		for item in repo.all():
+			if item.equip_slot == slot:
+				covered = true
+				break
+		assert_true(covered, "no item for slot %d" % slot)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Item" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+item_id = &"short_sword"
+item_name = "Short Sword"
+unidentified_name = "小剣?"
+category = 0
+equip_slot = 1
+allowed_jobs = Array[StringName]([&"Fighter", &"Thief", &"Samurai", &"Lord", &"Ninja"])
+attack_bonus = 4
+defense_bonus = 0
+agility_bonus = 1
+price = 80
