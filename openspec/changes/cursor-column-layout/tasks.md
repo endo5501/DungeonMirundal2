@@ -74,12 +74,49 @@
 ## 12. 統合確認
 
 - [x] 12.1 `godot --headless -s addons/gut/gut_cmdln.gd` で全テストが通過することを確認
-- [ ] 12.2 手動確認: title → ↓↑ で項目位置が一切動かない
-- [ ] 12.3 手動確認: town/shop/temple のメニューで同上
-- [ ] 12.4 手動確認: ダンジョン入口のリスト行（マルチカラム）でカーソル移動時に名前・サイズ・探索率のテキスト開始位置が不変
-- [ ] 12.5 手動確認: ESC メニュー 3 階層すべてで位置不変
-- [ ] 12.6 手動確認: セーブ・ロード画面で位置不変
+- [ ] 12.2 手動確認: title → ↓↑ で項目位置が一切動かない（ユーザ確認待ち）
+- [ ] 12.3 手動確認: town/shop/temple のメニューで同上（ユーザ確認待ち）
+- [ ] 12.4 手動確認: ダンジョン入口のリスト行（マルチカラム）でカーソル移動時に名前・サイズ・探索率のテキスト開始位置が不変（ユーザ確認待ち）
+- [ ] 12.5 手動確認: ESC メニュー 3 階層すべてで位置不変（ユーザ確認待ち）
+- [ ] 12.6 手動確認: セーブ・ロード画面で位置不変（ユーザ確認待ち）
 - [x] 12.7 `openspec validate cursor-column-layout --strict` が通る
+
+## 14. 画面移行: guild_menu
+
+- [x] 14.1 `src/guild_scene/guild_menu.gd` を行ベースに移行（local CURSOR 定数を削除）
+- [x] 14.2 既存テスト（test_guild_menu.gd）が通過することを確認
+
+## 15. 画面移行: character_list
+
+- [x] 15.1 `src/guild_scene/character_list.gd` のリスト表示および削除確認の `CURSOR` を行ベースに移行
+- [x] 15.2 既存テストが通過することを確認
+
+## 16. 画面移行: character_creation (Step 2/3/4)
+
+- [x] 16.1 `src/guild_scene/character_creation.gd` の `_update_list_cursor` および `_rebuild_step3_values` の prefix 注入を行ベースに置き換え
+- [x] 16.2 Step2/3/4 共通の行構築ヘルパーを CursorMenuRow に切替
+- [x] 16.3 既存テストが通過することを確認
+
+## 17. 画面移行: shop_screen (BUY / SELL)
+
+- [x] 17.1 `_render_buy` を行ベース化（価格列はサブ列、購入不可は disabled 色）
+- [x] 17.2 `_render_sell` を行ベース化
+- [x] 17.3 既存テストが通過することを確認
+
+## 18. 画面移行: combat_command_menu
+
+- [x] 18.1 `src/dungeon_scene/combat/combat_command_menu.gd` を単一 Label + 改行結合方式から CursorMenuRow の VBox 構造へ移行
+- [x] 18.2 テストが通過することを確認
+
+## 19. 画面移行: combat_target_selector
+
+- [x] 19.1 `src/dungeon_scene/combat/combat_target_selector.gd` を同様に行ベース化
+- [x] 19.2 テストが通過することを確認
+
+## 20. 整理
+
+- [x] 20.1 `src/` を再度 `"> "` で grep し、対象画面に残参照が無いことを確認（party_formation は対象外として残す）
+- [x] 20.2 全テスト通過を確認
 
 ## 13. 完了
 
