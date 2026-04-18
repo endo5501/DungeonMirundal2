@@ -28,7 +28,7 @@ func _setup_encounter_coordinator() -> void:
 			_encounter_tables_by_floor[table.floor] = table
 	_encounter_rng = RandomNumberGenerator.new()
 	_encounter_rng.randomize()
-	_equipment_provider = DummyEquipmentProvider.new()
+	_equipment_provider = InventoryEquipmentProvider.new()
 	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
 	_combat_overlay = CombatOverlay.new()
 	_combat_overlay.log_line_delay = 0.4
