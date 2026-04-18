@@ -71,31 +71,31 @@
 
 ## 9. ShopScreen
 
-- [ ] 9.1 `tests/items/test_shop_inventory.gd` を新規作成し、`ShopInventory` が固定の Item 配列を返し、`purchase(item)` で新規 `ItemInstance(identified=true)` を返すテストを書く
-- [ ] 9.2 `src/items/shop_inventory.gd` (`class_name ShopInventory extends RefCounted`) を実装。MVP では `ItemRepository.all()` から装備系アイテムを取り込んだ固定リストを返す
-- [ ] 9.3 `tests/town/test_shop_screen.gd` を新規作成し、上位メニューに「購入する / 売却する / 出る」が出ることをテスト
-- [ ] 9.4 `src/town_scene/shop_screen.gd` (`class_name ShopScreen extends Control`) の骨組みと上位メニューを実装
-- [ ] 9.5 `test_shop_screen.gd` に購入フローのテスト（所持金 500G で 100G のアイテムを買う → gold 400、インベントリに 1 個追加）、所持金不足時に取引成立しないテスト、購入アイテムが `identified == true` であるテストを追加
-- [ ] 9.6 ShopScreen の購入ロジックを実装（`Inventory.spend_gold` → `ShopInventory.purchase` → `Inventory.add`）
-- [ ] 9.7 `test_shop_screen.gd` に売却フローのテスト（買値 100 のアイテム売却で +50 gold、`price == 25` で +12 gold、装備中のアイテムが候補に出ないこと）を追加
-- [ ] 9.8 ShopScreen の売却ロジックを実装（装備中判定は全パーティメンバーの `Equipment.all_equipped()` を走査）
-- [ ] 9.9 `test_shop_screen.gd` に「鑑定メニューが存在しない」ことをテスト（画面文字列の negative assertion）
+- [x] 9.1 `tests/items/test_shop_inventory.gd` を新規作成し、`ShopInventory` が固定の Item 配列を返し、`purchase(item)` で新規 `ItemInstance(identified=true)` を返すテストを書く
+- [x] 9.2 `src/items/shop_inventory.gd` (`class_name ShopInventory extends RefCounted`) を実装。MVP では `ItemRepository.all()` から装備系アイテムを取り込んだ固定リストを返す
+- [x] 9.3 `tests/town/test_shop_screen.gd` を新規作成し、上位メニューに「購入する / 売却する / 出る」が出ることをテスト
+- [x] 9.4 `src/town_scene/shop_screen.gd` (`class_name ShopScreen extends Control`) の骨組みと上位メニューを実装
+- [x] 9.5 `test_shop_screen.gd` に購入フローのテスト（所持金 500G で 100G のアイテムを買う → gold 400、インベントリに 1 個追加）、所持金不足時に取引成立しないテスト、購入アイテムが `identified == true` であるテストを追加
+- [x] 9.6 ShopScreen の購入ロジックを実装（`Inventory.spend_gold` → `ShopInventory.purchase` → `Inventory.add`）
+- [x] 9.7 `test_shop_screen.gd` に売却フローのテスト（買値 100 のアイテム売却で +50 gold、`price == 25` で +12 gold、装備中のアイテムが候補に出ないこと）を追加
+- [x] 9.8 ShopScreen の売却ロジックを実装（装備中判定は全パーティメンバーの `Equipment.all_equipped()` を走査）
+- [x] 9.9 `test_shop_screen.gd` に「鑑定メニューが存在しない」ことをテスト（画面文字列の negative assertion）
 
 ## 10. TempleScreen
 
-- [ ] 10.1 `tests/town/test_temple_screen.gd` を新規作成し、パーティメンバー一覧表示、生存/死亡の区別表示、`REVIVE_COST_PER_LEVEL == 100` のコスト計算（Lv1=100, Lv5=500）をテスト
-- [ ] 10.2 `src/town_scene/temple_screen.gd` (`class_name TempleScreen extends Control`) の骨組みとキャラ一覧・コスト表示を実装
-- [ ] 10.3 `test_temple_screen.gd` に蘇生成功テスト（gold 足りる → gold 減算 + current_hp == 1、current_mp は変化なし）を追加
-- [ ] 10.4 蘇生ロジックを実装
-- [ ] 10.5 `test_temple_screen.gd` に gold 不足時のブロックテスト（gold 減らず、current_hp 0 のまま）、生存キャラ選択時の拒否テストを追加
-- [ ] 10.6 gold 不足・無効選択の処理を実装
+- [x] 10.1 `tests/town/test_temple_screen.gd` を新規作成し、パーティメンバー一覧表示、生存/死亡の区別表示、`REVIVE_COST_PER_LEVEL == 100` のコスト計算（Lv1=100, Lv5=500）をテスト
+- [x] 10.2 `src/town_scene/temple_screen.gd` (`class_name TempleScreen extends Control`) の骨組みとキャラ一覧・コスト表示を実装
+- [x] 10.3 `test_temple_screen.gd` に蘇生成功テスト（gold 足りる → gold 減算 + current_hp == 1、current_mp は変化なし）を追加
+- [x] 10.4 蘇生ロジックを実装
+- [x] 10.5 `test_temple_screen.gd` に gold 不足時のブロックテスト（gold 減らず、current_hp 0 のまま）、生存キャラ選択時の拒否テストを追加
+- [x] 10.6 gold 不足・無効選択の処理を実装
 
 ## 11. TownScreen の有効化
 
-- [ ] 11.1 `tests/town/test_town_screen.gd` を更新し、「商店」「教会」がカーソルでスキップされず選択可能であること、選択時に `open_shop` / `open_temple` シグナルが発火することをテスト
-- [ ] 11.2 `src/town_scene/town_screen.gd` の `DISABLED_INDICES` を空配列にし、`select_item(1)` で `open_shop.emit()`、`select_item(2)` で `open_temple.emit()` を実装。シグナル宣言も追加
-- [ ] 11.3 `src/main.gd` の町画面遷移処理に「`open_shop` → ShopScreen 表示」「`open_temple` → TempleScreen 表示」「戻り処理で TownScreen 復帰」を配線
-- [ ] 11.4 `tests/test_main_screen_transitions.gd` などで町→商店→町、町→教会→町の往復テストを追加
+- [x] 11.1 `tests/town/test_town_screen.gd` を更新し、「商店」「教会」がカーソルでスキップされず選択可能であること、選択時に `open_shop` / `open_temple` シグナルが発火することをテスト
+- [x] 11.2 `src/town_scene/town_screen.gd` の `DISABLED_INDICES` を空配列にし、`select_item(1)` で `open_shop.emit()`、`select_item(2)` で `open_temple.emit()` を実装。シグナル宣言も追加
+- [x] 11.3 `src/main.gd` の町画面遷移処理に「`open_shop` → ShopScreen 表示」「`open_temple` → TempleScreen 表示」「戻り処理で TownScreen 復帰」を配線
+- [x] 11.4 `tests/test_main_screen_transitions.gd` などで町→商店→町、町→教会→町の往復テストを追加
 
 ## 12. ESC メニューのアイテム / 装備ビュー
 

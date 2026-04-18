@@ -108,15 +108,15 @@ func test_party_menu_has_three_items():
 	menu.select_current_item()  # → party menu
 	assert_eq(menu.get_party_menu().size(), 3)
 
-func test_party_menu_disabled_indices():
+func test_party_menu_all_enabled():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
 	var party := menu.get_party_menu()
 	assert_false(party.is_disabled(0), "ステータス should be enabled")
-	assert_true(party.is_disabled(1), "アイテム should be disabled")
-	assert_true(party.is_disabled(2), "装備 should be disabled")
+	assert_false(party.is_disabled(1), "アイテム should be enabled")
+	assert_false(party.is_disabled(2), "装備 should be enabled")
 
 # --- 8. Navigation: ESC to go back ---
 
@@ -160,6 +160,73 @@ func test_esc_from_status_returns_to_party_menu():
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
 	menu.select_current_item()  # → status
+	menu.go_back()
+	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
+
+
+# --- items-and-economy: item view / equipment view ---
+
+func test_select_item_opens_items_view():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()
+	assert_eq(menu.get_current_view(), EscMenu.View.ITEMS)
+
+
+func test_esc_from_items_returns_to_party_menu():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()
+	menu.go_back()
+	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
+
+
+func test_select_equipment_opens_character_view():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()
+	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_CHARACTER)
+
+
+func test_equipment_character_to_slot_via_select():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()
+	menu.select_current_item()
+	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_SLOT)
+
+
+func test_esc_from_equipment_slot_returns_to_character():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()
+	menu.select_current_item()  # char → slot
+	menu.go_back()
+	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_CHARACTER)
+
+
+func test_esc_from_equipment_character_returns_to_party():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()
 	menu.go_back()
 	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
 
