@@ -94,14 +94,13 @@ func _rebuild() -> void:
 	else:
 		for i in range(members.size()):
 			var ch: Character = members[i]
-			var label := Label.new()
-			var prefix := "> " if i == _selected_index else "  "
+			var row := CursorMenuRow.new()
 			var status := "(死亡)" if is_dead(ch) else "(生存)"
-			label.text = "%s%s Lv%d  %s  蘇生費: %d G" % [prefix, ch.character_name, ch.level, status, revive_cost(ch)]
-			label.add_theme_font_size_override("font_size", FONT_SIZE)
-			if not is_dead(ch):
-				label.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
-			_root.add_child(label)
+			row.set_text("%s Lv%d  %s  蘇生費: %d G" % [ch.character_name, ch.level, status, revive_cost(ch)])
+			row.set_text_font_size(FONT_SIZE)
+			row.set_selected(i == _selected_index)
+			row.set_disabled(not is_dead(ch))
+			_root.add_child(row)
 
 	if _last_message != "":
 		var msg := Label.new()

@@ -148,12 +148,14 @@ func _rebuild() -> void:
 
 
 func _render_top_menu() -> void:
+	var rows: Array[CursorMenuRow] = []
 	for i in range(TOP_MENU_ITEMS.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _top_menu.selected_index else "  "
-		label.text = prefix + TOP_MENU_ITEMS[i]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		_root.add_child(label)
+		var row := CursorMenuRow.new()
+		row.set_text(TOP_MENU_ITEMS[i])
+		row.set_text_font_size(FONT_SIZE)
+		_root.add_child(row)
+		rows.append(row)
+	_top_menu.update_rows(rows)
 
 
 func _render_buy() -> void:

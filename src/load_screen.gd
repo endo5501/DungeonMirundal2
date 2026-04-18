@@ -7,7 +7,7 @@ signal back_requested
 var _save_manager: SaveManager
 var _slots: Array[Dictionary] = []
 var _menu: CursorMenu
-var _menu_labels: Array[Label] = []
+var _menu_rows: Array[CursorMenuRow] = []
 var _no_saves: bool = false
 var _container: VBoxContainer
 
@@ -71,13 +71,14 @@ func _build_ui() -> void:
 		items.append(s["label"])
 	_menu = CursorMenu.new(items)
 
-	_menu_labels.clear()
+	_menu_rows.clear()
 	for i in range(_menu.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 18)
-		_container.add_child(label)
-		_menu_labels.append(label)
-	_menu.update_labels(_menu_labels)
+		var row := CursorMenuRow.new()
+		row.set_text(_menu.items[i])
+		row.set_text_font_size(18)
+		_container.add_child(row)
+		_menu_rows.append(row)
+	_menu.update_rows(_menu_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey:
@@ -95,11 +96,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_UP, KEY_W:
 			if _menu:
 				_menu.move_cursor(-1)
-				_menu.update_labels(_menu_labels)
+				_menu.update_rows(_menu_rows)
 		KEY_DOWN, KEY_S:
 			if _menu:
 				_menu.move_cursor(1)
-				_menu.update_labels(_menu_labels)
+				_menu.update_rows(_menu_rows)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			if _menu and _slots.size() > 0:
 				var slot: int = _slots[_menu.selected_index]["slot_number"]

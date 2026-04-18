@@ -27,7 +27,7 @@ var selected_index: int:
 	set(v): _menu.selected_index = v
 
 var _menu: CursorMenu
-var _labels: Array[Label] = []
+var _rows: Array[CursorMenuRow] = []
 var _illustration_rect: ColorRect
 var _illustration_label: Label
 
@@ -57,10 +57,11 @@ func _ready() -> void:
 	left.add_child(spacer)
 
 	for i in range(MENU_ITEMS.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 20)
-		left.add_child(label)
-		_labels.append(label)
+		var row := CursorMenuRow.new()
+		row.set_text(MENU_ITEMS[i])
+		row.set_text_font_size(20)
+		left.add_child(row)
+		_rows.append(row)
 
 	var right := PanelContainer.new()
 	right.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -78,7 +79,7 @@ func _ready() -> void:
 	_illustration_label.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	right.add_child(_illustration_label)
 
-	_menu.update_labels(_labels)
+	_menu.update_rows(_rows)
 	_update_illustration()
 
 func _update_illustration() -> void:
@@ -90,12 +91,12 @@ func _update_illustration() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
 		_menu.move_cursor(1)
-		_menu.update_labels(_labels)
+		_menu.update_rows(_rows)
 		_update_illustration()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		_menu.move_cursor(-1)
-		_menu.update_labels(_labels)
+		_menu.update_rows(_rows)
 		_update_illustration()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):

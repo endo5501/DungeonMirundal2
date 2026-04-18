@@ -16,7 +16,7 @@ const RETURN_OPTIONS: Array[String] = ["はい", "いいえ"]
 
 var _showing_return_dialog: bool = false
 var _return_dialog_selected: int = 0
-var _return_dialog_labels: Array[Label] = []
+var _return_dialog_rows: Array[CursorMenuRow] = []
 var _return_dialog_container: Control
 var _encounter_active: bool = false
 
@@ -137,7 +137,7 @@ func is_on_start_tile() -> bool:
 func _show_return_dialog() -> void:
 	_showing_return_dialog = true
 	_return_dialog_selected = 1  # default to いいえ (safer)
-	_return_dialog_labels.clear()
+	_return_dialog_rows.clear()
 
 	_return_dialog_container = CenterContainer.new()
 	_return_dialog_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -162,16 +162,16 @@ func _show_return_dialog() -> void:
 	vbox.add_child(spacer)
 
 	for i in range(RETURN_OPTIONS.size()):
-		var label := Label.new()
-		label.add_theme_font_size_override("font_size", 18)
-		vbox.add_child(label)
-		_return_dialog_labels.append(label)
+		var row := CursorMenuRow.new()
+		row.set_text(RETURN_OPTIONS[i])
+		row.set_text_font_size(18)
+		vbox.add_child(row)
+		_return_dialog_rows.append(row)
 	_update_return_dialog_labels()
 
 func _update_return_dialog_labels() -> void:
-	for i in range(_return_dialog_labels.size()):
-		var prefix := CursorMenu.CURSOR_PREFIX if i == _return_dialog_selected else CursorMenu.NO_CURSOR_PREFIX
-		_return_dialog_labels[i].text = prefix + RETURN_OPTIONS[i]
+	for i in range(_return_dialog_rows.size()):
+		_return_dialog_rows[i].set_selected(i == _return_dialog_selected)
 
 func _handle_return_dialog_input(event: InputEventKey) -> void:
 	match event.keycode:
@@ -193,4 +193,4 @@ func _close_return_dialog() -> void:
 	if _return_dialog_container:
 		_return_dialog_container.queue_free()
 		_return_dialog_container = null
-	_return_dialog_labels.clear()
+	_return_dialog_rows.clear()

@@ -14,47 +14,47 @@
 
 ## 3. 画面移行: title_screen
 
-- [ ] 3.1 `title_screen` の既存テストから `"> "` / `"  "` 前提のアサーションを抽出、新 API（`row.is_selected()` など）に書き換え
-- [ ] 3.2 テストが失敗することを確認
-- [ ] 3.3 `src/title_scene/title_screen.gd` を `_rows: Array[CursorMenuRow]` と `_menu.update_rows(_rows)` に書き換え
-- [ ] 3.4 title_screen のテストが全て通過することを確認
+- [x] 3.1 `title_screen` の既存テストから `"> "` / `"  "` 前提のアサーションを抽出、新 API（`row.is_selected()` など）に書き換え
+- [x] 3.2 テストが失敗することを確認
+- [x] 3.3 `src/title_scene/title_screen.gd` を `_rows: Array[CursorMenuRow]` と `_menu.update_rows(_rows)` に書き換え
+- [x] 3.4 title_screen のテストが全て通過することを確認
 
 ## 4. 画面移行: town_screen
 
-- [ ] 4.1 `town_screen` のテストを新 API に更新
-- [ ] 4.2 `src/town_scene/town_screen.gd` を行ベースに移行
-- [ ] 4.3 テストが通過することを確認
+- [x] 4.1 `town_screen` のテストを新 API に更新
+- [x] 4.2 `src/town_scene/town_screen.gd` を行ベースに移行
+- [x] 4.3 テストが通過することを確認
 
 ## 5. 画面移行: shop_screen
 
-- [ ] 5.1 `shop_screen` のテストを新 API に更新（`TOP_MENU_ITEMS` 部分のみ該当）
-- [ ] 5.2 `src/town_scene/shop_screen.gd` を行ベースに移行
-- [ ] 5.3 テストが通過することを確認
+- [x] 5.1 `shop_screen` のテストを新 API に更新（`TOP_MENU_ITEMS` 部分のみ該当）
+- [x] 5.2 `src/town_scene/shop_screen.gd` を行ベースに移行
+- [x] 5.3 テストが通過することを確認
 
 ## 6. 画面移行: temple_screen
 
-- [ ] 6.1 `temple_screen` のテストを新 API に更新
-- [ ] 6.2 `src/town_scene/temple_screen.gd` を行ベースに移行
-- [ ] 6.3 テストが通過することを確認
+- [x] 6.1 `temple_screen` のテストを新 API に更新
+- [x] 6.2 `src/town_scene/temple_screen.gd` を行ベースに移行
+- [x] 6.3 テストが通過することを確認
 
 ## 7. 画面移行: esc_menu
 
-- [ ] 7.1 `esc_menu` のテストを新 API に更新。main_menu / party_menu / quit_menu の 3 メニュー分が対象
-- [ ] 7.2 `src/esc_menu/esc_menu.gd` の `_build_menu_labels` を `_build_menu_rows` に書き換え、3 メニューとも行ベースに移行
-- [ ] 7.3 テストが通過することを確認
+- [x] 7.1 `esc_menu` のテストを新 API に更新。main_menu / party_menu / quit_menu の 3 メニュー分が対象
+- [x] 7.2 `src/esc_menu/esc_menu.gd` の `_build_menu_labels` を `_build_menu_rows` に書き換え、3 メニューとも行ベースに移行
+- [x] 7.3 テストが通過することを確認
 
 ## 8. 画面移行: save_screen / load_screen
 
-- [ ] 8.1 save_screen / load_screen のテストを新 API に更新（save_screen は `_menu` と `_overwrite_menu` の 2 メニュー）
-- [ ] 8.2 `src/save_screen.gd` を行ベースに移行
-- [ ] 8.3 `src/load_screen.gd` を行ベースに移行
-- [ ] 8.4 テストが通過することを確認
+- [x] 8.1 save_screen / load_screen のテストを新 API に更新（save_screen は `_menu` と `_overwrite_menu` の 2 メニュー）
+- [x] 8.2 `src/save_screen.gd` を行ベースに移行
+- [x] 8.3 `src/load_screen.gd` を行ベースに移行
+- [x] 8.4 テストが通過することを確認
 
 ## 9. 画面移行: dungeon_screen (return dialog)
 
-- [ ] 9.1 `dungeon_screen` のリターンダイアログのテストを新 API に更新（line 173 付近の `CURSOR_PREFIX` 直接参照を書き換え）
-- [ ] 9.2 `src/dungeon_scene/dungeon_screen.gd` の return dialog を行ベースに移行
-- [ ] 9.3 テストが通過することを確認
+- [x] 9.1 `dungeon_screen` のリターンダイアログのテストを新 API に更新（line 173 付近の `CURSOR_PREFIX` 直接参照を書き換え）
+- [x] 9.2 `src/dungeon_scene/dungeon_screen.gd` の return dialog を行ベースに移行
+- [x] 9.3 テストが通過することを確認
 
 ## 10. 画面移行: dungeon_entrance（複合ケース）
 
