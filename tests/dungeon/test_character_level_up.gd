@@ -142,6 +142,44 @@ func test_level_up_stops_when_exp_below_next_threshold():
 	assert_eq(ch.level, 2)
 
 
+# --- final-level reachability (regression for clamp-guard bug) ---
+
+func _make_custom_job(table: PackedInt64Array) -> JobData:
+	var job := JobData.new()
+	job.job_name = "Custom"
+	job.base_hp = 10
+	job.has_magic = false
+	job.base_mp = 0
+	job.hp_per_level = 1
+	job.mp_per_level = 0
+	job.exp_table = table
+	return job
+
+
+func test_can_reach_final_level_in_small_table():
+	# Two-entry table [100, 200]: max reachable level is 3.
+	var ch := _make_character(_make_custom_job(PackedInt64Array([100, 200])))
+	ch.gain_experience(200)
+	assert_eq(ch.level, 3,
+		"should reach the final level whose threshold is the last entry of exp_table")
+
+
+func test_level_is_capped_at_table_size_plus_one():
+	# Two-entry table [100, 200]: gaining huge EXP must not exceed level 3.
+	var ch := _make_character(_make_custom_job(PackedInt64Array([100, 200])))
+	ch.gain_experience(10 ** 9)
+	assert_eq(ch.level, 3,
+		"level must not exceed exp_table.size() + 1 even with overflowing EXP")
+
+
+func test_fighter_can_reach_level_13_with_shipped_table():
+	# Final shipped fighter threshold to reach lv13 is exp_table[11] = 400_075.
+	var ch := _make_character(_fighter_job)
+	ch.gain_experience(_fighter_job.exp_table[_fighter_job.exp_table.size() - 1])
+	assert_eq(ch.level, 13,
+		"shipped 12-entry table should allow Lv13 when exp meets the final threshold")
+
+
 # --- to_dict / from_dict roundtrip ---
 
 func test_accumulated_exp_persists_via_to_dict_from_dict():

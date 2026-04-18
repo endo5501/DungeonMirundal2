@@ -59,12 +59,12 @@ func gain_experience(amount: int) -> void:
 	accumulated_exp += amount
 	if job == null:
 		return
+	# exp_table[i] is the threshold to reach level i + 2, so the maximum level
+	# representable in the table is exp_table.size() + 1. Stop once we're there,
+	# otherwise exp_to_reach_level clamps to the last entry and we'd loop forever.
+	var max_level := job.exp_table.size() + 1
 	while accumulated_exp >= job.exp_to_reach_level(level + 1):
-		var threshold := job.exp_to_reach_level(level + 1)
-		if threshold <= 0:
-			break
-		# Guard against infinite loop when the table is exhausted (clamped to last entry).
-		if level >= 1 and job.exp_to_reach_level(level + 2) == threshold:
+		if level >= max_level:
 			break
 		level_up()
 
