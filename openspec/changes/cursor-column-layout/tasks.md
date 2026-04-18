@@ -7,10 +7,10 @@
 
 ## 2. CursorMenu.update_rows の追加
 
-- [ ] 2.1 `test_cursor_menu.gd` に `update_rows()` のテストを追加: (a) selected_index に応じて cursor 表示が切り替わる (b) disabled_indices に応じて行の色が切り替わる (c) 空配列で呼んでもクラッシュしない
-- [ ] 2.2 テストが失敗することを確認してコミット
-- [ ] 2.3 `src/dungeon/cursor_menu.gd` に `update_rows(Array[CursorMenuRow])` を実装
-- [ ] 2.4 2.1 のテストが通過することを確認
+- [x] 2.1 `test_cursor_menu.gd` に `update_rows()` のテストを追加: (a) selected_index に応じて cursor 表示が切り替わる (b) disabled_indices に応じて行の色が切り替わる (c) 空配列で呼んでもクラッシュしない
+- [x] 2.2 テストが失敗することを確認してコミット
+- [x] 2.3 `src/dungeon/cursor_menu.gd` に `update_rows(Array[CursorMenuRow])` を実装
+- [x] 2.4 2.1 のテストが通過することを確認
 
 ## 3. 画面移行: title_screen
 

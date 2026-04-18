@@ -52,3 +52,8 @@ func update_labels(labels: Array[Label]) -> void:
 			"font_color",
 			DISABLED_COLOR if is_disabled(i) else ENABLED_COLOR
 		)
+
+func update_rows(rows: Array[CursorMenuRow]) -> void:
+	for i in range(rows.size()):
+		rows[i].set_selected(i == selected_index)
+		rows[i].set_disabled(is_disabled(i))
