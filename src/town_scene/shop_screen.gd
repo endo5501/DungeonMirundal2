@@ -166,14 +166,14 @@ func _render_buy() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(items.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _selected_index else "  "
+		var row := CursorMenuRow.new()
 		var affordable: bool = _inventory != null and _inventory.gold >= items[i].price
-		label.text = "%s%s    %d G" % [prefix, items[i].item_name, items[i].price]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
+		row.set_text("%s    %d G" % [items[i].item_name, items[i].price])
+		row.set_text_font_size(FONT_SIZE)
+		row.set_selected(i == _selected_index)
 		if not affordable:
-			label.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
-		_root.add_child(label)
+			row.set_disabled(true)
+		_root.add_child(row)
 
 
 func _render_sell() -> void:
@@ -184,12 +184,12 @@ func _render_sell() -> void:
 		_root.add_child(empty)
 		return
 	for i in range(instances.size()):
-		var label := Label.new()
-		var prefix := "> " if i == _selected_index else "  "
+		var row := CursorMenuRow.new()
 		var price: int = instances[i].item.price / 2
-		label.text = "%s%s    %d G" % [prefix, instances[i].item.item_name, price]
-		label.add_theme_font_size_override("font_size", FONT_SIZE)
-		_root.add_child(label)
+		row.set_text("%s    %d G" % [instances[i].item.item_name, price])
+		row.set_text_font_size(FONT_SIZE)
+		row.set_selected(i == _selected_index)
+		_root.add_child(row)
 
 
 # ---- input ----
