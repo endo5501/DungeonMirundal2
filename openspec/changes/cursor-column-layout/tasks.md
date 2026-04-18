@@ -66,22 +66,22 @@
 
 ## 11. 旧 API の削除
 
-- [ ] 11.1 `src/` を `CURSOR_PREFIX` / `NO_CURSOR_PREFIX` で grep し、参照が残っていないことを確認
-- [ ] 11.2 `src/` を `update_labels` で grep し、残参照が無いことを確認
-- [ ] 11.3 `src/dungeon/cursor_menu.gd` から `CURSOR_PREFIX`, `NO_CURSOR_PREFIX`, `update_labels(labels)` を削除
-- [ ] 11.4 全テスト通過を確認
+- [x] 11.1 `src/` を `CURSOR_PREFIX` / `NO_CURSOR_PREFIX` で grep し、参照が残っていないことを確認
+- [x] 11.2 `src/` を `update_labels` で grep し、残参照が無いことを確認
+- [x] 11.3 `src/dungeon/cursor_menu.gd` から `CURSOR_PREFIX`, `NO_CURSOR_PREFIX`, `update_labels(labels)` を削除
+- [x] 11.4 全テスト通過を確認
 
 ## 12. 統合確認
 
-- [ ] 12.1 `godot --headless -s addons/gut/gut_cmdln.gd` で全テストが通過することを確認
+- [x] 12.1 `godot --headless -s addons/gut/gut_cmdln.gd` で全テストが通過することを確認
 - [ ] 12.2 手動確認: title → ↓↑ で項目位置が一切動かない
 - [ ] 12.3 手動確認: town/shop/temple のメニューで同上
 - [ ] 12.4 手動確認: ダンジョン入口のリスト行（マルチカラム）でカーソル移動時に名前・サイズ・探索率のテキスト開始位置が不変
 - [ ] 12.5 手動確認: ESC メニュー 3 階層すべてで位置不変
 - [ ] 12.6 手動確認: セーブ・ロード画面で位置不変
-- [ ] 12.7 `openspec validate cursor-column-layout --strict` が通る
+- [x] 12.7 `openspec validate cursor-column-layout --strict` が通る
 
 ## 13. 完了
 
-- [ ] 13.1 変更内容を機能ごとにコミット（英語メッセージ）
+- [x] 13.1 変更内容を機能ごとにコミット（英語メッセージ）
 - [ ] 13.2 `/opsx:verify cursor-column-layout` で検証

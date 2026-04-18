@@ -1,8 +1,6 @@
 class_name CursorMenu
 extends RefCounted
 
-const CURSOR_PREFIX := "> "
-const NO_CURSOR_PREFIX := "  "
 const DISABLED_COLOR := Color(0.5, 0.5, 0.5)
 const ENABLED_COLOR := Color(1.0, 1.0, 1.0)
 
@@ -43,15 +41,6 @@ func ensure_valid_selection() -> void:
 		if not is_disabled(candidate):
 			selected_index = candidate
 			return
-
-func update_labels(labels: Array[Label]) -> void:
-	for i in range(labels.size()):
-		var prefix := CURSOR_PREFIX if i == selected_index else NO_CURSOR_PREFIX
-		labels[i].text = prefix + items[i]
-		labels[i].add_theme_color_override(
-			"font_color",
-			DISABLED_COLOR if is_disabled(i) else ENABLED_COLOR
-		)
 
 func update_rows(rows: Array[CursorMenuRow]) -> void:
 	for i in range(rows.size()):
