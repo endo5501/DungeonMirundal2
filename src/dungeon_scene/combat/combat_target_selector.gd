@@ -3,8 +3,9 @@ extends Control
 
 signal target_selected(target: CombatActor)
 
-var _label: Label
 var _title_label: Label
+var _options_vbox: VBoxContainer
+var _rows: Array[CursorMenuRow] = []
 var _selected_index: int = 0
 var _targets: Array = []  # Array[CombatActor] living
 
@@ -14,7 +15,7 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	if _label != null:
+	if _options_vbox != null:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -25,9 +26,8 @@ func _build_ui() -> void:
 	_title_label.text = "対象を選択:"
 	_title_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(_title_label)
-	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(_label)
+	_options_vbox = VBoxContainer.new()
+	vbox.add_child(_options_vbox)
 
 
 func show_with(monsters: Array) -> void:
@@ -38,6 +38,7 @@ func show_with(monsters: Array) -> void:
 			_targets.append(m)
 	_selected_index = 0
 	visible = true
+	_rebuild_rows()
 	_refresh_label()
 
 
@@ -81,15 +82,25 @@ func get_selected_index() -> int:
 
 
 func _ensure_ready() -> void:
-	if _label == null:
+	if _options_vbox == null:
 		_build_ui()
 
 
-func _refresh_label() -> void:
-	if _label == null:
-		return
-	var lines: Array = []
+func _rebuild_rows() -> void:
+	_rows.clear()
+	for child in _options_vbox.get_children():
+		_options_vbox.remove_child(child)
+		child.queue_free()
 	for i in range(_targets.size()):
-		var prefix: String = "> " if i == _selected_index else "  "
-		lines.append(prefix + _targets[i].actor_name)
-	_label.text = "\n".join(lines)
+		var row := CursorMenuRow.new()
+		row.set_text(_targets[i].actor_name)
+		row.set_text_font_size(16)
+		_options_vbox.add_child(row)
+		_rows.append(row)
+
+
+func _refresh_label() -> void:
+	if _rows.size() != _targets.size():
+		_rebuild_rows()
+	for i in range(_rows.size()):
+		_rows[i].set_selected(i == _selected_index)

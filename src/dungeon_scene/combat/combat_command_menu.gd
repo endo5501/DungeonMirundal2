@@ -5,8 +5,9 @@ const OPTIONS: Array[String] = ["こうげき", "ぼうぎょ", "にげる"]
 
 signal command_selected(index: int)
 
-var _label: Label
+var _rows: Array[CursorMenuRow] = []
 var _title_label: Label
+var _options_vbox: VBoxContainer
 var _selected_index: int = 0
 var _current_actor: CombatActor
 
@@ -16,7 +17,7 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	if _label != null:
+	if _options_vbox != null:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -26,9 +27,14 @@ func _build_ui() -> void:
 	_title_label = Label.new()
 	_title_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(_title_label)
-	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(_label)
+	_options_vbox = VBoxContainer.new()
+	vbox.add_child(_options_vbox)
+	for i in range(OPTIONS.size()):
+		var row := CursorMenuRow.new()
+		row.set_text(OPTIONS[i])
+		row.set_text_font_size(16)
+		_options_vbox.add_child(row)
+		_rows.append(row)
 	_refresh_label()
 
 
@@ -76,15 +82,12 @@ func get_selected_index() -> int:
 
 
 func _ensure_ready() -> void:
-	if _label == null:
+	if _options_vbox == null:
 		_build_ui()
 
 
 func _refresh_label() -> void:
-	if _label == null:
+	if _rows.is_empty():
 		return
-	var lines: Array = []
-	for i in range(OPTIONS.size()):
-		var prefix: String = "> " if i == _selected_index else "  "
-		lines.append(prefix + OPTIONS[i])
-	_label.text = "\n".join(lines)
+	for i in range(_rows.size()):
+		_rows[i].set_selected(i == _selected_index)
