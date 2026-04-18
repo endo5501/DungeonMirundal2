@@ -118,3 +118,52 @@ func test_loaded_floor_1_table_is_valid():
 	assert_true(floor_1.is_valid())
 	assert_gt(floor_1.entries.size(), 0)
 	assert_gt(floor_1.probability_per_step, 0.0)
+
+
+# --- combat-system: per-level growth and exp_table ---
+
+func _find_job_by_name(name: String) -> JobData:
+	var jobs := _loader.load_all_jobs()
+	for j in jobs:
+		if j.job_name == name:
+			return j
+	return null
+
+
+func test_loaded_fighter_has_positive_hp_per_level():
+	var fighter := _find_job_by_name("Fighter")
+	assert_not_null(fighter)
+	assert_gt(fighter.hp_per_level, 0)
+
+
+func test_loaded_fighter_has_zero_mp_per_level():
+	var fighter := _find_job_by_name("Fighter")
+	assert_not_null(fighter)
+	assert_eq(fighter.mp_per_level, 0)
+
+
+func test_loaded_thief_has_zero_mp_per_level():
+	var thief := _find_job_by_name("Thief")
+	assert_not_null(thief)
+	assert_eq(thief.mp_per_level, 0)
+
+
+func test_loaded_mage_has_positive_hp_and_mp_per_level():
+	var mage := _find_job_by_name("Mage")
+	assert_not_null(mage)
+	assert_gt(mage.hp_per_level, 0)
+	assert_gt(mage.mp_per_level, 0)
+
+
+func test_loaded_all_jobs_have_exp_table_with_at_least_12_entries():
+	var jobs := _loader.load_all_jobs()
+	for job in jobs:
+		assert_gte(job.exp_table.size(), 12, "%s exp_table size" % job.job_name)
+
+
+func test_loaded_all_jobs_have_monotonic_exp_table():
+	var jobs := _loader.load_all_jobs()
+	for job in jobs:
+		for i in range(1, job.exp_table.size()):
+			assert_gt(job.exp_table[i], job.exp_table[i - 1],
+				"%s exp_table[%d] > exp_table[%d]" % [job.job_name, i, i - 1])

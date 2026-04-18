@@ -12,6 +12,7 @@ var current_hp: int
 var max_hp: int
 var current_mp: int
 var max_mp: int
+var accumulated_exp: int = 0
 
 static func create(
 	p_name: String,
@@ -52,6 +53,35 @@ static func create(
 		ch.current_mp = 0
 	return ch
 
+func gain_experience(amount: int) -> void:
+	if amount <= 0:
+		return
+	accumulated_exp += amount
+	if job == null:
+		return
+	# exp_table[i] is the threshold to reach level i + 2, so the maximum level
+	# representable in the table is exp_table.size() + 1. Stop once we're there,
+	# otherwise exp_to_reach_level clamps to the last entry and we'd loop forever.
+	var max_level := job.exp_table.size() + 1
+	while accumulated_exp >= job.exp_to_reach_level(level + 1):
+		if level >= max_level:
+			break
+		level_up()
+
+
+func level_up() -> void:
+	level += 1
+	if job == null:
+		return
+	var vit: int = int(base_stats.get(&"VIT", 0))
+	var hp_growth := maxi(job.hp_per_level + vit / 3, 1)
+	max_hp += hp_growth
+	current_hp += hp_growth
+	if job.has_magic:
+		max_mp += job.mp_per_level
+		current_mp += job.mp_per_level
+
+
 func to_dict() -> Dictionary:
 	var stats_str := {}
 	for key in STAT_KEYS:
@@ -66,6 +96,7 @@ func to_dict() -> Dictionary:
 		"max_hp": max_hp,
 		"current_mp": current_mp,
 		"max_mp": max_mp,
+		"accumulated_exp": accumulated_exp,
 	}
 
 static func from_dict(data: Dictionary) -> Character:
@@ -76,6 +107,7 @@ static func from_dict(data: Dictionary) -> Character:
 	ch.max_hp = data.get("max_hp", 0)
 	ch.current_mp = data.get("current_mp", 0)
 	ch.max_mp = data.get("max_mp", 0)
+	ch.accumulated_exp = data.get("accumulated_exp", 0)
 	var race_id: String = data.get("race_id", "human")
 	ch.race = load("res://data/races/" + race_id + ".tres") as RaceData
 	var job_id: String = data.get("job_id", "fighter")

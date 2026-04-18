@@ -41,6 +41,11 @@ func remove_from_party(row: int, position: int) -> void:
 func get_party_data() -> PartyData:
 	return PartyData.new(_row_to_party_member_data(_front_row), _row_to_party_member_data(_back_row))
 
+
+func get_party_characters() -> Array:
+	# Returns [front_row, back_row] where each row is an Array of 3 (Character or null).
+	return [_front_row.duplicate(), _back_row.duplicate()]
+
 func get_character_at(row: int, position: int) -> Character:
 	var target_row := _get_row(row)
 	return target_row[position]
