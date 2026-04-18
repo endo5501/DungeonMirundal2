@@ -20,12 +20,14 @@ func _ensure_dir() -> void:
 
 func save(slot_number: int) -> void:
 	_ensure_dir()
+	var inv: Inventory = GameState.inventory
 	var data := {
 		"version": CURRENT_VERSION,
 		"last_saved": Time.get_datetime_string_from_system(),
 		"game_location": GameState.game_location,
 		"current_dungeon_index": GameState.current_dungeon_index,
-		"guild": GameState.guild.to_dict(),
+		"inventory": inv.to_dict() if inv != null else {"gold": 0, "items": []},
+		"guild": GameState.guild.to_dict(inv),
 		"dungeons": GameState.dungeon_registry.to_dict()["dungeons"],
 	}
 	var json_str := JSON.stringify(data, "\t")
@@ -52,7 +54,10 @@ func load(slot_number: int) -> bool:
 	var data: Dictionary = json.data
 	if int(data.get("version", 0)) > CURRENT_VERSION:
 		return false
-	GameState.guild = Guild.from_dict(data.get("guild", {}))
+	# Restore inventory first so equipment indices can resolve to ItemInstances.
+	var inv_data: Dictionary = data.get("inventory", {})
+	GameState.inventory = Inventory.from_dict(inv_data, GameState.item_repository)
+	GameState.guild = Guild.from_dict(data.get("guild", {}), GameState.inventory)
 	GameState.dungeon_registry = DungeonRegistry.from_dict({"dungeons": data.get("dungeons", [])})
 	GameState.game_location = data.get("game_location", GameState.LOCATION_TOWN)
 	GameState.current_dungeon_index = int(data.get("current_dungeon_index", -1))

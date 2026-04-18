@@ -99,12 +99,12 @@
 
 ## 12. ESC メニューのアイテム / 装備ビュー
 
-- [ ] 12.1 `tests/esc_menu/test_esc_menu.gd` を更新し、パーティメニューで「アイテム」「装備」が有効で選択可能であることをテスト
-- [ ] 12.2 `src/esc_menu/esc_menu.gd` の `PARTY_MENU_DISABLED` から `[1, 2]` を削除し、`_handle_party_menu_select` に ITEMS / EQUIPMENT 分岐を追加
-- [ ] 12.3 `tests/esc_menu/test_item_view.gd` を新規作成し、所持金表示、アイテム一覧、装備中マーク、使用ボタンなし、ESC で戻るをテスト
-- [ ] 12.4 `src/esc_menu/item_view.gd` （または `esc_menu.gd` 内ビュー）を実装
-- [ ] 12.5 `tests/esc_menu/test_equipment_view.gd` を新規作成し、キャラ選択 → スロット選択 → 候補選択 → 装備変更の正常系、`allowed_jobs` による候補フィルタ、装備解除（はずす）、ESC で 1 階層戻るをテスト
-- [ ] 12.6 `src/esc_menu/equipment_view.gd` （または `esc_menu.gd` 内ビュー）を実装
+- [x] 12.1 `tests/esc_menu/test_esc_menu.gd` を更新し、パーティメニューで「アイテム」「装備」が有効で選択可能であることをテスト
+- [x] 12.2 `src/esc_menu/esc_menu.gd` の `PARTY_MENU_DISABLED` から `[1, 2]` を削除し、`_handle_party_menu_select` に ITEMS / EQUIPMENT 分岐を追加
+- [x] 12.3 `tests/esc_menu/test_item_view.gd` を新規作成し、所持金表示、アイテム一覧、装備中マーク、使用ボタンなし、ESC で戻るをテスト
+- [x] 12.4 `src/esc_menu/item_view.gd` （または `esc_menu.gd` 内ビュー）を実装
+- [x] 12.5 `tests/esc_menu/test_equipment_view.gd` を新規作成し、キャラ選択 → スロット選択 → 候補選択 → 装備変更の正常系、`allowed_jobs` による候補フィルタ、装備解除（はずす）、ESC で 1 階層戻るをテスト
+- [x] 12.6 `src/esc_menu/equipment_view.gd` （または `esc_menu.gd` 内ビュー）を実装
 
 ## 13. SaveManager 拡張
 
