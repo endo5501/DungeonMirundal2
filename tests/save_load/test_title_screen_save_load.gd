@@ -35,13 +35,13 @@ func _setup_character():
 	GameState.guild.register(ch)
 	GameState.guild.assign_to_party(ch, 0, 0)
 
-# --- Disabled state based on saves ---
+# --- Disabled state based on saves (new menu order: 前回から=0, 新規ゲーム=1, ロード=2, ゲーム終了=3) ---
 
 func test_no_saves_disables_continue_and_load():
 	var screen := TitleScreen.new()
 	screen.setup_save_state(_save_manager)
 	add_child_autofree(screen)
-	assert_true(screen.is_item_disabled(1), "前回から should be disabled")
+	assert_true(screen.is_item_disabled(0), "前回から should be disabled")
 	assert_true(screen.is_item_disabled(2), "ロード should be disabled")
 
 func test_with_saves_enables_continue_and_load():
@@ -50,7 +50,7 @@ func test_with_saves_enables_continue_and_load():
 	var screen := TitleScreen.new()
 	screen.setup_save_state(_save_manager)
 	add_child_autofree(screen)
-	assert_false(screen.is_item_disabled(1), "前回から should be enabled")
+	assert_false(screen.is_item_disabled(0), "前回から should be enabled")
 	assert_false(screen.is_item_disabled(2), "ロード should be enabled")
 
 func test_with_saves_but_no_last_slot_disables_continue():
@@ -61,8 +61,33 @@ func test_with_saves_but_no_last_slot_disables_continue():
 	var screen := TitleScreen.new()
 	screen.setup_save_state(_save_manager)
 	add_child_autofree(screen)
-	assert_true(screen.is_item_disabled(1), "前回から should be disabled")
+	assert_true(screen.is_item_disabled(0), "前回から should be disabled")
 	assert_false(screen.is_item_disabled(2), "ロード should be enabled")
+
+# --- Initial cursor position after setup_save_state ---
+
+func test_cursor_starts_on_continue_when_last_slot_valid():
+	_setup_character()
+	_save_manager.save(1)
+	var screen := TitleScreen.new()
+	screen.setup_save_state(_save_manager)
+	add_child_autofree(screen)
+	assert_eq(screen.selected_index, 0, "cursor should start on 前回から when a valid save exists")
+
+func test_cursor_skips_to_new_game_when_no_saves():
+	var screen := TitleScreen.new()
+	screen.setup_save_state(_save_manager)
+	add_child_autofree(screen)
+	assert_eq(screen.selected_index, 1, "cursor should skip disabled 前回から and land on 新規ゲーム")
+
+func test_cursor_skips_to_new_game_when_last_slot_invalid():
+	_setup_character()
+	_save_manager.save(1)
+	DirAccess.remove_absolute(TEST_SAVE_DIR + "last_slot.txt")
+	var screen := TitleScreen.new()
+	screen.setup_save_state(_save_manager)
+	add_child_autofree(screen)
+	assert_eq(screen.selected_index, 1, "cursor should skip disabled 前回から and land on 新規ゲーム")
 
 # --- Main.gd integration ---
 
