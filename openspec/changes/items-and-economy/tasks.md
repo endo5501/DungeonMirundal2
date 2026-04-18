@@ -54,20 +54,20 @@
 
 ## 7. MonsterData に gold_min/gold_max 追加
 
-- [ ] 7.1 `tests/dungeon/test_monster_data.gd` に `gold_min` / `gold_max` フィールドの存在、バリデーション（`gold_min <= gold_max`）のテストを追加
-- [ ] 7.2 `src/dungeon/data/monster_data.gd` に `@export var gold_min: int` / `@export var gold_max: int` と validation を追加
-- [ ] 7.3 `data/monsters/*.tres` （slime, goblin, bat）に `gold_min` / `gold_max` を設定（slime: 1-3, goblin: 5-15, bat: 2-8 などの暫定値）
+- [x] 7.1 `tests/dungeon/test_monster_data.gd` に `gold_min` / `gold_max` フィールドの存在、バリデーション（`gold_min <= gold_max`）のテストを追加
+- [x] 7.2 `src/dungeon/data/monster_data.gd` に `@export var gold_min: int` / `@export var gold_max: int` と validation を追加
+- [x] 7.3 `data/monsters/*.tres` （slime, goblin, bat）に `gold_min` / `gold_max` を設定（slime: 1-3, goblin: 5-15, bat: 2-8 などの暫定値）
 
 ## 8. EncounterOutcome と CombatOverlay のゴールド処理
 
-- [ ] 8.1 `tests/combat/test_encounter_outcome.gd`（または既存）に `EncounterOutcome.gained_gold` フィールドが存在し、スタブ初期値が `0` であることをテスト
-- [ ] 8.2 `src/dungeon/encounter_outcome.gd` に `gained_gold: int` フィールドを追加
-- [ ] 8.3 `tests/dungeon/test_combat_overlay.gd` に「CLEARED のとき gained_gold が dead monsters の `gold_min..gold_max` 合計（固定シード下で決定論的）」「WIPED/ESCAPED のとき gained_gold == 0」のテストを追加
-- [ ] 8.4 `src/dungeon_scene/combat_overlay.gd` に gold 計算（`rng.randi_range` の和）と `EncounterOutcome.gained_gold` への代入を実装
-- [ ] 8.5 `test_combat_overlay.gd` に「ResultPanel が CLEARED で gained_experience と gained_gold の両方を表示する」「WIPED/ESCAPED では表示しない」テストを追加
-- [ ] 8.6 ResultPanel の表示ロジックを更新
-- [ ] 8.7 `tests/dungeon/test_main_encounter_flow.gd`（既存または新規）で「`encounter_resolved(outcome)` 受信時、`GameState.inventory.add_gold(outcome.gained_gold)` が呼ばれ `inventory.gold` が増える」ことをテスト
-- [ ] 8.8 `src/main.gd` の `encounter_resolved` ハンドラで `GameState.inventory.add_gold` を呼ぶ処理を追加
+- [x] 8.1 `tests/combat/test_encounter_outcome.gd`（または既存）に `EncounterOutcome.gained_gold` フィールドが存在し、スタブ初期値が `0` であることをテスト
+- [x] 8.2 `src/dungeon/encounter_outcome.gd` に `gained_gold: int` フィールドを追加
+- [x] 8.3 `tests/dungeon/test_combat_overlay.gd` に「CLEARED のとき gained_gold が dead monsters の `gold_min..gold_max` 合計（固定シード下で決定論的）」「WIPED/ESCAPED のとき gained_gold == 0」のテストを追加
+- [x] 8.4 `src/dungeon_scene/combat_overlay.gd` に gold 計算（`rng.randi_range` の和）と `EncounterOutcome.gained_gold` への代入を実装
+- [x] 8.5 `test_combat_overlay.gd` に「ResultPanel が CLEARED で gained_experience と gained_gold の両方を表示する」「WIPED/ESCAPED では表示しない」テストを追加
+- [x] 8.6 ResultPanel の表示ロジックを更新
+- [x] 8.7 `tests/dungeon/test_main_encounter_flow.gd`（既存または新規）で「`encounter_resolved(outcome)` 受信時、`GameState.inventory.add_gold(outcome.gained_gold)` が呼ばれ `inventory.gold` が増える」ことをテスト
+- [x] 8.8 `src/main.gd` の `encounter_resolved` ハンドラで `GameState.inventory.add_gold` を呼ぶ処理を追加
 
 ## 9. ShopScreen
 

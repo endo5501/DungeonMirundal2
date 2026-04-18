@@ -2,6 +2,8 @@ class_name TownScreen
 extends Control
 
 signal open_guild
+signal open_shop
+signal open_temple
 signal open_dungeon_entrance
 
 const MENU_ITEMS: Array[String] = [
@@ -11,7 +13,7 @@ const MENU_ITEMS: Array[String] = [
 	"ダンジョン入口",
 ]
 
-const DISABLED_INDICES: Array[int] = [1, 2]
+const DISABLED_INDICES: Array[int] = []
 
 const FACILITY_COLORS: Array[Color] = [
 	Color(0.2, 0.3, 0.5),
@@ -120,4 +122,6 @@ func select_item(index: int) -> void:
 		return
 	match index:
 		0: open_guild.emit()
+		1: open_shop.emit()
+		2: open_temple.emit()
 		3: open_dungeon_entrance.emit()

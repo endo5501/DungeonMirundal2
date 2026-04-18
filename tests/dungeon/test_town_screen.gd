@@ -17,13 +17,13 @@ func test_facilities_in_order():
 	assert_eq(items[2], "教会")
 	assert_eq(items[3], "ダンジョン入口")
 
-# --- Disabled items ---
+# --- Enabled items (all four enabled after items-and-economy) ---
 
-func test_shop_is_disabled():
-	assert_true(_screen.is_item_disabled(1))
+func test_shop_is_enabled():
+	assert_false(_screen.is_item_disabled(1))
 
-func test_church_is_disabled():
-	assert_true(_screen.is_item_disabled(2))
+func test_church_is_enabled():
+	assert_false(_screen.is_item_disabled(2))
 
 func test_guild_is_not_disabled():
 	assert_false(_screen.is_item_disabled(0))
@@ -31,19 +31,19 @@ func test_guild_is_not_disabled():
 func test_dungeon_entrance_is_not_disabled():
 	assert_false(_screen.is_item_disabled(3))
 
-# --- Cursor skip disabled ---
+# --- Cursor moves through all entries ---
 
 func test_cursor_starts_at_guild():
 	assert_eq(_screen.selected_index, 0)
 
-func test_cursor_down_skips_disabled():
+func test_cursor_down_moves_to_shop():
 	_screen.move_cursor(1)
-	assert_eq(_screen.selected_index, 3)
+	assert_eq(_screen.selected_index, 1)
 
-func test_cursor_up_skips_disabled():
-	_screen.selected_index = 3
+func test_cursor_up_wraps_to_dungeon_entrance():
+	_screen.selected_index = 0
 	_screen.move_cursor(-1)
-	assert_eq(_screen.selected_index, 0)
+	assert_eq(_screen.selected_index, 3)
 
 func test_cursor_wraps_down():
 	_screen.selected_index = 3
@@ -66,11 +66,15 @@ func test_dungeon_entrance_emits_signal():
 	_screen.select_item(3)
 	assert_signal_emitted(_screen, "open_dungeon_entrance")
 
-func test_disabled_item_does_not_emit():
+func test_shop_emits_open_shop():
 	watch_signals(_screen)
 	_screen.select_item(1)
-	assert_signal_not_emitted(_screen, "open_guild")
-	assert_signal_not_emitted(_screen, "open_dungeon_entrance")
+	assert_signal_emitted(_screen, "open_shop")
+
+func test_temple_emits_open_temple():
+	watch_signals(_screen)
+	_screen.select_item(2)
+	assert_signal_emitted(_screen, "open_temple")
 
 # --- Illustration data ---
 
