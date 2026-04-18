@@ -44,8 +44,11 @@ func _on_combat_party_state_changed() -> void:
 
 
 func _on_encounter_finished(outcome: EncounterOutcome) -> void:
-	if outcome != null and outcome.result == EncounterOutcome.Result.WIPED:
-		_on_return_to_town()
+	if outcome != null:
+		if outcome.gained_gold > 0 and GameState.inventory != null:
+			GameState.inventory.add_gold(outcome.gained_gold)
+		if outcome.result == EncounterOutcome.Result.WIPED:
+			_on_return_to_town()
 
 # --- Screen switching ---
 

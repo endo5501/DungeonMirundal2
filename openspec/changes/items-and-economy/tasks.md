@@ -33,24 +33,24 @@
 
 ## 4. GameState と ItemRepository の起動時配線
 
-- [ ] 4.1 `tests/dungeon/test_game_state.gd` に `GameState.item_repository` / `GameState.inventory` が存在し、`new_game()` で `inventory.gold == 500` かつ空の item 一覧になることをテスト
-- [ ] 4.2 `src/game_state.gd` に `var item_repository: ItemRepository` / `var inventory: Inventory` を追加し、`new_game()` での初期化、起動時 `_ready` で `DataLoader.load_all_items()` の呼び出しを実装
-- [ ] 4.3 `test_game_state.gd` に `heal_party` が死亡キャラ（`current_hp == 0`）の HP/MP を復活させないテストを追加
-- [ ] 4.4 `src/game_state.gd` の `heal_party` を修正し、`current_hp > 0` の生存メンバーのみ HP/MP を回復する実装に変更
+- [x] 4.1 `tests/dungeon/test_game_state.gd` に `GameState.item_repository` / `GameState.inventory` が存在し、`new_game()` で `inventory.gold == 500` かつ空の item 一覧になることをテスト
+- [x] 4.2 `src/game_state.gd` に `var item_repository: ItemRepository` / `var inventory: Inventory` を追加し、`new_game()` での初期化、起動時 `_ready` で `DataLoader.load_all_items()` の呼び出しを実装
+- [x] 4.3 `test_game_state.gd` に `heal_party` が死亡キャラ（`current_hp == 0`）の HP/MP を復活させないテストを追加
+- [x] 4.4 `src/game_state.gd` の `heal_party` を修正し、`current_hp > 0` の生存メンバーのみ HP/MP を回復する実装に変更
 
 ## 5. InventoryEquipmentProvider
 
-- [ ] 5.1 `tests/combat/test_inventory_equipment_provider.gd` を新規作成し、装備 0 個時の値（base_stats[STR]/2, [VIT]/3, [AGI]）、単一装備時のボーナス加算、複数装備の合算、identified/unidentified で結果が変わらないことをテスト
-- [ ] 5.2 `src/combat/inventory_equipment_provider.gd` (`class_name InventoryEquipmentProvider extends EquipmentProvider`) を実装
-- [ ] 5.3 `main.gd` のプロダクション配線箇所を確認し、`PartyCombatant` 生成時の provider を `DummyEquipmentProvider` → `InventoryEquipmentProvider` へ切り替える（テストからは DummyEquipmentProvider も使えるように維持）
-- [ ] 5.4 `tests/combat/test_dummy_equipment_provider.gd` が引き続き pass することを確認
+- [x] 5.1 `tests/combat/test_inventory_equipment_provider.gd` を新規作成し、装備 0 個時の値（base_stats[STR]/2, [VIT]/3, [AGI]）、単一装備時のボーナス加算、複数装備の合算、identified/unidentified で結果が変わらないことをテスト
+- [x] 5.2 `src/combat/inventory_equipment_provider.gd` (`class_name InventoryEquipmentProvider extends EquipmentProvider`) を実装
+- [x] 5.3 `main.gd` のプロダクション配線箇所を確認し、`PartyCombatant` 生成時の provider を `DummyEquipmentProvider` → `InventoryEquipmentProvider` へ切り替える（テストからは DummyEquipmentProvider も使えるように維持）
+- [x] 5.4 `tests/combat/test_dummy_equipment_provider.gd` が引き続き pass することを確認
 
 ## 6. 初期装備付与（CharacterCreation）
 
-- [ ] 6.1 `tests/guild/test_character_creation_equipment.gd` を新規作成し、Fighter / Mage / Priest / Thief / Bishop / Samurai / Lord / Ninja の各職が少なくとも 1 スロット装備済みでパーティに加入することをテスト
-- [ ] 6.2 `tests/guild/test_character_creation_equipment.gd` に「初期アイテムが `GameState.inventory` に追加される」「`allowed_jobs` を満たすアイテムが自動で該当スロットに装備される」テストを追加
-- [ ] 6.3 `src/guild_scene/character_creation.gd` （または作成完了の最終コード箇所）に初期装備付与ロジックを実装。職業 → `Array[StringName]` のマッピングを定数で保持し、各 item_id を `ItemRepository` で解決して `Inventory.add` + `Equipment.equip` を呼ぶ
-- [ ] 6.4 必要な初期装備 `.tres`（職業毎の武器・鎧 8 職分）が手順 1.9 で揃っていることを確認し、不足分を追加
+- [x] 6.1 `tests/guild/test_character_creation_equipment.gd` を新規作成し、Fighter / Mage / Priest / Thief / Bishop / Samurai / Lord / Ninja の各職が少なくとも 1 スロット装備済みでパーティに加入することをテスト
+- [x] 6.2 `tests/guild/test_character_creation_equipment.gd` に「初期アイテムが `GameState.inventory` に追加される」「`allowed_jobs` を満たすアイテムが自動で該当スロットに装備される」テストを追加
+- [x] 6.3 `src/guild_scene/character_creation.gd` （または作成完了の最終コード箇所）に初期装備付与ロジックを実装。職業 → `Array[StringName]` のマッピングを定数で保持し、各 item_id を `ItemRepository` で解決して `Inventory.add` + `Equipment.equip` を呼ぶ
+- [x] 6.4 必要な初期装備 `.tres`（職業毎の武器・鎧 8 職分）が手順 1.9 で揃っていることを確認し、不足分を追加
 
 ## 7. MonsterData に gold_min/gold_max 追加
 

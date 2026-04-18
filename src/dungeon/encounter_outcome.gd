@@ -9,6 +9,7 @@ enum Result {
 
 var result: Result
 var gained_experience: int = 0
+var gained_gold: int = 0
 var drops: Array = []
 
 

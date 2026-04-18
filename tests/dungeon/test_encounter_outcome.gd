@@ -33,3 +33,14 @@ func test_default_gained_experience_is_zero():
 func test_default_drops_is_empty():
 	var outcome := EncounterOutcome.new()
 	assert_eq(outcome.drops.size(), 0)
+
+
+func test_default_gained_gold_is_zero():
+	var outcome := EncounterOutcome.new()
+	assert_eq(outcome.gained_gold, 0)
+
+
+func test_gained_gold_assignable():
+	var outcome := EncounterOutcome.new()
+	outcome.gained_gold = 25
+	assert_eq(outcome.gained_gold, 25)
