@@ -108,16 +108,16 @@
 
 ## 13. SaveManager 拡張
 
-- [ ] 13.1 `tests/save/test_save_manager_inventory.gd` を新規作成し、「save → load で gold 750 と items A/B/C の順序が保存/復元される」「レガシーセーブ（inventory キーなし）が空インベントリ + gold 0 でロードできる」ことをテスト
-- [ ] 13.2 `src/save_manager.gd` に `inventory.to_dict()` / `Inventory.from_dict()` を統合。save ファイルに `"inventory"` キーを追加、load でキー欠如時に空 Inventory を生成
-- [ ] 13.3 `tests/save/test_save_manager_equipment.gd` を新規作成し、Character の equipment 6 スロット（index または null）が正しく save/load されること、装備参照が復元後に Inventory の同じ ItemInstance を指すこと、レガシーセーブ（equipment キーなし）が全スロット null でロードできることをテスト
-- [ ] 13.4 `src/save_manager.gd` と `src/dungeon/character.gd` の `to_dict / from_dict` を連携し、load 時に inventory → Guild の順で復元するよう保証
+- [x] 13.1 `tests/save/test_save_manager_inventory.gd` を新規作成し、「save → load で gold 750 と items A/B/C の順序が保存/復元される」「レガシーセーブ（inventory キーなし）が空インベントリ + gold 0 でロードできる」ことをテスト
+- [x] 13.2 `src/save_manager.gd` に `inventory.to_dict()` / `Inventory.from_dict()` を統合。save ファイルに `"inventory"` キーを追加、load でキー欠如時に空 Inventory を生成
+- [x] 13.3 `tests/save/test_save_manager_equipment.gd` を新規作成し、Character の equipment 6 スロット（index または null）が正しく save/load されること、装備参照が復元後に Inventory の同じ ItemInstance を指すこと、レガシーセーブ（equipment キーなし）が全スロット null でロードできることをテスト
+- [x] 13.4 `src/save_manager.gd` と `src/dungeon/character.gd` の `to_dict / from_dict` を連携し、load 時に inventory → Guild の順で復元するよう保証
 
 ## 14. 統合確認とクリーンアップ
 
-- [ ] 14.1 `openspec validate items-and-economy --strict` が pass することを確認
-- [ ] 14.2 全 GUT テストがローカルで pass することを確認（`./addons/gut/gut_cmdln.sh` 等のプロジェクト慣用コマンドを使う）
+- [x] 14.1 `openspec validate items-and-economy --strict` が pass することを確認
+- [x] 14.2 全 GUT テストがローカルで pass することを確認 (913/913)（`./addons/gut/gut_cmdln.sh` 等のプロジェクト慣用コマンドを使う）
 - [ ] 14.3 手動確認シナリオを実行: 新規ゲーム → 町 → 商店で装備購入 → ダンジョンで戦闘勝利 → ゴールド加算確認 → ESC メニューで装備変更 → 戻る → セーブ → ロード → 状態復元確認
 - [ ] 14.4 戦闘で死亡キャラを作成し → 町の教会で蘇生 → current_hp == 1 になり、current_mp は変化なし・ゴールドが減っていることを確認
-- [ ] 14.5 `DummyEquipmentProvider` がテスト以外で参照されていないことを grep で確認
+- [x] 14.5 `DummyEquipmentProvider` がテスト以外で参照されていないことを grep で確認 (src 内の参照は定義ファイル self のみ)
 - [ ] 14.6 `openspec archive items-and-economy` の準備（ `/opsx:verify` 相当）に移れる状態を確認
