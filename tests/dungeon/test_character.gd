@@ -168,8 +168,11 @@ func test_to_dict_with_inventory_includes_equipment():
 
 
 func test_from_dict_without_inventory_yields_empty_equipment():
+	# Use real loaded race/job so resource_path round-trips correctly.
+	var human_loaded := load("res://data/races/human.tres") as RaceData
+	var fighter_loaded := load("res://data/jobs/fighter.tres") as JobData
 	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
-	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	var ch := Character.create("Test", human_loaded, fighter_loaded, allocation)
 	var d := ch.to_dict()  # no inventory
 	var restored := Character.from_dict(d)
 	assert_not_null(restored.equipment)
