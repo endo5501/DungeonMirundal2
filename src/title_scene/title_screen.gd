@@ -7,13 +7,13 @@ signal load_game
 signal quit_game
 
 const MENU_ITEMS: Array[String] = [
-	"新規ゲーム",
 	"前回から",
+	"新規ゲーム",
 	"ロード",
 	"ゲーム終了",
 ]
 
-var _disabled_indices: Array[int] = [1, 2]
+var _disabled_indices: Array[int] = [0, 2]
 
 var selected_index: int:
 	get: return _menu.selected_index
@@ -24,14 +24,16 @@ var _labels: Array[Label] = []
 
 func _init() -> void:
 	_menu = CursorMenu.new(MENU_ITEMS, _disabled_indices)
+	_menu.ensure_valid_selection()
 
 func setup_save_state(save_manager: SaveManager) -> void:
 	_disabled_indices = []
 	if save_manager.get_last_slot() < 0:
-		_disabled_indices.append(1)
+		_disabled_indices.append(0)
 	if not save_manager.has_saves():
 		_disabled_indices.append(2)
 	_menu = CursorMenu.new(MENU_ITEMS, _disabled_indices)
+	_menu.ensure_valid_selection()
 	if _labels.size() > 0:
 		_menu.update_labels(_labels)
 
@@ -91,7 +93,7 @@ func select_item(index: int) -> void:
 	if _menu.is_disabled(index):
 		return
 	match index:
-		0: start_new_game.emit()
-		1: continue_game.emit()
+		0: continue_game.emit()
+		1: start_new_game.emit()
 		2: load_game.emit()
 		3: quit_game.emit()

@@ -33,6 +33,9 @@ func setup(registry: DungeonRegistry, has_party: bool) -> void:
 	_has_party = has_party
 	if _registry.size() > 0:
 		selected_index = 0
+	else:
+		_focus = Focus.BUTTONS
+		_button_menu.selected_index = 1  # 新規生成
 
 func _ready() -> void:
 	_vbox = VBoxContainer.new()
@@ -65,9 +68,8 @@ func _build_ui() -> void:
 			_list_labels.append(label)
 	else:
 		var empty := Label.new()
-		empty.text = "  (ダンジョンがありません)"
+		empty.text = "まず「新規生成」でダンジョンを作成してください"
 		empty.add_theme_font_size_override("font_size", FONT_SIZE)
-		empty.add_theme_color_override("font_color", CursorMenu.DISABLED_COLOR)
 		_vbox.add_child(empty)
 
 	var spacer2 := Control.new()

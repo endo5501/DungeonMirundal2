@@ -31,6 +31,19 @@ func move_cursor(direction: int) -> void:
 			return
 	selected_index = start
 
+func ensure_valid_selection() -> void:
+	if items.is_empty():
+		return
+	if not is_disabled(selected_index):
+		return
+	var start := selected_index
+	var count := items.size()
+	for i in range(count):
+		var candidate := (start + i + 1) % count
+		if not is_disabled(candidate):
+			selected_index = candidate
+			return
+
 func update_labels(labels: Array[Label]) -> void:
 	for i in range(labels.size()):
 		var prefix := CURSOR_PREFIX if i == selected_index else NO_CURSOR_PREFIX
