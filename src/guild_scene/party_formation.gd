@@ -4,7 +4,7 @@ extends Control
 signal back_requested
 
 const FONT_SIZE := 18
-const CURSOR := "> "
+const CURSOR := "▶ "
 
 var _guild: Guild
 var _party_slots: Array = []
@@ -67,11 +67,7 @@ func _rebuild_display() -> void:
 			var slot_idx := row * 3 + pos
 			var ch = _party_slots[slot_idx]
 			var name_str: String = ch.character_name if ch != null else "---"
-			var prefix := ""
-			if _mode == 0 and _grid_index == slot_idx:
-				prefix = CURSOR.strip_edges() + " "
-			else:
-				prefix = "  "
+			var prefix := CURSOR if (_mode == 0 and _grid_index == slot_idx) else "  "
 			line += "[%s%s]  " % [prefix, name_str]
 		_add_label(line)
 
@@ -82,8 +78,11 @@ func _rebuild_display() -> void:
 	else:
 		for i in range(_waiting.size()):
 			var ch := _waiting[i]
-			var prefix := CURSOR if (_mode == 1 and _wait_index == i) else "  "
-			_add_label("%s%s  LV:%d  %s  %s" % [prefix, ch.character_name, ch.level, ch.race.race_name, ch.job.job_name])
+			var row := CursorMenuRow.create(
+				_content,
+				"%s  LV:%d  %s  %s" % [ch.character_name, ch.level, ch.race.race_name, ch.job.job_name],
+				FONT_SIZE)
+			row.set_selected(_mode == 1 and _wait_index == i)
 
 	_add_label("")
 	_add_hint("[↑↓←→] 選択  [Tab] パーティ/待機切替  [Enter] 追加/外す  [N] パーティ名変更  [Esc] 戻る")
