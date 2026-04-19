@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="Item" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+[ext_resource type="Script" path="res://src/items/effects/escape_to_town_effect.gd" id="2"]
+[ext_resource type="Script" path="res://src/items/conditions/in_dungeon_only.gd" id="3"]
+[ext_resource type="Script" path="res://src/items/conditions/not_in_combat_only.gd" id="4"]
+
+[sub_resource type="Resource" id="Escape_escape_scroll"]
+script = ExtResource("2")
+
+[sub_resource type="Resource" id="InDungeonOnly_escape_scroll"]
+script = ExtResource("3")
+
+[sub_resource type="Resource" id="NotInCombatOnly_escape_scroll"]
+script = ExtResource("4")
+
+[resource]
+script = ExtResource("1")
+item_id = &"escape_scroll"
+item_name = "脱出の巻物"
+unidentified_name = "古びた巻物"
+category = 7
+equip_slot = 0
+allowed_jobs = Array[StringName]([])
+attack_bonus = 0
+defense_bonus = 0
+agility_bonus = 0
+price = 500
+effect = SubResource("Escape_escape_scroll")
+context_conditions = Array[Resource]([SubResource("InDungeonOnly_escape_scroll"), SubResource("NotInCombatOnly_escape_scroll")])
+target_conditions = Array[Resource]([])

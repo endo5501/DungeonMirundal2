@@ -1,49 +1,49 @@
 ## 1. データモデル拡張 (Item / Repository)
 
-- [ ] 1.1 `src/items/item.gd` の `ItemCategory` enum に `CONSUMABLE` を追加する
-- [ ] 1.2 `src/items/item.gd` に `@export var effect: ItemEffect`、`@export var context_conditions: Array[ContextCondition]`、`@export var target_conditions: Array[TargetCondition]` を追加する (既定値は null / 空配列)
-- [ ] 1.3 既存の `.tres` (long_sword など) が新フィールドの既定値のままロード可能であることをテストで確認する (GUT: items spec 互換テスト)
-- [ ] 1.4 `ItemRepository.all()` と `DataLoader.load_all_items()` が CONSUMABLE アイテムも返すことを GUT テストで確認する
+- [x] 1.1 `src/items/item.gd` の `ItemCategory` enum に `CONSUMABLE` を追加する
+- [x] 1.2 `src/items/item.gd` に `@export var effect: ItemEffect`、`@export var context_conditions: Array[ContextCondition]`、`@export var target_conditions: Array[TargetCondition]` を追加する (既定値は null / 空配列)
+- [x] 1.3 既存の `.tres` (long_sword など) が新フィールドの既定値のままロード可能であることをテストで確認する (GUT: items spec 互換テスト)
+- [x] 1.4 `ItemRepository.all()` と `DataLoader.load_all_items()` が CONSUMABLE アイテムも返すことを GUT テストで確認する
 
 ## 2. Effect 階層
 
-- [ ] 2.1 `src/items/effects/item_effect.gd` を作成: `class_name ItemEffect extends Resource`、`apply(user, targets, context) -> ItemEffectResult` (仮想)
-- [ ] 2.2 `src/items/effects/item_effect_result.gd` (または同居) で結果型 `{success: bool, message: String}` を定義
-- [ ] 2.3 `src/items/effects/heal_hp_effect.gd` 実装 (`@export var power: int`)、HP を clamp して回復
-- [ ] 2.4 `src/items/effects/heal_mp_effect.gd` 実装 (`@export var power: int`)、MP を clamp して回復
-- [ ] 2.5 `src/items/effects/escape_to_town_effect.gd` 実装 (`is_in_combat` で分岐)
-- [ ] 2.6 GUT テスト: HealHpEffect の回復量 / clamp / 死亡者への不適用 (条件側で弾かれる想定だが効果自体の耐性確認)
-- [ ] 2.7 GUT テスト: HealMpEffect の回復量 / clamp
-- [ ] 2.8 GUT テスト: EscapeToTownEffect の非戦闘フロー (シグナル発火のみ確認、遷移は別テスト)
+- [x] 2.1 `src/items/effects/item_effect.gd` を作成: `class_name ItemEffect extends Resource`、`apply(user, targets, context) -> ItemEffectResult` (仮想)
+- [x] 2.2 `src/items/effects/item_effect_result.gd` (または同居) で結果型 `{success: bool, message: String}` を定義
+- [x] 2.3 `src/items/effects/heal_hp_effect.gd` 実装 (`@export var power: int`)、HP を clamp して回復
+- [x] 2.4 `src/items/effects/heal_mp_effect.gd` 実装 (`@export var power: int`)、MP を clamp して回復
+- [x] 2.5 `src/items/effects/escape_to_town_effect.gd` 実装 (`is_in_combat` で分岐)
+- [x] 2.6 GUT テスト: HealHpEffect の回復量 / clamp / 死亡者への不適用 (条件側で弾かれる想定だが効果自体の耐性確認)
+- [x] 2.7 GUT テスト: HealMpEffect の回復量 / clamp
+- [x] 2.8 GUT テスト: EscapeToTownEffect の非戦闘フロー (シグナル発火のみ確認、遷移は別テスト)
 
 ## 3. Condition 階層
 
-- [ ] 3.1 `src/items/conditions/item_use_context.gd` を作成 (is_in_dungeon、is_in_combat、party)
-- [ ] 3.2 `src/items/conditions/context_condition.gd` を作成: `class_name ContextCondition extends Resource`、`is_satisfied(ctx)` / `reason()` 仮想
-- [ ] 3.3 `src/items/conditions/in_dungeon_only.gd` 実装
-- [ ] 3.4 `src/items/conditions/not_in_combat_only.gd` 実装
-- [ ] 3.5 `src/items/conditions/target_condition.gd` を作成: `class_name TargetCondition extends Resource`、`is_satisfied(target, ctx)` / `reason()` 仮想
-- [ ] 3.6 `src/items/conditions/alive_only.gd` 実装
-- [ ] 3.7 `src/items/conditions/not_full_hp.gd` 実装
-- [ ] 3.8 `src/items/conditions/not_full_mp.gd` 実装
-- [ ] 3.9 `src/items/conditions/has_mp_slot.gd` 実装 (Character.job から MP 所持を判定)
-- [ ] 3.10 GUT テスト: 各 Context / Target Condition の成否と reason 文言
+- [x] 3.1 `src/items/conditions/item_use_context.gd` を作成 (is_in_dungeon、is_in_combat、party)
+- [x] 3.2 `src/items/conditions/context_condition.gd` を作成: `class_name ContextCondition extends Resource`、`is_satisfied(ctx)` / `reason()` 仮想
+- [x] 3.3 `src/items/conditions/in_dungeon_only.gd` 実装
+- [x] 3.4 `src/items/conditions/not_in_combat_only.gd` 実装
+- [x] 3.5 `src/items/conditions/target_condition.gd` を作成: `class_name TargetCondition extends Resource`、`is_satisfied(target, ctx)` / `reason()` 仮想
+- [x] 3.6 `src/items/conditions/alive_only.gd` 実装
+- [x] 3.7 `src/items/conditions/not_full_hp.gd` 実装
+- [x] 3.8 `src/items/conditions/not_full_mp.gd` 実装
+- [x] 3.9 `src/items/conditions/has_mp_slot.gd` 実装 (Character.job から MP 所持を判定)
+- [x] 3.10 GUT テスト: 各 Context / Target Condition の成否と reason 文言
 
 ## 4. Inventory の使用 API
 
-- [ ] 4.1 `src/items/inventory.gd` に `use_item(instance, targets, context) -> ItemEffectResult` を追加 (存在確認 → context 検査 → target 検査 → effect.apply → 成功時に remove)
-- [ ] 4.2 GUT テスト: 成功で instance が除去される
-- [ ] 4.3 GUT テスト: context 失敗で instance が残る + message が返る
-- [ ] 4.4 GUT テスト: target 失敗で instance が残る + message が返る
-- [ ] 4.5 GUT テスト: instance がインベントリに存在しないとき success=false で副作用なし
+- [x] 4.1 `src/items/inventory.gd` に `use_item(instance, targets, context) -> ItemEffectResult` を追加 (存在確認 → context 検査 → target 検査 → effect.apply → 成功時に remove)
+- [x] 4.2 GUT テスト: 成功で instance が除去される
+- [x] 4.3 GUT テスト: context 失敗で instance が残る + message が返る
+- [x] 4.4 GUT テスト: target 失敗で instance が残る + message が返る
+- [x] 4.5 GUT テスト: instance がインベントリに存在しないとき success=false で副作用なし
 
 ## 5. 初期消費アイテム `.tres` (data/items/)
 
-- [ ] 5.1 `data/items/potion.tres` を作成 (CONSUMABLE、HealHpEffect(power=20 目安)、AliveOnly+NotFullHp、price=50)
-- [ ] 5.2 `data/items/magic_potion.tres` を作成 (CONSUMABLE、HealMpEffect(power=10 目安)、AliveOnly+HasMpSlot+NotFullMp、price=200)
-- [ ] 5.3 `data/items/escape_scroll.tres` を作成 (CONSUMABLE、EscapeToTownEffect、InDungeonOnly+NotInCombatOnly、price=500)
-- [ ] 5.4 `data/items/emergency_escape_scroll.tres` を作成 (CONSUMABLE、EscapeToTownEffect、InDungeonOnly、price=2000)
-- [ ] 5.5 GUT テスト: DataLoader ロード結果に 4 アイテムが含まれる、`escape_scroll` と `emergency_escape_scroll` が NotInCombatOnly の有無で差別化される
+- [x] 5.1 `data/items/potion.tres` を作成 (CONSUMABLE、HealHpEffect(power=20 目安)、AliveOnly+NotFullHp、price=50)
+- [x] 5.2 `data/items/magic_potion.tres` を作成 (CONSUMABLE、HealMpEffect(power=10 目安)、AliveOnly+HasMpSlot+NotFullMp、price=200)
+- [x] 5.3 `data/items/escape_scroll.tres` を作成 (CONSUMABLE、EscapeToTownEffect、InDungeonOnly+NotInCombatOnly、price=500)
+- [x] 5.4 `data/items/emergency_escape_scroll.tres` を作成 (CONSUMABLE、EscapeToTownEffect、InDungeonOnly、price=2000)
+- [x] 5.5 GUT テスト: DataLoader ロード結果に 4 アイテムが含まれる、`escape_scroll` と `emergency_escape_scroll` が NotInCombatOnly の有無で差別化される
 
 ## 6. ショップ対応 (ShopInventory + ShopScreen)
 

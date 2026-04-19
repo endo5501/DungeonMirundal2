@@ -46,6 +46,29 @@ func spend_gold(amount: int) -> bool:
 	return true
 
 
+func use_item(instance: ItemInstance, targets: Array, context: ItemUseContext) -> ItemEffectResult:
+	if instance == null:
+		return ItemEffectResult.failure("アイテムが無効")
+	if not contains(instance):
+		return ItemEffectResult.failure("所持していない")
+	var item: Item = instance.item
+	if item == null:
+		return ItemEffectResult.failure("アイテム定義が欠落")
+	if item.effect == null:
+		return ItemEffectResult.failure("このアイテムは使用できない")
+	for ctx_cond in item.context_conditions:
+		if not ctx_cond.is_satisfied(context):
+			return ItemEffectResult.failure(ctx_cond.reason())
+	for target in targets:
+		for tgt_cond in item.target_conditions:
+			if not tgt_cond.is_satisfied(target, context):
+				return ItemEffectResult.failure(tgt_cond.reason())
+	var result: ItemEffectResult = item.effect.apply(targets, context)
+	if result != null and result.success:
+		remove(instance)
+	return result
+
+
 func to_dict() -> Dictionary:
 	var items_data: Array = []
 	for inst in _items:

@@ -1,7 +1,7 @@
 class_name Item
 extends Resource
 
-enum ItemCategory { WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY, OTHER }
+enum ItemCategory { WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY, OTHER, CONSUMABLE }
 enum EquipSlot { NONE, WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY }
 
 @export var item_id: StringName
@@ -14,6 +14,9 @@ enum EquipSlot { NONE, WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY }
 @export var defense_bonus: int = 0
 @export var agility_bonus: int = 0
 @export var price: int = 0
+@export var effect: ItemEffect = null
+@export var context_conditions: Array[ContextCondition] = []
+@export var target_conditions: Array[TargetCondition] = []
 
 
 func is_slot_consistent() -> bool:
@@ -32,4 +35,10 @@ func is_slot_consistent() -> bool:
 			return equip_slot == EquipSlot.ACCESSORY
 		ItemCategory.OTHER:
 			return equip_slot == EquipSlot.NONE
+		ItemCategory.CONSUMABLE:
+			return equip_slot == EquipSlot.NONE
 	return false
+
+
+func is_consumable() -> bool:
+	return category == ItemCategory.CONSUMABLE
