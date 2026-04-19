@@ -278,6 +278,7 @@ func _confirm_delete() -> void:
 		_registry.remove(selected_index)
 		if selected_index >= _registry.size():
 			selected_index = _registry.size() - 1
+		_focus = Focus.BUTTONS
 		_build_ui()
 
 func get_dungeon_count() -> int:

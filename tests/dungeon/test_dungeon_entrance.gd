@@ -188,6 +188,48 @@ func test_up_down_in_list_focus_moves_list_cursor():
 	entrance._unhandled_input(_make_key_event(KEY_DOWN))
 	assert_eq(entrance.selected_index, 1, "Down key in list focus should move list cursor")
 
+func test_confirmed_delete_returns_focus_to_buttons():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	assert_eq(entrance._mode, DungeonEntrance.Mode.DELETE_CONFIRM)
+	entrance._delete_confirm_selected = 0  # はい
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion
+	assert_eq(_registry.size(), 1, "one dungeon should remain after deleting one of two")
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should reset to BUTTONS after confirmed delete")
+
+func test_enter_after_last_delete_does_not_reopen_dialog():
+	_registry.create("Last", DungeonRegistry.SIZE_SMALL)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	entrance._delete_confirm_selected = 0  # はい
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion, registry now empty
+	assert_eq(_registry.size(), 0)
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should not remain on LIST_FOR_DELETE after last dungeon is deleted")
+	# A subsequent Enter must not reopen the delete dialog (would crash with selected_index=-1)
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(entrance._mode, DungeonEntrance.Mode.LIST, "subsequent Enter should not reopen delete confirmation")
+
+func test_cancelled_delete_keeps_focus_on_list():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	entrance._delete_confirm_selected = 1  # いいえ (default)
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # cancel via dialog
+	assert_eq(_registry.size(), 2, "no dungeon should be deleted on cancel")
+	assert_eq(entrance._focus, DungeonEntrance.Focus.LIST_FOR_DELETE, "focus should remain on LIST_FOR_DELETE after cancel so user can pick a different target")
+
 # --- Empty state guidance message ---
 
 func test_empty_registry_shows_guidance_message():
