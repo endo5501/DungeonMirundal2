@@ -36,13 +36,6 @@ func _setup_character():
 	GameState.guild.register(ch)
 	GameState.guild.assign_to_party(ch, 0, 0)
 
-func _start_tile_position(dd: DungeonData) -> Vector2i:
-	for y in range(dd.wiz_map.map_size):
-		for x in range(dd.wiz_map.map_size):
-			if dd.wiz_map.cell(x, y).tile == TileType.START:
-				return Vector2i(x, y)
-	return Vector2i(-1, -1)
-
 func _find_non_start_floor(dd: DungeonData) -> Vector2i:
 	for y in range(dd.wiz_map.map_size):
 		for x in range(dd.wiz_map.map_size):
@@ -58,7 +51,7 @@ func test_on_enter_dungeon_resets_player_state_to_start_tile():
 	var main := MainScript.new()
 	add_child_autofree(main)
 	main._on_enter_dungeon(0)
-	var start_pos := _start_tile_position(dd)
+	var start_pos := DungeonData.find_start(dd.wiz_map)
 	assert_eq(dd.player_state.position, start_pos,
 		"player position should be reset to START tile")
 	assert_eq(dd.player_state.facing, Direction.NORTH,

@@ -23,7 +23,7 @@ static var CEILING_COLOR := Color(0.1, 0.1, 0.15)
 static var STAIRS_COLOR := Color(0.55, 0.5, 0.4)
 
 const STAIRS_COUNT := 3
-const STAIRS_MAX_HEIGHT := 1.0
+const STAIRS_MAX_HEIGHT := CELL_HEIGHT * 0.5
 const STAIRS_WIDTH_MARGIN := 0.5
 const STAIRS_DEPTH := 0.3
 
@@ -78,22 +78,18 @@ func _add_stairs_up(faces: Array, x0: float, z0: float) -> void:
 		var y_prev := STAIRS_MAX_HEIGHT * float(i) / float(STAIRS_COUNT)
 		var z_front := z_mid - float(i) * STAIRS_DEPTH
 		var z_back := z_mid - float(i + 1) * STAIRS_DEPTH
-		# Top (tread) faces +Y
 		faces.append(Face.new("stairs_up_top_%d" % i,
 			[Vector3(x_lo, y_top, z_front), Vector3(x_hi, y_top, z_front),
 				Vector3(x_hi, y_top, z_back), Vector3(x_lo, y_top, z_back)],
 			Vector3(0, 1, 0), STAIRS_COLOR))
-		# Riser (front face) faces +Z (toward the player approaching from south)
 		faces.append(Face.new("stairs_up_riser_%d" % i,
 			[Vector3(x_lo, y_prev, z_front), Vector3(x_hi, y_prev, z_front),
 				Vector3(x_hi, y_top, z_front), Vector3(x_lo, y_top, z_front)],
 			Vector3(0, 0, 1), STAIRS_COLOR))
-		# East side face (+X)
 		faces.append(Face.new("stairs_up_east_%d" % i,
 			[Vector3(x_hi, y_prev, z_front), Vector3(x_hi, y_prev, z_back),
 				Vector3(x_hi, y_top, z_back), Vector3(x_hi, y_top, z_front)],
 			Vector3(1, 0, 0), STAIRS_COLOR))
-		# West side face (-X)
 		faces.append(Face.new("stairs_up_west_%d" % i,
 			[Vector3(x_lo, y_prev, z_back), Vector3(x_lo, y_prev, z_front),
 				Vector3(x_lo, y_top, z_front), Vector3(x_lo, y_top, z_back)],
