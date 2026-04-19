@@ -118,10 +118,117 @@ func test_empty_registry_enter_opens_create_dialog_with_one_press():
 	entrance._unhandled_input(_make_key_event(KEY_ENTER))
 	assert_not_null(_find_create_dialog(entrance), "create dialog should open after single Enter press")
 
-func test_non_empty_registry_keeps_list_focus():
+func test_non_empty_registry_focuses_buttons():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	var entrance := _make_entrance()
-	assert_eq(entrance._focus, DungeonEntrance.Focus.DUNGEON_LIST, "non-empty registry should keep list focus")
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "non-empty registry should focus on buttons")
+
+func test_non_empty_registry_initial_cursor_on_enter():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, true)
+	assert_eq(entrance._button_menu.selected_index, 0, "cursor should start on 潜入する (index 0) when registry has entries")
+
+func test_activate_enter_moves_focus_to_list():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, true)
+	add_child_autofree(entrance)
+	entrance._button_menu.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(entrance._focus, DungeonEntrance.Focus.LIST_FOR_ENTER, "activating 潜入する should move focus to list (enter variant)")
+
+func test_activate_delete_moves_focus_to_list():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._button_menu.selected_index = 2
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(entrance._focus, DungeonEntrance.Focus.LIST_FOR_DELETE, "activating 破棄 should move focus to list (delete variant)")
+
+func test_esc_in_enter_list_focus_returns_to_buttons():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, true)
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
+	watch_signals(entrance)
+	entrance._unhandled_input(_make_key_event(KEY_ESCAPE))
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "ESC in list focus should return to buttons")
+	assert_signal_not_emitted(entrance, "enter_dungeon")
+
+func test_esc_in_delete_list_focus_returns_to_buttons():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance._unhandled_input(_make_key_event(KEY_ESCAPE))
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "ESC in delete list focus should return to buttons")
+
+func test_enter_in_enter_list_focus_emits_signal():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, true)
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
+	entrance.selected_index = 1
+	watch_signals(entrance)
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_signal_emitted_with_parameters(entrance, "enter_dungeon", [1])
+
+func test_up_down_in_list_focus_moves_list_cursor():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, true)
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_DOWN))
+	assert_eq(entrance.selected_index, 1, "Down key in list focus should move list cursor")
+
+func test_confirmed_delete_returns_focus_to_buttons():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	assert_eq(entrance._mode, DungeonEntrance.Mode.DELETE_CONFIRM)
+	entrance._delete_confirm_selected = 0  # はい
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion
+	assert_eq(_registry.size(), 1, "one dungeon should remain after deleting one of two")
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should reset to BUTTONS after confirmed delete")
+
+func test_enter_after_last_delete_does_not_reopen_dialog():
+	_registry.create("Last", DungeonRegistry.SIZE_SMALL)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	entrance._delete_confirm_selected = 0  # はい
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion, registry now empty
+	assert_eq(_registry.size(), 0)
+	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should not remain on LIST_FOR_DELETE after last dungeon is deleted")
+	# A subsequent Enter must not reopen the delete dialog (would crash with selected_index=-1)
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(entrance._mode, DungeonEntrance.Mode.LIST, "subsequent Enter should not reopen delete confirmation")
+
+func test_cancelled_delete_keeps_focus_on_list():
+	_registry.create("A", DungeonRegistry.SIZE_SMALL)
+	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
+	var entrance := _make_entrance()
+	add_child_autofree(entrance)
+	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
+	entrance.selected_index = 0
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
+	entrance._delete_confirm_selected = 1  # いいえ (default)
+	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # cancel via dialog
+	assert_eq(_registry.size(), 2, "no dungeon should be deleted on cancel")
+	assert_eq(entrance._focus, DungeonEntrance.Focus.LIST_FOR_DELETE, "focus should remain on LIST_FOR_DELETE after cancel so user can pick a different target")
 
 # --- Empty state guidance message ---
 

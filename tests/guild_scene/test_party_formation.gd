@@ -150,3 +150,109 @@ func test_center_container_covers_full_rect():
 	assert_not_null(center)
 	assert_eq(center.anchor_right, 1.0, "CenterContainer should span full width")
 	assert_eq(center.anchor_bottom, 1.0, "CenterContainer should span full height")
+
+# --- Cursor glyph consistency (▶) ---
+
+func _find_cursor_rows(node: Node, out: Array) -> void:
+	for child in node.get_children():
+		if child is CursorMenuRow:
+			out.append(child)
+		if child.get_child_count() > 0:
+			_find_cursor_rows(child, out)
+
+func _find_grid_slots(node: Node, out: Array) -> void:
+	for child in node.get_children():
+		if child is HBoxContainer and child.has_meta("grid_slot_idx"):
+			out.append(child)
+		if child.get_child_count() > 0:
+			_find_grid_slots(child, out)
+
+func test_waiting_list_uses_cursor_menu_row():
+	var ch1 := _make_character("A")
+	var ch2 := _make_character("B")
+	_guild.register(ch1)
+	_guild.register(ch2)
+	_formation.refresh()
+	_formation._rebuild_display()
+	var rows: Array = []
+	_find_cursor_rows(_formation, rows)
+	assert_true(rows.size() >= 2, "waiting list should render each character as a CursorMenuRow (found %d)" % rows.size())
+
+func test_waiting_row_text_excludes_cursor_glyph():
+	var ch := _make_character("Hero")
+	_guild.register(ch)
+	_formation.refresh()
+	# Switch to waiting mode so the first waiting entry is "selected"
+	_formation._mode = 1
+	_formation._wait_index = 0
+	_formation._rebuild_display()
+	var rows: Array = []
+	_find_cursor_rows(_formation, rows)
+	assert_gt(rows.size(), 0, "at least one CursorMenuRow should exist for the waiting list")
+	for r in rows:
+		var row: CursorMenuRow = r
+		var text := row.get_text_label().text
+		assert_false(text.contains("▶"), "waiting row text should not embed the cursor glyph: '%s'" % text)
+
+func test_selected_waiting_row_is_marked_selected():
+	var ch1 := _make_character("A")
+	var ch2 := _make_character("B")
+	_guild.register(ch1)
+	_guild.register(ch2)
+	_formation.refresh()
+	_formation._mode = 1
+	_formation._wait_index = 1
+	_formation._rebuild_display()
+	var rows: Array = []
+	_find_cursor_rows(_formation, rows)
+	# Find the two waiting rows (there may be none from the grid since grid uses labels)
+	assert_eq(rows.size(), 2, "expected exactly 2 CursorMenuRow entries for 2 waiting characters")
+	assert_false((rows[0] as CursorMenuRow).is_selected(), "first waiting row should not be selected")
+	assert_true((rows[1] as CursorMenuRow).is_selected(), "second waiting row should be selected (wait_index=1)")
+
+func test_grid_renders_six_slots():
+	_formation._mode = 0
+	_formation._grid_index = 0
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	assert_eq(slots.size(), 6, "grid should render 6 slots (2 rows x 3 positions)")
+
+func test_grid_slots_have_fixed_width_cursor_column():
+	_formation._mode = 0
+	_formation._grid_index = 0
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	assert_eq(slots.size(), 6)
+	var widths: Array = []
+	for slot in slots:
+		var cursor_slot: Control = slot.get_meta("cursor_slot")
+		widths.append(cursor_slot.custom_minimum_size.x)
+	for w in widths:
+		assert_eq(w, widths[0], "all grid slots should share the same cursor column width (got %s)" % str(widths))
+	assert_gt(widths[0], 0.0, "cursor column width should be non-zero")
+
+func test_grid_selected_slot_shows_cursor_glyph():
+	_formation._mode = 0
+	_formation._grid_index = 2
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	for i in range(slots.size()):
+		var cursor_label: Label = slots[i].get_meta("cursor_label")
+		if i == 2:
+			assert_true(cursor_label.visible, "slot %d should show cursor glyph" % i)
+			assert_eq(cursor_label.text, CursorMenuRow.CURSOR_GLYPH, "cursor label should display ▶ glyph")
+		else:
+			assert_false(cursor_label.visible, "slot %d should not show cursor glyph" % i)
+
+func test_grid_no_cursor_visible_when_in_waiting_mode():
+	_formation._mode = 1
+	_formation._grid_index = 0
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	for i in range(slots.size()):
+		var cursor_label: Label = slots[i].get_meta("cursor_label")
+		assert_false(cursor_label.visible, "no grid slot should show cursor when mode is waiting-list")

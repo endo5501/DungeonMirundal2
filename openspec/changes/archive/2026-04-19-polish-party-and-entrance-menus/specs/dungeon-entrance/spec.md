@@ -1,22 +1,4 @@
-## Purpose
-ダンジョン入口画面の一覧表示・新規生成・破棄および入場フローを規定する。DungeonRegistry との連携、空状態時の誘導表示、パーティ未編成時の入場抑止を対象とする。
-
-## Requirements
-
-### Requirement: Dungeon entrance displays dungeon list
-DungeonEntrance SHALL display a list of all dungeons from DungeonRegistry, showing each dungeon's name, map size (e.g. "16x16"), and exploration percentage. When DungeonRegistry is empty, the list area SHALL display the guidance message "まず「新規生成」でダンジョンを作成してください" in the normal enabled text color.
-
-#### Scenario: Empty list shows guidance message
-- **WHEN** DungeonRegistry has no dungeons
-- **THEN** the list area SHALL display "まず「新規生成」でダンジョンを作成してください" in the enabled (non-grayed) color
-
-#### Scenario: Multiple dungeons listed
-- **WHEN** DungeonRegistry has 3 dungeons
-- **THEN** all 3 dungeons SHALL be displayed with name, size, and exploration rate
-
-#### Scenario: Exploration rate display format
-- **WHEN** a dungeon has exploration rate 0.4
-- **THEN** it SHALL be displayed as "40%"
+## MODIFIED Requirements
 
 ### Requirement: Dungeon entrance has cursor selection
 `DungeonEntrance` SHALL provide keyboard-based cursor navigation that starts on the button row. The button row SHALL use Up/Down to move between `潜入する` / `新規生成` / `破棄` / `戻る`. The dungeon list SHALL be displayed alongside the buttons at all times as read-only information, and SHALL receive cursor focus only when the user activates `潜入する` or `破棄`. Up/Down keys SHALL move the cursor between dungeon entries while the list has focus. ESC while the dungeon list has focus SHALL return focus to the button row without triggering an action.
@@ -52,25 +34,6 @@ DungeonEntrance SHALL display a list of all dungeons from DungeonRegistry, showi
 - **WHEN** `DungeonRegistry` has at least one dungeon but the party has no members assigned
 - **THEN** `潜入する` SHALL be disabled
 
-### Requirement: Create new dungeon via dialog
-DungeonEntrance SHALL display a DungeonCreateDialog when "新規生成" is activated. The dialog SHALL allow selecting a size category (小/中/大) and editing a randomly generated name. Confirming the dialog SHALL create a new dungeon via DungeonRegistry.
-
-#### Scenario: Open create dialog
-- **WHEN** "新規生成" is activated
-- **THEN** DungeonCreateDialog SHALL be displayed with a random name and size selection defaulting to 中
-
-#### Scenario: Create dialog has editable name
-- **WHEN** DungeonCreateDialog is shown
-- **THEN** a text field SHALL contain a randomly generated name that the user can edit
-
-#### Scenario: Confirm creation adds dungeon
-- **WHEN** the user sets size to "大" and name to "試練の回廊" and confirms
-- **THEN** a new dungeon SHALL be added to DungeonRegistry with size_category LARGE and name "試練の回廊"
-
-#### Scenario: Cancel creation returns to list
-- **WHEN** the user cancels the create dialog
-- **THEN** no dungeon SHALL be created and the dungeon list SHALL be shown
-
 ### Requirement: Delete selected dungeon with confirmation
 `DungeonEntrance` SHALL require the user to first activate `破棄`, then move the cursor to the target dungeon entry in the dungeon list, then confirm with Enter. Upon Enter it SHALL display a confirmation dialog; confirming SHALL remove the dungeon from `DungeonRegistry`. After a confirmed deletion, focus SHALL return to the button row so that the `破棄` action must be explicitly re-selected to delete another dungeon. Cancelling the confirmation dialog SHALL leave the focus on the dungeon list so the user can pick a different target without re-selecting the action. `破棄` SHALL be disabled when `DungeonRegistry` is empty.
 
@@ -97,13 +60,6 @@ DungeonEntrance SHALL display a DungeonCreateDialog when "新規生成" is activ
 #### Scenario: Deleting the last dungeon does not leave list-for-delete focus
 - **WHEN** `DungeonRegistry` has exactly one dungeon and the user deletes it via the `破棄` flow
 - **THEN** after the confirmation dialog closes, the focus SHALL be on the button row, and a subsequent Enter SHALL NOT reopen the delete confirmation dialog
-
-### Requirement: Back button returns to town screen
-DungeonEntrance SHALL emit a `back_requested` signal when "戻る" is activated.
-
-#### Scenario: Back to town
-- **WHEN** the user activates "戻る"
-- **THEN** the `back_requested` signal SHALL be emitted
 
 ### Requirement: Initial focus adapts to empty dungeon registry
 When `setup()` is called with an empty `DungeonRegistry`, `DungeonEntrance` SHALL initialize the input focus on the button row with the cursor placed on `新規生成`, because `潜入する` and `破棄` are disabled in the empty state and `新規生成` is the first enabled button. When the registry has at least one dungeon, the initial cursor SHALL be placed on `潜入する` (the first button, which is enabled when the party has members).
