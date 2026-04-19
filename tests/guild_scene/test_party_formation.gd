@@ -160,8 +160,12 @@ func _find_cursor_rows(node: Node, out: Array) -> void:
 		if child.get_child_count() > 0:
 			_find_cursor_rows(child, out)
 
-func test_cursor_constant_uses_filled_triangle():
-	assert_eq(PartyFormation.CURSOR, "▶ ", "grid cursor should use '▶ ' prefix")
+func _find_grid_slots(node: Node, out: Array) -> void:
+	for child in node.get_children():
+		if child is HBoxContainer and child.has_meta("grid_slot_idx"):
+			out.append(child)
+		if child.get_child_count() > 0:
+			_find_grid_slots(child, out)
 
 func test_waiting_list_uses_cursor_menu_row():
 	var ch1 := _make_character("A")
@@ -206,18 +210,49 @@ func test_selected_waiting_row_is_marked_selected():
 	assert_false((rows[0] as CursorMenuRow).is_selected(), "first waiting row should not be selected")
 	assert_true((rows[1] as CursorMenuRow).is_selected(), "second waiting row should be selected (wait_index=1)")
 
-func test_grid_selected_slot_uses_triangle_prefix():
+func test_grid_renders_six_slots():
 	_formation._mode = 0
 	_formation._grid_index = 0
 	_formation._rebuild_display()
-	# Scan all labels in the content; the front-row label must contain "[▶ ---]" at position 0
-	var found := false
-	for child in _formation._content.get_children():
-		if child is Label:
-			var text := (child as Label).text
-			if text.begins_with("  前列:"):
-				assert_true(text.contains("[▶ "), "selected grid slot should use '▶ ' prefix; got '%s'" % text)
-				assert_false(text.contains("[> "), "grid should not use legacy '> ' prefix")
-				found = true
-				break
-	assert_true(found, "front-row grid label was not found")
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	assert_eq(slots.size(), 6, "grid should render 6 slots (2 rows x 3 positions)")
+
+func test_grid_slots_have_fixed_width_cursor_column():
+	_formation._mode = 0
+	_formation._grid_index = 0
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	assert_eq(slots.size(), 6)
+	var widths: Array = []
+	for slot in slots:
+		var cursor_slot: Control = slot.get_meta("cursor_slot")
+		widths.append(cursor_slot.custom_minimum_size.x)
+	for w in widths:
+		assert_eq(w, widths[0], "all grid slots should share the same cursor column width (got %s)" % str(widths))
+	assert_gt(widths[0], 0.0, "cursor column width should be non-zero")
+
+func test_grid_selected_slot_shows_cursor_glyph():
+	_formation._mode = 0
+	_formation._grid_index = 2
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	for i in range(slots.size()):
+		var cursor_label: Label = slots[i].get_meta("cursor_label")
+		if i == 2:
+			assert_true(cursor_label.visible, "slot %d should show cursor glyph" % i)
+			assert_eq(cursor_label.text, CursorMenuRow.CURSOR_GLYPH, "cursor label should display ▶ glyph")
+		else:
+			assert_false(cursor_label.visible, "slot %d should not show cursor glyph" % i)
+
+func test_grid_no_cursor_visible_when_in_waiting_mode():
+	_formation._mode = 1
+	_formation._grid_index = 0
+	_formation._rebuild_display()
+	var slots: Array = []
+	_find_grid_slots(_formation, slots)
+	for i in range(slots.size()):
+		var cursor_label: Label = slots[i].get_meta("cursor_label")
+		assert_false(cursor_label.visible, "no grid slot should show cursor when mode is waiting-list")

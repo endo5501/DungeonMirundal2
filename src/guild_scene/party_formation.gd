@@ -4,7 +4,7 @@ extends Control
 signal back_requested
 
 const FONT_SIZE := 18
-const CURSOR := "▶ "
+const GRID_CURSOR_SLOT_WIDTH := 20.0
 
 var _guild: Guild
 var _party_slots: Array = []
@@ -62,14 +62,7 @@ func _rebuild_display() -> void:
 	_add_section_label("パーティ")
 	var row_names := ["前列", "後列"]
 	for row in range(2):
-		var line := "  %s: " % row_names[row]
-		for pos in range(3):
-			var slot_idx := row * 3 + pos
-			var ch = _party_slots[slot_idx]
-			var name_str: String = ch.character_name if ch != null else "---"
-			var prefix := CURSOR if (_mode == 0 and _grid_index == slot_idx) else "  "
-			line += "[%s%s]  " % [prefix, name_str]
-		_add_label(line)
+		_build_grid_row(row, row_names[row])
 
 	_add_label("")
 	_add_section_label("待機中キャラクター")
@@ -86,6 +79,60 @@ func _rebuild_display() -> void:
 
 	_add_label("")
 	_add_hint("[↑↓←→] 選択  [Tab] パーティ/待機切替  [Enter] 追加/外す  [N] パーティ名変更  [Esc] 戻る")
+
+func _build_grid_row(row: int, row_name: String) -> void:
+	var row_box := HBoxContainer.new()
+	row_box.add_theme_constant_override("separation", 0)
+	_content.add_child(row_box)
+
+	var header := Label.new()
+	header.text = "  %s: " % row_name
+	header.add_theme_font_size_override("font_size", FONT_SIZE)
+	row_box.add_child(header)
+
+	for pos in range(3):
+		var slot_idx := row * 3 + pos
+		_build_grid_slot(row_box, slot_idx)
+		if pos < 2:
+			var sep := Label.new()
+			sep.text = "  "
+			sep.add_theme_font_size_override("font_size", FONT_SIZE)
+			row_box.add_child(sep)
+
+func _build_grid_slot(parent: Control, slot_idx: int) -> void:
+	var slot := HBoxContainer.new()
+	slot.add_theme_constant_override("separation", 0)
+	slot.set_meta("grid_slot_idx", slot_idx)
+	parent.add_child(slot)
+
+	var open := Label.new()
+	open.text = "["
+	open.add_theme_font_size_override("font_size", FONT_SIZE)
+	slot.add_child(open)
+
+	var cursor_slot := Control.new()
+	cursor_slot.custom_minimum_size = Vector2(GRID_CURSOR_SLOT_WIDTH, 0)
+	slot.add_child(cursor_slot)
+
+	var cursor_label := Label.new()
+	cursor_label.text = CursorMenuRow.CURSOR_GLYPH
+	cursor_label.add_theme_font_size_override("font_size", FONT_SIZE)
+	cursor_label.visible = _mode == 0 and _grid_index == slot_idx
+	cursor_slot.add_child(cursor_label)
+
+	slot.set_meta("cursor_slot", cursor_slot)
+	slot.set_meta("cursor_label", cursor_label)
+
+	var ch = _party_slots[slot_idx]
+	var name_label := Label.new()
+	name_label.text = ch.character_name if ch != null else "---"
+	name_label.add_theme_font_size_override("font_size", FONT_SIZE)
+	slot.add_child(name_label)
+
+	var close := Label.new()
+	close.text = "]"
+	close.add_theme_font_size_override("font_size", FONT_SIZE)
+	slot.add_child(close)
 
 func _add_label(text: String) -> void:
 	var label := Label.new()
