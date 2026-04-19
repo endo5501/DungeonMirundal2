@@ -5,7 +5,7 @@ signal enter_dungeon(index: int)
 signal back_requested
 
 enum Mode { LIST, CREATE_DIALOG, DELETE_CONFIRM }
-enum Focus { DUNGEON_LIST, BUTTONS }
+enum Focus { BUTTONS, LIST_FOR_ENTER, LIST_FOR_DELETE }
 
 const BUTTON_ITEMS: Array[String] = ["潜入する", "新規生成", "破棄", "戻る"]
 const FONT_SIZE := 18
@@ -14,7 +14,7 @@ var _registry: DungeonRegistry
 var _has_party: bool
 var selected_index: int = -1
 var _mode: Mode = Mode.LIST
-var _focus: Focus = Focus.DUNGEON_LIST
+var _focus: Focus = Focus.BUTTONS
 
 var _list_rows: Array[CursorMenuRow] = []
 var _button_menu: CursorMenu
@@ -31,11 +31,13 @@ func _init() -> void:
 func setup(registry: DungeonRegistry, has_party: bool) -> void:
 	_registry = registry
 	_has_party = has_party
+	_focus = Focus.BUTTONS
 	if _registry.size() > 0:
 		selected_index = 0
+		_button_menu.selected_index = 0  # 潜入する
 	else:
-		_focus = Focus.BUTTONS
-		_button_menu.selected_index = 1  # 新規生成
+		selected_index = -1
+		_button_menu.selected_index = 1  # 新規生成 (first enabled button when registry is empty)
 
 func _ready() -> void:
 	_vbox = VBoxContainer.new()
@@ -86,6 +88,17 @@ func _build_ui() -> void:
 	for i in range(BUTTON_ITEMS.size()):
 		_button_rows.append(CursorMenuRow.create(_vbox, BUTTON_ITEMS[i], FONT_SIZE))
 
+	var hint_spacer := Control.new()
+	hint_spacer.custom_minimum_size.y = 8
+	_vbox.add_child(hint_spacer)
+
+	var hint := Label.new()
+	hint.text = "[↑↓] 選択  [Enter] 決定  [Esc] 戻る"
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_vbox.add_child(hint)
+
 	_update_button_disabled()
 	_update_rows()
 
@@ -98,8 +111,9 @@ func _update_button_disabled() -> void:
 	_button_menu.disabled_indices = disabled
 
 func _update_rows() -> void:
+	var list_focused := _focus == Focus.LIST_FOR_ENTER or _focus == Focus.LIST_FOR_DELETE
 	for i in range(_list_rows.size()):
-		_list_rows[i].set_selected(_focus == Focus.DUNGEON_LIST and i == selected_index)
+		_list_rows[i].set_selected(list_focused and i == selected_index)
 
 	_button_menu.update_rows(_button_rows)
 
@@ -109,38 +123,54 @@ func _unhandled_input(event: InputEvent) -> void:
 			_handle_delete_confirm_input(event)
 		return
 
+	if _focus == Focus.BUTTONS:
+		_input_buttons(event)
+	else:
+		_input_list(event)
+
+func _input_buttons(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
-		if _focus == Focus.DUNGEON_LIST and _registry.size() > 0:
-			move_list_cursor(1)
-		elif _focus == Focus.BUTTONS:
-			_button_menu.move_cursor(1)
-		_update_button_disabled()
+		_button_menu.move_cursor(1)
 		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		if _focus == Focus.DUNGEON_LIST and _registry.size() > 0:
-			move_list_cursor(-1)
-		elif _focus == Focus.BUTTONS:
-			_button_menu.move_cursor(-1)
-		_update_button_disabled()
+		_button_menu.move_cursor(-1)
 		_update_rows()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		if _focus == Focus.BUTTONS:
-			_activate_button()
-		else:
-			_focus = Focus.BUTTONS
-			_button_menu.selected_index = 0
-			_update_button_disabled()
-			_update_rows()
+		_activate_button()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
-		if _focus == Focus.BUTTONS:
-			_focus = Focus.DUNGEON_LIST
-			_update_rows()
-		else:
-			do_back()
+		do_back()
 		get_viewport().set_input_as_handled()
+
+func _input_list(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_down"):
+		move_list_cursor(1)
+		_update_rows()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_up"):
+		move_list_cursor(-1)
+		_update_rows()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_commit_list_action()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_return_to_buttons()
+		get_viewport().set_input_as_handled()
+
+func _commit_list_action() -> void:
+	match _focus:
+		Focus.LIST_FOR_ENTER:
+			do_enter()
+			_return_to_buttons()
+		Focus.LIST_FOR_DELETE:
+			_show_delete_confirm()
+
+func _return_to_buttons() -> void:
+	_focus = Focus.BUTTONS
+	_update_rows()
 
 func _show_delete_confirm() -> void:
 	_mode = Mode.DELETE_CONFIRM
@@ -203,10 +233,18 @@ func _activate_button() -> void:
 	if _button_menu.is_disabled(_button_menu.selected_index):
 		return
 	match _button_menu.selected_index:
-		0: do_enter()
+		0: _begin_list_selection(Focus.LIST_FOR_ENTER)
 		1: _open_create_dialog()
-		2: _show_delete_confirm()
+		2: _begin_list_selection(Focus.LIST_FOR_DELETE)
 		3: do_back()
+
+func _begin_list_selection(target_focus: Focus) -> void:
+	if _registry.size() == 0:
+		return
+	if selected_index < 0 or selected_index >= _registry.size():
+		selected_index = 0
+	_focus = target_focus
+	_update_rows()
 
 func _open_create_dialog() -> void:
 	_create_dialog = DungeonCreateDialog.new()
@@ -244,10 +282,10 @@ func get_dungeon_count() -> int:
 	return _registry.size()
 
 func is_enter_disabled() -> bool:
-	return selected_index < 0 or not _has_party
+	return _registry == null or _registry.size() == 0 or not _has_party
 
 func is_delete_disabled() -> bool:
-	return selected_index < 0
+	return _registry == null or _registry.size() == 0
 
 func move_list_cursor(direction: int) -> void:
 	if _registry.size() == 0:
