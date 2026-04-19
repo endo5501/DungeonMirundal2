@@ -37,6 +37,8 @@ func _make_potion(power: int = 20) -> Item:
 	var e := HealHpEffect.new()
 	e.power = power
 	it.effect = e
+	var tc: Array[TargetCondition] = [AliveOnly.new(), NotFullHp.new()]
+	it.target_conditions = tc
 	return it
 
 
@@ -146,3 +148,47 @@ func test_command_menu_item_is_at_opt_item_index():
 	assert_eq(CombatCommandMenu.OPT_ITEM, 2)
 	assert_eq(CombatCommandMenu.OPTIONS[CombatCommandMenu.OPT_ITEM], "アイテム")
 	assert_eq(CombatCommandMenu.OPT_ESCAPE, 3)
+
+
+# --- atomicity: duplicate ItemCommand for same instance ---
+
+func test_two_commands_sharing_one_instance_only_apply_once():
+	var user_a := _StubActor.new("A", 40, 40, 20)
+	var user_b := _StubActor.new("B", 40, 40, 15)
+	var target := _StubActor.new("T", 10, 40, 10)
+	var dead_monster := _StubActor.new("M", 0, 40, 1)
+	var potion := _make_potion(20)
+	var inst := ItemInstance.new(potion, true)
+	var inv := Inventory.new()
+	inv.add(inst)
+	var engine := TurnEngine.new()
+	engine.inventory = inv
+	engine.start_battle([user_a, user_b, target], [dead_monster])
+	engine.submit_command(0, ItemCommand.new(user_a, inst, target))
+	engine.submit_command(1, ItemCommand.new(user_b, inst, target))
+	engine.submit_command(2, DefendCommand.new())
+	engine.resolve_turn(_make_rng())
+	# First use heals +20 (10 -> 30). Second use must NOT apply again.
+	assert_eq(target.hp, 30)
+	assert_false(inv.contains(inst))
+
+
+# --- atomicity: target no longer alive at resolution ---
+
+func test_item_is_not_consumed_when_target_is_dead_at_resolution():
+	var target := _StubActor.new("T", 0, 40, 10)  # already dead
+	var healer := _StubActor.new("H", 40, 40, 15)
+	var dead_monster := _StubActor.new("M", 0, 40, 1)
+	var potion := _make_potion(20)
+	var inst := ItemInstance.new(potion, true)
+	var inv := Inventory.new()
+	inv.add(inst)
+	var engine := TurnEngine.new()
+	engine.inventory = inv
+	engine.start_battle([healer, target], [dead_monster])
+	engine.submit_command(0, ItemCommand.new(healer, inst, target))
+	engine.submit_command(1, DefendCommand.new())
+	engine.resolve_turn(_make_rng())
+	# AliveOnly rechecked at resolution: target dead → instance not consumed, no "revive" heal.
+	assert_true(inv.contains(inst))
+	assert_eq(target.hp, 0)

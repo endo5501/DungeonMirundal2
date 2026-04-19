@@ -143,7 +143,7 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 		return ItemResolution.NORMAL
 	var item: Item = cmd.item_instance.item
 	var item_name: String = item.item_name if item != null else ""
-	if not actor.is_alive() or item == null or item.effect == null:
+	if not actor.is_alive():
 		cmd.cancelled = true
 		report.add_item_cancelled(actor, item_name)
 		return ItemResolution.NORMAL
@@ -151,14 +151,19 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 	if cmd.target != null:
 		targets.append(_character_of(cmd.target))
 	var ctx := ItemUseContext.make(true, true, [])
-	var result: ItemEffectResult = item.effect.apply(targets, ctx)
+	# Atomic validate-and-consume via Inventory; guards against duplicate ItemCommands
+	# pointing at the same instance and against target state changing mid-turn
+	# (e.g. AliveOnly now failing because the target was KO'd earlier in the order).
+	var result: ItemEffectResult
+	if inventory != null:
+		result = inventory.use_item(cmd.item_instance, targets, ctx)
+	elif item.effect != null:
+		result = item.effect.apply(targets, ctx)
 	if result == null or not result.success:
 		cmd.cancelled = true
 		report.add_item_cancelled(actor, item_name)
 		return ItemResolution.NORMAL
 	report.add_item_use(actor, item_name, cmd.target, result.message)
-	if inventory != null:
-		inventory.remove(cmd.item_instance)
 	if result.request_town_return:
 		return ItemResolution.TOWN_ESCAPE
 	return ItemResolution.NORMAL
