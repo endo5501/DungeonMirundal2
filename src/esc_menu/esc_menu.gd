@@ -155,6 +155,8 @@ func is_menu_visible() -> bool:
 func show_menu() -> void:
 	visible = true
 	_main_menu.selected_index = 0
+	_item_use_last_message = ""
+	_item_use_instance = null
 	_switch_view(View.MAIN_MENU)
 
 func hide_menu() -> void:
@@ -202,6 +204,7 @@ func go_back() -> void:
 		View.STATUS:
 			_switch_view(View.PARTY_MENU)
 		View.ITEMS:
+			_item_use_last_message = ""
 			_switch_view(View.PARTY_MENU)
 		View.ITEM_USE_TARGET:
 			_item_use_instance = null

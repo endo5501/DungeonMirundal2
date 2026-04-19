@@ -212,6 +212,41 @@ func test_select_sword_does_nothing():
 	assert_true(GameState.inventory.contains(inst))
 
 
+# --- message persistence regression ---
+
+func test_message_cleared_on_next_show_menu():
+	var potion := _make_potion()
+	GameState.inventory.add(ItemInstance.new(potion, true))
+	GameState.guild.register(_make_character("Aragorn", 10, 40))
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_items_view(menu)
+	menu._items_index = 0
+	menu.select_current_item()  # → target view
+	menu._item_use_target_index = 0
+	menu.select_current_item()  # consumes potion, sets message
+	assert_true(menu._item_use_last_message.length() > 0)
+	menu.hide_menu()
+	menu.show_menu()
+	assert_eq(menu._item_use_last_message, "")
+
+
+func test_message_cleared_when_leaving_items_view():
+	var potion := _make_potion()
+	GameState.inventory.add(ItemInstance.new(potion, true))
+	GameState.guild.register(_make_character("Aragorn", 10, 40))
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_items_view(menu)
+	menu._items_index = 0
+	menu.select_current_item()
+	menu._item_use_target_index = 0
+	menu.select_current_item()
+	# back from ITEMS
+	menu.go_back()
+	assert_eq(menu._item_use_last_message, "")
+
+
 # --- target condition: full-HP character ---
 
 func test_full_hp_target_is_blocked_with_message():
