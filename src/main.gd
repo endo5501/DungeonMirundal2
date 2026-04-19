@@ -50,6 +50,8 @@ func _on_encounter_finished(outcome: EncounterOutcome) -> void:
 			GameState.inventory.add_gold(outcome.gained_gold)
 		if outcome.result == EncounterOutcome.Result.WIPED:
 			_on_return_to_town()
+		elif outcome.request_town_return:
+			_on_return_to_town()
 
 # --- Screen switching ---
 

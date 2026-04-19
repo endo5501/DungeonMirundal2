@@ -71,30 +71,30 @@
 
 ## 8. 戦闘コマンド「アイテム」の追加
 
-- [ ] 8.1 `src/dungeon_scene/combat/combat_command_menu.gd` の `OPTIONS` を `["こうげき", "ぼうぎょ", "アイテム", "にげる"]` に変更
-- [ ] 8.2 「アイテム」選択時のフロー: 消費アイテム一覧 → context 失敗はグレーアウト → 対象選択 or 即確定 → ItemCommand コミット
-- [ ] 8.3 消費アイテム 0 のときに「アイテムがありません」メッセージを表示しコマンド未確定のまま CommandMenu に戻る
-- [ ] 8.4 `src/dungeon_scene/combat/commands/item_command.gd` を新規作成 (actor、item_instance、target、cancelled フラグ)
-- [ ] 8.5 TurnEngine の解決ループに ItemCommand を組み込む (すばやさ順、行動前 KO 判定でキャンセル、成功時 instance 削除 + ログ追加)
-- [ ] 8.6 EscapeToTownEffect 成功時は戦闘を ESCAPED で即終了し、残コマンドを破棄する
-- [ ] 8.7 GUT テスト: ItemCommand がすばやさ順で解決される (特別補正なし)
-- [ ] 8.8 GUT テスト: 使用者が行動前に KO → ItemCommand キャンセル、instance 残留、ログに記録
-- [ ] 8.9 GUT テスト: 戦闘中 emergency_escape_scroll → EncounterOutcome.ESCAPED、EXP/gold 0、instance 消費
-- [ ] 8.10 GUT テスト: 戦闘中の escape_scroll (NotInCombatOnly) はリストでグレーアウト
+- [x] 8.1 `src/dungeon_scene/combat/combat_command_menu.gd` の `OPTIONS` を `["こうげき", "ぼうぎょ", "アイテム", "にげる"]` に変更
+- [x] 8.2 「アイテム」選択時のフロー: 消費アイテム一覧 → context 失敗はグレーアウト → 対象選択 or 即確定 → ItemCommand コミット
+- [x] 8.3 消費アイテム 0 のときに「アイテムがありません」メッセージを表示しコマンド未確定のまま CommandMenu に戻る
+- [x] 8.4 `src/dungeon_scene/combat/commands/item_command.gd` を新規作成 (actor、item_instance、target、cancelled フラグ)
+- [x] 8.5 TurnEngine の解決ループに ItemCommand を組み込む (すばやさ順、行動前 KO 判定でキャンセル、成功時 instance 削除 + ログ追加)
+- [x] 8.6 EscapeToTownEffect 成功時は戦闘を ESCAPED で即終了し、残コマンドを破棄する
+- [x] 8.7 GUT テスト: ItemCommand がすばやさ順で解決される (特別補正なし)
+- [x] 8.8 GUT テスト: 使用者が行動前に KO → ItemCommand キャンセル、instance 残留、ログに記録
+- [x] 8.9 GUT テスト: 戦闘中 emergency_escape_scroll → EncounterOutcome.ESCAPED、EXP/gold 0、instance 消費
+- [x] 8.10 GUT テスト: 戦闘中の escape_scroll (NotInCombatOnly) はリストでグレーアウト
 - [ ] 8.11 手動確認: 戦闘でポーションを使って仲間を回復できる
 - [ ] 8.12 手動確認: 戦闘で緊急脱出の巻物を使うと戦闘終了 → 町メニュー入り口へ
 
 ## 9. 帰還遷移の共通化 (dungeon-return)
 
-- [ ] 9.1 `src/dungeon_scene/dungeon_screen.gd` の `return_to_town` 発火経路が EscapeToTownEffect からも呼ばれるようにフックを用意
-- [ ] 9.2 START タイル経路が無変更で機能することを GUT / scene テストで確認 (既存シナリオを維持)
-- [ ] 9.3 GUT テスト: EscapeToTownEffect (非戦闘) が `return_to_town` シグナルと同等の遷移を引き起こす
-- [ ] 9.4 GUT テスト: EscapeToTownEffect (戦闘中) は combat-overlay の ESCAPED 経由で同じ遷移先に到達する
+- [x] 9.1 `src/dungeon_scene/dungeon_screen.gd` の `return_to_town` 発火経路が EscapeToTownEffect からも呼ばれるようにフックを用意
+- [x] 9.2 START タイル経路が無変更で機能することを GUT / scene テストで確認 (既存シナリオを維持)
+- [x] 9.3 GUT テスト: EscapeToTownEffect (非戦闘) が `return_to_town` シグナルと同等の遷移を引き起こす
+- [x] 9.4 GUT テスト: EscapeToTownEffect (戦闘中) は combat-overlay の ESCAPED 経由で同じ遷移先に到達する
 
 ## 10. 統合確認 + クリーンアップ
 
-- [ ] 10.1 プロジェクト全体の GUT テスト (`gut`) が通ることを確認
-- [ ] 10.2 `openspec validate add-consumable-items --strict` が通ることを確認
+- [x] 10.1 プロジェクト全体の GUT テスト (`gut`) が通ることを確認
+- [x] 10.2 `openspec validate add-consumable-items --strict` が通ることを確認
 - [ ] 10.3 既存セーブファイル (あれば) でロードしてインベントリが破損しないことを手動確認
 - [ ] 10.4 E2E 手動確認シナリオ: ショップで 4 アイテム購入 → 非戦闘でポーション/マジックポーション/脱出の巻物を使用 → ダンジョンで戦闘 → 戦闘中にポーション/緊急脱出の巻物を使用
 - [ ] 10.5 変更をコミット (英語コミットメッセージ、TDD の流れでテスト先行の区切りでコミット)

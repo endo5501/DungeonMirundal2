@@ -43,3 +43,26 @@ func add_defeated(actor: CombatActor) -> void:
 		"damage": 0,
 		"defended": false,
 	})
+
+
+func add_item_use(actor: CombatActor, item_name: String, target: CombatActor, message: String) -> void:
+	actions.append({
+		"type": "item_use",
+		"attacker_name": actor.actor_name if actor != null else "",
+		"target_name": target.actor_name if target != null else "",
+		"item_name": item_name,
+		"message": message,
+		"damage": 0,
+		"defended": false,
+	})
+
+
+func add_item_cancelled(actor: CombatActor, item_name: String) -> void:
+	actions.append({
+		"type": "item_cancelled",
+		"attacker_name": actor.actor_name if actor != null else "",
+		"target_name": "",
+		"item_name": item_name,
+		"damage": 0,
+		"defended": false,
+	})

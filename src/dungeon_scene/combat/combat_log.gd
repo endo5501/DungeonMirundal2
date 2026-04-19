@@ -82,5 +82,14 @@ func _format_action(action: Dictionary) -> String:
 			return "逃走に失敗した"
 		"defeated":
 			return "%s は倒れた" % target
+		"item_use":
+			var item_name: String = action.get("item_name", "")
+			var message: String = action.get("message", "")
+			if target.length() > 0:
+				return "%s は %s を使った！ %s" % [attacker, item_name, message]
+			return "%s は %s を使った！ %s" % [attacker, item_name, message]
+		"item_cancelled":
+			var cancelled_item: String = action.get("item_name", "")
+			return "%s は 行動不能で %s を使えなかった" % [attacker, cancelled_item]
 		_:
 			return ""
