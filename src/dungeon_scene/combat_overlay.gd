@@ -5,13 +5,16 @@ enum Phase {
 	IDLE,
 	COMMAND_MENU,
 	TARGET_SELECT,
+	ITEM_SELECT,
+	ITEM_TARGET,
 	RESOLVING,
 	RESULT,
 }
 
-const _OPT_ATTACK: int = 0
-const _OPT_DEFEND: int = 1
-const _OPT_ESCAPE: int = 2
+const _OPT_ATTACK: int = CombatCommandMenu.OPT_ATTACK
+const _OPT_DEFEND: int = CombatCommandMenu.OPT_DEFEND
+const _OPT_ITEM: int = CombatCommandMenu.OPT_ITEM
+const _OPT_ESCAPE: int = CombatCommandMenu.OPT_ESCAPE
 
 signal party_state_changed
 
@@ -27,6 +30,8 @@ var _current_actor_index: int = 0
 var _monster_panel: CombatMonsterPanel
 var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
+var _item_selector: CombatItemSelector
+var _pending_item_instance: ItemInstance = null
 var _combat_log: CombatLog
 var _result_panel: CombatResultPanel
 # Cached separately from TurnEngine._outcome because unit tests call
@@ -53,6 +58,7 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	var party_combatants := _build_party_combatants()
 	var monster_combatants := _build_monster_combatants(monster_party)
 	_turn_engine = TurnEngine.new()
+	_turn_engine.inventory = GameState.inventory if GameState != null else null
 	_turn_engine.start_battle(party_combatants, monster_combatants)
 	_is_active = true
 	visible = true
@@ -102,12 +108,33 @@ func command_menu_select(option_index: int) -> void:
 
 
 func target_select(target_index: int) -> void:
-	if _current_phase != Phase.TARGET_SELECT:
+	if _current_phase != Phase.TARGET_SELECT and _current_phase != Phase.ITEM_TARGET:
 		return
 	var targets: Array = _target_selector.get_targets()
 	if target_index < 0 or target_index >= targets.size():
 		return
 	_handle_target_choice(targets[target_index])
+
+
+func item_select(item_index: int) -> void:
+	# Test/UI convenience: pick an item by index in the selector's entries.
+	if _current_phase != Phase.ITEM_SELECT or _item_selector == null:
+		return
+	var entries: Array = _item_selector.get_entries()
+	if item_index < 0 or item_index >= entries.size():
+		return
+	var entry: Dictionary = entries[item_index]
+	if not entry.usable:
+		return
+	_on_item_selector_item_selected(entry.instance)
+
+
+func get_item_selector() -> CombatItemSelector:
+	return _item_selector
+
+
+func get_pending_item_instance() -> ItemInstance:
+	return _pending_item_instance
 
 
 # --- phases ---
@@ -143,12 +170,89 @@ func _handle_command_choice(option_index: int) -> void:
 		_OPT_DEFEND:
 			_turn_engine.submit_command(_current_actor_index, DefendCommand.new())
 			_advance_to_next_actor()
+		_OPT_ITEM:
+			_open_item_selector()
 		_OPT_ESCAPE:
 			_turn_engine.submit_command(_current_actor_index, EscapeCommand.new())
 			_advance_to_next_actor()
 
 
+func _open_item_selector() -> void:
+	var inv: Inventory = GameState.inventory if GameState != null else null
+	var ctx := ItemUseContext.make(true, true, [])
+	if _item_selector == null or inv == null or _consumable_count(inv) == 0:
+		if _combat_log != null:
+			_combat_log.append_line("アイテムがありません")
+		# Stay in command menu: do not hide or advance.
+		return
+	_current_phase = Phase.ITEM_SELECT
+	_command_menu.hide_menu()
+	_item_selector.show_with(inv, ctx)
+
+
+func _consumable_count(inv: Inventory) -> int:
+	var count := 0
+	for inst in inv.list():
+		if inst.item != null and inst.item.is_consumable():
+			count += 1
+	return count
+
+
+func _on_item_selector_item_selected(instance: ItemInstance) -> void:
+	_pending_item_instance = instance
+	if instance.item.target_conditions.is_empty():
+		_commit_item_command(null)
+		return
+	_current_phase = Phase.ITEM_TARGET
+	_item_selector.hide_selector()
+	var valid_targets: Array = _valid_item_targets(instance)
+	if valid_targets.is_empty():
+		if _combat_log != null:
+			_combat_log.append_line("有効な対象がいない")
+		_pending_item_instance = null
+		_current_phase = Phase.COMMAND_MENU
+		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		return
+	_target_selector.show_with(valid_targets)
+
+
+func _on_item_selector_cancelled() -> void:
+	_pending_item_instance = null
+	_item_selector.hide_selector()
+	_current_phase = Phase.COMMAND_MENU
+	_command_menu.show_for(_turn_engine.party[_current_actor_index])
+
+
+func _valid_item_targets(instance: ItemInstance) -> Array:
+	var result: Array = []
+	if instance == null or instance.item == null:
+		return result
+	var ctx := ItemUseContext.make(true, true, [])
+	for pc in _turn_engine.party:
+		if pc == null:
+			continue
+		var ch = pc.character if pc is PartyCombatant else pc
+		if instance.item.get_target_failure_reason(ch, ctx) == "":
+			result.append(pc)
+	return result
+
+
+func _commit_item_command(target: CombatActor) -> void:
+	if _pending_item_instance == null:
+		return
+	var actor: CombatActor = _turn_engine.party[_current_actor_index]
+	var cmd := ItemCommand.new(actor, _pending_item_instance, target)
+	_turn_engine.submit_command(_current_actor_index, cmd)
+	_pending_item_instance = null
+	if _item_selector != null:
+		_item_selector.hide_selector()
+	_advance_to_next_actor()
+
+
 func _handle_target_choice(target: CombatActor) -> void:
+	if _pending_item_instance != null:
+		_commit_item_command(target)
+		return
 	_turn_engine.submit_command(_current_actor_index, AttackCommand.new(target))
 	_target_selector.hide_selector()
 	_advance_to_next_actor()
@@ -289,6 +393,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _handle_command_menu_key(key)
 		Phase.TARGET_SELECT:
 			handled = _handle_target_select_key(key)
+		Phase.ITEM_SELECT:
+			handled = _handle_item_select_key(key)
+		Phase.ITEM_TARGET:
+			handled = _handle_target_select_key(key)
 		Phase.RESULT:
 			handled = _handle_result_key(key)
 		_:
@@ -323,6 +431,23 @@ func _handle_target_select_key(key: InputEventKey) -> bool:
 			return true
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			target_select(_target_selector.get_selected_index())
+			return true
+	return false
+
+
+func _handle_item_select_key(key: InputEventKey) -> bool:
+	match key.keycode:
+		KEY_UP, KEY_W:
+			_item_selector.move_up()
+			return true
+		KEY_DOWN, KEY_S:
+			_item_selector.move_down()
+			return true
+		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+			_item_selector.confirm_current()
+			return true
+		KEY_ESCAPE:
+			_on_item_selector_cancelled()
 			return true
 	return false
 
@@ -385,6 +510,13 @@ func _build_combat_ui() -> void:
 	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
 	_target_selector.visible = false
 	add_child(_target_selector)
+
+	_item_selector = CombatItemSelector.new()
+	_place(_item_selector, 0.15, 0.32, 0.55, 0.62)
+	_item_selector.visible = false
+	_item_selector.item_selected.connect(_on_item_selector_item_selected)
+	_item_selector.cancelled.connect(_on_item_selector_cancelled)
+	add_child(_item_selector)
 
 	_result_panel = CombatResultPanel.new()
 	_place(_result_panel, 0.20, 0.25, 0.80, 0.60)

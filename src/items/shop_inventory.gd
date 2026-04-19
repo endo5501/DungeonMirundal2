@@ -9,7 +9,7 @@ static func from_repository(repository: ItemRepository) -> ShopInventory:
 	if repository == null:
 		return shop
 	for item in repository.all():
-		if item.equip_slot != Item.EquipSlot.NONE:
+		if item.is_equipment() or item.is_consumable():
 			shop._items.append(item)
 	shop._items.sort_custom(func(a: Item, b: Item) -> bool: return a.price < b.price)
 	return shop

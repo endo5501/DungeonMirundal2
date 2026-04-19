@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="Item" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+[ext_resource type="Script" path="res://src/items/effects/heal_mp_effect.gd" id="2"]
+[ext_resource type="Script" path="res://src/items/conditions/alive_only.gd" id="3"]
+[ext_resource type="Script" path="res://src/items/conditions/has_mp_slot.gd" id="4"]
+[ext_resource type="Script" path="res://src/items/conditions/not_full_mp.gd" id="5"]
+
+[sub_resource type="Resource" id="HealMp_magic_potion"]
+script = ExtResource("2")
+power = 10
+
+[sub_resource type="Resource" id="AliveOnly_magic_potion"]
+script = ExtResource("3")
+
+[sub_resource type="Resource" id="HasMpSlot_magic_potion"]
+script = ExtResource("4")
+
+[sub_resource type="Resource" id="NotFullMp_magic_potion"]
+script = ExtResource("5")
+
+[resource]
+script = ExtResource("1")
+item_id = &"magic_potion"
+item_name = "マジックポーション"
+unidentified_name = "青い薬"
+category = 7
+equip_slot = 0
+allowed_jobs = Array[StringName]([])
+attack_bonus = 0
+defense_bonus = 0
+agility_bonus = 0
+price = 200
+effect = SubResource("HealMp_magic_potion")
+context_conditions = Array[Resource]([])
+target_conditions = Array[Resource]([SubResource("AliveOnly_magic_potion"), SubResource("HasMpSlot_magic_potion"), SubResource("NotFullMp_magic_potion")])

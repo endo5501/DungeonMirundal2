@@ -16,6 +16,7 @@ func _ready() -> void:
 	_esc_menu.quit_to_title.connect(_on_quit_to_title)
 	_esc_menu.save_requested.connect(_on_save_requested)
 	_esc_menu.load_requested.connect(_on_load_requested)
+	_esc_menu.return_to_town_requested.connect(_on_return_to_town)
 	add_child(_esc_menu)
 	_show_title_screen()
 
@@ -48,6 +49,8 @@ func _on_encounter_finished(outcome: EncounterOutcome) -> void:
 		if outcome.gained_gold > 0 and GameState.inventory != null:
 			GameState.inventory.add_gold(outcome.gained_gold)
 		if outcome.result == EncounterOutcome.Result.WIPED:
+			_on_return_to_town()
+		elif outcome.request_town_return:
 			_on_return_to_town()
 
 # --- Screen switching ---

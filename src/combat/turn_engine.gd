@@ -8,11 +8,17 @@ enum State {
 	FINISHED,
 }
 
+enum ItemResolution {
+	NORMAL,
+	TOWN_ESCAPE,
+}
+
 var state: State = State.IDLE
 var party: Array = []  # Array[PartyCombatant or CombatActor-compatible]
 var monsters: Array = []  # Array[MonsterCombatant or CombatActor-compatible]
 var turn_number: int = 0
 var escape_threshold: float = 0.5
+var inventory: Inventory = null  # Optional; set to remove consumed ItemCommand instances
 
 var _pending_commands: Dictionary = {}  # int index -> Command
 var _outcome: EncounterOutcome
@@ -80,9 +86,8 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 	all_actors.append_array(monsters)
 	var order: Array = TurnOrder.order(all_actors, rng)
 
+	var early_escape_town := false
 	for actor in order:
-		if not actor.is_alive():
-			continue
 		if _is_party_member(actor):
 			if any_escape and not escape_succeeded:
 				# Party offense forfeited on failed escape.
@@ -91,15 +96,32 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if idx < 0:
 				continue
 			var cmd = _pending_commands.get(idx, null)
+			if cmd is ItemCommand:
+				var handled := _resolve_item(actor, cmd as ItemCommand, report)
+				if handled == ItemResolution.TOWN_ESCAPE:
+					early_escape_town = true
+					break
+				continue
+			if not actor.is_alive():
+				continue
 			if cmd is AttackCommand:
 				_resolve_attack(actor, cmd.target, rng, report)
 		else:
+			if not actor.is_alive():
+				continue
 			var target: CombatActor = _pick_living_party(rng)
 			if target != null:
 				_resolve_attack(actor, target, rng, report)
 		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
 			break
+
+	if early_escape_town:
+		_finish(EncounterOutcome.Result.ESCAPED)
+		if _outcome != null:
+			_outcome.request_town_return = true
+		_end_turn_cleanup()
+		return report
 
 	_end_turn_cleanup()
 
@@ -114,6 +136,43 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 		state = State.COMMAND_INPUT
 
 	return report
+
+
+func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> ItemResolution:
+	if cmd == null or cmd.item_instance == null:
+		return ItemResolution.NORMAL
+	var item: Item = cmd.item_instance.item
+	var item_name: String = item.item_name if item != null else ""
+	if not actor.is_alive():
+		cmd.cancelled = true
+		report.add_item_cancelled(actor, item_name)
+		return ItemResolution.NORMAL
+	var targets: Array = []
+	if cmd.target != null:
+		targets.append(_character_of(cmd.target))
+	var ctx := ItemUseContext.make(true, true, [])
+	# Atomic validate-and-consume via Inventory; guards against duplicate ItemCommands
+	# pointing at the same instance and against target state changing mid-turn
+	# (e.g. AliveOnly now failing because the target was KO'd earlier in the order).
+	var result: ItemEffectResult
+	if inventory != null:
+		result = inventory.use_item(cmd.item_instance, targets, ctx)
+	elif item.effect != null:
+		result = item.effect.apply(targets, ctx)
+	if result == null or not result.success:
+		cmd.cancelled = true
+		report.add_item_cancelled(actor, item_name)
+		return ItemResolution.NORMAL
+	report.add_item_use(actor, item_name, cmd.target, result.message)
+	if result.request_town_return:
+		return ItemResolution.TOWN_ESCAPE
+	return ItemResolution.NORMAL
+
+
+func _character_of(combatant: CombatActor):
+	if combatant is PartyCombatant:
+		return (combatant as PartyCombatant).character
+	return combatant
 
 
 func _resolve_attack(attacker: CombatActor, target: CombatActor, rng: RandomNumberGenerator, report: TurnReport) -> void:

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="Item" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+[ext_resource type="Script" path="res://src/items/effects/heal_hp_effect.gd" id="2"]
+[ext_resource type="Script" path="res://src/items/conditions/alive_only.gd" id="3"]
+[ext_resource type="Script" path="res://src/items/conditions/not_full_hp.gd" id="4"]
+
+[sub_resource type="Resource" id="HealHp_potion"]
+script = ExtResource("2")
+power = 20
+
+[sub_resource type="Resource" id="AliveOnly_potion"]
+script = ExtResource("3")
+
+[sub_resource type="Resource" id="NotFullHp_potion"]
+script = ExtResource("4")
+
+[resource]
+script = ExtResource("1")
+item_id = &"potion"
+item_name = "ポーション"
+unidentified_name = "怪しい薬"
+category = 7
+equip_slot = 0
+allowed_jobs = Array[StringName]([])
+attack_bonus = 0
+defense_bonus = 0
+agility_bonus = 0
+price = 50
+effect = SubResource("HealHp_potion")
+context_conditions = Array[Resource]([])
+target_conditions = Array[Resource]([SubResource("AliveOnly_potion"), SubResource("NotFullHp_potion")])

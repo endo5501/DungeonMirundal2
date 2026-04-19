@@ -1,7 +1,11 @@
 class_name CombatCommandMenu
 extends Control
 
-const OPTIONS: Array[String] = ["こうげき", "ぼうぎょ", "にげる"]
+const OPTIONS: Array[String] = ["こうげき", "ぼうぎょ", "アイテム", "にげる"]
+const OPT_ATTACK: int = 0
+const OPT_DEFEND: int = 1
+const OPT_ITEM: int = 2
+const OPT_ESCAPE: int = 3
 
 signal command_selected(index: int)
 

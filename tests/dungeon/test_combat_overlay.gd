@@ -233,15 +233,16 @@ func test_dead_party_member_is_skipped_in_command_input():
 	assert_eq(current.actor_name, "P2")
 
 
-func test_command_menu_has_three_options():
+func test_command_menu_has_four_options():
 	var overlay := CombatOverlay.new()
 	add_child_autofree(overlay)
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var options := overlay.get_command_menu_options()
-	assert_eq(options.size(), 3)
+	assert_eq(options.size(), 4)
 	assert_true("こうげき" in options)
 	assert_true("ぼうぎょ" in options)
+	assert_true("アイテム" in options)
 	assert_true("にげる" in options)
 
 
