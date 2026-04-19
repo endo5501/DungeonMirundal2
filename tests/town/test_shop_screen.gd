@@ -178,3 +178,101 @@ func test_esc_in_sell_mode_returns_to_top_and_consumes_event():
 	assert_eq(s.get_mode(), ShopScreen.Mode.TOP_MENU)
 	assert_true(get_viewport().is_input_handled(),
 		"ui_cancel in SELL must consume the event to avoid leaking ESC to the global menu")
+
+
+# --- consumable tab ---
+
+func _make_consumable_item(id: StringName, name: String, price: int) -> Item:
+	var item := Item.new()
+	item.item_id = id
+	item.item_name = name
+	item.category = Item.ItemCategory.CONSUMABLE
+	item.equip_slot = Item.EquipSlot.NONE
+	item.price = price
+	var effect := HealHpEffect.new()
+	effect.power = 20
+	item.effect = effect
+	return item
+
+
+func _register_consumables() -> void:
+	_repo.register(_make_consumable_item(&"potion", "ポーション", 50))
+	_shop_inventory = ShopInventory.from_repository(_repo)
+
+
+func test_buy_tab_equipment_only_shows_equipment():
+	_register_consumables()
+	var s := _make_screen()
+	s.enter_buy()
+	s.set_active_tab(ShopScreen.Tab.EQUIPMENT)
+	var catalog := s.get_buy_catalog()
+	var ids: Array = []
+	for it in catalog:
+		ids.append(it.item_id)
+	assert_false(ids.has(&"potion"))
+	assert_true(ids.has(&"mid"))
+
+
+func test_buy_tab_consumable_only_shows_consumables():
+	_register_consumables()
+	var s := _make_screen()
+	s.enter_buy()
+	s.set_active_tab(ShopScreen.Tab.CONSUMABLE)
+	var catalog := s.get_buy_catalog()
+	var ids: Array = []
+	for it in catalog:
+		ids.append(it.item_id)
+	assert_true(ids.has(&"potion"))
+	assert_false(ids.has(&"mid"))
+
+
+func test_buy_consumable_creates_identified_instance():
+	_register_consumables()
+	_inventory.gold = 500
+	var s := _make_screen()
+	var potion := _repo.find(&"potion")
+	assert_true(s.buy(potion))
+	assert_eq(_inventory.gold, 450)
+	assert_eq(_inventory.list().size(), 1)
+	assert_true(_inventory.list()[0].identified)
+	assert_eq(_inventory.list()[0].item, potion)
+
+
+func test_sell_tab_consumable_lists_consumable_instances():
+	_register_consumables()
+	_inventory.gold = 0
+	var potion_inst := ItemInstance.new(_repo.find(&"potion"), true)
+	_inventory.add(potion_inst)
+	var mid_inst := ItemInstance.new(_repo.find(&"mid"), true)
+	_inventory.add(mid_inst)
+	var s := _make_screen()
+	s.enter_sell()
+	s.set_active_tab(ShopScreen.Tab.CONSUMABLE)
+	var candidates := s.get_sell_candidates()
+	assert_true(candidates.has(potion_inst))
+	assert_false(candidates.has(mid_inst))
+
+
+func test_sell_consumable_adds_half_price_gold():
+	_register_consumables()
+	_inventory.gold = 0
+	var inst := ItemInstance.new(_repo.find(&"potion"), true)
+	_inventory.add(inst)
+	var s := _make_screen()
+	assert_true(s.sell(inst))
+	assert_eq(_inventory.gold, 25)  # 50 / 2
+	assert_false(_inventory.contains(inst))
+
+
+func test_left_right_toggles_tab_in_buy():
+	_register_consumables()
+	var s := _make_screen()
+	s.enter_buy()
+	assert_eq(s.get_active_tab(), ShopScreen.Tab.EQUIPMENT)
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_RIGHT
+	ev.pressed = true
+	s._input_buy(ev)
+	assert_eq(s.get_active_tab(), ShopScreen.Tab.CONSUMABLE)
+	s._input_buy(ev)
+	assert_eq(s.get_active_tab(), ShopScreen.Tab.EQUIPMENT)

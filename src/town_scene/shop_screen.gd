@@ -4,12 +4,14 @@ extends Control
 signal back_requested
 
 enum Mode { TOP_MENU, BUY, SELL }
+enum Tab { EQUIPMENT, CONSUMABLE }
 
 const TOP_MENU_ITEMS: Array[String] = ["購入する", "売却する", "出る"]
 const TOP_IDX_BUY: int = 0
 const TOP_IDX_SELL: int = 1
 const TOP_IDX_EXIT: int = 2
 const FONT_SIZE: int = 18
+const TAB_LABELS: Array[String] = ["装備品", "消費アイテム"]
 
 var _inventory: Inventory
 var _guild: Guild
@@ -17,6 +19,7 @@ var _shop_inventory: ShopInventory
 
 var _top_menu: CursorMenu
 var _mode: Mode = Mode.TOP_MENU
+var _tab: Tab = Tab.EQUIPMENT
 var _selected_index: int = 0
 var _last_message: String = ""
 
@@ -59,10 +62,32 @@ func get_last_message() -> String:
 	return _last_message
 
 
+func get_active_tab() -> Tab:
+	return _tab
+
+
+func set_active_tab(tab: Tab) -> void:
+	_tab = tab
+	_selected_index = 0
+
+
+func _item_matches_tab(item: Item, tab: Tab) -> bool:
+	match tab:
+		Tab.EQUIPMENT:
+			return item.equip_slot != Item.EquipSlot.NONE
+		Tab.CONSUMABLE:
+			return item.category == Item.ItemCategory.CONSUMABLE
+	return false
+
+
 func get_buy_catalog() -> Array[Item]:
+	var results: Array[Item] = []
 	if _shop_inventory == null:
-		return []
-	return _shop_inventory.list()
+		return results
+	for item in _shop_inventory.list():
+		if _item_matches_tab(item, _tab):
+			results.append(item)
+	return results
 
 
 func get_sell_candidates() -> Array[ItemInstance]:
@@ -71,8 +96,12 @@ func get_sell_candidates() -> Array[ItemInstance]:
 		return results
 	var equipped := _equipped_instance_set()
 	for inst in _inventory.list():
-		if not equipped.has(inst):
-			results.append(inst)
+		if not _item_matches_tab(inst.item, _tab):
+			continue
+		# Equipment-only: skip equipped items. Consumables are never equipped.
+		if _tab == Tab.EQUIPMENT and equipped.has(inst):
+			continue
+		results.append(inst)
 	return results
 
 
@@ -134,6 +163,9 @@ func _rebuild() -> void:
 	spacer.custom_minimum_size.y = 12
 	_root.add_child(spacer)
 
+	if _mode == Mode.BUY or _mode == Mode.SELL:
+		_render_tab_bar()
+
 	match _mode:
 		Mode.TOP_MENU: _render_top_menu()
 		Mode.BUY: _render_buy()
@@ -145,6 +177,28 @@ func _rebuild() -> void:
 		msg.add_theme_font_size_override("font_size", 14)
 		msg.add_theme_color_override("font_color", Color(0.9, 0.7, 0.4))
 		_root.add_child(msg)
+
+
+func _render_tab_bar() -> void:
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 12)
+	for i in range(TAB_LABELS.size()):
+		var tab_label := Label.new()
+		tab_label.add_theme_font_size_override("font_size", FONT_SIZE)
+		var is_active: bool = (i == int(_tab))
+		var text := TAB_LABELS[i]
+		tab_label.text = "[%s]" % text if is_active else " %s " % text
+		if is_active:
+			tab_label.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+		else:
+			tab_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		bar.add_child(tab_label)
+	_root.add_child(bar)
+	var hint := Label.new()
+	hint.add_theme_font_size_override("font_size", 12)
+	hint.text = "←/→ でタブ切替"
+	hint.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
+	_root.add_child(hint)
 
 
 func _render_top_menu() -> void:
@@ -215,7 +269,17 @@ func _input_top(event: InputEventKey) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _toggle_tab() -> void:
+	_tab = Tab.CONSUMABLE if _tab == Tab.EQUIPMENT else Tab.EQUIPMENT
+	_selected_index = 0
+
+
 func _input_buy(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		_toggle_tab()
+		_rebuild()
+		get_viewport().set_input_as_handled()
+		return
 	var count := get_buy_catalog().size()
 	if event.is_action_pressed("ui_down") and count > 0:
 		_selected_index = (_selected_index + 1) % count
@@ -238,6 +302,11 @@ func _input_buy(event: InputEventKey) -> void:
 
 
 func _input_sell(event: InputEventKey) -> void:
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		_toggle_tab()
+		_rebuild()
+		get_viewport().set_input_as_handled()
+		return
 	var candidates := get_sell_candidates()
 	var count := candidates.size()
 	if event.is_action_pressed("ui_down") and count > 0:
@@ -263,11 +332,13 @@ func _input_sell(event: InputEventKey) -> void:
 
 func enter_buy() -> void:
 	_mode = Mode.BUY
+	_tab = Tab.EQUIPMENT
 	_selected_index = 0
 	_rebuild()
 
 
 func enter_sell() -> void:
 	_mode = Mode.SELL
+	_tab = Tab.EQUIPMENT
 	_selected_index = 0
 	_rebuild()

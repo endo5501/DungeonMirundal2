@@ -47,25 +47,25 @@
 
 ## 6. ショップ対応 (ShopInventory + ShopScreen)
 
-- [ ] 6.1 `src/items/shop_inventory.gd` のフィルタを「装備品 OR CONSUMABLE」に書き換える (既存の `equip_slot != NONE` を拡張)
-- [ ] 6.2 `src/shop/shop_screen.gd` にカテゴリタブ UI ([装備品]/[消費アイテム]) を追加、現在タブに応じて一覧をフィルタ
-- [ ] 6.3 Buy フローが消費アイテム購入でも identified=true の ItemInstance を生成することを確認 (既存コード流用)
-- [ ] 6.4 Sell フローが消費アイテムを売却可能にし、装備中チェックは装備品のみに適用されることを確認
-- [ ] 6.5 GUT テスト: ShopInventory が CONSUMABLE を含む
-- [ ] 6.6 GUT テスト: 消費アイテム購入で identified=true の instance がインベントリに追加される
-- [ ] 6.7 GUT テスト: 消費アイテムを売却すると gold が price/2 増加する (scene テストまたは shop_screen 単体)
+- [x] 6.1 `src/items/shop_inventory.gd` のフィルタを「装備品 OR CONSUMABLE」に書き換える (既存の `equip_slot != NONE` を拡張)
+- [x] 6.2 `src/shop/shop_screen.gd` にカテゴリタブ UI ([装備品]/[消費アイテム]) を追加、現在タブに応じて一覧をフィルタ
+- [x] 6.3 Buy フローが消費アイテム購入でも identified=true の ItemInstance を生成することを確認 (既存コード流用)
+- [x] 6.4 Sell フローが消費アイテムを売却可能にし、装備中チェックは装備品のみに適用されることを確認
+- [x] 6.5 GUT テスト: ShopInventory が CONSUMABLE を含む
+- [x] 6.6 GUT テスト: 消費アイテム購入で identified=true の instance がインベントリに追加される
+- [x] 6.7 GUT テスト: 消費アイテムを売却すると gold が price/2 増加する (scene テストまたは shop_screen 単体)
 - [ ] 6.8 手動確認: ShopScreen でタブ切替、装備品のみ/消費アイテムのみの表示を確認
 
 ## 7. ESC メニュー: アイテム使用フロー
 
-- [ ] 7.1 `src/esc_menu/esc_menu.gd` のアイテムビューに「使う」アクションを追加 (消費アイテム行のみ)
-- [ ] 7.2 Context 条件失敗時の行グレーアウト表示 + reason 表示を実装
-- [ ] 7.3 対象条件ありの消費アイテムに対して対象選択サブビューを実装 (パーティメンバーを列挙、target_conditions 失敗はグレーアウト)
-- [ ] 7.4 対象条件なしの消費アイテムに「使いますか？」確認ダイアログを表示
-- [ ] 7.5 確定時に `Inventory.use_item(instance, targets, ctx)` を呼び出し、結果に応じて一覧を refresh / メッセージ表示
-- [ ] 7.6 `escape_scroll` 成功時に `return_to_town` シグナル経路を発火する
-- [ ] 7.7 GUT テスト: 消費アイテム行に使用アクションが現れる / 装備品行には現れない
-- [ ] 7.8 GUT テスト: ポーション使用で HP が回復し、成功時にインベントリから除去される
+- [x] 7.1 `src/esc_menu/esc_menu.gd` のアイテムビューに「使う」アクションを追加 (消費アイテム行のみ)
+- [x] 7.2 Context 条件失敗時の行グレーアウト表示 + reason 表示を実装
+- [x] 7.3 対象条件ありの消費アイテムに対して対象選択サブビューを実装 (パーティメンバーを列挙、target_conditions 失敗はグレーアウト)
+- [x] 7.4 対象条件なしの消費アイテムに「使いますか？」確認ダイアログを表示
+- [x] 7.5 確定時に `Inventory.use_item(instance, targets, ctx)` を呼び出し、結果に応じて一覧を refresh / メッセージ表示
+- [x] 7.6 `escape_scroll` 成功時に `return_to_town` シグナル経路を発火する
+- [x] 7.7 GUT テスト: 消費アイテム行に使用アクションが現れる / 装備品行には現れない
+- [x] 7.8 GUT テスト: ポーション使用で HP が回復し、成功時にインベントリから除去される
 - [ ] 7.9 手動確認: ダンジョン内で脱出の巻物を使用して町に戻れる
 - [ ] 7.10 手動確認: 町で脱出の巻物を使おうとするとグレー表示で理由が出る
 

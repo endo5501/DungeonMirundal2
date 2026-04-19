@@ -16,6 +16,7 @@ func _ready() -> void:
 	_esc_menu.quit_to_title.connect(_on_quit_to_title)
 	_esc_menu.save_requested.connect(_on_save_requested)
 	_esc_menu.load_requested.connect(_on_load_requested)
+	_esc_menu.return_to_town_requested.connect(_on_return_to_town)
 	add_child(_esc_menu)
 	_show_title_screen()
 
