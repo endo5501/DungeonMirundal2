@@ -45,3 +45,52 @@ func test_exploration_rate_full():
 		for x in range(8):
 			dd.explored_map.mark_visited(Vector2i(x, y))
 	assert_almost_eq(dd.get_exploration_rate(), 1.0, 0.001)
+
+# --- reset_to_start ---
+
+func _start_tile_position(dd: DungeonData) -> Vector2i:
+	for y in range(dd.wiz_map.map_size):
+		for x in range(dd.wiz_map.map_size):
+			if dd.wiz_map.cell(x, y).tile == TileType.START:
+				return Vector2i(x, y)
+	return Vector2i(-1, -1)
+
+func test_reset_to_start_returns_player_to_start_tile():
+	var dd := _create_dungeon_data()
+	var start_pos := _start_tile_position(dd)
+	# Move player elsewhere
+	dd.player_state.position = start_pos + Vector2i(2, 3)
+	dd.player_state.facing = Direction.SOUTH
+	dd.reset_to_start()
+	assert_eq(dd.player_state.position, start_pos)
+	assert_eq(dd.player_state.facing, Direction.NORTH)
+
+func test_reset_to_start_preserves_explored_map():
+	var dd := _create_dungeon_data()
+	dd.explored_map.mark_visited(Vector2i(1, 1))
+	dd.explored_map.mark_visited(Vector2i(2, 2))
+	var before_count := dd.explored_map.get_visited_count()
+	var before_dict := dd.explored_map.to_dict()
+	dd.reset_to_start()
+	assert_eq(dd.explored_map.get_visited_count(), before_count)
+	assert_eq(dd.explored_map.to_dict(), before_dict)
+
+func test_reset_to_start_preserves_identity_fields():
+	var dd := _create_dungeon_data("守護者の塔", 1234, 16)
+	var before_wiz_map := dd.wiz_map
+	dd.reset_to_start()
+	assert_eq(dd.dungeon_name, "守護者の塔")
+	assert_eq(dd.seed_value, 1234)
+	assert_eq(dd.map_size, 16)
+	assert_same(dd.wiz_map, before_wiz_map)
+
+func test_reset_to_start_is_idempotent():
+	var dd := _create_dungeon_data()
+	var start_pos := _start_tile_position(dd)
+	dd.player_state.position = start_pos + Vector2i(1, 0)
+	dd.reset_to_start()
+	var pos_after_first := dd.player_state.position
+	var facing_after_first := dd.player_state.facing
+	dd.reset_to_start()
+	assert_eq(dd.player_state.position, pos_after_first)
+	assert_eq(dd.player_state.facing, facing_after_first)

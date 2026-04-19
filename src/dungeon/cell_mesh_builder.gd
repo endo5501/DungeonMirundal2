@@ -20,6 +20,12 @@ static var WALL_COLOR := Color(0.7, 0.7, 0.65)
 static var DOOR_COLOR := Color(0.6, 0.35, 0.1)
 static var FLOOR_COLOR := Color(0.15, 0.15, 0.2)
 static var CEILING_COLOR := Color(0.1, 0.1, 0.15)
+static var STAIRS_COLOR := Color(0.55, 0.5, 0.4)
+
+const STAIRS_COUNT := 3
+const STAIRS_MAX_HEIGHT := 1.0
+const STAIRS_WIDTH_MARGIN := 0.5
+const STAIRS_DEPTH := 0.3
 
 func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 	var faces: Array = []
@@ -56,7 +62,42 @@ func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 		Vector3(x1, y1, z1), Vector3(x0, y1, z1)]
 	faces.append(Face.new("ceiling", ceil_verts, Vector3(0, -1, 0), CEILING_COLOR))
 
+	if cell.tile == TileType.START:
+		_add_stairs_up(faces, x0, z0)
+
 	return faces
+
+func _add_stairs_up(faces: Array, x0: float, z0: float) -> void:
+	var x_lo := x0 + STAIRS_WIDTH_MARGIN
+	var x_hi := x0 + CELL_SIZE - STAIRS_WIDTH_MARGIN
+	# Stairs occupy the northern half of the cell; front (closest to the player
+	# approaching from the south) is step 0 at the cell's midline.
+	var z_mid := z0 + CELL_SIZE * 0.5
+	for i in range(STAIRS_COUNT):
+		var y_top := STAIRS_MAX_HEIGHT * float(i + 1) / float(STAIRS_COUNT)
+		var y_prev := STAIRS_MAX_HEIGHT * float(i) / float(STAIRS_COUNT)
+		var z_front := z_mid - float(i) * STAIRS_DEPTH
+		var z_back := z_mid - float(i + 1) * STAIRS_DEPTH
+		# Top (tread) faces +Y
+		faces.append(Face.new("stairs_up_top_%d" % i,
+			[Vector3(x_lo, y_top, z_front), Vector3(x_hi, y_top, z_front),
+				Vector3(x_hi, y_top, z_back), Vector3(x_lo, y_top, z_back)],
+			Vector3(0, 1, 0), STAIRS_COLOR))
+		# Riser (front face) faces +Z (toward the player approaching from south)
+		faces.append(Face.new("stairs_up_riser_%d" % i,
+			[Vector3(x_lo, y_prev, z_front), Vector3(x_hi, y_prev, z_front),
+				Vector3(x_hi, y_top, z_front), Vector3(x_lo, y_top, z_front)],
+			Vector3(0, 0, 1), STAIRS_COLOR))
+		# East side face (+X)
+		faces.append(Face.new("stairs_up_east_%d" % i,
+			[Vector3(x_hi, y_prev, z_front), Vector3(x_hi, y_prev, z_back),
+				Vector3(x_hi, y_top, z_back), Vector3(x_hi, y_top, z_front)],
+			Vector3(1, 0, 0), STAIRS_COLOR))
+		# West side face (-X)
+		faces.append(Face.new("stairs_up_west_%d" % i,
+			[Vector3(x_lo, y_prev, z_back), Vector3(x_lo, y_prev, z_front),
+				Vector3(x_lo, y_top, z_front), Vector3(x_lo, y_top, z_back)],
+			Vector3(-1, 0, 0), STAIRS_COLOR))
 
 func _add_wall_face(faces: Array, cell: Cell, dir: int, dir_name: String,
 		verts: Array[Vector3], normal: Vector3) -> void:

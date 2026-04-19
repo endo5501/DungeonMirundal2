@@ -26,6 +26,9 @@ static func _find_start(wiz_map: WizMap) -> Vector2i:
 				return Vector2i(x, y)
 	return Vector2i(0, 0)
 
+func reset_to_start() -> void:
+	player_state = PlayerState.new(_find_start(wiz_map), Direction.NORTH)
+
 func to_dict() -> Dictionary:
 	return {
 		"dungeon_name": dungeon_name,

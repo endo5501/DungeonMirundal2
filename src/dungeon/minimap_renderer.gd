@@ -12,6 +12,7 @@ static var COLOR_FLOOR := Color8(102, 102, 89)
 static var COLOR_WALL := Color8(178, 178, 178)
 static var COLOR_DOOR := Color8(153, 102, 51)
 static var COLOR_PLAYER := Color8(51, 204, 51)
+static var COLOR_START := Color8(230, 204, 51)
 static var COLOR_BG := Color8(0, 0, 0)
 
 func render(wiz_map: WizMap, explored_map: ExploredMap, player_state: PlayerState) -> Image:
@@ -47,6 +48,15 @@ func _draw_cell(img: Image, wiz_map: WizMap, explored_map: ExploredMap,
 		var edge := wiz_map.get_edge(cx, cy, dir)
 		var color := _edge_color(edge, cx, cy, dir, explored_map)
 		_draw_edge_line(img, vx, vy, dir, color)
+
+	if wiz_map.cell(cx, cy).tile == TileType.START:
+		_draw_start_marker(img, vx, vy)
+
+func _draw_start_marker(img: Image, vx: int, vy: int) -> void:
+	var mx := vx * STRIDE + WALL_PX + 1
+	var fy := vy * STRIDE + WALL_PX
+	for dy in range(CELL_PX):
+		img.set_pixel(mx, fy + dy, COLOR_START)
 
 func _edge_color(edge: int, cx: int, cy: int, dir: int, explored_map: ExploredMap) -> Color:
 	if edge == EdgeType.WALL:
