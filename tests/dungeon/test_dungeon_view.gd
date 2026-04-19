@@ -124,24 +124,82 @@ func test_lateral_cells_at_player_blocked_by_wall():
 	assert_false(cells.has(Vector2i(4, 5)), "left blocked at player depth")
 	assert_true(cells.has(Vector2i(6, 5)), "right still open at player depth")
 
-func test_near_side_wall_occludes_deeper_side_cells():
+func test_near_side_wall_blocks_only_its_own_lateral():
 	var wm = _create_open_map(10)
-	# wall on left at depth 1 should block left at depth 2+
+	# A wall on the west edge of the cell at depth 1 hides that particular
+	# left cell, but lateral openings at deeper cells are checked per-depth
+	# and so remain visible (the depth buffer handles the actual occlusion).
 	wm.set_edge(5, 4, Direction.WEST, EdgeType.WALL)
 	var dv = DungeonView.new()
 	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
-	assert_false(cells.has(Vector2i(4, 4)), "depth 1 left blocked")
-	assert_false(cells.has(Vector2i(4, 3)), "depth 2 left also blocked by nearer wall")
-	assert_false(cells.has(Vector2i(4, 2)), "depth 3 left also blocked")
+	assert_false(cells.has(Vector2i(4, 4)), "depth 1 left blocked by its own wall")
+	assert_true(cells.has(Vector2i(4, 3)), "depth 2 left visible via opening at its own depth")
+	assert_true(cells.has(Vector2i(4, 2)), "depth 3 left visible via opening at its own depth")
 	# right side unaffected
 	assert_true(cells.has(Vector2i(6, 4)), "depth 1 right still visible")
 	assert_true(cells.has(Vector2i(6, 3)), "depth 2 right still visible")
 
-func test_near_right_wall_occludes_deeper_right_cells():
+func test_near_right_wall_blocks_only_its_own_lateral():
 	var wm = _create_open_map(10)
 	wm.set_edge(5, 4, Direction.EAST, EdgeType.WALL)
 	var dv = DungeonView.new()
 	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
-	assert_false(cells.has(Vector2i(6, 4)), "depth 1 right blocked")
-	assert_false(cells.has(Vector2i(6, 3)), "depth 2 right also blocked")
+	assert_false(cells.has(Vector2i(6, 4)), "depth 1 right blocked by its own wall")
+	assert_true(cells.has(Vector2i(6, 3)), "depth 2 right visible via opening at its own depth")
+	assert_true(cells.has(Vector2i(6, 2)), "depth 3 right visible via opening at its own depth")
 	assert_true(cells.has(Vector2i(4, 4)), "depth 1 left still visible")
+
+func test_lateral_blocks_only_at_its_own_depth():
+	# Explicit coverage of the "branch becomes visible via opening" case.
+	var wm = _create_open_map(10)
+	wm.set_edge(5, 4, Direction.WEST, EdgeType.WALL)   # blocks (4, 4)
+	wm.set_edge(5, 3, Direction.WEST, EdgeType.WALL)   # blocks (4, 3)
+	# (5, 2) keeps its OPEN west edge from the default map
+	var dv = DungeonView.new()
+	var cells = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH)
+	assert_false(cells.has(Vector2i(4, 4)))
+	assert_false(cells.has(Vector2i(4, 3)))
+	assert_true(cells.has(Vector2i(4, 2)), "branch at depth 3 visible again")
+
+
+# --- fill_openings (used for rendering to prevent pitch-black voids) ---
+
+func test_fill_openings_adds_one_hop_through_open_edges():
+	# Player at (5, 5) facing N in a fully-open map. Without fill_openings,
+	# the far lateral column (3, 5), (7, 5) stays out of the view. With
+	# fill_openings, those become visible as renderable filler.
+	var wm = _create_open_map(10)
+	var dv = DungeonView.new()
+	var strict = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, false, false)
+	var filled = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, false, true)
+	assert_false(strict.has(Vector2i(3, 5)), "strict view stops at 1 cell lateral")
+	assert_true(filled.has(Vector2i(3, 5)), "fill_openings reaches +2 lateral via open hop")
+	assert_true(filled.has(Vector2i(7, 5)), "fill_openings reaches -2 lateral via open hop")
+
+
+func test_fill_openings_does_not_cross_walls():
+	# A wall should still block the flood.
+	var wm = WizMap.new(10)  # all walls by default
+	var dv = DungeonView.new()
+	var filled = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, false, true)
+	assert_eq(filled.size(), 1, "no flood across walls; only the player cell")
+
+
+func test_fill_openings_flood_only_follows_open_edges():
+	# Doors are handled by the main pass (can_move sees through them when
+	# block_doors is false); the flood itself uses only OPEN edges so it
+	# does not expand the render set further through a door chain.
+	var wm = WizMap.new(10)
+	wm.set_edge(5, 5, Direction.NORTH, EdgeType.DOOR)
+	wm.set_edge(5, 4, Direction.WEST, EdgeType.DOOR)
+	var dv = DungeonView.new()
+	var filled = dv.get_visible_cells(wm, Vector2i(5, 5), Direction.NORTH, false, true)
+	# (5, 4) is added by the main pass through the forward DOOR.
+	assert_true(filled.has(Vector2i(5, 4)))
+	# (4, 4) reached only via a lateral DOOR from (5, 4): depth-1 lateral
+	# uses can_move which traverses doors, so it IS included.
+	assert_true(filled.has(Vector2i(4, 4)))
+	# However a farther cell reachable only through another door from
+	# (4, 4) should NOT be flood-added because flood requires OPEN.
+	# Here (3, 4) is walled off from (4, 4), so it stays out.
+	assert_false(filled.has(Vector2i(3, 4)))

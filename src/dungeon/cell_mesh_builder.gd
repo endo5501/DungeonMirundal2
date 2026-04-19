@@ -16,11 +16,19 @@ class Face:
 		normal = n
 		color = c
 
-static var WALL_COLOR := Color(0.7, 0.7, 0.65)
-static var DOOR_COLOR := Color(0.6, 0.35, 0.1)
-static var FLOOR_COLOR := Color(0.15, 0.15, 0.2)
-static var CEILING_COLOR := Color(0.1, 0.1, 0.15)
-static var STAIRS_COLOR := Color(0.55, 0.5, 0.4)
+# Vertex color alpha carries a surface-kind flag for the dungeon shader:
+# STONE_ALPHA (1.0) is the default stone / stairs / floor / ceiling path
+# and WOOD_ALPHA (0.5) switches the shader to the wooden-plank pattern.
+# The ShaderMaterial is opaque (no blending / transparency render_mode),
+# so the alpha channel is data only and never affects the rendered alpha.
+const STONE_ALPHA := 1.0
+const WOOD_ALPHA := 0.5
+
+static var WALL_COLOR := Color(0.55, 0.53, 0.48, STONE_ALPHA)
+static var DOOR_COLOR := Color(0.45, 0.28, 0.12, WOOD_ALPHA)
+static var FLOOR_COLOR := Color(0.28, 0.26, 0.24, STONE_ALPHA)
+static var CEILING_COLOR := Color(0.20, 0.19, 0.22, STONE_ALPHA)
+static var STAIRS_COLOR := Color(0.48, 0.42, 0.34, STONE_ALPHA)
 
 const STAIRS_COUNT := 3
 const STAIRS_MAX_HEIGHT := CELL_HEIGHT * 0.5

@@ -2,11 +2,12 @@ class_name DungeonScene
 extends Node3D
 
 const EYE_HEIGHT := 1.0
+const DUNGEON_SHADER := preload("res://src/dungeon_scene/dungeon_wall.gdshader")
 
 var _camera: Camera3D
 var _mesh_instance: MeshInstance3D
 var _mesh: ImmediateMesh
-var _material: StandardMaterial3D
+var _material: ShaderMaterial
 var _dungeon_view: DungeonView
 var _cell_mesh_builder: CellMeshBuilder
 
@@ -22,14 +23,33 @@ func _ready() -> void:
 	_camera.fov = 75.0
 	add_child(_camera)
 
+	var torch := OmniLight3D.new()
+	torch.light_color = Color(1.0, 0.88, 0.65)
+	torch.light_energy = 4.0
+	torch.omni_range = 10.0
+	torch.omni_attenuation = 0.8
+	_camera.add_child(torch)
+
+	var world_env := WorldEnvironment.new()
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color.BLACK
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.08, 0.08, 0.10)
+	env.ambient_light_energy = 2.0
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.03, 0.03, 0.05)
+	env.fog_density = 0.02
+	world_env.environment = env
+	add_child(world_env)
+
 	_mesh = ImmediateMesh.new()
-	_material = StandardMaterial3D.new()
-	_material.vertex_color_use_as_albedo = true
-	_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_material = ShaderMaterial.new()
+	_material.shader = DUNGEON_SHADER
 
 	_mesh_instance = MeshInstance3D.new()
 	_mesh_instance.mesh = _mesh
+	_mesh_instance.material_override = _material
 	add_child(_mesh_instance)
 
 func refresh(visible_cells: Array[Vector2i] = []) -> void:
@@ -38,7 +58,7 @@ func refresh(visible_cells: Array[Vector2i] = []) -> void:
 	if visible_cells.size() > 0:
 		_cached_visible_cells = visible_cells
 	else:
-		_cached_visible_cells = _dungeon_view.get_visible_cells(
+		_cached_visible_cells = _dungeon_view.get_render_cells(
 			wiz_map, player_state.position, player_state.facing)
 	_update_camera()
 	_rebuild_mesh()
@@ -67,4 +87,3 @@ func _rebuild_mesh() -> void:
 				_mesh.surface_add_vertex(f.vertices[vi])
 
 	_mesh.surface_end()
-	_mesh_instance.set_surface_override_material(0, _material)

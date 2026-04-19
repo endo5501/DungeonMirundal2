@@ -62,10 +62,10 @@ func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap
 	_refresh_all()
 
 func _refresh_all() -> void:
-	var render_cells := _dungeon_view.get_visible_cells(
+	var render_cells := _dungeon_view.get_render_cells(
 		_wiz_map, _player_state.position, _player_state.facing)
-	var explore_cells := _dungeon_view.get_visible_cells(
-		_wiz_map, _player_state.position, _player_state.facing, true)
+	var explore_cells := _dungeon_view.get_explored_cells(
+		_wiz_map, _player_state.position, _player_state.facing)
 	_explored_map.mark_visible(explore_cells)
 	_dungeon_scene.refresh(render_cells)
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
