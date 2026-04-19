@@ -34,10 +34,11 @@ func setup(registry: DungeonRegistry, has_party: bool) -> void:
 	_focus = Focus.BUTTONS
 	if _registry.size() > 0:
 		selected_index = 0
-		_button_menu.selected_index = 0  # 潜入する
+		_button_menu.selected_index = 0
 	else:
 		selected_index = -1
-		_button_menu.selected_index = 1  # 新規生成 (first enabled button when registry is empty)
+		# Skip disabled 潜入する (index 0) and 破棄 (index 2); land on 新規生成 instead.
+		_button_menu.selected_index = 1
 
 func _ready() -> void:
 	_vbox = VBoxContainer.new()
@@ -88,19 +89,22 @@ func _build_ui() -> void:
 	for i in range(BUTTON_ITEMS.size()):
 		_button_rows.append(CursorMenuRow.create(_vbox, BUTTON_ITEMS[i], FONT_SIZE))
 
-	var hint_spacer := Control.new()
-	hint_spacer.custom_minimum_size.y = 8
-	_vbox.add_child(hint_spacer)
+	_add_hint("[↑↓] 選択  [Enter] 決定  [Esc] 戻る")
+
+	_update_button_disabled()
+	_update_rows()
+
+func _add_hint(text: String) -> void:
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 8
+	_vbox.add_child(spacer)
 
 	var hint := Label.new()
-	hint.text = "[↑↓] 選択  [Enter] 決定  [Esc] 戻る"
+	hint.text = text
 	hint.add_theme_font_size_override("font_size", 14)
 	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_vbox.add_child(hint)
-
-	_update_button_disabled()
-	_update_rows()
 
 func _update_button_disabled() -> void:
 	var disabled: Array[int] = []
