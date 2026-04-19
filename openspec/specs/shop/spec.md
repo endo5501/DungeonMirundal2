@@ -4,7 +4,7 @@
 ## Requirements
 
 ### Requirement: ShopScreen is a town sub-screen with a fixed single-shop catalog
-The system SHALL provide a `ShopScreen` (Control) that the player enters from TownScreen by selecting 「商店」. ShopScreen SHALL present a fixed, single-shop catalog sourced from a `ShopInventory` (RefCounted) that returns the same list of `Item` definitions for every visit.
+The system SHALL provide a `ShopScreen` (Control) that the player enters from TownScreen by selecting 「商店」. ShopScreen SHALL present a fixed, single-shop catalog sourced from a `ShopInventory` (RefCounted) that returns the same list of `Item` definitions for every visit. The catalog SHALL include both equipment items and consumable items. Equipment items SHALL be those Items whose `equip_slot != EquipSlot.NONE`; consumable items SHALL be those Items whose `category == ItemCategory.CONSUMABLE`. Items with `category == OTHER` and `equip_slot == NONE` SHALL be excluded.
 
 #### Scenario: Entering the shop from town
 - **WHEN** the player selects 「商店」 on TownScreen
@@ -13,6 +13,10 @@ The system SHALL provide a `ShopScreen` (Control) that the player enters from To
 #### Scenario: Shop catalog is fixed across visits
 - **WHEN** the player opens ShopScreen twice in a single game session with no purchases in between
 - **THEN** the listed items SHALL be identical in both visits
+
+#### Scenario: ShopInventory includes consumables
+- **WHEN** `ShopInventory.get_stock()` is invoked on a repository containing `potion` (CONSUMABLE) and `long_sword` (WEAPON)
+- **THEN** the returned list SHALL contain both items
 
 ### Requirement: ShopScreen offers Buy, Sell, and Exit modes
 The system SHALL provide a top-level menu on ShopScreen with three entries: 「購入する」, 「売却する」, 「出る」. The player SHALL freely switch between Buy and Sell, and SHALL return to TownScreen via 「出る」 or ESC.
@@ -26,6 +30,8 @@ The system SHALL allow the player to purchase any item listed in `ShopInventory`
 - spend exactly `item.price` gold via `Inventory.spend_gold`
 - create a new `ItemInstance` with `identified == true` wrapping the selected `Item`
 - add that instance to `GameState.inventory`
+
+This rule SHALL apply identically to equipment items and to consumable items.
 
 Items with price greater than current gold SHALL be visually marked as unaffordable and SHALL NOT be purchasable (selection attempt produces an informational message, no state change).
 
@@ -41,10 +47,16 @@ Items with price greater than current gold SHALL be visually marked as unafforda
 - **WHEN** any purchase succeeds
 - **THEN** the newly added `ItemInstance` SHALL have `identified == true`
 
+#### Scenario: Consumable purchase creates identified consumable
+- **WHEN** the player buys a `potion` (CONSUMABLE) with sufficient gold
+- **THEN** the added ItemInstance SHALL have `identified == true` and its `item.category` SHALL be `CONSUMABLE`
+
 ### Requirement: Sell transaction pays half the item price and removes the instance
 The system SHALL allow the player to sell any `ItemInstance` currently in `GameState.inventory` that is NOT equipped on any party character. A successful sale SHALL:
 - remove the instance from `GameState.inventory`
 - add `floor(item.price / 2)` gold to `GameState.inventory.gold`
+
+Consumable items SHALL always be sellable (they cannot be equipped). Equipped checks SHALL apply only to equipment items.
 
 Items that are currently equipped on any party member SHALL NOT be listed as sellable (or SHALL be filtered out of the sell menu), and selection attempts SHALL be prevented.
 
@@ -64,6 +76,10 @@ Items that are currently equipped on any party member SHALL NOT be listed as sel
 - **WHEN** a sale succeeds for instance `X`
 - **THEN** `GameState.inventory.contains(X)` SHALL return `false`
 
+#### Scenario: Consumables are always sellable
+- **WHEN** a consumable ItemInstance exists in `GameState.inventory`
+- **THEN** the sell list SHALL include that instance regardless of any party member's Equipment state
+
 ### Requirement: ShopScreen has no identify service in MVP
 The system SHALL NOT provide an identify / 鑑定 action on ShopScreen during the MVP phase. All items in the shop SHALL be sold as already-identified.
 
@@ -74,3 +90,27 @@ The system SHALL NOT provide an identify / 鑑定 action on ShopScreen during th
 #### Scenario: Shop items are pre-identified
 - **WHEN** any item is purchased from the shop
 - **THEN** the resulting ItemInstance SHALL have `identified == true`
+
+### Requirement: ShopScreen categorizes the catalog via tabs
+
+The system SHALL display the shop catalog under two category tabs: **[装備品]** and **[消費アイテム]**. The active tab SHALL determine which items are listed below. Switching tabs SHALL change only the displayed item list; it SHALL NOT alter gold, inventory, or the selected sub-mode (Buy/Sell).
+
+#### Scenario: Buy mode shows tab bar
+- **WHEN** the player enters Buy mode
+- **THEN** the screen SHALL display a tab bar with `[装備品]` and `[消費アイテム]`, with one tab marked active
+
+#### Scenario: Equipment tab shows only equippable items
+- **WHEN** the player selects the `[装備品]` tab in Buy mode
+- **THEN** the listed items SHALL be exactly those from `ShopInventory.get_stock()` whose `equip_slot != EquipSlot.NONE`
+
+#### Scenario: Consumable tab shows only consumable items
+- **WHEN** the player selects the `[消費アイテム]` tab in Buy mode
+- **THEN** the listed items SHALL be exactly those from `ShopInventory.get_stock()` whose `category == ItemCategory.CONSUMABLE`
+
+#### Scenario: Sell mode also uses the tab bar
+- **WHEN** the player enters Sell mode
+- **THEN** the tab bar SHALL be displayed, and each tab SHALL list only inventory items of its corresponding kind (equippable vs. consumable)
+
+#### Scenario: Tab selection is input-driven
+- **WHEN** the player presses the tab-switch input (e.g., Left/Right on the tab bar, or Tab key) on the shop
+- **THEN** the active tab SHALL toggle and the item list below SHALL refresh accordingly
