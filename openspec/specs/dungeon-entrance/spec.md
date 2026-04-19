@@ -19,26 +19,38 @@ DungeonEntrance SHALL display a list of all dungeons from DungeonRegistry, showi
 - **THEN** it SHALL be displayed as "40%"
 
 ### Requirement: Dungeon entrance has cursor selection
-DungeonEntrance SHALL provide keyboard-based cursor navigation for the dungeon list. Up/Down keys SHALL move the cursor between dungeon entries.
+`DungeonEntrance` SHALL provide keyboard-based cursor navigation that starts on the button row. The button row SHALL use Up/Down to move between `潜入する` / `新規生成` / `破棄` / `戻る`. The dungeon list SHALL be displayed alongside the buttons at all times as read-only information, and SHALL receive cursor focus only when the user activates `潜入する` or `破棄`. Up/Down keys SHALL move the cursor between dungeon entries while the list has focus. ESC while the dungeon list has focus SHALL return focus to the button row without triggering an action.
 
-#### Scenario: Cursor navigates dungeon list
-- **WHEN** the cursor is on the first dungeon and Down is pressed
-- **THEN** the cursor SHALL move to the second dungeon
+#### Scenario: Initial focus is on the button row
+- **WHEN** `DungeonEntrance` is shown with at least one registered dungeon
+- **THEN** the focus SHALL be on the button row (not the dungeon list), and the dungeon list SHALL still be visible as information
+
+#### Scenario: Activating 潜入 moves focus to the dungeon list
+- **WHEN** the user activates `潜入する` from the button row
+- **THEN** focus SHALL move to the dungeon list and Up/Down keys SHALL move the list cursor
+
+#### Scenario: Activating 破棄 moves focus to the dungeon list
+- **WHEN** the user activates `破棄` from the button row
+- **THEN** focus SHALL move to the dungeon list and Up/Down keys SHALL move the list cursor
+
+#### Scenario: ESC in list focus returns to the button row
+- **WHEN** the dungeon list has focus (after activating `潜入する` or `破棄`) and the user presses ESC
+- **THEN** focus SHALL return to the button row with the same button still selected, and no action SHALL be executed
 
 ### Requirement: Enter dungeon with selected dungeon
-DungeonEntrance SHALL emit an `enter_dungeon` signal with the selected DungeonData index when "潜入する" is activated. This button SHALL be disabled when no dungeon is selected or when the party has no members.
+`DungeonEntrance` SHALL emit an `enter_dungeon` signal with the selected `DungeonData` index after the user activates `潜入する`, moves the cursor to the desired dungeon entry in the dungeon list, and confirms with Enter. `潜入する` SHALL be disabled when `DungeonRegistry` is empty or when the party has no members.
 
 #### Scenario: Enter selected dungeon
-- **WHEN** a dungeon is selected in the list and the party has members and "潜入する" is activated
-- **THEN** the `enter_dungeon` signal SHALL be emitted with the selected dungeon index
+- **WHEN** the user activates `潜入する`, moves the cursor to a dungeon entry, and presses Enter, with at least one member in the party
+- **THEN** the `enter_dungeon` signal SHALL be emitted with the index of the cursor-pointed dungeon
 
-#### Scenario: Enter disabled with no selection
-- **WHEN** no dungeon is selected in the list
-- **THEN** "潜入する" SHALL be disabled
+#### Scenario: 潜入 disabled with empty registry
+- **WHEN** `DungeonRegistry` is empty
+- **THEN** `潜入する` SHALL be disabled and activating it SHALL have no effect
 
-#### Scenario: Enter disabled with empty party
-- **WHEN** a dungeon is selected but the party has no members assigned
-- **THEN** "潜入する" SHALL be disabled
+#### Scenario: 潜入 disabled with empty party
+- **WHEN** `DungeonRegistry` has at least one dungeon but the party has no members assigned
+- **THEN** `潜入する` SHALL be disabled
 
 ### Requirement: Create new dungeon via dialog
 DungeonEntrance SHALL display a DungeonCreateDialog when "新規生成" is activated. The dialog SHALL allow selecting a size category (小/中/大) and editing a randomly generated name. Confirming the dialog SHALL create a new dungeon via DungeonRegistry.
@@ -60,19 +72,31 @@ DungeonEntrance SHALL display a DungeonCreateDialog when "新規生成" is activ
 - **THEN** no dungeon SHALL be created and the dungeon list SHALL be shown
 
 ### Requirement: Delete selected dungeon with confirmation
-DungeonEntrance SHALL display a confirmation dialog when "破棄" is activated with a dungeon selected. Confirming SHALL remove the dungeon from DungeonRegistry. "破棄" SHALL be disabled when no dungeon is selected.
+`DungeonEntrance` SHALL require the user to first activate `破棄`, then move the cursor to the target dungeon entry in the dungeon list, then confirm with Enter. Upon Enter it SHALL display a confirmation dialog; confirming SHALL remove the dungeon from `DungeonRegistry`. After a confirmed deletion, focus SHALL return to the button row so that the `破棄` action must be explicitly re-selected to delete another dungeon. Cancelling the confirmation dialog SHALL leave the focus on the dungeon list so the user can pick a different target without re-selecting the action. `破棄` SHALL be disabled when `DungeonRegistry` is empty.
 
 #### Scenario: Delete with confirmation
-- **WHEN** a dungeon is selected and "破棄" is activated and the user confirms
-- **THEN** the selected dungeon SHALL be removed from DungeonRegistry
+- **WHEN** the user activates `破棄`, moves the cursor to a dungeon entry, presses Enter, and confirms the dialog with `はい`
+- **THEN** the selected dungeon SHALL be removed from `DungeonRegistry`
 
-#### Scenario: Delete cancelled
-- **WHEN** a dungeon is selected and "破棄" is activated and the user cancels
+#### Scenario: Focus returns to buttons after confirmed delete
+- **WHEN** the user completes a confirmed deletion via `破棄`
+- **THEN** the focus SHALL be on the button row (not the dungeon list), so that a subsequent Enter does NOT trigger another delete confirmation
+
+#### Scenario: Focus remains on list after cancelled delete
+- **WHEN** the user activates `破棄`, opens the confirmation dialog for a dungeon, and cancels it with `いいえ`
+- **THEN** the focus SHALL remain on the dungeon list (LIST_FOR_DELETE) so the user can pick a different dungeon to delete without re-selecting `破棄`
+
+#### Scenario: Delete cancelled via confirmation dialog
+- **WHEN** the user activates `破棄`, moves the cursor to a dungeon entry, presses Enter, and selects `いいえ` in the confirmation dialog
 - **THEN** the dungeon SHALL NOT be removed
 
-#### Scenario: Delete disabled with no selection
-- **WHEN** no dungeon is selected
-- **THEN** "破棄" SHALL be disabled
+#### Scenario: 破棄 disabled with empty registry
+- **WHEN** `DungeonRegistry` is empty
+- **THEN** `破棄` SHALL be disabled and activating it SHALL have no effect
+
+#### Scenario: Deleting the last dungeon does not leave list-for-delete focus
+- **WHEN** `DungeonRegistry` has exactly one dungeon and the user deletes it via the `破棄` flow
+- **THEN** after the confirmation dialog closes, the focus SHALL be on the button row, and a subsequent Enter SHALL NOT reopen the delete confirmation dialog
 
 ### Requirement: Back button returns to town screen
 DungeonEntrance SHALL emit a `back_requested` signal when "戻る" is activated.
@@ -82,16 +106,16 @@ DungeonEntrance SHALL emit a `back_requested` signal when "戻る" is activated.
 - **THEN** the `back_requested` signal SHALL be emitted
 
 ### Requirement: Initial focus adapts to empty dungeon registry
-When `setup()` is called with an empty DungeonRegistry, DungeonEntrance SHALL initialize the input focus on the button row with the cursor placed on "新規生成", so that pressing Enter immediately opens the dungeon creation dialog without requiring a preparatory key press. When the registry has at least one dungeon, the initial focus SHALL remain on the dungeon list (unchanged from prior behavior).
+When `setup()` is called with an empty `DungeonRegistry`, `DungeonEntrance` SHALL initialize the input focus on the button row with the cursor placed on `新規生成`, because `潜入する` and `破棄` are disabled in the empty state and `新規生成` is the first enabled button. When the registry has at least one dungeon, the initial cursor SHALL be placed on `潜入する` (the first button, which is enabled when the party has members).
 
-#### Scenario: Empty registry starts with button focus on 新規生成
-- **WHEN** DungeonEntrance is shown with an empty DungeonRegistry
-- **THEN** the focus SHALL be on the button row and the cursor SHALL be on "新規生成"
+#### Scenario: Empty registry starts with cursor on 新規生成
+- **WHEN** `DungeonEntrance` is shown with an empty `DungeonRegistry`
+- **THEN** the focus SHALL be on the button row and the cursor SHALL be on `新規生成`
 
 #### Scenario: Enter opens create dialog directly when registry is empty
-- **WHEN** DungeonEntrance is shown with an empty DungeonRegistry and the user presses Enter without any prior input
-- **THEN** DungeonCreateDialog SHALL open
+- **WHEN** `DungeonEntrance` is shown with an empty `DungeonRegistry` and the user presses Enter without any prior input
+- **THEN** `DungeonCreateDialog` SHALL open
 
-#### Scenario: Non-empty registry keeps list focus
-- **WHEN** DungeonEntrance is shown with at least one registered dungeon
-- **THEN** the focus SHALL be on the dungeon list with the cursor on the first dungeon
+#### Scenario: Non-empty registry starts with cursor on 潜入する
+- **WHEN** `DungeonEntrance` is shown with at least one registered dungeon
+- **THEN** the focus SHALL be on the button row and the cursor SHALL be on `潜入する`
