@@ -56,13 +56,13 @@ func use_item(instance: ItemInstance, targets: Array, context: ItemUseContext) -
 		return ItemEffectResult.failure("アイテム定義が欠落")
 	if item.effect == null:
 		return ItemEffectResult.failure("このアイテムは使用できない")
-	for ctx_cond in item.context_conditions:
-		if not ctx_cond.is_satisfied(context):
-			return ItemEffectResult.failure(ctx_cond.reason())
+	var ctx_fail := item.get_context_failure_reason(context)
+	if ctx_fail != "":
+		return ItemEffectResult.failure(ctx_fail)
 	for target in targets:
-		for tgt_cond in item.target_conditions:
-			if not tgt_cond.is_satisfied(target, context):
-				return ItemEffectResult.failure(tgt_cond.reason())
+		var tgt_fail := item.get_target_failure_reason(target, context)
+		if tgt_fail != "":
+			return ItemEffectResult.failure(tgt_fail)
 	var result: ItemEffectResult = item.effect.apply(targets, context)
 	if result != null and result.success:
 		remove(instance)

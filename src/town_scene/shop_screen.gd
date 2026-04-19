@@ -74,9 +74,9 @@ func set_active_tab(tab: Tab) -> void:
 func _item_matches_tab(item: Item, tab: Tab) -> bool:
 	match tab:
 		Tab.EQUIPMENT:
-			return item.equip_slot != Item.EquipSlot.NONE
+			return item.is_equipment()
 		Tab.CONSUMABLE:
-			return item.category == Item.ItemCategory.CONSUMABLE
+			return item.is_consumable()
 	return false
 
 

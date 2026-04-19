@@ -42,3 +42,21 @@ func is_slot_consistent() -> bool:
 
 func is_consumable() -> bool:
 	return category == ItemCategory.CONSUMABLE
+
+
+func is_equipment() -> bool:
+	return equip_slot != EquipSlot.NONE
+
+
+func get_context_failure_reason(ctx: ItemUseContext) -> String:
+	for cond in context_conditions:
+		if not cond.is_satisfied(ctx):
+			return cond.reason()
+	return ""
+
+
+func get_target_failure_reason(target, ctx: ItemUseContext) -> String:
+	for cond in target_conditions:
+		if not cond.is_satisfied(target, ctx):
+			return cond.reason()
+	return ""

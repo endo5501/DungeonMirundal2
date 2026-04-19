@@ -44,14 +44,8 @@ func show_with(inventory: Inventory, context: ItemUseContext) -> void:
 		for inst in inventory.list():
 			if inst.item == null or not inst.item.is_consumable():
 				continue
-			var usable := true
-			var reason := ""
-			for cond in inst.item.context_conditions:
-				if not cond.is_satisfied(context):
-					usable = false
-					reason = cond.reason()
-					break
-			_entries.append({"instance": inst, "usable": usable, "reason": reason})
+			var reason := inst.item.get_context_failure_reason(context)
+			_entries.append({"instance": inst, "usable": reason == "", "reason": reason})
 	_selected_index = _first_usable_index()
 	_message_label.visible = false
 	visible = true

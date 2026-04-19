@@ -462,12 +462,12 @@ func _refresh_items_view() -> void:
 		_items_container.add_child(empty)
 		return
 
-	if _items_index >= inv.list().size():
-		_items_index = maxi(0, inv.list().size() - 1)
+	var instances := inv.list()
+	if _items_index >= instances.size():
+		_items_index = maxi(0, instances.size() - 1)
 
 	var ctx := make_item_use_context()
 	var equipped_by := _map_equipped_to_character_names()
-	var instances := inv.list()
 	for i in range(instances.size()):
 		var inst: ItemInstance = instances[i]
 		var marker := ""
@@ -477,7 +477,7 @@ func _refresh_items_view() -> void:
 		var usable: bool = inst.item.is_consumable()
 		var context_failure := ""
 		if usable:
-			context_failure = _context_failure_reason(inst.item, ctx)
+			context_failure = inst.item.get_context_failure_reason(ctx)
 		var text: String
 		if usable and context_failure == "":
 			text = "  %s%s" % [display_name, marker]
@@ -493,7 +493,7 @@ func _refresh_items_view() -> void:
 	var hint := Label.new()
 	var current_inst: ItemInstance = instances[_items_index] if _items_index < instances.size() else null
 	if current_inst != null and current_inst.item.is_consumable():
-		var fail := _context_failure_reason(current_inst.item, ctx)
+		var fail := current_inst.item.get_context_failure_reason(ctx)
 		if fail == "":
 			hint.text = "Enter: 使う  ESC: 戻る"
 		else:
@@ -503,15 +503,6 @@ func _refresh_items_view() -> void:
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	_items_container.add_child(hint)
-
-
-func _context_failure_reason(item: Item, ctx: ItemUseContext) -> String:
-	if item == null or ctx == null:
-		return ""
-	for cond in item.context_conditions:
-		if not cond.is_satisfied(ctx):
-			return cond.reason()
-	return ""
 
 
 func make_item_use_context() -> ItemUseContext:
@@ -534,7 +525,7 @@ func _handle_items_select() -> void:
 	if not inst.item.is_consumable():
 		return
 	var ctx := make_item_use_context()
-	var failure := _context_failure_reason(inst.item, ctx)
+	var failure := inst.item.get_context_failure_reason(ctx)
 	if failure != "":
 		_item_use_last_message = "使えない: %s" % failure
 		_refresh_items_view()
@@ -561,8 +552,8 @@ func _refresh_item_use_target_view() -> void:
 	var ctx := make_item_use_context()
 	for i in range(members.size()):
 		var ch: Character = members[i]
-		var valid := _target_is_valid(_item_use_instance.item, ch, ctx)
-		var reason := _target_failure_reason(_item_use_instance.item, ch, ctx)
+		var reason := _item_use_instance.item.get_target_failure_reason(ch, ctx)
+		var valid := reason == ""
 		var line_text: String
 		if valid:
 			line_text = "  %s  HP:%d/%d MP:%d/%d" % [ch.character_name, ch.current_hp, ch.max_hp, ch.current_mp, ch.max_mp]
@@ -580,27 +571,13 @@ func _refresh_item_use_target_view() -> void:
 	_item_use_target_container.add_child(hint)
 
 
-func _target_is_valid(item: Item, target, ctx: ItemUseContext) -> bool:
-	for cond in item.target_conditions:
-		if not cond.is_satisfied(target, ctx):
-			return false
-	return true
-
-
-func _target_failure_reason(item: Item, target, ctx: ItemUseContext) -> String:
-	for cond in item.target_conditions:
-		if not cond.is_satisfied(target, ctx):
-			return cond.reason()
-	return ""
-
-
 func _first_valid_target_index() -> int:
 	if _item_use_instance == null:
 		return 0
 	var members := _get_guild_members()
 	var ctx := make_item_use_context()
 	for i in range(members.size()):
-		if _target_is_valid(_item_use_instance.item, members[i], ctx):
+		if _item_use_instance.item.get_target_failure_reason(members[i], ctx) == "":
 			return i
 	return 0
 
@@ -614,8 +591,9 @@ func _handle_item_use_target_select() -> void:
 		return
 	var target: Character = members[_item_use_target_index]
 	var ctx := make_item_use_context()
-	if not _target_is_valid(_item_use_instance.item, target, ctx):
-		_item_use_last_message = _target_failure_reason(_item_use_instance.item, target, ctx)
+	var reason := _item_use_instance.item.get_target_failure_reason(target, ctx)
+	if reason != "":
+		_item_use_last_message = reason
 		_refresh_item_use_target_view()
 		return
 	_resolve_use([target], ctx)

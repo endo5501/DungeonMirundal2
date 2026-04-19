@@ -231,13 +231,8 @@ func _valid_item_targets(instance: ItemInstance) -> Array:
 	for pc in _turn_engine.party:
 		if pc == null:
 			continue
-		var ch = pc.character if pc is PartyCombatant else null
-		var ok := true
-		for cond in instance.item.target_conditions:
-			if not cond.is_satisfied(ch if ch != null else pc, ctx):
-				ok = false
-				break
-		if ok:
+		var ch = pc.character if pc is PartyCombatant else pc
+		if instance.item.get_target_failure_reason(ch, ctx) == "":
 			result.append(pc)
 	return result
 

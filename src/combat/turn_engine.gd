@@ -8,6 +8,11 @@ enum State {
 	FINISHED,
 }
 
+enum ItemResolution {
+	NORMAL,
+	TOWN_ESCAPE,
+}
+
 var state: State = State.IDLE
 var party: Array = []  # Array[PartyCombatant or CombatActor-compatible]
 var monsters: Array = []  # Array[MonsterCombatant or CombatActor-compatible]
@@ -93,7 +98,7 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			var cmd = _pending_commands.get(idx, null)
 			if cmd is ItemCommand:
 				var handled := _resolve_item(actor, cmd as ItemCommand, report)
-				if handled == 1:  # town escape requested
+				if handled == ItemResolution.TOWN_ESCAPE:
 					early_escape_town = true
 					break
 				continue
@@ -133,20 +138,15 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 	return report
 
 
-func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> int:
-	# Returns 0 for normal resolution, 1 when EscapeToTownEffect requested town return.
+func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> ItemResolution:
 	if cmd == null or cmd.item_instance == null:
-		return 0
+		return ItemResolution.NORMAL
 	var item: Item = cmd.item_instance.item
 	var item_name: String = item.item_name if item != null else ""
-	if not actor.is_alive():
+	if not actor.is_alive() or item == null or item.effect == null:
 		cmd.cancelled = true
 		report.add_item_cancelled(actor, item_name)
-		return 0
-	if item == null or item.effect == null:
-		cmd.cancelled = true
-		report.add_item_cancelled(actor, item_name)
-		return 0
+		return ItemResolution.NORMAL
 	var targets: Array = []
 	if cmd.target != null:
 		targets.append(_character_of(cmd.target))
@@ -154,15 +154,14 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 	var result: ItemEffectResult = item.effect.apply(targets, ctx)
 	if result == null or not result.success:
 		cmd.cancelled = true
-		var msg: String = result.message if result != null else "使用失敗"
 		report.add_item_cancelled(actor, item_name)
-		return 0
+		return ItemResolution.NORMAL
 	report.add_item_use(actor, item_name, cmd.target, result.message)
 	if inventory != null:
 		inventory.remove(cmd.item_instance)
 	if result.request_town_return:
-		return 1
-	return 0
+		return ItemResolution.TOWN_ESCAPE
+	return ItemResolution.NORMAL
 
 
 func _character_of(combatant: CombatActor):
