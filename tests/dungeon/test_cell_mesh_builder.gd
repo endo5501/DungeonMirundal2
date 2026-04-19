@@ -81,3 +81,53 @@ func test_all_four_walls_default():
 	var faces = builder.build_faces(cell, Vector2i(0, 0))
 	var wall_faces = faces.filter(func(f): return f.type.begins_with("wall_"))
 	assert_eq(wall_faces.size(), 4, "4 walls when all edges WALL")
+
+# --- START tile stairs-up mesh ---
+
+func test_start_tile_generates_stairs_up_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.START
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
+	assert_true(stairs_faces.size() > 0, "START cell should generate stairs_up_* faces")
+
+func test_floor_tile_has_no_stairs_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	# default tile is FLOOR
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
+	assert_eq(stairs_faces.size(), 0, "non-START cell should not generate stairs faces")
+
+func test_start_tile_stairs_vertices_within_cell_volume():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.START
+	var grid := Vector2i(3, 2)
+	var faces = builder.build_faces(cell, grid)
+	var x0 := grid.x * CELL_SIZE
+	var z0 := grid.y * CELL_SIZE
+	var x1 := x0 + CELL_SIZE
+	var z1 := z0 + CELL_SIZE
+	var ceiling_height := CellMeshBuilder.CELL_HEIGHT
+	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
+	assert_true(stairs_faces.size() > 0, "preconditions: stairs faces exist")
+	for f in stairs_faces:
+		for v in f.vertices:
+			assert_true(v.x >= x0 - 0.01 and v.x <= x1 + 0.01,
+				"stairs vertex x (%f) within [%f, %f]" % [v.x, x0, x1])
+			assert_true(v.z >= z0 - 0.01 and v.z <= z1 + 0.01,
+				"stairs vertex z (%f) within [%f, %f]" % [v.z, z0, z1])
+			assert_true(v.y >= -0.01 and v.y < ceiling_height + 0.01,
+				"stairs vertex y (%f) within [0, %f)" % [v.y, ceiling_height])
+
+func test_start_tile_still_has_floor_and_ceiling():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.START
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var floor_faces = faces.filter(func(f): return f.type == "floor")
+	var ceiling_faces = faces.filter(func(f): return f.type == "ceiling")
+	assert_eq(floor_faces.size(), 1, "floor face still generated on START tile")
+	assert_eq(ceiling_faces.size(), 1, "ceiling face still generated on START tile")

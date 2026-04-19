@@ -194,6 +194,79 @@ func test_corner_between_walls_is_filled():
 	assert_eq(img.get_pixel(8, 8), MinimapRenderer.COLOR_WALL,
 		"corner between walls should be wall color")
 
+# --- START tile marker ---
+# Player at (5,5), cell (4,4) -> view pos (2,2), floor x=[9..11], y=[9..11]
+
+func _center_pixel_of_cell_view_pos(vx: int, vy: int) -> Vector2i:
+	# Cell floor is 3x3 starting at (vx*4+1, vy*4+1); center pixel = (+1, +1)
+	return Vector2i(vx * 4 + 2, vy * 4 + 2)
+
+func test_start_tile_marker_drawn_on_explored_start():
+	var wm = WizMap.new(16)
+	wm.cell(4, 4).tile = TileType.START
+	var em = ExploredMap.new()
+	em.mark_visited(Vector2i(4, 4))
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var img = _renderer.render(wm, em, ps)
+	# cell (4,4) -> view (2,2); check at least one pixel within 3x3 floor is marker color
+	var found_marker := false
+	for x in range(9, 12):
+		for y in range(9, 12):
+			if img.get_pixel(x, y) == MinimapRenderer.COLOR_START:
+				found_marker = true
+	assert_true(found_marker, "START marker pixel should be drawn on explored START tile")
+
+func test_start_marker_color_distinct_from_floor_and_player():
+	assert_ne(MinimapRenderer.COLOR_START, MinimapRenderer.COLOR_FLOOR,
+		"COLOR_START must differ from COLOR_FLOOR")
+	assert_ne(MinimapRenderer.COLOR_START, MinimapRenderer.COLOR_PLAYER,
+		"COLOR_START must differ from COLOR_PLAYER")
+
+func test_start_marker_stays_within_floor_area():
+	var wm = WizMap.new(16)
+	wm.cell(4, 4).tile = TileType.START
+	# Surround with walls so edge gap pixels are wall color, not marker color
+	var em = ExploredMap.new()
+	em.mark_visited(Vector2i(4, 4))
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var img = _renderer.render(wm, em, ps)
+	# cell (4,4) -> view (2,2): floor is x=[9..11], y=[9..11]
+	# Edge gaps around it: y=8 (north), y=12 (south), x=8 (west), x=12 (east)
+	# None of those should be COLOR_START
+	for x in range(8, 13):
+		assert_ne(img.get_pixel(x, 8), MinimapRenderer.COLOR_START,
+			"no marker pixel should leak into north gap at (%d, 8)" % x)
+		assert_ne(img.get_pixel(x, 12), MinimapRenderer.COLOR_START,
+			"no marker pixel should leak into south gap at (%d, 12)" % x)
+	for y in range(8, 13):
+		assert_ne(img.get_pixel(8, y), MinimapRenderer.COLOR_START,
+			"no marker pixel should leak into west gap at (8, %d)" % y)
+		assert_ne(img.get_pixel(12, y), MinimapRenderer.COLOR_START,
+			"no marker pixel should leak into east gap at (12, %d)" % y)
+
+func test_unexplored_start_tile_has_no_marker():
+	var wm = WizMap.new(16)
+	wm.cell(4, 4).tile = TileType.START
+	var em = ExploredMap.new()
+	# cell (4,4) NOT visited
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var img = _renderer.render(wm, em, ps)
+	for x in range(9, 12):
+		for y in range(9, 12):
+			assert_ne(img.get_pixel(x, y), MinimapRenderer.COLOR_START,
+				"unexplored START tile should not draw marker at (%d, %d)" % [x, y])
+
+func test_player_on_start_tile_center_shows_player_color():
+	var wm = WizMap.new(16)
+	wm.cell(5, 5).tile = TileType.START
+	var em = ExploredMap.new()
+	em.mark_visited(Vector2i(5, 5))
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var img = _renderer.render(wm, em, ps)
+	# Player center pixel (14, 14) should be PLAYER, not START marker
+	assert_eq(img.get_pixel(14, 14), MinimapRenderer.COLOR_PLAYER,
+		"player color takes precedence on the center START tile")
+
 func test_corner_in_open_room_is_floor():
 	var wm = WizMap.new(16)
 	# Open room: cells (4,4), (5,4), (4,5), (5,5) all open between each other

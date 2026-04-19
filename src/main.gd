@@ -184,6 +184,7 @@ func _on_enter_dungeon(index: int) -> void:
 	GameState.game_location = GameState.LOCATION_DUNGEON
 	GameState.current_dungeon_index = index
 	_current_dungeon_data = GameState.dungeon_registry.get_dungeon(index)
+	_current_dungeon_data.reset_to_start()
 	_show_dungeon_screen(_current_dungeon_data)
 
 func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
