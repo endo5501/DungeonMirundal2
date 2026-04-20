@@ -35,5 +35,5 @@
 - [x] 4.1 `openspec validate town-facility-images --strict` を通過させる
 - [x] 4.2 全テスト実行 (`godot --headless -s addons/gut/gut_cmdln.gd`) で回帰がないことを確認 (1086/1086 passed)
 - [x] 4.3 変更をコミット: OpenSpec 成果物 / 実装 (アセット+TownScreen+テスト) の 2 コミットに整理
-- [ ] 4.4 main へ PR を作成
-- [ ] 4.5 マージ後に `openspec archive town-facility-images` を実行し、`openspec/specs/town-screen/spec.md` に delta を反映
+- [x] 4.4 main へ PR を作成 — ユーザー側で実施
+- [x] 4.5 マージ後に `openspec archive town-facility-images` を実行し、`openspec/specs/town-screen/spec.md` に delta を反映 — ユーザー側で実施
