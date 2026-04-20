@@ -22,6 +22,18 @@ const FACILITY_COLORS: Array[Color] = [
 	Color(0.3, 0.2, 0.2),
 ]
 
+const DEFAULT_FACILITY_IMAGES: Array[String] = [
+	"res://assets/images/facilities/guild.png",
+	"res://assets/images/facilities/shop.png",
+	"res://assets/images/facilities/church.png",
+	"res://assets/images/facilities/dungeon.png",
+]
+
+const LABEL_OVERLAY_HEIGHT_RATIO := 0.15
+const LABEL_OVERLAY_COLOR := Color(0.0, 0.0, 0.0, 0.5)
+
+var facility_image_paths: Array[String] = DEFAULT_FACILITY_IMAGES.duplicate()
+
 var selected_index: int:
 	get: return _menu.selected_index
 	set(v): _menu.selected_index = v
@@ -29,6 +41,8 @@ var selected_index: int:
 var _menu: CursorMenu
 var _rows: Array[CursorMenuRow] = []
 var _illustration_rect: ColorRect
+var _illustration_texture: TextureRect
+var _illustration_overlay: ColorRect
 var _illustration_label: Label
 
 func _init() -> void:
@@ -66,23 +80,73 @@ func _ready() -> void:
 
 	_illustration_rect = ColorRect.new()
 	_illustration_rect.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_illustration_rect.visible = false
 	right.add_child(_illustration_rect)
+
+	_illustration_texture = TextureRect.new()
+	_illustration_texture.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_illustration_texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_illustration_texture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	right.add_child(_illustration_texture)
+
+	_illustration_overlay = ColorRect.new()
+	_illustration_overlay.color = LABEL_OVERLAY_COLOR
+	_illustration_overlay.anchor_left = 0.0
+	_illustration_overlay.anchor_right = 1.0
+	_illustration_overlay.anchor_top = 1.0 - LABEL_OVERLAY_HEIGHT_RATIO
+	_illustration_overlay.anchor_bottom = 1.0
+	_illustration_overlay.offset_left = 0
+	_illustration_overlay.offset_top = 0
+	_illustration_overlay.offset_right = 0
+	_illustration_overlay.offset_bottom = 0
+	right.add_child(_illustration_overlay)
 
 	_illustration_label = Label.new()
 	_illustration_label.add_theme_font_size_override("font_size", 32)
+	_illustration_label.add_theme_color_override("font_color", Color.WHITE)
 	_illustration_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_illustration_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_illustration_label.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_illustration_label.anchor_left = 0.0
+	_illustration_label.anchor_right = 1.0
+	_illustration_label.anchor_top = 1.0 - LABEL_OVERLAY_HEIGHT_RATIO
+	_illustration_label.anchor_bottom = 1.0
+	_illustration_label.offset_left = 0
+	_illustration_label.offset_top = 0
+	_illustration_label.offset_right = 0
+	_illustration_label.offset_bottom = 0
 	right.add_child(_illustration_label)
 
 	_menu.update_rows(_rows)
 	_update_illustration()
 
 func _update_illustration() -> void:
-	if _illustration_rect:
-		_illustration_rect.color = get_facility_color(_menu.selected_index)
-	if _illustration_label:
-		_illustration_label.text = MENU_ITEMS[_menu.selected_index]
+	var index := _menu.selected_index
+	var tex: Texture2D = _load_facility_image(index)
+	if tex != null and _illustration_texture != null:
+		_illustration_texture.texture = tex
+		_illustration_texture.visible = true
+		if _illustration_rect != null:
+			_illustration_rect.visible = false
+	else:
+		if _illustration_texture != null:
+			_illustration_texture.texture = null
+			_illustration_texture.visible = false
+		if _illustration_rect != null:
+			_illustration_rect.color = get_facility_color(index)
+			_illustration_rect.visible = true
+	if _illustration_label != null:
+		_illustration_label.text = MENU_ITEMS[index]
+
+func _load_facility_image(index: int) -> Texture2D:
+	if index < 0 or index >= facility_image_paths.size():
+		return null
+	var path := facility_image_paths[index]
+	if path == "" or not ResourceLoader.exists(path):
+		return null
+	var res := load(path)
+	if res is Texture2D:
+		return res
+	return null
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_down"):
@@ -107,6 +171,22 @@ func is_item_disabled(index: int) -> bool:
 
 func get_facility_color(index: int) -> Color:
 	return FACILITY_COLORS[index]
+
+func get_illustration_texture() -> Texture2D:
+	if _illustration_texture == null:
+		return null
+	return _illustration_texture.texture
+
+func get_illustration_label_text() -> String:
+	if _illustration_label == null:
+		return ""
+	return _illustration_label.text
+
+func is_texture_visible() -> bool:
+	return _illustration_texture != null and _illustration_texture.visible
+
+func is_fallback_visible() -> bool:
+	return _illustration_rect != null and _illustration_rect.visible
 
 func move_cursor(direction: int) -> void:
 	_menu.move_cursor(direction)
