@@ -6,3 +6,6 @@
 
 # Scratch / manual-test artifacts
 tmp/
+
+# Git worktrees
+.worktrees/
