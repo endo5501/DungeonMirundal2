@@ -5,6 +5,7 @@ const BG_COLOR := Color(0, 0, 0, 0.85)
 const HUD_MARGIN := 24
 const NAME_FONT_SIZE := 24
 const HUD_FONT_SIZE := 18
+const HUD_LABEL_WIDTH := 200
 const TEXTURE_TOP_MARGIN := 64
 const TEXTURE_BOTTOM_MARGIN := 64
 const FALLBACK_TARGET := Vector2i(512, 512)
@@ -61,6 +62,7 @@ func _ready() -> void:
 	_coord_label.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
 	_coord_label.set_anchors_and_offsets_preset(PRESET_BOTTOM_LEFT)
 	_coord_label.offset_left = HUD_MARGIN
+	_coord_label.offset_right = HUD_MARGIN + HUD_LABEL_WIDTH
 	_coord_label.offset_top = -HUD_MARGIN - HUD_FONT_SIZE - 4
 	_coord_label.offset_bottom = -HUD_MARGIN
 	_coord_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -70,7 +72,7 @@ func _ready() -> void:
 	_explored_label.add_theme_font_size_override("font_size", HUD_FONT_SIZE)
 	_explored_label.set_anchors_and_offsets_preset(PRESET_BOTTOM_RIGHT)
 	_explored_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_explored_label.offset_left = -200
+	_explored_label.offset_left = -HUD_LABEL_WIDTH
 	_explored_label.offset_right = -HUD_MARGIN
 	_explored_label.offset_top = -HUD_MARGIN - HUD_FONT_SIZE - 4
 	_explored_label.offset_bottom = -HUD_MARGIN
