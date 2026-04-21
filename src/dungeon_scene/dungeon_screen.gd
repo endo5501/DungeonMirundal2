@@ -69,8 +69,8 @@ func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap
 
 	_refresh_all()
 
-func get_full_map_overlay() -> FullMapOverlay:
-	return _full_map_overlay
+func is_full_map_open() -> bool:
+	return _full_map_overlay != null and _full_map_overlay.is_open()
 
 func _refresh_all() -> void:
 	var render_cells := _dungeon_view.get_render_cells(

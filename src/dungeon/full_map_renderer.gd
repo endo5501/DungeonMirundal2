@@ -20,11 +20,8 @@ func render(wiz_map: WizMap, explored_map: ExploredMap, player_state: PlayerStat
 	var img := Image.create(image_size, image_size, false, Image.FORMAT_RGBA8)
 	img.fill(COLOR_BG)
 
-	for cy in range(wiz_map.map_size):
-		for cx in range(wiz_map.map_size):
-			if not explored_map.is_visited(Vector2i(cx, cy)):
-				continue
-			_draw_cell(img, wiz_map, explored_map, cx, cy, cell_px, floor_px)
+	for cell_pos in explored_map.get_visited_cells():
+		_draw_cell(img, wiz_map, explored_map, cell_pos.x, cell_pos.y, cell_px, floor_px)
 
 	_draw_player(img, player_state, cell_px, floor_px)
 	return img
