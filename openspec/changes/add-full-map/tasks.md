@@ -50,5 +50,5 @@
 
 - [x] 5.1 `openspec validate add-full-map --strict` で仕様の妥当性を検証する
 - [x] 5.2 すべてのテストが通り目視確認も完了したらコミットする
-- [ ] 5.3 `/opsx:verify add-full-map` で実装と仕様の整合を最終確認する
+- [x] 5.3 `/opsx:verify add-full-map` で実装と仕様の整合を最終確認する
 - [ ] 5.4 `/opsx:archive add-full-map` で変更をアーカイブする
