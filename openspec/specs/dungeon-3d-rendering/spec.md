@@ -1,8 +1,6 @@
 ## Purpose
 ダンジョンの 1 人称 3D 描画に関する表示ルールを規定する。壁・床・天井のテクスチャ、視野角、カメラ位置、向き変更時のスムージングなどを対象とする。
-
 ## Requirements
-
 ### Requirement: DungeonView calculates visible cells
 DungeonView SHALL calculate the set of visible cells from the player's current position and facing direction. The view SHALL extend up to 4 cells forward and 1 cell to each side. Cells behind walls SHALL NOT be included in the visible set. Lateral visibility SHALL be evaluated independently at each depth so that an opening at depth N is not hidden by a wall at a shallower depth. The 3D rasterizer's depth buffer handles the actual geometric occlusion between the nearer wall and the deeper cell.
 
@@ -166,3 +164,42 @@ The shader SHALL NOT require modifications to `CellMeshBuilder` to emit UVs.
 #### Scenario: Door surfaces use a distinct plank pattern
 - **WHEN** a vertical face is rendered with a door-warm base color (door tile type)
 - **THEN** the shader SHALL suppress the stone-brick pattern on that face and apply a wooden plank pattern (vertical grooves plus at least one horizontal cross-band) so that doors read as doors rather than tinted walls
+
+### Requirement: DungeonScreen toggles the FullMapOverlay with the M key
+DungeonScreen SHALL listen for the M key in `_unhandled_input` and SHALL toggle the visibility of `FullMapOverlay` on key press. The M key SHALL be ignored when an encounter is active or when the return-to-town dialog is visible.
+
+#### Scenario: M key opens the overlay when closed
+- **WHEN** DungeonScreen is active (no encounter, no return dialog) and the overlay is hidden, and the user presses the M key
+- **THEN** `FullMapOverlay.open()` SHALL be invoked and the overlay SHALL become visible
+
+#### Scenario: M key closes the overlay when open
+- **WHEN** the overlay is visible and the user presses the M key
+- **THEN** `FullMapOverlay.close()` SHALL be invoked and the overlay SHALL become hidden
+
+#### Scenario: M key is ignored during encounter
+- **WHEN** DungeonScreen has `_encounter_active == true` and the user presses the M key
+- **THEN** the overlay SHALL NOT change state (remains hidden if it was hidden)
+
+#### Scenario: M key is ignored during return dialog
+- **WHEN** DungeonScreen has `_showing_return_dialog == true` and the user presses the M key
+- **THEN** the overlay SHALL NOT change state
+
+#### Scenario: M key echo events are ignored
+- **WHEN** an M key event with `event.echo == true` is received
+- **THEN** the overlay SHALL NOT toggle (only the initial press counts)
+
+### Requirement: DungeonScreen blocks movement input while the FullMapOverlay is visible
+DungeonScreen SHALL ignore movement and turn key inputs (UP/W, DOWN/S, LEFT/A, RIGHT/D) while `FullMapOverlay.is_open() == true`. This SHALL prevent the player from moving or rotating while inspecting the full map.
+
+#### Scenario: Movement key does not move the player while overlay is visible
+- **WHEN** the overlay is visible and the user presses the UP key
+- **THEN** the player position SHALL NOT change and DungeonScene SHALL NOT rebuild
+
+#### Scenario: Turn key does not rotate the player while overlay is visible
+- **WHEN** the overlay is visible and the user presses the LEFT key
+- **THEN** the player facing SHALL NOT change and the minimap SHALL NOT refresh (it is hidden anyway)
+
+#### Scenario: Movement is restored after the overlay closes
+- **WHEN** the overlay is closed and the user presses the UP key
+- **THEN** the player SHALL move forward as normal (input handling resumes)
+

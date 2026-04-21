@@ -8,9 +8,11 @@ var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
 var _minimap_display: MinimapDisplay
 var _party_display: PartyDisplay
+var _full_map_overlay: FullMapOverlay
 var _player_state: PlayerState
 var _wiz_map: WizMap
 var _explored_map: ExploredMap
+var _dungeon_data: DungeonData
 var _dungeon_view: DungeonView
 const RETURN_OPTIONS: Array[String] = ["はい", "いいえ"]
 
@@ -42,7 +44,11 @@ func _ready() -> void:
 	_party_display = PartyDisplay.new()
 	add_child(_party_display)
 
+	_full_map_overlay = FullMapOverlay.new()
+	add_child(_full_map_overlay)
+
 func setup_from_data(dungeon_data: DungeonData, party_data: PartyData = null) -> void:
+	_dungeon_data = dungeon_data
 	setup(dungeon_data.wiz_map, dungeon_data.player_state, dungeon_data.explored_map, party_data)
 
 func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap = null, party_data: PartyData = null) -> void:
@@ -59,7 +65,12 @@ func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap
 		party_data = PartyData.create_placeholder()
 	_party_display.setup(party_data)
 
+	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display)
+
 	_refresh_all()
+
+func is_full_map_open() -> bool:
+	return _full_map_overlay != null and _full_map_overlay.is_open()
 
 func _refresh_all() -> void:
 	var render_cells := _dungeon_view.get_render_cells(
@@ -77,6 +88,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey:
 		return
 	if not event.pressed or event.echo:
+		return
+
+	if event.keycode == KEY_M:
+		if _encounter_active or _showing_return_dialog:
+			return
+		_toggle_full_map_overlay()
+		return
+
+	if _full_map_overlay != null and _full_map_overlay.is_open():
 		return
 
 	if _encounter_active:
@@ -100,6 +120,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_RIGHT, KEY_D:
 			_player_state.turn_right()
 			_refresh_all()
+
+func _toggle_full_map_overlay() -> void:
+	if _full_map_overlay == null:
+		return
+	if _full_map_overlay.is_open():
+		_full_map_overlay.close()
+	else:
+		_full_map_overlay.open()
 
 func _on_position_changed() -> void:
 	_refresh_all()

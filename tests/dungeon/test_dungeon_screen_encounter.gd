@@ -1,24 +1,6 @@
 extends GutTest
 
 
-func _make_key_event(keycode: int) -> InputEventKey:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.pressed = true
-	return event
-
-
-func _make_map(start_pos: Vector2i) -> WizMap:
-	var wiz_map := WizMap.new(8)
-	wiz_map.generate(42)
-	for y in range(wiz_map.map_size):
-		for x in range(wiz_map.map_size):
-			if wiz_map.cell(x, y).tile == TileType.START:
-				wiz_map.cell(x, y).tile = TileType.FLOOR
-	wiz_map.cell(start_pos.x, start_pos.y).tile = TileType.START
-	return wiz_map
-
-
 func _find_open_forward_position(wiz_map: WizMap) -> Vector2i:
 	# Scan for a cell where NORTH edge is open (so forward move is possible)
 	for y in range(1, wiz_map.map_size - 1):
@@ -42,7 +24,7 @@ func _find_blocked_forward_position(wiz_map: WizMap) -> Vector2i:
 # --- step_taken signal on position change ---
 
 func test_forward_move_emits_step_taken():
-	var wiz_map := _make_map(Vector2i(7, 7))  # start far from test position
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))  # start far from test position
 	var open_pos := _find_open_forward_position(wiz_map)
 	if open_pos == Vector2i(-1, -1):
 		pending("no open forward position in generated map; rerun with different seed")
@@ -52,12 +34,12 @@ func test_forward_move_emits_step_taken():
 	var ps := PlayerState.new(open_pos, Direction.NORTH)
 	screen.setup(wiz_map, ps)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_UP))
 	assert_signal_emitted(screen, "step_taken")
 
 
 func test_blocked_move_does_not_emit_step_taken():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var blocked_pos := _find_blocked_forward_position(wiz_map)
 	if blocked_pos == Vector2i(-1, -1):
 		pending("no blocked position in generated map; rerun with different seed")
@@ -67,36 +49,36 @@ func test_blocked_move_does_not_emit_step_taken():
 	var ps := PlayerState.new(blocked_pos, Direction.NORTH)
 	screen.setup(wiz_map, ps)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_UP))
 	assert_signal_not_emitted(screen, "step_taken")
 
 
 func test_turn_left_does_not_emit_step_taken():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
 	var ps := PlayerState.new(Vector2i(3, 3), Direction.NORTH)
 	screen.setup(wiz_map, ps)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_LEFT))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_LEFT))
 	assert_signal_not_emitted(screen, "step_taken")
 
 
 func test_turn_right_does_not_emit_step_taken():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
 	var ps := PlayerState.new(Vector2i(3, 3), Direction.NORTH)
 	screen.setup(wiz_map, ps)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_RIGHT))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_RIGHT))
 	assert_signal_not_emitted(screen, "step_taken")
 
 
 # --- encounter_active blocks input ---
 
 func test_movement_blocked_when_encounter_active():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var open_pos := _find_open_forward_position(wiz_map)
 	if open_pos == Vector2i(-1, -1):
 		pending("no open forward position")
@@ -108,24 +90,24 @@ func test_movement_blocked_when_encounter_active():
 	screen.set_encounter_active(true)
 	watch_signals(screen)
 	var starting_pos := ps.position
-	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_UP))
 	assert_eq(ps.position, starting_pos, "position must not change while encounter is active")
 	assert_signal_not_emitted(screen, "step_taken")
 
 
 func test_rotation_blocked_when_encounter_active():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
 	var ps := PlayerState.new(Vector2i(3, 3), Direction.NORTH)
 	screen.setup(wiz_map, ps)
 	screen.set_encounter_active(true)
-	screen._unhandled_input(_make_key_event(KEY_LEFT))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_LEFT))
 	assert_eq(ps.facing, Direction.NORTH, "facing must not change while encounter is active")
 
 
 func test_encounter_active_clears_back_to_normal_movement():
-	var wiz_map := _make_map(Vector2i(7, 7))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(7, 7))
 	var open_pos := _find_open_forward_position(wiz_map)
 	if open_pos == Vector2i(-1, -1):
 		pending("no open forward position")
@@ -137,7 +119,7 @@ func test_encounter_active_clears_back_to_normal_movement():
 	screen.set_encounter_active(true)
 	screen.set_encounter_active(false)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_UP))
 	assert_signal_emitted(screen, "step_taken")
 
 
@@ -147,7 +129,7 @@ func test_start_tile_return_dialog_suppressed_when_encounter_activates_during_st
 	# Simulate: stepping onto start tile AND encounter triggers on same step.
 	# Coordinator reacts to step_taken by calling set_encounter_active(true) before
 	# DungeonScreen has a chance to show the return dialog.
-	var wiz_map := _make_map(Vector2i(4, 4))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(4, 4))
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
 	# Place player adjacent to start, facing toward it, so forward move lands on start
@@ -172,14 +154,14 @@ func test_start_tile_return_dialog_suppressed_when_encounter_activates_during_st
 	screen.setup(wiz_map, ps)
 	screen.step_taken.connect(func(_pos: Vector2i) -> void:
 		screen.set_encounter_active(true))
-	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(TestHelpers.make_key_event(KEY_UP))
 	assert_true(screen.is_on_start_tile())
 	assert_false(screen.is_showing_return_dialog(),
 		"return dialog must be suppressed while encounter is active")
 
 
 func test_check_start_tile_return_shows_dialog_after_encounter_resolves():
-	var wiz_map := _make_map(Vector2i(4, 4))
+	var wiz_map := TestHelpers.make_test_map(Vector2i(4, 4))
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
 	var ps := PlayerState.new(Vector2i(4, 4), Direction.NORTH)
