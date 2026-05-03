@@ -62,9 +62,7 @@ func _ready() -> void:
 	_menu.update_rows(_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
-	# ESC is intentionally ignored on the title screen: there is no parent screen
-	# to return to. We deliberately omit on_back so MenuController.route returns
-	# false for ui_cancel, leaving set_input_as_handled uncalled.
+	# ESC has no parent screen to return to: omit on_back so route returns false.
 	if MenuController.route(event, _menu, _rows, confirm_selection):
 		get_viewport().set_input_as_handled()
 

@@ -1,9 +1,8 @@
 class_name MenuController
 extends RefCounted
 
-# Routes the four standard menu input actions (ui_up / ui_down / ui_accept /
-# ui_cancel) onto a CursorMenu. Returns true if the event was consumed.
-# The caller decides whether to call get_viewport().set_input_as_handled().
+# The caller — not route() — calls set_input_as_handled. Keeping it that way
+# lets ui_cancel without on_back pass through to outer handlers.
 static func route(
 	event: InputEvent,
 	menu: CursorMenu,
