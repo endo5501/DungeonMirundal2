@@ -135,21 +135,21 @@ func test_hud_exploration_rate_refreshes_on_reopen():
 func test_esc_closes_overlay():
 	var overlay = _make_overlay()
 	overlay.open()
-	overlay._unhandled_input(TestHelpers.make_key_event(KEY_ESCAPE))
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_false(overlay.is_open())
 
 
 func test_esc_when_hidden_does_nothing():
 	var overlay = _make_overlay()
 	# Overlay is hidden initially
-	overlay._unhandled_input(TestHelpers.make_key_event(KEY_ESCAPE))
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_false(overlay.is_open())
 
 
 func test_non_esc_key_when_visible_does_not_close():
 	var overlay = _make_overlay()
 	overlay.open()
-	overlay._unhandled_input(TestHelpers.make_key_event(KEY_SPACE))
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_true(overlay.is_open())
 
 
@@ -174,5 +174,5 @@ func test_close_via_esc_restores_minimap():
 	var overlay = _make_overlay()
 	_minimap_stub.visible = true
 	overlay.open()
-	overlay._unhandled_input(TestHelpers.make_key_event(KEY_ESCAPE))
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_true(_minimap_stub.visible)

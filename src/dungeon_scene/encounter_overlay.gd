@@ -85,15 +85,9 @@ func is_active() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_active:
 		return
-	if not event is InputEventKey:
-		return
-	var key := event as InputEventKey
-	if not key.pressed or key.echo:
-		return
-	match key.keycode:
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			resolve()
-			get_viewport().set_input_as_handled()
+	if event.is_action_pressed("ui_accept"):
+		resolve()
+		get_viewport().set_input_as_handled()
 
 
 func _format_party(party: MonsterParty) -> String:

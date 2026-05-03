@@ -32,12 +32,6 @@ func _clean_test_dir():
 			saves_dir.list_dir_end()
 		dir.remove("test_saves_screen")
 
-func _make_key_event(keycode: int) -> InputEventKey:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.pressed = true
-	return event
-
 # --- Slot display tests ---
 
 func test_save_screen_shows_new_save_only_when_no_saves():
@@ -61,7 +55,7 @@ func test_new_save_creates_file():
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(screen, "save_completed")
 	assert_true(FileAccess.file_exists(TEST_SAVE_DIR + "save_001.json"))
 
@@ -72,8 +66,8 @@ func test_overwrite_shows_confirm_dialog():
 	var screen := SaveScreen.new()
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
-	screen._unhandled_input(_make_key_event(KEY_DOWN))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_true(screen.is_overwrite_dialog_visible())
 
 func test_overwrite_confirm_saves():
@@ -82,11 +76,11 @@ func test_overwrite_confirm_saves():
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_DOWN))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	# Confirm overwrite (select "はい" which is first)
-	screen._unhandled_input(_make_key_event(KEY_UP))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(screen, "save_completed")
 
 func test_overwrite_cancel_returns_to_list():
@@ -94,9 +88,9 @@ func test_overwrite_cancel_returns_to_list():
 	var screen := SaveScreen.new()
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
-	screen._unhandled_input(_make_key_event(KEY_DOWN))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
-	screen._unhandled_input(_make_key_event(KEY_ESCAPE))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_false(screen.is_overwrite_dialog_visible())
 
 # --- ESC to close ---
@@ -106,7 +100,7 @@ func test_esc_emits_back_requested():
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_ESCAPE))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_signal_emitted(screen, "back_requested")
 
 # --- Failure UI ---
@@ -117,7 +111,7 @@ func test_save_failure_shows_status_label_and_no_save_completed():
 	add_child_autofree(screen)
 	screen.setup(failing)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_not_emitted(screen, "save_completed")
 	assert_ne(screen.get_status_text(), "")
 
@@ -125,7 +119,7 @@ func test_save_success_clears_status_label():
 	var screen := SaveScreen.new()
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_eq(screen.get_status_text(), "")
 
 func test_overwrite_failure_shows_status_label():
@@ -135,11 +129,11 @@ func test_overwrite_failure_shows_status_label():
 	add_child_autofree(screen)
 	screen.setup(failing)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_DOWN))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
-	# "はい" is selected after KEY_UP from default index 1
-	screen._unhandled_input(_make_key_event(KEY_UP))
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
+	# "はい" is selected after ui_up from default index 1
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_not_emitted(screen, "save_completed")
 	assert_ne(screen.get_status_text(), "")
 
@@ -150,10 +144,10 @@ func test_status_label_cleared_after_recovery():
 	var screen1 := SaveScreen.new()
 	add_child_autofree(screen1)
 	screen1.setup(failing)
-	screen1._unhandled_input(_make_key_event(KEY_ENTER))
+	screen1._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_ne(screen1.get_status_text(), "")
 	var screen2 := SaveScreen.new()
 	add_child_autofree(screen2)
 	screen2.setup(_save_manager)
-	screen2._unhandled_input(_make_key_event(KEY_ENTER))
+	screen2._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_eq(screen2.get_status_text(), "")

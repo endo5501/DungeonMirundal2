@@ -15,16 +15,21 @@ func turn_left() -> void:
 	facing = Direction.turn_left(facing)
 
 func move_forward(wiz_map: WizMap) -> bool:
-	if not wiz_map.can_move(position.x, position.y, facing):
-		return false
-	position += Direction.offset(facing)
-	return true
+	return _try_step(wiz_map, facing)
 
 func move_backward(wiz_map: WizMap) -> bool:
-	var back_dir := Direction.opposite(facing)
-	if not wiz_map.can_move(position.x, position.y, back_dir):
+	return _try_step(wiz_map, Direction.opposite(facing))
+
+func strafe_left(wiz_map: WizMap) -> bool:
+	return _try_step(wiz_map, Direction.turn_left(facing))
+
+func strafe_right(wiz_map: WizMap) -> bool:
+	return _try_step(wiz_map, Direction.turn_right(facing))
+
+func _try_step(wiz_map: WizMap, dir: int) -> bool:
+	if not wiz_map.can_move(position.x, position.y, dir):
 		return false
-	position += Direction.offset(back_dir)
+	position += Direction.offset(dir)
 	return true
 
 func to_dict() -> Dictionary:

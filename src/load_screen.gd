@@ -98,30 +98,17 @@ func show_load_failure(result: SaveManager.LoadResult) -> void:
 	_status_label.text = _FAILURE_MESSAGES.get(result, "ロードに失敗しました")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event is InputEventKey:
-		return
-	if not event.pressed or event.echo:
-		return
-
 	if _no_saves:
-		if (event as InputEventKey).keycode == KEY_ESCAPE:
+		if event.is_action_pressed("ui_cancel"):
 			back_requested.emit()
-		get_viewport().set_input_as_handled()
+			get_viewport().set_input_as_handled()
 		return
+	if MenuController.route(event, _menu, _menu_rows, _on_slot_selected, back_requested.emit):
+		get_viewport().set_input_as_handled()
 
-	match (event as InputEventKey).keycode:
-		KEY_UP, KEY_W:
-			if _menu:
-				_menu.move_cursor(-1)
-				_menu.update_rows(_menu_rows)
-		KEY_DOWN, KEY_S:
-			if _menu:
-				_menu.move_cursor(1)
-				_menu.update_rows(_menu_rows)
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			if _menu and _slots.size() > 0:
-				var slot: int = _slots[_menu.selected_index]["slot_number"]
-				load_requested.emit(slot)
-		KEY_ESCAPE:
-			back_requested.emit()
-	get_viewport().set_input_as_handled()
+
+func _on_slot_selected() -> void:
+	if _menu == null or _slots.is_empty():
+		return
+	var slot: int = _slots[_menu.selected_index]["slot_number"]
+	load_requested.emit(slot)

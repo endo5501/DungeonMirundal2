@@ -85,12 +85,8 @@ func _refresh_all() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_state == null or _wiz_map == null:
 		return
-	if not event is InputEventKey:
-		return
-	if not event.pressed or event.echo:
-		return
 
-	if event.keycode == KEY_M:
+	if event.is_action_pressed("toggle_full_map"):
 		if _encounter_active or _showing_return_dialog:
 			return
 		_toggle_full_map_overlay()
@@ -107,19 +103,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	match event.keycode:
-		KEY_UP, KEY_W:
-			if _player_state.move_forward(_wiz_map):
-				_on_position_changed()
-		KEY_DOWN, KEY_S:
-			if _player_state.move_backward(_wiz_map):
-				_on_position_changed()
-		KEY_LEFT, KEY_A:
-			_player_state.turn_left()
-			_refresh_all()
-		KEY_RIGHT, KEY_D:
-			_player_state.turn_right()
-			_refresh_all()
+	if event.is_action_pressed("move_forward"):
+		if _player_state.move_forward(_wiz_map):
+			_on_position_changed()
+	elif event.is_action_pressed("move_back"):
+		if _player_state.move_backward(_wiz_map):
+			_on_position_changed()
+	elif event.is_action_pressed("strafe_left"):
+		if _player_state.strafe_left(_wiz_map):
+			_on_position_changed()
+	elif event.is_action_pressed("strafe_right"):
+		if _player_state.strafe_right(_wiz_map):
+			_on_position_changed()
+	elif event.is_action_pressed("turn_left"):
+		_player_state.turn_left()
+		_refresh_all()
+	elif event.is_action_pressed("turn_right"):
+		_player_state.turn_right()
+		_refresh_all()
 
 func _toggle_full_map_overlay() -> void:
 	if _full_map_overlay == null:
@@ -197,20 +198,19 @@ func _update_return_dialog_rows() -> void:
 	for i in range(_return_dialog_rows.size()):
 		_return_dialog_rows[i].set_selected(i == _return_dialog_selected)
 
-func _handle_return_dialog_input(event: InputEventKey) -> void:
-	match event.keycode:
-		KEY_UP, KEY_W:
-			_return_dialog_selected = 0
-			_update_return_dialog_rows()
-		KEY_DOWN, KEY_S:
-			_return_dialog_selected = 1
-			_update_return_dialog_rows()
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			if _return_dialog_selected == 0:
-				return_to_town.emit()
-			_close_return_dialog()
-		KEY_ESCAPE:
-			_close_return_dialog()
+func _handle_return_dialog_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_return_dialog_selected = 0
+		_update_return_dialog_rows()
+	elif event.is_action_pressed("ui_down"):
+		_return_dialog_selected = 1
+		_update_return_dialog_rows()
+	elif event.is_action_pressed("ui_accept"):
+		if _return_dialog_selected == 0:
+			return_to_town.emit()
+		_close_return_dialog()
+	elif event.is_action_pressed("ui_cancel"):
+		_close_return_dialog()
 
 func _close_return_dialog() -> void:
 	_showing_return_dialog = false

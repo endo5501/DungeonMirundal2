@@ -456,11 +456,7 @@ func test_enter_during_command_phase_does_not_resolve_encounter():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	watch_signals(overlay)
-	# Simulate Enter
-	var ev := InputEventKey.new()
-	ev.keycode = KEY_ENTER
-	ev.pressed = true
-	overlay._unhandled_input(ev)
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	# No encounter_resolved emitted because we're in COMMAND_MENU phase
 	assert_signal_not_emitted(overlay, "encounter_resolved")
 
@@ -481,8 +477,5 @@ func test_enter_at_result_phase_resolves_encounter():
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	watch_signals(overlay)
 	overlay.show_result(EncounterOutcome.new(EncounterOutcome.Result.CLEARED), [])
-	var ev := InputEventKey.new()
-	ev.keycode = KEY_ENTER
-	ev.pressed = true
-	overlay._unhandled_input(ev)
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(overlay, "encounter_resolved")
