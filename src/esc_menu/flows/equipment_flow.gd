@@ -5,8 +5,6 @@ signal flow_completed
 
 enum SubView { CHARACTER, SLOT, CANDIDATE }
 
-const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view
-
 const SLOT_LABELS: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
 
 var _sub_view: int = SubView.CHARACTER
@@ -71,26 +69,12 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
-	_character_container = _build_titled_view("装備 - キャラクター選択", 4)
+	_character_container = TitledView.build("装備 - キャラクター選択", 4)
 	root.add_child(_character_container)
-	_slot_container = _build_titled_view("装備 - スロット選択", 4)
+	_slot_container = TitledView.build("装備 - スロット選択", 4)
 	root.add_child(_slot_container)
-	_candidate_container = _build_titled_view("装備 - 候補", 4)
+	_candidate_container = TitledView.build("装備 - 候補", 4)
 	root.add_child(_candidate_container)
-
-
-func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", separation)
-	var title := Label.new()
-	title.text = title_text
-	title.add_theme_font_size_override("font_size", 24)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	vbox.add_child(spacer)
-	return vbox
 
 
 # --- sub-view dispatch ---
@@ -218,7 +202,7 @@ func _map_equipped_to_character_names() -> Dictionary:
 # --- refresh views ---
 
 func _refresh_character() -> void:
-	_clear_extra_children(_character_container)
+	TitledView.clear_extras(_character_container)
 	if _party.is_empty():
 		var empty := Label.new()
 		empty.text = "  (パーティが編成されていません)"
@@ -232,7 +216,7 @@ func _refresh_character() -> void:
 
 
 func _refresh_slot() -> void:
-	_clear_extra_children(_slot_container)
+	TitledView.clear_extras(_slot_container)
 	var ch := _get_selected_character()
 	if ch == null:
 		return
@@ -248,7 +232,7 @@ func _refresh_slot() -> void:
 
 
 func _refresh_candidate() -> void:
-	_clear_extra_children(_candidate_container)
+	TitledView.clear_extras(_candidate_container)
 	var candidates := get_equipment_candidates()
 	var unequip_row := CursorMenuRow.create(_candidate_container, "[はずす]", 16)
 	unequip_row.set_selected(_candidate_index == 0)
@@ -266,10 +250,3 @@ func _refresh_candidate() -> void:
 		var row := CursorMenuRow.create(_candidate_container,
 			"%s%s" % [inst.item.item_name, marker], 16)
 		row.set_selected((i + 1) == _candidate_index)
-
-
-func _clear_extra_children(container: VBoxContainer) -> void:
-	while container.get_child_count() > _HEADER_CHILD_COUNT:
-		var child := container.get_child(container.get_child_count() - 1)
-		container.remove_child(child)
-		child.queue_free()

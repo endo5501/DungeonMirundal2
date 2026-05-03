@@ -6,8 +6,6 @@ signal town_return_requested
 
 enum SubView { SELECT_ITEM, SELECT_TARGET, CONFIRM, RESULT }
 
-const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view
-
 var _sub_view: int = SubView.SELECT_ITEM
 var _context: ItemUseContext
 var _inventory: Inventory
@@ -15,7 +13,7 @@ var _party: Array[Character] = []
 
 var _items_index: int = 0
 var _target_index: int = 0
-var _confirm_index: int = 0  # 0 = はい, 1 = いいえ
+var _confirm_index: int = 0
 var _selected_item: ItemInstance = null
 var _selected_target: Character = null
 var _result_message: String = ""
@@ -80,28 +78,14 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(root)
-	_select_item_container = _build_titled_view("アイテム", 4)
+	_select_item_container = TitledView.build("アイテム", 4)
 	root.add_child(_select_item_container)
-	_select_target_container = _build_titled_view("対象を選択", 4)
+	_select_target_container = TitledView.build("対象を選択", 4)
 	root.add_child(_select_target_container)
-	_confirm_container = _build_titled_view("アイテム使用", 6)
+	_confirm_container = TitledView.build("アイテム使用", 6)
 	root.add_child(_confirm_container)
-	_result_container = _build_titled_view("結果", 6)
+	_result_container = TitledView.build("結果", 6)
 	root.add_child(_result_container)
-
-
-func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", separation)
-	var title := Label.new()
-	title.text = title_text
-	title.add_theme_font_size_override("font_size", 24)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	vbox.add_child(spacer)
-	return vbox
 
 
 # --- sub-view dispatch ---
@@ -259,7 +243,7 @@ func _first_valid_target_index() -> int:
 # --- refresh views ---
 
 func _refresh_select_item() -> void:
-	_clear_extra_children(_select_item_container)
+	TitledView.clear_extras(_select_item_container)
 	if _inventory == null:
 		return
 	var instances := _inventory.list()
@@ -275,16 +259,10 @@ func _refresh_select_item() -> void:
 		var inst: ItemInstance = instances[i]
 		var display_name: String = inst.item.item_name if inst.identified else inst.item.unidentified_name
 		var usable: bool = inst.item.is_consumable()
-		var context_failure := ""
-		if usable:
-			context_failure = inst.item.get_context_failure_reason(_context)
-		var text: String
-		if usable and context_failure == "":
-			text = "  %s" % display_name
-		elif usable:
+		var context_failure: String = inst.item.get_context_failure_reason(_context) if usable else ""
+		var text: String = "  %s" % display_name
+		if usable and context_failure != "":
 			text = "  %s  (%s)" % [display_name, context_failure]
-		else:
-			text = "  %s" % display_name
 		var row := CursorMenuRow.create(_select_item_container, text, 14)
 		row.set_selected(i == _items_index)
 		if not usable or context_failure != "":
@@ -292,7 +270,7 @@ func _refresh_select_item() -> void:
 
 
 func _refresh_select_target() -> void:
-	_clear_extra_children(_select_target_container)
+	TitledView.clear_extras(_select_target_container)
 	if _selected_item == null:
 		return
 	var item_label := Label.new()
@@ -315,7 +293,7 @@ func _refresh_select_target() -> void:
 
 
 func _refresh_confirm() -> void:
-	_clear_extra_children(_confirm_container)
+	TitledView.clear_extras(_confirm_container)
 	if _selected_item == null:
 		return
 	var label := Label.new()
@@ -329,15 +307,8 @@ func _refresh_confirm() -> void:
 
 
 func _refresh_result() -> void:
-	_clear_extra_children(_result_container)
+	TitledView.clear_extras(_result_container)
 	var label := Label.new()
 	label.text = _result_message
 	label.add_theme_font_size_override("font_size", 16)
 	_result_container.add_child(label)
-
-
-func _clear_extra_children(container: VBoxContainer) -> void:
-	while container.get_child_count() > _HEADER_CHILD_COUNT:
-		var child := container.get_child(container.get_child_count() - 1)
-		container.remove_child(child)
-		child.queue_free()

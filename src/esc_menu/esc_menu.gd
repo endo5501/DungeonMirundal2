@@ -73,18 +73,18 @@ func _build_ui() -> void:
 	var root_vbox := VBoxContainer.new()
 	_panel.add_child(root_vbox)
 
-	_main_menu_container = _build_titled_view("メニュー")
+	_main_menu_container = TitledView.build("メニュー")
 	_build_menu_rows(_main_menu, _main_menu_rows, _main_menu_container)
 	root_vbox.add_child(_main_menu_container)
 
-	_party_menu_container = _build_titled_view("パーティ")
+	_party_menu_container = TitledView.build("パーティ")
 	_build_menu_rows(_party_menu, _party_menu_rows, _party_menu_container)
 	root_vbox.add_child(_party_menu_container)
 
-	_status_container = _build_titled_view("ステータス", 4)
+	_status_container = TitledView.build("ステータス", 4)
 	root_vbox.add_child(_status_container)
 
-	_quit_dialog_container = _build_titled_view("タイトルに戻りますか？", 8)
+	_quit_dialog_container = TitledView.build("タイトルに戻りますか？", 8)
 	_build_menu_rows(_quit_menu, _quit_rows, _quit_dialog_container)
 	root_vbox.add_child(_quit_dialog_container)
 
@@ -96,19 +96,6 @@ func _build_ui() -> void:
 	_equipment_flow = EquipmentFlow.new()
 	_equipment_flow.flow_completed.connect(_on_equipment_flow_completed)
 	root_vbox.add_child(_equipment_flow)
-
-func _build_titled_view(title_text: String, separation: int = 6) -> VBoxContainer:
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", separation)
-	var title := Label.new()
-	title.text = title_text
-	title.add_theme_font_size_override("font_size", 24)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	vbox.add_child(spacer)
-	return vbox
 
 func _build_menu_rows(menu: CursorMenu, rows_out: Array[CursorMenuRow], parent: VBoxContainer) -> void:
 	for i in range(menu.size()):
@@ -283,7 +270,7 @@ func _on_equipment_flow_completed() -> void:
 
 
 func _refresh_status_view() -> void:
-	_clear_extra_children(_status_container)
+	TitledView.clear_extras(_status_container)
 
 	var guild: Guild = GameState.guild if GameState != null else null
 	if guild == null or not guild.has_party_members():
@@ -352,11 +339,3 @@ func make_item_use_context() -> ItemUseContext:
 	return ItemUseContext.make(in_dungeon, in_combat, party)
 
 
-const _HEADER_CHILD_COUNT: int = 2  # title + spacer; see _build_titled_view
-
-
-func _clear_extra_children(container: VBoxContainer) -> void:
-	while container.get_child_count() > _HEADER_CHILD_COUNT:
-		var child := container.get_child(container.get_child_count() - 1)
-		container.remove_child(child)
-		child.queue_free()
