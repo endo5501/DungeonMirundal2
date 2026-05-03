@@ -4,7 +4,7 @@ Wizardry風一人称ダンジョン探索RPG（Godot 4.x）
 
 ## 必要環境
 
-- [Godot Engine 4.6+](https://godotengine.org/download/) (Standard版)
+- [Godot Engine 4.6.x](https://godotengine.org/download/) (Standard版)
 - Git
 
 ## セットアップ

@@ -45,8 +45,8 @@
 
 ## 8. F042: README のバージョン記述
 
-- [ ] 8.1 `README.md` の "Godot Engine 4.6+" を "Godot Engine 4.6.x" に変更
-- [ ] 8.2 コミット
+- [x] 8.1 `README.md` の "Godot Engine 4.6+" を "Godot Engine 4.6.x" に変更
+- [x] 8.2 コミット
 
 ## 9. F043: item_use_context.gd の移動
 
