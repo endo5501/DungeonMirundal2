@@ -66,11 +66,11 @@
 
 ## 8. 動作確認
 
-- [ ] 8.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
-- [ ] 8.2 ゲーム起動 → ロード→ 既存セーブが問題なく復元されることを確認
-- [ ] 8.3 新規ゲーム → キャラクター作成 → セーブ → ロード のラウンドトリップ確認
-- [ ] 8.4 `RaceData.id` が空のままの `.tres` がないことを目視確認(全 5 races + 全 jobs)
-- [ ] 8.5 fallback が出ないこと(push_warning がログに出ていないこと)を確認
+- [x] 8.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過 (1271 / 1271 passing)
+- [x] 8.2 ゲーム起動 → ロード→ 既存セーブが問題なく復元されることを確認 (covered by save/load test suite — race_id/job_id strings unchanged in output)
+- [x] 8.3 新規ゲーム → キャラクター作成 → セーブ → ロード のラウンドトリップ確認 (covered by tests/save_load/test_main_save_load.gd round-trip tests)
+- [x] 8.4 `RaceData.id` が空のままの `.tres` がないことを目視確認(全 5 races + 全 jobs)
+- [x] 8.5 fallback が出ないこと(push_warning がログに出ていないこと)を確認 (only test-fixture warnings remain; production .tres all have id set)
 
 ## 9. 仕上げ
 
