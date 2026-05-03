@@ -98,6 +98,6 @@ func test_load_legacy_save_without_equipment_key_yields_empty_slots():
 	f.store_string(JSON.stringify(d, "\t"))
 	f.close()
 	GameState.new_game()
-	assert_true(_save_manager.load(1))
+	assert_eq(_save_manager.load(1), SaveManager.LoadResult.OK)
 	var ch: Character = GameState.guild.get_all_characters()[0]
 	assert_eq(ch.equipment.all_equipped().size(), 0)

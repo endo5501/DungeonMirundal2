@@ -7,12 +7,15 @@ signal back_requested
 const NEW_SAVE_LABEL := "新規保存"
 const OVERWRITE_OPTIONS: Array[String] = ["はい", "いいえ"]
 
+const SAVE_FAILURE_MESSAGE := "保存に失敗しました"
+
 var _save_manager: SaveManager
 var _slots: Array[Dictionary] = []  # [{slot_number, ...}], first entry is "new save"
 var _menu: CursorMenu
 var _menu_rows: Array[CursorMenuRow] = []
 var _title_label: Label
 var _container: VBoxContainer
+var _status_label: Label
 
 var _overwrite_visible := false
 var _overwrite_slot: int = -1
@@ -75,6 +78,15 @@ func _build_ui() -> void:
 		_menu_rows.append(CursorMenuRow.create(_container, _menu.items[i], 18))
 	_menu.update_rows(_menu_rows)
 
+	_status_label = Label.new()
+	_status_label.add_theme_font_size_override("font_size", 16)
+	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status_label.text = ""
+	_container.add_child(_status_label)
+
+func get_status_text() -> String:
+	return _status_label.text if _status_label != null else ""
+
 func _build_overwrite_dialog() -> void:
 	_overwrite_menu = CursorMenu.new(OVERWRITE_OPTIONS)
 	_overwrite_menu.selected_index = 1  # default to いいえ
@@ -131,8 +143,11 @@ func _on_slot_selected() -> void:
 	if selected["slot_number"] == -1:
 		# New save
 		var slot := _save_manager.get_next_slot_number()
-		_save_manager.save(slot)
-		save_completed.emit()
+		if _save_manager.save(slot):
+			_status_label.text = ""
+			save_completed.emit()
+		else:
+			_status_label.text = SAVE_FAILURE_MESSAGE
 	else:
 		# Show overwrite dialog
 		_overwrite_slot = selected["slot_number"]
@@ -149,12 +164,16 @@ func _handle_overwrite_input(event: InputEventKey) -> void:
 			_overwrite_menu.update_rows(_overwrite_rows)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			if _overwrite_menu.selected_index == 0:  # はい
-				_save_manager.save(_overwrite_slot)
+				var ok := _save_manager.save(_overwrite_slot)
 				_overwrite_visible = false
 				if _overwrite_container:
 					_overwrite_container.queue_free()
 					_overwrite_container = null
-				save_completed.emit()
+				if ok:
+					_status_label.text = ""
+					save_completed.emit()
+				else:
+					_status_label.text = SAVE_FAILURE_MESSAGE
 			else:  # いいえ
 				cancel_overwrite()
 		KEY_ESCAPE:

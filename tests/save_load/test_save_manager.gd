@@ -2,6 +2,14 @@ extends GutTest
 
 const TEST_SAVE_DIR := "user://test_saves/"
 
+# Stub: routes last_slot.txt into a directory that does not exist so
+# FileAccess.open returns null only for the last_slot write, while the
+# slot file body still succeeds. Lets us exercise the "body OK, pointer
+# write failed" path required by the save-manager spec.
+class _LastSlotFailingSaveManager extends SaveManager:
+	func _last_slot_path() -> String:
+		return "user://nonexistent_dir_for_last_slot_test/last_slot.txt"
+
 var _save_manager: SaveManager
 
 func before_each():
@@ -34,6 +42,20 @@ func _setup_game_with_character():
 	GameState.guild.assign_to_party(ch, 0, 0)
 
 # --- save() tests ---
+
+func test_save_returns_true_on_success():
+	_setup_game_with_character()
+	var ok: bool = _save_manager.save(1)
+	assert_true(ok)
+
+func test_save_returns_false_when_only_last_slot_write_fails():
+	_setup_game_with_character()
+	var stub := _LastSlotFailingSaveManager.new(TEST_SAVE_DIR)
+	var ok: bool = stub.save(1)
+	assert_false(ok)
+	# Slot body should still have been written (failure occurred after).
+	assert_true(FileAccess.file_exists(TEST_SAVE_DIR + "save_001.json"))
+	assert_push_error("last_slot")
 
 func test_save_creates_file():
 	_setup_game_with_character()
@@ -91,13 +113,21 @@ func test_save_includes_dungeons():
 
 # --- load() tests ---
 
+func test_load_result_enum_has_expected_values():
+	# Ensure the public enum surface is stable for callers.
+	assert_eq(SaveManager.LoadResult.OK, 0)
+	assert_true(SaveManager.LoadResult.has("FILE_NOT_FOUND"))
+	assert_true(SaveManager.LoadResult.has("PARSE_ERROR"))
+	assert_true(SaveManager.LoadResult.has("VERSION_TOO_NEW"))
+	assert_true(SaveManager.LoadResult.has("RESTORE_FAILED"))
+
 func test_load_restores_guild():
 	_setup_game_with_character()
 	_save_manager.save(1)
 	GameState.new_game()
 	assert_eq(GameState.guild.get_all_characters().size(), 0)
-	var ok := _save_manager.load(1)
-	assert_true(ok)
+	var result: int = _save_manager.load(1)
+	assert_eq(result, SaveManager.LoadResult.OK)
 	assert_eq(GameState.guild.get_all_characters().size(), 1)
 	assert_eq(GameState.guild.get_all_characters()[0].character_name, "Hero")
 
@@ -123,9 +153,34 @@ func test_load_restores_dungeon_registry():
 	assert_eq(GameState.dungeon_registry.size(), 1)
 	assert_eq(GameState.dungeon_registry.get_dungeon(0).dungeon_name, "迷宮")
 
-func test_load_nonexistent_returns_false():
-	var ok := _save_manager.load(999)
-	assert_false(ok)
+func test_load_nonexistent_returns_file_not_found():
+	var result: int = _save_manager.load(999)
+	assert_eq(result, SaveManager.LoadResult.FILE_NOT_FOUND)
+	assert_push_error("file not found")
+
+func test_load_returns_parse_error_on_corrupt_json():
+	_save_manager._ensure_dir()
+	var path := TEST_SAVE_DIR + "save_001.json"
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("{ this is not valid json")
+	f.close()
+	var result: int = _save_manager.load(1)
+	assert_eq(result, SaveManager.LoadResult.PARSE_ERROR)
+	assert_push_error("parse error")
+
+func test_load_returns_version_too_new_when_version_exceeds_current():
+	_save_manager._ensure_dir()
+	var path := TEST_SAVE_DIR + "save_001.json"
+	var data := {
+		"version": SaveManager.CURRENT_VERSION + 1,
+		"last_saved": "future",
+	}
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(data))
+	f.close()
+	var result: int = _save_manager.load(1)
+	assert_eq(result, SaveManager.LoadResult.VERSION_TOO_NEW)
+	assert_push_error("version too new")
 
 # --- list_saves() tests ---
 

@@ -64,3 +64,63 @@ func test_roundtrip_preserves_party_name():
 	guild.register(_make_character("Hero"))
 	var restored := Guild.from_dict(guild.to_dict())
 	assert_eq(restored.party_name, "勇者の一行")
+
+func test_from_dict_skips_broken_character_keeps_others():
+	var alice := _make_character("Alice")
+	var carol := _make_character("Carol")
+	var d := {
+		"characters": [
+			alice.to_dict(),
+			{"character_name": "Broken", "race_id": "bogus_race_xyz", "job_id": "fighter"},
+			carol.to_dict(),
+		],
+		"front_row": [null, null, null],
+		"back_row": [null, null, null],
+		"party_name": "",
+	}
+	var restored := Guild.from_dict(d)
+	# Skipped index produces no Character entry
+	assert_eq(restored.get_all_characters().size(), 2)
+	assert_eq(restored.get_all_characters()[0].character_name, "Alice")
+	assert_eq(restored.get_all_characters()[1].character_name, "Carol")
+	assert_push_warning("Broken character")
+
+func test_from_dict_party_position_pointing_to_broken_character_is_left_empty():
+	var alice := _make_character("Alice")
+	var carol := _make_character("Carol")
+	# Index 1 is broken; front_row[0] points at the broken index, front_row[1]
+	# at Carol (index 2). Expect: front_row[0] empty, front_row[1] = Carol.
+	var d := {
+		"characters": [
+			alice.to_dict(),
+			{"character_name": "Broken", "race_id": "bogus_race_xyz", "job_id": "fighter"},
+			carol.to_dict(),
+		],
+		"front_row": [1, 2, null],
+		"back_row": [0, null, null],
+		"party_name": "",
+	}
+	var restored := Guild.from_dict(d)
+	# Position pointing at broken index stays null
+	assert_null(restored.get_character_at(0, 0))
+	# Position pointing at Carol resolves correctly
+	assert_not_null(restored.get_character_at(0, 1))
+	assert_eq(restored.get_character_at(0, 1).character_name, "Carol")
+	# Back row: alice at index 0
+	assert_not_null(restored.get_character_at(1, 0))
+	assert_eq(restored.get_character_at(1, 0).character_name, "Alice")
+	assert_push_warning("Broken character")
+
+func test_from_dict_all_broken_returns_empty_guild():
+	var d := {
+		"characters": [
+			{"character_name": "A", "race_id": "bogus_race_xyz", "job_id": "fighter"},
+			{"character_name": "B", "race_id": "bogus_race_xyz", "job_id": "fighter"},
+		],
+		"front_row": [0, 1, null],
+		"back_row": [null, null, null],
+		"party_name": "",
+	}
+	var restored := Guild.from_dict(d)
+	assert_eq(restored.get_all_characters().size(), 0)
+	assert_false(restored.has_party_members())

@@ -87,3 +87,23 @@ func test_from_dict_missing_fields_uses_defaults():
 	assert_eq(restored.character_name, "最小データ")
 	assert_eq(restored.level, 1)
 	assert_eq(restored.current_hp, 0)
+
+func test_from_dict_returns_null_when_race_missing():
+	var d := {
+		"character_name": "壊れた",
+		"race_id": "bogus_race_xyz",
+		"job_id": "fighter",
+	}
+	var restored := Character.from_dict(d)
+	assert_null(restored)
+	assert_push_warning("race")
+
+func test_from_dict_returns_null_when_job_missing():
+	var d := {
+		"character_name": "壊れた",
+		"race_id": "human",
+		"job_id": "bogus_job_xyz",
+	}
+	var restored := Character.from_dict(d)
+	assert_null(restored)
+	assert_push_warning("job")

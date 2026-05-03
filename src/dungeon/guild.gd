@@ -96,17 +96,38 @@ static func from_dict(data: Dictionary, inventory: Inventory = null) -> Guild:
 	var guild := Guild.new()
 	guild.party_name = data.get("party_name", "")
 	var chars_arr: Array = data.get("characters", [])
+	# original index (in chars_arr) -> Character (null if entry was unrecoverable)
+	# Used so saved party-row indices keep referring to the right slot even if
+	# earlier characters got skipped.
+	var by_original_index: Array = []
 	for ch_data in chars_arr:
-		guild.register(Character.from_dict(ch_data, inventory))
-	var all_chars := guild.get_all_characters()
+		var ch := Character.from_dict(ch_data, inventory)
+		if ch == null:
+			push_warning("Guild.from_dict: Broken character entry skipped (character_name=%s)" % ch_data.get("character_name", ""))
+			by_original_index.append(null)
+			continue
+		guild.register(ch)
+		by_original_index.append(ch)
 	var front: Array = data.get("front_row", [null, null, null])
 	for i in range(3):
-		if front[i] != null:
-			guild.assign_to_party(all_chars[int(front[i])], 0, i)
+		if front[i] == null:
+			continue
+		var idx := int(front[i])
+		if idx < 0 or idx >= by_original_index.size():
+			continue
+		var member: Character = by_original_index[idx]
+		if member != null:
+			guild.assign_to_party(member, 0, i)
 	var back: Array = data.get("back_row", [null, null, null])
 	for i in range(3):
-		if back[i] != null:
-			guild.assign_to_party(all_chars[int(back[i])], 1, i)
+		if back[i] == null:
+			continue
+		var idx := int(back[i])
+		if idx < 0 or idx >= by_original_index.size():
+			continue
+		var member: Character = by_original_index[idx]
+		if member != null:
+			guild.assign_to_party(member, 1, i)
 	return guild
 
 func _is_in_party(character: Character) -> bool:

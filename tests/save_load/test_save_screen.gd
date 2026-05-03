@@ -2,6 +2,12 @@ extends GutTest
 
 const TEST_SAVE_DIR := "user://test_saves_screen/"
 
+# Test stub: forces save() failures so we can exercise the SaveScreen
+# error path without depending on filesystem state.
+class _FailingSaveManager extends SaveManager:
+	func save(_slot_number: int) -> bool:
+		return false
+
 var _save_manager: SaveManager
 
 func before_each():
@@ -102,3 +108,52 @@ func test_esc_emits_back_requested():
 	watch_signals(screen)
 	screen._unhandled_input(_make_key_event(KEY_ESCAPE))
 	assert_signal_emitted(screen, "back_requested")
+
+# --- Failure UI ---
+
+func test_save_failure_shows_status_label_and_no_save_completed():
+	var failing := _FailingSaveManager.new(TEST_SAVE_DIR)
+	var screen := SaveScreen.new()
+	add_child_autofree(screen)
+	screen.setup(failing)
+	watch_signals(screen)
+	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_signal_not_emitted(screen, "save_completed")
+	assert_ne(screen.get_status_text(), "")
+
+func test_save_success_clears_status_label():
+	var screen := SaveScreen.new()
+	add_child_autofree(screen)
+	screen.setup(_save_manager)
+	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(screen.get_status_text(), "")
+
+func test_overwrite_failure_shows_status_label():
+	_save_manager.save(1)
+	var failing := _FailingSaveManager.new(TEST_SAVE_DIR)
+	var screen := SaveScreen.new()
+	add_child_autofree(screen)
+	screen.setup(failing)
+	watch_signals(screen)
+	screen._unhandled_input(_make_key_event(KEY_DOWN))
+	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	# "はい" is selected after KEY_UP from default index 1
+	screen._unhandled_input(_make_key_event(KEY_UP))
+	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_signal_not_emitted(screen, "save_completed")
+	assert_ne(screen.get_status_text(), "")
+
+func test_status_label_cleared_after_recovery():
+	# First fail with _FailingSaveManager, then setup a fresh screen with the
+	# real manager so the next save succeeds — covers the "ラベルがクリア" rule.
+	var failing := _FailingSaveManager.new(TEST_SAVE_DIR)
+	var screen1 := SaveScreen.new()
+	add_child_autofree(screen1)
+	screen1.setup(failing)
+	screen1._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_ne(screen1.get_status_text(), "")
+	var screen2 := SaveScreen.new()
+	add_child_autofree(screen2)
+	screen2.setup(_save_manager)
+	screen2._unhandled_input(_make_key_event(KEY_ENTER))
+	assert_eq(screen2.get_status_text(), "")

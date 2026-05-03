@@ -70,3 +70,16 @@ func test_main_load_from_load_screen_restores_town():
 	main._on_load_slot_selected(1)
 	assert_is(main._current_screen, TownScreen)
 	assert_eq(GameState.guild.get_all_characters()[0].character_name, "Hero")
+
+func test_main_load_failure_keeps_load_screen_with_error_label():
+	# Trigger a failure by selecting a non-existent slot. main should leave
+	# LoadScreen visible and surface the failure on the screen's status label.
+	var main := MainScript.new()
+	add_child_autofree(main)
+	main._on_load_requested()
+	assert_is(main._current_screen, LoadScreen)
+	main._on_load_slot_selected(999)
+	assert_is(main._current_screen, LoadScreen, "LoadScreen should stay open after failure")
+	var screen: LoadScreen = main._current_screen
+	assert_eq(screen.get_status_text(), "セーブファイルが見つかりません")
+	assert_push_error("file not found")

@@ -108,6 +108,25 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 	return d
 
 static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
+	# ResourceLoader.exists() is load-bearing: calling load() on a missing path
+	# emits engine-level "Condition 'found' is true" errors, which we want to
+	# avoid for routine save-with-missing-resource cases.
+	var race_id: String = data.get("race_id", "human")
+	var race_path := "res://data/races/" + race_id + ".tres"
+	var race_res: RaceData = null
+	if ResourceLoader.exists(race_path):
+		race_res = load(race_path) as RaceData
+	if race_res == null:
+		push_warning("Character.from_dict: race resource missing at %s (character_name=%s)" % [race_path, data.get("character_name", "")])
+		return null
+	var job_id: String = data.get("job_id", "fighter")
+	var job_path := "res://data/jobs/" + job_id + ".tres"
+	var job_res: JobData = null
+	if ResourceLoader.exists(job_path):
+		job_res = load(job_path) as JobData
+	if job_res == null:
+		push_warning("Character.from_dict: job resource missing at %s (character_name=%s)" % [job_path, data.get("character_name", "")])
+		return null
 	var ch := Character.new()
 	ch.character_name = data.get("character_name", "")
 	ch.level = data.get("level", 1)
@@ -116,10 +135,8 @@ static func from_dict(data: Dictionary, inventory: Inventory = null) -> Characte
 	ch.current_mp = data.get("current_mp", 0)
 	ch.max_mp = data.get("max_mp", 0)
 	ch.accumulated_exp = data.get("accumulated_exp", 0)
-	var race_id: String = data.get("race_id", "human")
-	ch.race = load("res://data/races/" + race_id + ".tres") as RaceData
-	var job_id: String = data.get("job_id", "fighter")
-	ch.job = load("res://data/jobs/" + job_id + ".tres") as JobData
+	ch.race = race_res
+	ch.job = job_res
 	var stats_raw: Dictionary = data.get("base_stats", {})
 	ch.base_stats = {}
 	for key in STAT_KEYS:
