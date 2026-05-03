@@ -21,9 +21,7 @@ var _button_menu: CursorMenu
 var _button_rows: Array[CursorMenuRow] = []
 var _vbox: VBoxContainer
 var _create_dialog: DungeonCreateDialog
-var _delete_confirm_container: CenterContainer
-var _delete_confirm_rows: Array[CursorMenuRow] = []
-var _delete_confirm_selected: int = 1  # default to いいえ
+var _delete_dialog: ConfirmDialog
 
 func _init() -> void:
 	_button_menu = CursorMenu.new(BUTTON_ITEMS)
@@ -46,6 +44,11 @@ func _ready() -> void:
 	_vbox.add_theme_constant_override("separation", 4)
 	add_child(_vbox)
 	_build_ui()
+
+	_delete_dialog = ConfirmDialog.new()
+	add_child(_delete_dialog)
+	_delete_dialog.confirmed.connect(_on_delete_confirmed)
+	_delete_dialog.cancelled.connect(_on_delete_cancelled)
 
 func _build_ui() -> void:
 	for child in _vbox.get_children():
@@ -122,9 +125,10 @@ func _update_rows() -> void:
 	_button_menu.update_rows(_button_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# ConfirmDialog handles its own input while visible.
+	if _mode == Mode.DELETE_CONFIRM:
+		return
 	if _mode != Mode.LIST:
-		if _mode == Mode.DELETE_CONFIRM:
-			_handle_delete_confirm_input(event)
 		return
 
 	if _focus == Focus.BUTTONS:
@@ -178,60 +182,15 @@ func _return_to_buttons() -> void:
 
 func _show_delete_confirm() -> void:
 	_mode = Mode.DELETE_CONFIRM
-	_delete_confirm_selected = 1  # default to いいえ
-	_delete_confirm_rows.clear()
-
-	_delete_confirm_container = CenterContainer.new()
-	_delete_confirm_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(_delete_confirm_container)
-
-	var confirm_panel := PanelContainer.new()
-	confirm_panel.custom_minimum_size = Vector2(350, 140)
-	_delete_confirm_container.add_child(confirm_panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	confirm_panel.add_child(vbox)
-
 	var dd := _registry.get_dungeon(selected_index)
-	var msg := Label.new()
-	msg.text = "「%s」を破棄しますか？" % dd.dungeon_name
-	msg.add_theme_font_size_override("font_size", 18)
-	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(msg)
+	_delete_dialog.setup("「%s」を破棄しますか？" % dd.dungeon_name, ConfirmDialog.DEFAULT_NO_INDEX)
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 4
-	vbox.add_child(spacer)
-
-	for option in ["はい", "いいえ"]:
-		_delete_confirm_rows.append(CursorMenuRow.create(vbox, option, FONT_SIZE))
-	_update_delete_confirm_rows()
-
-func _update_delete_confirm_rows() -> void:
-	for i in range(_delete_confirm_rows.size()):
-		_delete_confirm_rows[i].set_selected(i == _delete_confirm_selected)
-
-func _close_delete_confirm() -> void:
-	if _delete_confirm_container:
-		_delete_confirm_container.queue_free()
-		_delete_confirm_container = null
-	_delete_confirm_rows.clear()
+func _on_delete_confirmed() -> void:
+	_confirm_delete()
 	_mode = Mode.LIST
 
-func _handle_delete_confirm_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		_delete_confirm_selected = 1 - _delete_confirm_selected
-		_update_delete_confirm_rows()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		if _delete_confirm_selected == 0:
-			_confirm_delete()
-		_close_delete_confirm()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_cancel"):
-		_close_delete_confirm()
-		get_viewport().set_input_as_handled()
+func _on_delete_cancelled() -> void:
+	_mode = Mode.LIST
 
 func _activate_button() -> void:
 	if _button_menu.is_disabled(_button_menu.selected_index):

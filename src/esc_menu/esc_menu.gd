@@ -21,26 +21,22 @@ const PARTY_IDX_STATUS := 0
 const PARTY_IDX_ITEMS := 1
 const PARTY_IDX_EQUIPMENT := 2
 
-const QUIT_ITEMS: Array[String] = ["はい", "いいえ"]
-const QUIT_IDX_YES := 0
-const QUIT_IDX_NO := 1
+const QUIT_MESSAGE := "タイトルに戻りますか？"
 
 var _current_view: View = View.MAIN_MENU
 
 var _main_menu: CursorMenu
 var _party_menu: CursorMenu
-var _quit_menu: CursorMenu
 
 var _overlay: ColorRect
 var _panel: PanelContainer
 var _main_menu_container: VBoxContainer
 var _party_menu_container: VBoxContainer
 var _status_container: VBoxContainer
-var _quit_dialog_container: VBoxContainer
+var _quit_dialog: ConfirmDialog
 
 var _main_menu_rows: Array[CursorMenuRow] = []
 var _party_menu_rows: Array[CursorMenuRow] = []
-var _quit_rows: Array[CursorMenuRow] = []
 
 var _item_use_flow: ItemUseFlow
 var _equipment_flow: EquipmentFlow
@@ -49,7 +45,6 @@ func _init() -> void:
 	layer = 10
 	_main_menu = CursorMenu.new(MAIN_MENU_ITEMS, MAIN_MENU_DISABLED)
 	_party_menu = CursorMenu.new(PARTY_MENU_ITEMS, PARTY_MENU_DISABLED)
-	_quit_menu = CursorMenu.new(QUIT_ITEMS)
 
 func _ready() -> void:
 	_build_ui()
@@ -89,10 +84,6 @@ func _build_ui() -> void:
 	_status_container = TitledView.build("ステータス", 4)
 	root_vbox.add_child(_status_container)
 
-	_quit_dialog_container = TitledView.build("タイトルに戻りますか？", 8)
-	_build_menu_rows(_quit_menu, _quit_rows, _quit_dialog_container)
-	root_vbox.add_child(_quit_dialog_container)
-
 	_item_use_flow = ItemUseFlow.new()
 	_item_use_flow.flow_completed.connect(_on_item_use_flow_completed)
 	_item_use_flow.town_return_requested.connect(_on_item_use_town_return)
@@ -101,6 +92,12 @@ func _build_ui() -> void:
 	_equipment_flow = EquipmentFlow.new()
 	_equipment_flow.flow_completed.connect(_on_equipment_flow_completed)
 	root_vbox.add_child(_equipment_flow)
+
+	# Overlay-style ConfirmDialog covers the whole CanvasLayer when active.
+	_quit_dialog = ConfirmDialog.new()
+	add_child(_quit_dialog)
+	_quit_dialog.confirmed.connect(_on_quit_confirmed)
+	_quit_dialog.cancelled.connect(_on_quit_cancelled)
 
 func _build_menu_rows(menu: CursorMenu, rows_out: Array[CursorMenuRow], parent: VBoxContainer) -> void:
 	for i in range(menu.size()):
@@ -131,17 +128,12 @@ func get_main_menu() -> CursorMenu:
 func get_party_menu() -> CursorMenu:
 	return _party_menu
 
-func get_quit_menu() -> CursorMenu:
-	return _quit_menu
-
 func select_current_item() -> void:
 	match _current_view:
 		View.MAIN_MENU:
 			_handle_main_menu_select()
 		View.PARTY_MENU:
 			_handle_party_menu_select()
-		View.QUIT_DIALOG:
-			_handle_quit_dialog_select()
 
 func go_back() -> void:
 	match _current_view:
@@ -155,7 +147,10 @@ func go_back() -> void:
 			_switch_view(View.MAIN_MENU)
 
 func handle_input(event: InputEvent) -> bool:
+	# ConfirmDialog and the flow Controls own their own input while visible.
 	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW:
+		return false
+	if _current_view == View.QUIT_DIALOG:
 		return false
 	if event.is_action_pressed("ui_up"):
 		_move_cursor(-1)
@@ -183,8 +178,6 @@ func _move_cursor(direction: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW:
-		return
 	if handle_input(event):
 		get_viewport().set_input_as_handled()
 
@@ -193,17 +186,17 @@ func _switch_view(view: View) -> void:
 	_main_menu_container.visible = (view == View.MAIN_MENU)
 	_party_menu_container.visible = (view == View.PARTY_MENU)
 	_status_container.visible = (view == View.STATUS)
-	_quit_dialog_container.visible = (view == View.QUIT_DIALOG)
 	_item_use_flow.visible = (view == View.ITEMS_FLOW)
 	_equipment_flow.visible = (view == View.EQUIPMENT_FLOW)
+	if view != View.QUIT_DIALOG:
+		_quit_dialog.visible = false
 
 	match view:
 		View.PARTY_MENU:
 			_party_menu.selected_index = 0
 			_party_menu.update_rows(_party_menu_rows)
 		View.QUIT_DIALOG:
-			_quit_menu.selected_index = QUIT_IDX_NO
-			_quit_menu.update_rows(_quit_rows)
+			_quit_dialog.setup(QUIT_MESSAGE, ConfirmDialog.DEFAULT_NO_INDEX)
 		View.STATUS:
 			_refresh_status_view()
 		View.ITEMS_FLOW:
@@ -219,8 +212,6 @@ func _get_current_menu() -> CursorMenu:
 			return _main_menu
 		View.PARTY_MENU:
 			return _party_menu
-		View.QUIT_DIALOG:
-			return _quit_menu
 	return null
 
 func _update_current_labels() -> void:
@@ -229,8 +220,6 @@ func _update_current_labels() -> void:
 			_main_menu.update_rows(_main_menu_rows)
 		View.PARTY_MENU:
 			_party_menu.update_rows(_party_menu_rows)
-		View.QUIT_DIALOG:
-			_quit_menu.update_rows(_quit_rows)
 
 func _handle_main_menu_select() -> void:
 	match _main_menu.selected_index:
@@ -257,12 +246,12 @@ func _handle_party_menu_select() -> void:
 		PARTY_IDX_EQUIPMENT:
 			_switch_view(View.EQUIPMENT_FLOW)
 
-func _handle_quit_dialog_select() -> void:
-	match _quit_menu.selected_index:
-		QUIT_IDX_YES:
-			quit_to_title.emit()
-		QUIT_IDX_NO:
-			_switch_view(View.MAIN_MENU)
+func _on_quit_confirmed() -> void:
+	quit_to_title.emit()
+
+func _on_quit_cancelled() -> void:
+	if _current_view == View.QUIT_DIALOG:
+		_switch_view(View.MAIN_MENU)
 
 
 func _on_item_use_flow_completed(_message: String) -> void:
@@ -346,5 +335,3 @@ func make_item_use_context() -> ItemUseContext:
 	if GameState != null:
 		in_dungeon = (GameState.game_location == GameState.LOCATION_DUNGEON)
 	return ItemUseContext.make(in_dungeon, in_combat, party)
-
-

@@ -4,6 +4,8 @@ extends Control
 signal return_to_town
 signal step_taken(new_position: Vector2i)
 
+const RETURN_DIALOG_MESSAGE := "地上に戻りますか？"
+
 var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
 var _minimap_display: MinimapDisplay
@@ -14,12 +16,8 @@ var _wiz_map: WizMap
 var _explored_map: ExploredMap
 var _dungeon_data: DungeonData
 var _dungeon_view: DungeonView
-const RETURN_OPTIONS: Array[String] = ["はい", "いいえ"]
 
-var _showing_return_dialog: bool = false
-var _return_dialog_selected: int = 0
-var _return_dialog_rows: Array[CursorMenuRow] = []
-var _return_dialog_container: Control
+var _return_dialog: ConfirmDialog
 var _encounter_active: bool = false
 
 func _ready() -> void:
@@ -46,6 +44,10 @@ func _ready() -> void:
 
 	_full_map_overlay = FullMapOverlay.new()
 	add_child(_full_map_overlay)
+
+	_return_dialog = ConfirmDialog.new()
+	add_child(_return_dialog)
+	_return_dialog.confirmed.connect(_on_return_confirmed)
 
 func setup_from_data(dungeon_data: DungeonData, party_data: PartyData = null) -> void:
 	_dungeon_data = dungeon_data
@@ -87,7 +89,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("toggle_full_map"):
-		if _encounter_active or _showing_return_dialog:
+		if _encounter_active or is_showing_return_dialog():
 			return
 		_toggle_full_map_overlay()
 		return
@@ -98,9 +100,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _encounter_active:
 		return
 
-	if _showing_return_dialog:
-		_handle_return_dialog_input(event)
-		get_viewport().set_input_as_handled()
+	# ConfirmDialog handles its own input via its own _unhandled_input.
+	if is_showing_return_dialog():
 		return
 
 	if event.is_action_pressed("move_forward"):
@@ -145,15 +146,14 @@ func is_encounter_active() -> bool:
 	return _encounter_active
 
 func is_showing_return_dialog() -> bool:
-	return _showing_return_dialog
-
+	return _return_dialog.visible
 
 func refresh_party_display(party_data: PartyData) -> void:
 	if _party_display != null and party_data != null:
 		_party_display.setup(party_data)
 
 func check_start_tile_return() -> void:
-	if _encounter_active or _showing_return_dialog:
+	if _encounter_active or is_showing_return_dialog():
 		return
 	if is_on_start_tile():
 		_show_return_dialog()
@@ -164,57 +164,7 @@ func is_on_start_tile() -> bool:
 	return _wiz_map.cell(_player_state.position.x, _player_state.position.y).tile == TileType.START
 
 func _show_return_dialog() -> void:
-	_showing_return_dialog = true
-	_return_dialog_selected = 1  # default to いいえ (safer)
-	_return_dialog_rows.clear()
+	_return_dialog.setup(RETURN_DIALOG_MESSAGE, ConfirmDialog.DEFAULT_NO_INDEX)
 
-	_return_dialog_container = CenterContainer.new()
-	_return_dialog_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(_return_dialog_container)
-
-	var dialog_panel := PanelContainer.new()
-	dialog_panel.custom_minimum_size = Vector2(300, 120)
-	_return_dialog_container.add_child(dialog_panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	dialog_panel.add_child(vbox)
-
-	var msg := Label.new()
-	msg.text = "地上に戻りますか？"
-	msg.add_theme_font_size_override("font_size", 20)
-	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(msg)
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	vbox.add_child(spacer)
-
-	for i in range(RETURN_OPTIONS.size()):
-		_return_dialog_rows.append(CursorMenuRow.create(vbox, RETURN_OPTIONS[i], 18))
-	_update_return_dialog_rows()
-
-func _update_return_dialog_rows() -> void:
-	for i in range(_return_dialog_rows.size()):
-		_return_dialog_rows[i].set_selected(i == _return_dialog_selected)
-
-func _handle_return_dialog_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_up"):
-		_return_dialog_selected = 0
-		_update_return_dialog_rows()
-	elif event.is_action_pressed("ui_down"):
-		_return_dialog_selected = 1
-		_update_return_dialog_rows()
-	elif event.is_action_pressed("ui_accept"):
-		if _return_dialog_selected == 0:
-			return_to_town.emit()
-		_close_return_dialog()
-	elif event.is_action_pressed("ui_cancel"):
-		_close_return_dialog()
-
-func _close_return_dialog() -> void:
-	_showing_return_dialog = false
-	if _return_dialog_container:
-		_return_dialog_container.queue_free()
-		_return_dialog_container = null
-	_return_dialog_rows.clear()
+func _on_return_confirmed() -> void:
+	return_to_town.emit()
