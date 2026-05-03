@@ -1,18 +1,18 @@
 ## 1. TestHelpers 拡張
 
-- [ ] 1.1 `tests/test_helpers.gd` に `make_action_event(action: StringName, pressed: bool = true) -> InputEventAction` を追加(InputEventAction で action を再現)
-- [ ] 1.2 `Callable()` (引数なしコンストラクタ) が `is_valid() == false` を返すことを 1 行のテストで確認(設計前提の検証)
+- [x] 1.1 `tests/test_helpers.gd` に `make_action_event(action: StringName, pressed: bool = true) -> InputEventAction` を追加(InputEventAction で action を再現)
+- [x] 1.2 `Callable()` (引数なしコンストラクタ) が `is_valid() == false` を返すことを 1 行のテストで確認(設計前提の検証)
 
 ## 2. MenuController の単体実装 (TDD)
 
-- [ ] 2.1 `tests/ui/test_menu_controller.gd` を新規作成し、`route(event_ui_down, ...)` で `menu.move_cursor(1)` が呼ばれ true が返るテスト
-- [ ] 2.2 `route(event_ui_up, ...)` で `move_cursor(-1)` が呼ばれ true が返るテスト
-- [ ] 2.3 `route(event_ui_accept, ..., on_accept)` で `on_accept` が呼ばれ true が返るテスト
-- [ ] 2.4 `route(event_ui_cancel, ..., on_back)` で `on_back` が呼ばれ true が返るテスト
-- [ ] 2.5 `route(event_ui_cancel, ...)` で on_back 未指定の場合 false が返り、コールバックは呼ばれないテスト
-- [ ] 2.6 `route(event_ui_down, ..., on_cursor_changed)` で `on_cursor_changed` が `update_rows` の後に 1 回呼ばれるテスト
-- [ ] 2.7 未対応 event(ui_left など)で false が返り、menu の状態が変わらないテスト
-- [ ] 2.8 テストを実行し全て失敗することを確認しコミット (Red)
+- [x] 2.1 `tests/ui/test_menu_controller.gd` を新規作成し、`route(event_ui_down, ...)` で `menu.move_cursor(1)` が呼ばれ true が返るテスト
+- [x] 2.2 `route(event_ui_up, ...)` で `move_cursor(-1)` が呼ばれ true が返るテスト
+- [x] 2.3 `route(event_ui_accept, ..., on_accept)` で `on_accept` が呼ばれ true が返るテスト
+- [x] 2.4 `route(event_ui_cancel, ..., on_back)` で `on_back` が呼ばれ true が返るテスト
+- [x] 2.5 `route(event_ui_cancel, ...)` で on_back 未指定の場合 false が返り、コールバックは呼ばれないテスト
+- [x] 2.6 `route(event_ui_down, ..., on_cursor_changed)` で `on_cursor_changed` が `update_rows` の後に 1 回呼ばれるテスト
+- [x] 2.7 未対応 event(ui_left など)で false が返り、menu の状態が変わらないテスト
+- [x] 2.8 テストを実行し全て失敗することを確認しコミット (Red)
 - [ ] 2.9 `src/ui/menu_controller.gd` を新規作成、`class_name MenuController extends RefCounted` で static `route` を実装
 - [ ] 2.10 全テスト通過を確認しコミット (Green)
 
