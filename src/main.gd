@@ -240,13 +240,8 @@ func _on_load_requested() -> void:
 	_switch_screen(screen)
 
 func _on_load_slot_selected(slot_number: int) -> void:
-	var result := GameState.save_manager.load(slot_number)
-	if result != SaveManager.LoadResult.OK:
-		if _current_screen is LoadScreen:
-			(_current_screen as LoadScreen).show_load_failure(result)
-		return
-	_esc_menu.hide_menu()
-	_apply_loaded_state()
+	if _load_game(slot_number):
+		_esc_menu.hide_menu()
 
 func _on_load_back() -> void:
 	_restore_current_screen()
@@ -261,18 +256,16 @@ func _restore_current_screen() -> void:
 
 # --- Load Game ---
 
-func _load_game(slot_number: int) -> void:
+func _load_game(slot_number: int) -> bool:
 	var result := GameState.save_manager.load(slot_number)
 	if result != SaveManager.LoadResult.OK:
 		if _current_screen is LoadScreen:
 			(_current_screen as LoadScreen).show_load_failure(result)
-		return
-	_apply_loaded_state()
-
-func _apply_loaded_state() -> void:
+		return false
 	match GameState.game_location:
 		GameState.LOCATION_TOWN:
 			_show_town_screen()
 		GameState.LOCATION_DUNGEON:
 			_current_dungeon_data = GameState.dungeon_registry.get_dungeon(GameState.current_dungeon_index)
 			_show_dungeon_screen(_current_dungeon_data)
+	return true

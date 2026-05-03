@@ -108,6 +108,9 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 	return d
 
 static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
+	# ResourceLoader.exists() is load-bearing: calling load() on a missing path
+	# emits engine-level "Condition 'found' is true" errors, which we want to
+	# avoid for routine save-with-missing-resource cases.
 	var race_id: String = data.get("race_id", "human")
 	var race_path := "res://data/races/" + race_id + ".tres"
 	var race_res: RaceData = null
