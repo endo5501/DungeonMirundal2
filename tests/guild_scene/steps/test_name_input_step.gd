@@ -5,9 +5,7 @@ extends GutTest
 class FakeContext:
 	extends RefCounted
 	var name_input: String = ""
-	var advance_calls: int = 0
-	var current_step: int = 1
-	var total_steps: int = 5
+	var submit_calls: Array[String] = []
 
 	func get_name_input() -> String:
 		return name_input
@@ -15,8 +13,10 @@ class FakeContext:
 	func set_name_input(value: String) -> void:
 		name_input = value
 
-	func advance() -> void:
-		advance_calls += 1
+	func submit_name(value: String) -> void:
+		# Step delegates the entire name-submitted flow (set_name_input,
+		# advance, rebuild_ui, frame guard) to the dispatcher.
+		submit_calls.append(value)
 
 
 var _step: NameInputStep
@@ -91,13 +91,13 @@ func test_unrecognized_event_returns_stay():
 
 # --- text submission via line edit ---
 
-func test_text_submitted_updates_context_name_and_advances():
+func test_text_submitted_delegates_to_context_submit_name():
 	_build()
 	var edit := _find_line_edit()
 	edit.text = "Alice"
 	edit.text_submitted.emit("Alice")
-	assert_eq(_ctx.name_input, "Alice")
-	assert_eq(_ctx.advance_calls, 1)
+	assert_eq(_ctx.submit_calls.size(), 1)
+	assert_eq(_ctx.submit_calls[0], "Alice")
 
 
 func test_text_changed_updates_context_name():

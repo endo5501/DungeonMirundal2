@@ -20,7 +20,7 @@ func build(content: VBoxContainer, context) -> void:
 	_name_edit.text = context.get_name_input()
 	_name_edit.custom_minimum_size.x = 200
 	_name_edit.text_changed.connect(func(t: String): context.set_name_input(t))
-	_name_edit.text_submitted.connect(func(t: String): _on_submit(t, context))
+	_name_edit.text_submitted.connect(func(t: String): context.submit_name(t))
 	content.add_child(_name_edit)
 	_name_edit.grab_focus()
 
@@ -46,8 +46,3 @@ func handle_input(event: InputEvent, _context) -> int:
 
 func get_line_edit() -> LineEdit:
 	return _name_edit
-
-
-func _on_submit(text: String, context) -> void:
-	context.set_name_input(text)
-	context.advance()

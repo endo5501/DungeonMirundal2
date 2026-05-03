@@ -44,14 +44,14 @@
 
 ## 7. character_creation.gd のディスパッチャ化 (TDD)
 
-- [ ] 7.1 既存 `tests/guild_scene/test_character_creation.gd` が無修正で通ることを目標にする
-- [ ] 7.2 `src/guild_scene/character_creation.gd` の `_steps: Array[CharacterCreationStep]` フィールドを追加、`_init` で 5 個の Step を生成
-- [ ] 7.3 `_build_step_ui` を `_steps[current_step - 1].build(_content, self)` に書き換え、`_step_label.text = step.get_title()` を設定
-- [ ] 7.4 `_unhandled_input` を `_steps[current_step - 1].handle_input(event, self)` に書き換え、戻り値で `advance()` / `go_back()` / `cancel()` をディスパッチ
-- [ ] 7.5 旧 `_build_step1` 〜 `_build_step5` を削除
-- [ ] 7.6 旧 `_input_step1` 〜 `_input_step5` を削除
-- [ ] 7.7 `_is_back_pressed` 等のヘルパーが Step 側に移ったら削除
-- [ ] 7.8 既存テスト全通過を確認しコミット
+- [x] 7.1 既存 `tests/guild_scene/test_character_creation.gd` が無修正で通ることを目標にする
+- [x] 7.2 `src/guild_scene/character_creation.gd` の `_steps: Array[CharacterCreationStep]` フィールドを追加、`_init` で 5 個の Step を生成
+- [x] 7.3 `_build_step_ui` を `_steps[current_step - 1].build(_content, self)` に書き換え、`_step_label.text = step.get_title()` を設定
+- [x] 7.4 `_unhandled_input` を `_steps[current_step - 1].handle_input(event, self)` に書き換え、戻り値で `advance()` / `go_back()` / `cancel()` をディスパッチ
+- [x] 7.5 旧 `_build_step1` 〜 `_build_step5` を削除
+- [x] 7.6 旧 `_input_step1` 〜 `_input_step5` を削除
+- [x] 7.7 `_is_back_pressed` 等のヘルパーが Step 側に移ったら削除
+- [x] 7.8 既存テスト全通過を確認しコミット
 
 ## 8. 動作確認
 
