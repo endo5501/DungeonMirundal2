@@ -3,16 +3,12 @@ extends GutTest
 class FakeContext:
 	extends RefCounted
 	var _summary: Dictionary
-	var confirm_calls: int = 0
 
 	func _init(p_summary: Dictionary) -> void:
 		_summary = p_summary
 
 	func get_summary() -> Dictionary:
 		return _summary
-
-	func confirm_creation() -> void:
-		confirm_calls += 1
 
 
 var _step: ConfirmationStep
@@ -82,12 +78,13 @@ func test_build_with_empty_summary_shows_error():
 
 # --- handle_input ---
 
-func test_ui_accept_returns_advance_and_calls_confirm():
+func test_ui_accept_returns_advance():
+	# Per design: step returns ADVANCE; the dispatcher routes that to
+	# context.confirm_creation() since current_step == 5.
 	_build()
 	var ev := TestHelpers.make_action_event(&"ui_accept")
 	var result := _step.handle_input(ev, _ctx)
 	assert_eq(result, CharacterCreationStep.StepTransition.ADVANCE)
-	assert_eq(_ctx.confirm_calls, 1)
 
 
 func test_step_back_returns_back():

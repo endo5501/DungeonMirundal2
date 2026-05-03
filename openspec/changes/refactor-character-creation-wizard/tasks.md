@@ -37,10 +37,10 @@
 
 ## 6. ConfirmationStep の抽出 (TDD)
 
-- [ ] 6.1 `tests/guild_scene/steps/test_confirmation_step.gd` を作成、`build` でサマリ表示、ui_accept で ADVANCE(=確定)、ui_back / ui_cancel で BACK / CANCEL
-- [ ] 6.2 テスト Red コミット
-- [ ] 6.3 `src/guild_scene/steps/confirmation_step.gd` を実装
-- [ ] 6.4 テスト Green コミット
+- [x] 6.1 `tests/guild_scene/steps/test_confirmation_step.gd` を作成、`build` でサマリ表示、ui_accept で ADVANCE(=確定)、ui_back / ui_cancel で BACK / CANCEL
+- [x] 6.2 テスト Red コミット
+- [x] 6.3 `src/guild_scene/steps/confirmation_step.gd` を実装
+- [x] 6.4 テスト Green コミット
 
 ## 7. character_creation.gd のディスパッチャ化 (TDD)
 
