@@ -2,23 +2,19 @@
 エンカウント発生時に表示される UI オーバーレイの振る舞いを規定する。モンスター出現演出、先制判定結果、戦闘開始ボタンまでの遷移タイミングを対象とする。
 ## Requirements
 ### Requirement: EncounterOverlay presents a monster party and blocks dungeon input
-The system SHALL provide an `EncounterOverlay` (CanvasLayer) that, when started with a MonsterParty, is displayed on top of the dungeon screen and consumes keyboard input until dismissed. A concrete implementation (`CombatOverlay`, ADDED by combat-system) SHALL extend `EncounterOverlay` and present a full Wizardry-style battle UI; the base stub (text-only confirmation) is retained only as a testing baseline for the contract.
+`EncounterOverlay` SHALL be an abstract base class for encounter UIs. It SHALL declare the `encounter_resolved(outcome: EncounterOutcome)` signal and the abstract `start_encounter(monster_party)` API, but SHALL NOT build any UI itself. Concrete subclasses (`SimpleEncounterOverlay` for text-only encounters and `CombatOverlay` for the full combat UI) SHALL present the monster party and SHALL consume input until dismissed.
 
-#### Scenario: Overlay appears with monster names
-- **WHEN** `EncounterOverlay.start_encounter(monster_party)` is called with a party of 2 slimes and 1 goblin
-- **THEN** the overlay SHALL become visible and SHALL display the monster names (e.g., "スライム x2", "ゴブリン x1")
+#### Scenario: Direct base instantiation rejects start_encounter
+- **WHEN** `EncounterOverlay.new()` is instantiated and `start_encounter` is called on it directly
+- **THEN** the base class SHALL emit an error (`push_error("EncounterOverlay.start_encounter must be overridden")` or equivalent warning)
 
-#### Scenario: Dungeon input is blocked while overlay is visible
-- **WHEN** the EncounterOverlay is visible
-- **THEN** keyboard events for movement SHALL NOT reach the DungeonScreen
+#### Scenario: Subclasses provide the UI
+- **WHEN** `SimpleEncounterOverlay` or `CombatOverlay` is instantiated and `_ready()` runs
+- **THEN** each subclass SHALL build its own UI; the base class SHALL NOT add any UI children
 
-#### Scenario: Overlay is hidden before start
-- **WHEN** an EncounterOverlay is instantiated but `start_encounter` has not been called
-- **THEN** the overlay SHALL NOT be visible
-
-#### Scenario: Combat overlay subclass replaces stub in production wiring
-- **WHEN** the application is running in production wiring
-- **THEN** the overlay instance received by `EncounterCoordinator` SHALL be a `CombatOverlay` (a subclass of `EncounterOverlay`), not the raw stub
+#### Scenario: encounter_resolved is declared on the base
+- **WHEN** the `EncounterOverlay` class is inspected
+- **THEN** `encounter_resolved(outcome: EncounterOutcome)` SHALL be declared on the base and available to all subclasses
 
 ### Requirement: EncounterOverlay resolves via signal contract
 The system SHALL ensure that `EncounterOverlay` emits `encounter_resolved(outcome: EncounterOutcome)` exactly once when the overlay is dismissed, regardless of whether the concrete implementation is the stub or the full combat UI. The signal contract and function signature SHALL NOT change.
@@ -63,11 +59,4 @@ The system SHALL provide an `EncounterOutcome` (RefCounted) with:
 #### Scenario: drops is always empty in items-and-economy MVP
 - **WHEN** any EncounterOutcome is emitted during the items-and-economy MVP scope
 - **THEN** `drops` SHALL be an empty array (drop/chest systems are a later change)
-
-### Requirement: EncounterOverlay は ui_accept action で確認入力を受ける
-SHALL: `EncounterOverlay._unhandled_input` は `is_action_pressed("ui_accept")` でモンスター遭遇画面の確認操作を受け付ける。`event.keycode == KEY_*` の直接マッチは使わない。
-
-#### Scenario: ui_accept で遭遇確認が完了する
-- **WHEN** encounter overlay が表示されている状態で `is_action_pressed("ui_accept")` がディスパッチされる
-- **THEN** `encounter_resolved` シグナルが発行され、戦闘 phase または通常移動に遷移する
 
