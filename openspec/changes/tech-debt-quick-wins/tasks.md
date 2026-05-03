@@ -23,10 +23,10 @@
 
 ## 5. F027: Equipment.equip を can_equip 経由に整理 (TDD)
 
-- [ ] 5.1 既存 `tests/items/test_equipment.gd` の equip / can_equip テストを確認
-- [ ] 5.2 `src/items/equipment.gd:equip` の slot match / job allowed check を `can_equip` 呼び出しに置換
-- [ ] 5.3 失敗時の FailReason 判定ロジックを保持(`can_equip` はブール返却なので、reason の判定は equip 内に残す)
-- [ ] 5.4 全テスト通過を確認しコミット
+- [x] 5.1 既存 `tests/items/test_equipment.gd` の equip / can_equip テストを確認
+- [x] 5.2 `src/items/equipment.gd:equip` の slot match / job allowed check を `can_equip` 呼び出しに置換
+- [x] 5.3 失敗時の FailReason 判定ロジックを保持(`can_equip` はブール返却なので、reason の判定は equip 内に残す)
+- [x] 5.4 全テスト通過を確認しコミット
 
 ## 6. F032: potion.tres → healing_potion.tres リネーム
 
