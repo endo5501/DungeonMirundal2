@@ -192,3 +192,31 @@ func test_cancel_from_character_emits_flow_completed():
 	watch_signals(flow)
 	flow.handle_input(_cancel())
 	assert_signal_emitted(flow, "flow_completed")
+
+
+# --- candidate cursor regression (moved from test_esc_menu.gd) ---
+
+func _drive_to_alice_weapon_candidate(setup: Array) -> EquipmentFlow:
+	var flow: EquipmentFlow = setup[0]
+	flow.handle_input(_accept())  # CHARACTER → SLOT (Alice index 0)
+	flow.handle_input(_accept())  # SLOT → CANDIDATE (weapon index 0)
+	return flow
+
+
+func test_candidate_cursor_can_reach_last_item():
+	var setup := _setup_two_fighters_with_swords()
+	var flow := _drive_to_alice_weapon_candidate(setup)
+	var candidates_count: int = flow.get_equipment_candidates().size()
+	# Navigate down `candidates_count` times — should land on the last real candidate
+	for i in range(candidates_count):
+		flow._move_cursor(1)
+	assert_eq(flow._candidate_index, candidates_count)
+
+
+func test_candidate_cursor_wraps_through_unequip_entry():
+	var setup := _setup_two_fighters_with_swords()
+	var flow := _drive_to_alice_weapon_candidate(setup)
+	var rows: int = flow.get_equipment_candidates().size() + 1
+	for i in range(rows):
+		flow._move_cursor(1)
+	assert_eq(flow._candidate_index, 0)

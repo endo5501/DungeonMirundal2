@@ -26,11 +26,11 @@
 
 ## 3. EscMenu のスリム化 (TDD)
 
-- [ ] 3.1 既存 `tests/esc_menu/test_esc_menu.gd` のうち、private state(`_items_index`, `_item_use_instance`, `_equipment_*_index`)を直接 assert しているテストを「外部観測可能シナリオ」に書き換え
-- [ ] 3.2 「ESC → パーティ → アイテム を選択すると ItemUseFlow が visible になる」テストを追加
-- [ ] 3.3 「ItemUseFlow.flow_completed 発行で PARTY_MENU に戻る」テストを追加
-- [ ] 3.4 同様に EquipmentFlow についてのテストを追加
-- [ ] 3.5 テスト Red 確認(現実装は旧構造のまま)
+- [x] 3.1 既存 `tests/esc_menu/test_esc_menu.gd` のうち、private state(`_items_index`, `_item_use_instance`, `_equipment_*_index`)を直接 assert しているテストを「外部観測可能シナリオ」に書き換え
+- [x] 3.2 「ESC → パーティ → アイテム を選択すると ItemUseFlow が visible になる」テストを追加
+- [x] 3.3 「ItemUseFlow.flow_completed 発行で PARTY_MENU に戻る」テストを追加
+- [x] 3.4 同様に EquipmentFlow についてのテストを追加
+- [x] 3.5 テスト Red 確認(現実装は旧構造のまま)
 - [ ] 3.6 `src/esc_menu/esc_menu.gd` の View enum を 6 値に縮小(`ITEMS_FLOW`, `EQUIPMENT_FLOW` を追加、旧 7 値を削除)
 - [ ] 3.7 EscMenu に `_item_use_flow: ItemUseFlow` と `_equipment_flow: EquipmentFlow` フィールドを追加、`_build_ui` で生成して add_child
 - [ ] 3.8 メニュー選択時に Flow.setup を呼んで visible 切替する関数を追加
