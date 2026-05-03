@@ -1,10 +1,10 @@
 ## 1. CharacterCreationStep 基底の追加 (TDD)
 
-- [ ] 1.1 `tests/guild_scene/steps/test_character_creation_step.gd` を作成し、`StepTransition` enum 値の存在テスト
-- [ ] 1.2 基底クラスの `build` / `handle_input` のデフォルト実装(no-op / STAY 返却)テスト
-- [ ] 1.3 テストを実行し失敗することを確認しコミット (Red)
-- [ ] 1.4 `src/guild_scene/character_creation_step.gd` を新規作成、`class_name CharacterCreationStep extends RefCounted`、StepTransition enum、`build` / `handle_input` のデフォルト実装
-- [ ] 1.5 テスト通過を確認しコミット (Green)
+- [x] 1.1 `tests/guild_scene/steps/test_character_creation_step.gd` を作成し、`StepTransition` enum 値の存在テスト
+- [x] 1.2 基底クラスの `build` / `handle_input` のデフォルト実装(no-op / STAY 返却)テスト
+- [x] 1.3 テストを実行し失敗することを確認しコミット (Red)
+- [x] 1.4 `src/guild_scene/character_creation_step.gd` を新規作成、`class_name CharacterCreationStep extends RefCounted`、StepTransition enum、`build` / `handle_input` のデフォルト実装
+- [x] 1.5 テスト通過を確認しコミット (Green)
 
 ## 2. NameInputStep の抽出 (TDD)
 
