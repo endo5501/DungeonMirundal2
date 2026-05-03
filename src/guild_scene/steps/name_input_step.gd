@@ -24,23 +24,14 @@ func build(content: VBoxContainer, context) -> void:
 	content.add_child(_name_edit)
 	_name_edit.grab_focus()
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	content.add_child(spacer)
-	var hint := Label.new()
-	hint.text = "[Enter] 次へ  [Esc] やめる"
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	content.add_child(hint)
+	add_nav_hint(content, "[Enter] 次へ  [Esc] やめる")
 
 
 func handle_input(event: InputEvent, _context) -> int:
 	if event.is_action_pressed("ui_cancel"):
 		return StepTransition.CANCEL
-	if event.is_action_pressed("ui_accept"):
-		if _name_edit != null and not _name_edit.has_focus():
-			_name_edit.grab_focus()
-		return StepTransition.STAY
+	if event.is_action_pressed("ui_accept") and not _name_edit.has_focus():
+		_name_edit.grab_focus()
 	return StepTransition.STAY
 
 

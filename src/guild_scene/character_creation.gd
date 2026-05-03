@@ -85,27 +85,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var step := _steps[current_step - 1]
 	var transition: int = step.handle_input(event, self)
+	if transition == CharacterCreationStep.StepTransition.STAY:
+		return
 	match transition:
 		CharacterCreationStep.StepTransition.ADVANCE:
 			if current_step == total_steps:
 				confirm_creation()
 			else:
-				var before := current_step
-				advance()
-				if current_step != before:
-					_build_step_ui()
-			get_viewport().set_input_as_handled()
+				_transition(advance)
 		CharacterCreationStep.StepTransition.BACK:
-			var before := current_step
-			go_back()
-			if current_step != before:
-				_build_step_ui()
-			get_viewport().set_input_as_handled()
+			_transition(go_back)
 		CharacterCreationStep.StepTransition.CANCEL:
 			cancel()
-			get_viewport().set_input_as_handled()
-		_:
-			pass
+	get_viewport().set_input_as_handled()
+
+
+func _transition(action: Callable) -> void:
+	var before := current_step
+	action.call()
+	if current_step != before:
+		_build_step_ui()
 
 
 # --- Context API used by step classes ---
@@ -134,7 +133,6 @@ func get_selected_job_index() -> int:
 	return _selected_job_index
 
 
-# Backwards-compatible accessor used by tests (test_step1_text_submitted_*).
 var _name_edit: LineEdit:
 	get:
 		return (_steps[0] as NameInputStep).get_line_edit()
@@ -146,16 +144,11 @@ func set_name_input(value: String) -> void:
 	_name_input = value
 
 
-# Called by NameInputStep when the LineEdit emits text_submitted. Mirrors the
-# old _on_name_submitted: persist the name, attempt to advance, and rebuild
-# the UI so the next step's frame guard is set (prevents the same Enter from
-# leaking through as ui_accept).
+# Sets the frame guard via _build_step_ui so the same Enter key cannot
+# propagate as ui_accept into the next step.
 func submit_name(value: String) -> void:
 	_name_input = value
-	var before := current_step
-	advance()
-	if current_step != before:
-		_build_step_ui()
+	_transition(advance)
 
 
 func get_available_races() -> Array[RaceData]:

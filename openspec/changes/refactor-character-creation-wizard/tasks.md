@@ -55,13 +55,13 @@
 
 ## 8. 動作確認
 
-- [ ] 8.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
+- [x] 8.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
 - [ ] 8.2 ゲーム起動 → ギルド → キャラクター作成 → 5 ステップを順に通って作成完了することを目視確認
 - [ ] 8.3 各ステップで ESC キャンセル、Backspace で前ステップ戻り、ボーナスポイント reroll、不適格職業 disabled 表示などを確認
 
 ## 9. 仕上げ
 
-- [ ] 9.1 `openspec validate refactor-character-creation-wizard --strict`
-- [ ] 9.2 `/simplify`スキルでコードレビューを実施
+- [x] 9.1 `openspec validate refactor-character-creation-wizard --strict`
+- [x] 9.2 `/simplify`スキルでコードレビューを実施
 - [ ] 9.3 `/opsx:verify refactor-character-creation-wizard`
 - [ ] 9.4 `/opsx:archive refactor-character-creation-wizard`

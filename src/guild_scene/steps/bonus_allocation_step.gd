@@ -2,7 +2,6 @@ class_name BonusAllocationStep
 extends CharacterCreationStep
 
 const FONT_SIZE := 18
-const HEADER_OFFSET := 2  # 0=summary label, 1=blank label, 2..n=stat rows
 
 var _content: VBoxContainer
 var _summary_label: Label
@@ -31,14 +30,7 @@ func build(content: VBoxContainer, context) -> void:
 		_rows.append(CursorMenuRow.create(content, "%s: %d" % [key, context.get_stat_value(key)], FONT_SIZE))
 	_update_cursor(0)
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	content.add_child(spacer)
-	var hint := Label.new()
-	hint.text = "[↑↓] 選択  [→] +1  [←] -1  [R] 振り直し  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる"
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	content.add_child(hint)
+	add_nav_hint(content, "[↑↓] 選択  [→] +1  [←] -1  [R] 振り直し  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる")
 
 
 func handle_input(event: InputEvent, context) -> int:
@@ -69,11 +61,7 @@ func handle_input(event: InputEvent, context) -> int:
 		if context.get_remaining_points() == 0:
 			return StepTransition.ADVANCE
 		return StepTransition.STAY
-	if event.is_action_pressed("step_back"):
-		return StepTransition.BACK
-	if event.is_action_pressed("ui_cancel"):
-		return StepTransition.CANCEL
-	return StepTransition.STAY
+	return back_or_cancel(event)
 
 
 func _refresh(context) -> void:

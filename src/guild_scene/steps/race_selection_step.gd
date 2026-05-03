@@ -26,14 +26,7 @@ func build(content: VBoxContainer, context) -> void:
 		context.set_cursor_index(context.get_selected_race_index())
 	_update_cursor(context.get_cursor_index())
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size.y = 8
-	content.add_child(spacer)
-	var hint := Label.new()
-	hint.text = "[↑↓] 選択  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる"
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	content.add_child(hint)
+	add_nav_hint(content, "[↑↓] 選択  [Enter] 次へ  [Backspace] 戻る  [Esc] やめる")
 
 
 func handle_input(event: InputEvent, context) -> int:
@@ -53,11 +46,7 @@ func handle_input(event: InputEvent, context) -> int:
 	if event.is_action_pressed("ui_accept"):
 		context.select_race(context.get_cursor_index())
 		return StepTransition.ADVANCE
-	if event.is_action_pressed("step_back"):
-		return StepTransition.BACK
-	if event.is_action_pressed("ui_cancel"):
-		return StepTransition.CANCEL
-	return StepTransition.STAY
+	return back_or_cancel(event)
 
 
 func _update_cursor(selected: int) -> void:
