@@ -30,10 +30,10 @@
 
 ## 5. JobSelectionStep の抽出 (TDD)
 
-- [ ] 5.1 `tests/guild_scene/steps/test_job_selection_step.gd` を作成、不適格 job の disabled 表示、ui_accept で適格 job のみ ADVANCE
-- [ ] 5.2 テスト Red コミット
-- [ ] 5.3 `src/guild_scene/steps/job_selection_step.gd` を実装
-- [ ] 5.4 テスト Green コミット
+- [x] 5.1 `tests/guild_scene/steps/test_job_selection_step.gd` を作成、不適格 job の disabled 表示、ui_accept で適格 job のみ ADVANCE
+- [x] 5.2 テスト Red コミット
+- [x] 5.3 `src/guild_scene/steps/job_selection_step.gd` を実装
+- [x] 5.4 テスト Green コミット
 
 ## 6. ConfirmationStep の抽出 (TDD)
 
