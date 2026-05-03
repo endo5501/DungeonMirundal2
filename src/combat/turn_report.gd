@@ -4,13 +4,20 @@ extends RefCounted
 var actions: Array = []
 
 
-func add_attack(attacker: CombatActor, target: CombatActor, damage: int, defended: bool = false) -> void:
+func add_attack(
+	attacker: CombatActor,
+	target: CombatActor,
+	damage: int,
+	defended: bool = false,
+	retargeted_from: String = ""
+) -> void:
 	actions.append({
 		"type": "attack",
 		"attacker_name": attacker.actor_name if attacker != null else "",
 		"target_name": target.actor_name if target != null else "",
 		"damage": damage,
 		"defended": defended,
+		"retargeted_from": retargeted_from,
 	})
 
 

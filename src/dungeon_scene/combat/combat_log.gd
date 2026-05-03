@@ -68,8 +68,11 @@ func _format_action(action: Dictionary) -> String:
 	var target: String = action.get("target_name", "")
 	var damage: int = int(action.get("damage", 0))
 	var defended: bool = bool(action.get("defended", false))
+	var retargeted_from: String = action.get("retargeted_from", "")
 	match type:
 		"attack":
+			if retargeted_from != "":
+				return "%s は既に倒れているため %s を攻撃：%d ダメージ" % [retargeted_from, target, damage]
 			if defended:
 				return "%s の攻撃！ %s は身を守り %d ダメージ" % [attacker, target, damage]
 			return "%s の攻撃！ %s に %d ダメージ" % [attacker, target, damage]

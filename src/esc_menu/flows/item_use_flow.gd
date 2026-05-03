@@ -3,6 +3,7 @@ extends Control
 
 signal flow_completed(message: String)
 signal town_return_requested
+signal combat_item_selected(instance: ItemInstance, target: Character)
 
 enum SubView { SELECT_ITEM, SELECT_TARGET, CONFIRM, RESULT }
 
@@ -10,6 +11,7 @@ var _sub_view: int = SubView.SELECT_ITEM
 var _context: ItemUseContext
 var _inventory: Inventory
 var _party: Array[Character] = []
+var _combat_command_mode: bool = false
 
 var _items_index: int = 0
 var _target_index: int = 0
@@ -30,9 +32,23 @@ func _ready() -> void:
 
 
 func setup(p_context: ItemUseContext, p_inventory: Inventory, p_party: Array[Character]) -> void:
+	_setup(p_context, p_inventory, p_party, false)
+
+
+func setup_for_combat(p_context: ItemUseContext, p_inventory: Inventory, p_party: Array[Character]) -> void:
+	_setup(p_context, p_inventory, p_party, true)
+
+
+func _setup(
+	p_context: ItemUseContext,
+	p_inventory: Inventory,
+	p_party: Array[Character],
+	p_combat_command_mode: bool
+) -> void:
 	_context = p_context
 	_inventory = p_inventory
 	_party = p_party
+	_combat_command_mode = p_combat_command_mode
 	_items_index = 0
 	_target_index = 0
 	_confirm_index = 0
@@ -124,7 +140,7 @@ func _move_cursor(direction: int) -> void:
 			_items_index = (_items_index + direction + count) % count
 			_refresh_select_item()
 		SubView.SELECT_TARGET:
-			var pcount := _party.size()
+			var pcount := _list_targets().size()
 			if pcount == 0:
 				return
 			_target_index = (_target_index + direction + pcount) % pcount
@@ -176,19 +192,21 @@ func _on_select_item_accept() -> void:
 		return
 	_selected_item = inst
 	if _has_targets():
+		if _combat_command_mode and _list_targets().is_empty():
+			_selected_item = null
+			return
 		_switch_sub_view(SubView.SELECT_TARGET)
 	else:
 		_switch_sub_view(SubView.CONFIRM)
 
 
 func _on_select_target_accept() -> void:
-	if _selected_item == null or _party.is_empty():
+	var targets := _list_targets()
+	if _selected_item == null or targets.is_empty():
 		return
-	if _target_index < 0 or _target_index >= _party.size():
+	if _target_index < 0 or _target_index >= targets.size():
 		return
-	var target: Character = _party[_target_index]
-	if _selected_item.item.get_target_failure_reason(target, _context) != "":
-		return
+	var target: Character = targets[_target_index]
 	_selected_target = target
 	_switch_sub_view(SubView.CONFIRM)
 
@@ -206,6 +224,12 @@ func _on_confirm_accept() -> void:
 	if _selected_target != null:
 		targets.append(_selected_target)
 	var used_inst := _selected_item
+	if _combat_command_mode:
+		var used_target := _selected_target
+		_selected_item = null
+		_selected_target = null
+		combat_item_selected.emit(used_inst, used_target)
+		return
 	var result: ItemEffectResult = _inventory.use_item(_selected_item, targets, _context)
 	_selected_item = null
 	_selected_target = null
@@ -228,15 +252,28 @@ func _has_targets() -> bool:
 func _list_items() -> Array[ItemInstance]:
 	if _inventory == null:
 		return [] as Array[ItemInstance]
-	return _inventory.list()
+	var result: Array[ItemInstance] = []
+	for inst in _inventory.list():
+		if inst != null and inst.item != null and inst.item.is_consumable():
+			result.append(inst)
+	return result
+
+
+func _list_targets() -> Array[Character]:
+	if not _combat_command_mode:
+		return _party
+	var result: Array[Character] = []
+	if _selected_item == null:
+		return result
+	for ch in _party:
+		if _selected_item.item.get_target_failure_reason(ch, _context) == "":
+			result.append(ch)
+	return result
 
 
 func _first_valid_target_index() -> int:
 	if _selected_item == null:
 		return 0
-	for i in range(_party.size()):
-		if _selected_item.item.get_target_failure_reason(_party[i], _context) == "":
-			return i
 	return 0
 
 
@@ -246,7 +283,7 @@ func _refresh_select_item() -> void:
 	TitledView.clear_extras(_select_item_container)
 	if _inventory == null:
 		return
-	var instances := _inventory.list()
+	var instances := _list_items()
 	if instances.is_empty():
 		var empty := Label.new()
 		empty.text = "  (アイテムなし)"
@@ -277,8 +314,9 @@ func _refresh_select_target() -> void:
 	item_label.text = "使用: %s" % _selected_item.item.item_name
 	item_label.add_theme_font_size_override("font_size", 16)
 	_select_target_container.add_child(item_label)
-	for i in range(_party.size()):
-		var ch: Character = _party[i]
+	var targets := _list_targets()
+	for i in range(targets.size()):
+		var ch: Character = targets[i]
 		var reason := _selected_item.item.get_target_failure_reason(ch, _context)
 		var valid := reason == ""
 		var line: String

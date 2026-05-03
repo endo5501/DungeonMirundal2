@@ -30,10 +30,12 @@ var _current_actor_index: int = 0
 var _monster_panel: CombatMonsterPanel
 var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
-var _item_selector: CombatItemSelector
-var _pending_item_instance: ItemInstance = null
+var _item_use_panel: PanelContainer
+var _item_use_flow: ItemUseFlow
 var _combat_log: CombatLog
 var _result_panel: CombatResultPanel
+var _log_timer: Timer
+var _log_pending_actions: Array = []
 # Cached separately from TurnEngine._outcome because unit tests call
 # show_result() with a hand-built EncounterOutcome that never passed through
 # a TurnEngine. Revisit if items-and-economy drops that test surface.
@@ -67,6 +69,11 @@ func start_encounter(monster_party: MonsterParty) -> void:
 		_combat_log.clear_log()
 	if _result_panel != null:
 		_result_panel.visible = false
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
+	cancel_log_playback()
 	_refresh_panels()
 	_begin_command_phase()
 
@@ -116,25 +123,17 @@ func target_select(target_index: int) -> void:
 	_handle_target_choice(targets[target_index])
 
 
-func item_select(item_index: int) -> void:
-	# Test/UI convenience: pick an item by index in the selector's entries.
-	if _current_phase != Phase.ITEM_SELECT or _item_selector == null:
+func item_select(_item_index: int) -> void:
+	if _current_phase != Phase.ITEM_SELECT or _item_use_flow == null:
 		return
-	var entries: Array = _item_selector.get_entries()
-	if item_index < 0 or item_index >= entries.size():
-		return
-	var entry: Dictionary = entries[item_index]
-	if not entry.usable:
-		return
-	_on_item_selector_item_selected(entry.instance)
 
 
 func get_item_selector() -> CombatItemSelector:
-	return _item_selector
+	return null
 
 
-func get_pending_item_instance() -> ItemInstance:
-	return _pending_item_instance
+func get_item_use_flow() -> ItemUseFlow:
+	return _item_use_flow
 
 
 # --- phases ---
@@ -171,23 +170,29 @@ func _handle_command_choice(option_index: int) -> void:
 			_turn_engine.submit_command(_current_actor_index, DefendCommand.new())
 			_advance_to_next_actor()
 		_OPT_ITEM:
-			_open_item_selector()
+			_show_item_use_flow()
 		_OPT_ESCAPE:
 			_turn_engine.submit_command(_current_actor_index, EscapeCommand.new())
 			_advance_to_next_actor()
 
 
-func _open_item_selector() -> void:
+func _show_item_use_flow() -> void:
 	var inv: Inventory = GameState.inventory if GameState != null else null
-	var ctx := ItemUseContext.make(true, true, [])
-	if _item_selector == null or inv == null or _consumable_count(inv) == 0:
+	if _item_use_flow == null or inv == null or _consumable_count(inv) == 0:
 		if _combat_log != null:
 			_combat_log.append_line("アイテムがありません")
-		# Stay in command menu: do not hide or advance.
 		return
+	var ctx := ItemUseContext.make(true, true, [])
+	var party_chars: Array[Character] = []
+	for pc in _turn_engine.party:
+		if pc is PartyCombatant and pc.character != null:
+			party_chars.append(pc.character)
 	_current_phase = Phase.ITEM_SELECT
 	_command_menu.hide_menu()
-	_item_selector.show_with(inv, ctx)
+	_item_use_flow.setup_for_combat(ctx, inv, party_chars)
+	if _item_use_panel != null:
+		_item_use_panel.visible = true
+	_item_use_flow.visible = true
 
 
 func _consumable_count(inv: Inventory) -> int:
@@ -198,61 +203,38 @@ func _consumable_count(inv: Inventory) -> int:
 	return count
 
 
-func _on_item_selector_item_selected(instance: ItemInstance) -> void:
-	_pending_item_instance = instance
-	if instance.item.target_conditions.is_empty():
-		_commit_item_command(null)
-		return
-	_current_phase = Phase.ITEM_TARGET
-	_item_selector.hide_selector()
-	var valid_targets: Array = _valid_item_targets(instance)
-	if valid_targets.is_empty():
-		if _combat_log != null:
-			_combat_log.append_line("有効な対象がいない")
-		_pending_item_instance = null
+func _on_item_use_flow_completed(message: String) -> void:
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
+	if message == "":
 		_current_phase = Phase.COMMAND_MENU
 		_command_menu.show_for(_turn_engine.party[_current_actor_index])
 		return
-	_target_selector.show_with(valid_targets)
 
 
-func _on_item_selector_cancelled() -> void:
-	_pending_item_instance = null
-	_item_selector.hide_selector()
-	_current_phase = Phase.COMMAND_MENU
-	_command_menu.show_for(_turn_engine.party[_current_actor_index])
-
-
-func _valid_item_targets(instance: ItemInstance) -> Array:
-	var result: Array = []
-	if instance == null or instance.item == null:
-		return result
-	var ctx := ItemUseContext.make(true, true, [])
-	for pc in _turn_engine.party:
-		if pc == null:
-			continue
-		var ch = pc.character if pc is PartyCombatant else pc
-		if instance.item.get_target_failure_reason(ch, ctx) == "":
-			result.append(pc)
-	return result
-
-
-func _commit_item_command(target: CombatActor) -> void:
-	if _pending_item_instance == null:
-		return
+func _on_combat_item_selected(instance: ItemInstance, target: Character) -> void:
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
+	var target_actor := _find_party_combatant_for_character(target)
 	var actor: CombatActor = _turn_engine.party[_current_actor_index]
-	var cmd := ItemCommand.new(actor, _pending_item_instance, target)
-	_turn_engine.submit_command(_current_actor_index, cmd)
-	_pending_item_instance = null
-	if _item_selector != null:
-		_item_selector.hide_selector()
+	_turn_engine.submit_command(_current_actor_index, ItemCommand.new(actor, instance, target_actor))
 	_advance_to_next_actor()
 
 
+func _find_party_combatant_for_character(target: Character) -> CombatActor:
+	if target == null:
+		return null
+	for pc in _turn_engine.party:
+		if pc is PartyCombatant and pc.character == target:
+			return pc
+	return null
+
+
 func _handle_target_choice(target: CombatActor) -> void:
-	if _pending_item_instance != null:
-		_commit_item_command(target)
-		return
 	_turn_engine.submit_command(_current_actor_index, AttackCommand.new(target))
 	_target_selector.hide_selector()
 	_advance_to_next_actor()
@@ -269,18 +251,56 @@ func _resolve_turn_now() -> void:
 	_command_menu.hide_menu()
 	if _target_selector != null:
 		_target_selector.hide_selector()
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
 	var report := _turn_engine.resolve_turn(_rng)
 	_refresh_panels()
 	_play_log_sequentially(report)
 
 
 func _play_log_sequentially(report: TurnReport) -> void:
-	if _combat_log != null and report != null:
-		for action in report.actions:
-			_combat_log.append_from_report_action(action)
-			if log_line_delay > 0.0:
-				await get_tree().create_timer(log_line_delay).timeout
-	_on_log_playback_finished()
+	_log_pending_actions.clear()
+	if report != null:
+		_log_pending_actions = report.actions.duplicate()
+	_ensure_log_timer()
+	_show_next_log_line()
+
+
+func _ensure_log_timer() -> void:
+	if _log_timer != null:
+		return
+	_log_timer = Timer.new()
+	_log_timer.one_shot = true
+	_log_timer.timeout.connect(_on_log_timer)
+	add_child(_log_timer)
+
+
+func _show_next_log_line() -> void:
+	if not _is_active:
+		cancel_log_playback()
+		return
+	if _log_pending_actions.is_empty():
+		_on_log_playback_finished()
+		return
+	var action = _log_pending_actions.pop_front()
+	if _combat_log != null:
+		_combat_log.append_from_report_action(action)
+	if log_line_delay > 0.0:
+		_log_timer.start(log_line_delay)
+	else:
+		_show_next_log_line()
+
+
+func _on_log_timer() -> void:
+	_show_next_log_line()
+
+
+func cancel_log_playback() -> void:
+	_log_pending_actions.clear()
+	if _log_timer != null:
+		_log_timer.stop()
 
 
 func _on_log_playback_finished() -> void:
@@ -292,59 +312,28 @@ func _on_log_playback_finished() -> void:
 
 func _finalize_battle() -> void:
 	var outcome := _turn_engine.outcome()
-	var level_ups: Array = []
+	var summary := BattleResolver.resolve_rewards(_turn_engine, _rng)
+	if outcome != null:
+		outcome.gained_experience = summary.gained_experience
+		outcome.gained_gold = summary.gained_gold
 	if outcome != null and outcome.result == EncounterOutcome.Result.CLEARED:
-		var participant_characters := _collect_participant_characters()
-		var dead_monsters := _collect_dead_monsters()
-		var levels_before: Array = []
-		for ch in participant_characters:
-			levels_before.append(ch.level)
-		var share := ExperienceCalculator.award(participant_characters, dead_monsters)
-		outcome.gained_experience = share
-		outcome.gained_gold = _compute_gold_drop(dead_monsters)
-		for i in range(participant_characters.size()):
-			var ch: Character = participant_characters[i]
-			if ch.level > int(levels_before[i]):
-				level_ups.append({"name": ch.character_name, "new_level": ch.level})
 		party_state_changed.emit()
-	show_result(outcome, level_ups)
+	show_result(outcome, summary)
 
 
-func _compute_gold_drop(dead_monsters: Array) -> int:
-	if _rng == null:
-		return 0
-	var total: int = 0
-	for m in dead_monsters:
-		if m is Monster and m.data != null:
-			total += _rng.randi_range(m.data.gold_min, m.data.gold_max)
-	return total
-
-
-func _collect_participant_characters() -> Array:
-	var result: Array = []
-	for pc in _turn_engine.party:
-		if pc is PartyCombatant and pc.character != null:
-			result.append(pc.character)
-	return result
-
-
-func _collect_dead_monsters() -> Array:
-	var result: Array = []
-	for mc in _turn_engine.monsters:
-		if mc is MonsterCombatant and not mc.is_alive() and mc.monster != null:
-			result.append(mc.monster)
-	return result
-
-
-func show_result(outcome: EncounterOutcome, level_ups: Array) -> void:
+func show_result(outcome: EncounterOutcome, summary: BattleSummary) -> void:
 	_last_outcome = outcome
 	_current_phase = Phase.RESULT
 	if _command_menu != null:
 		_command_menu.hide_menu()
 	if _target_selector != null:
 		_target_selector.hide_selector()
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
 	if _result_panel != null:
-		_result_panel.show_result(outcome, level_ups)
+		_result_panel.show_result(outcome, summary)
 
 
 func confirm_result() -> void:
@@ -356,6 +345,7 @@ func confirm_result() -> void:
 func _on_result_confirmed() -> void:
 	if _last_outcome == null:
 		_last_outcome = EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
+	cancel_log_playback()
 	_is_active = false
 	visible = false
 	if _result_panel != null:
@@ -382,73 +372,20 @@ func get_result_panel_text() -> String:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_active:
 		return
-	var handled := false
-	match _current_phase:
-		Phase.COMMAND_MENU:
-			handled = _handle_command_menu_event(event)
-		Phase.TARGET_SELECT:
-			handled = _handle_target_select_event(event)
-		Phase.ITEM_SELECT:
-			handled = _handle_item_select_event(event)
-		Phase.ITEM_TARGET:
-			handled = _handle_target_select_event(event)
-		Phase.RESULT:
-			handled = _handle_result_event(event)
-		_:
-			handled = false
+	var handled := CombatInputRouter.route(event, _current_phase, _panels_dict())
 	if handled:
 		var viewport := get_viewport()
 		if viewport != null:
 			viewport.set_input_as_handled()
 
 
-func _handle_command_menu_event(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up"):
-		_command_menu.move_up()
-		return true
-	if event.is_action_pressed("ui_down"):
-		_command_menu.move_down()
-		return true
-	if event.is_action_pressed("ui_accept"):
-		command_menu_select(_command_menu.get_selected_index())
-		return true
-	return false
-
-
-func _handle_target_select_event(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up"):
-		_target_selector.move_up()
-		return true
-	if event.is_action_pressed("ui_down"):
-		_target_selector.move_down()
-		return true
-	if event.is_action_pressed("ui_accept"):
-		target_select(_target_selector.get_selected_index())
-		return true
-	return false
-
-
-func _handle_item_select_event(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up"):
-		_item_selector.move_up()
-		return true
-	if event.is_action_pressed("ui_down"):
-		_item_selector.move_down()
-		return true
-	if event.is_action_pressed("ui_accept"):
-		_item_selector.confirm_current()
-		return true
-	if event.is_action_pressed("ui_cancel"):
-		_on_item_selector_cancelled()
-		return true
-	return false
-
-
-func _handle_result_event(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_accept"):
-		confirm_result()
-		return true
-	return false
+func _panels_dict() -> Dictionary:
+	return {
+		"command_menu": _command_menu,
+		"target_selector": _target_selector,
+		"item_selector": null,
+		"result_panel": _result_panel,
+	}
 
 
 # --- helpers ---
@@ -495,19 +432,26 @@ func _build_combat_ui() -> void:
 	_command_menu = CombatCommandMenu.new()
 	_place(_command_menu, 0.15, 0.32, 0.55, 0.62)
 	_command_menu.visible = false
+	_command_menu.command_selected.connect(_handle_command_choice)
 	add_child(_command_menu)
 
 	_target_selector = CombatTargetSelector.new()
 	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
 	_target_selector.visible = false
+	_target_selector.target_selected.connect(_handle_target_choice)
 	add_child(_target_selector)
 
-	_item_selector = CombatItemSelector.new()
-	_place(_item_selector, 0.15, 0.32, 0.55, 0.62)
-	_item_selector.visible = false
-	_item_selector.item_selected.connect(_on_item_selector_item_selected)
-	_item_selector.cancelled.connect(_on_item_selector_cancelled)
-	add_child(_item_selector)
+	_item_use_panel = PanelContainer.new()
+	_place(_item_use_panel, 0.15, 0.32, 0.55, 0.62)
+	_item_use_panel.visible = false
+	add_child(_item_use_panel)
+
+	_item_use_flow = ItemUseFlow.new()
+	_item_use_flow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_item_use_flow.visible = false
+	_item_use_flow.flow_completed.connect(_on_item_use_flow_completed)
+	_item_use_flow.combat_item_selected.connect(_on_combat_item_selected)
+	_item_use_panel.add_child(_item_use_flow)
 
 	_result_panel = CombatResultPanel.new()
 	_place(_result_panel, 0.20, 0.25, 0.80, 0.60)

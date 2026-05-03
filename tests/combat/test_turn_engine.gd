@@ -221,6 +221,29 @@ func test_attack_on_dead_target_is_retargeted_or_skipped():
 	assert_eq(engine.state, TurnEngine.State.FINISHED)  # all monsters should be dead if retargeted
 
 
+func test_attack_on_dead_target_records_retargeted_from():
+	var engine := TurnEngine.new()
+	var party := [
+		_StubPartyActor.new("P1", 999, 0, 10, 30),
+		_StubPartyActor.new("P2", 999, 0, 9, 30),
+	]
+	var monsters := [
+		_StubMonsterActor.new("M1", 0, 0, 1, 5),
+		_StubMonsterActor.new("M2", 0, 0, 1, 5),
+	]
+	engine.start_battle(party, monsters)
+	engine.submit_command(0, AttackCommand.new(monsters[0]))
+	engine.submit_command(1, AttackCommand.new(monsters[0]))
+	var report := engine.resolve_turn(_make_rng())
+	var retargeted_action: Dictionary = {}
+	for action in report.actions:
+		if action.get("type", "") == "attack" and action.get("retargeted_from", "") != "":
+			retargeted_action = action
+			break
+	assert_eq(retargeted_action.get("target_name", ""), "M2")
+	assert_eq(retargeted_action.get("retargeted_from", ""), "M1")
+
+
 # --- escape success ---
 
 func test_escape_success_ends_battle_with_escaped_outcome():
