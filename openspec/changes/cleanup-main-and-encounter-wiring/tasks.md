@@ -22,12 +22,12 @@
 
 ## 3. _refresh_combat_overlay_dependencies の削除 (TDD)
 
-- [ ] 3.1 既存テストで `_refresh_combat_overlay_dependencies` を呼んでいる箇所がないことを grep 確認
-- [ ] 3.2 `_combat_overlay.setup_dependencies(...)` の呼び出しを `_on_start_new_game` および `_load_game` 完了タイミングに移動
-- [ ] 3.3 `_setup_encounter_coordinator` で `setup_dependencies` を呼んでいたら、guild が null である可能性があるので削除し、後で呼ぶ形に
-- [ ] 3.4 `_attach_encounter_coordinator_to_screen` から `_refresh_combat_overlay_dependencies` 呼び出しを削除
-- [ ] 3.5 `_refresh_combat_overlay_dependencies` メソッド本体を削除
-- [ ] 3.6 全テスト通過を確認しコミット
+- [x] 3.1 既存テストで `_refresh_combat_overlay_dependencies` を呼んでいる箇所がないことを grep 確認
+- [x] 3.2 `_combat_overlay.setup_dependencies(...)` の呼び出しを `_on_start_new_game` および `_load_game` 完了タイミングに移動
+- [x] 3.3 `_setup_encounter_coordinator` で `setup_dependencies` を呼んでいたら、guild が null である可能性があるので削除し、後で呼ぶ形に
+- [x] 3.4 `_attach_encounter_coordinator_to_screen` から `_refresh_combat_overlay_dependencies` 呼び出しを削除
+- [x] 3.5 `_refresh_combat_overlay_dependencies` メソッド本体を削除
+- [x] 3.6 全テスト通過を確認しコミット
 
 ## 4. DungeonEntrance.setup のシグネチャ変更 (TDD)
 

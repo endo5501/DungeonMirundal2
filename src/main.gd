@@ -78,6 +78,7 @@ func _show_title_screen() -> void:
 
 func _on_start_new_game() -> void:
 	GameState.new_game()
+	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 	_show_town_screen()
 
 func _on_continue_game() -> void:
@@ -204,7 +205,6 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	if _encounter_coordinator == null:
 		return
-	_refresh_combat_overlay_dependencies()
 	# TODO: use the dungeon's current floor once multi-floor dungeons land.
 	var table: EncounterTableData = _encounter_tables_by_floor.get(1, null)
 	if table == null:
@@ -212,11 +212,6 @@ func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	_encounter_coordinator.set_table(table)
 	_encounter_coordinator.attach_screen(screen)
 
-
-func _refresh_combat_overlay_dependencies() -> void:
-	if _combat_overlay == null or GameState.guild == null:
-		return
-	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 
 func _on_return_to_town() -> void:
 	GameState.heal_party()
@@ -269,6 +264,7 @@ func _load_game(slot_number: int) -> bool:
 		if _current_screen is LoadScreen:
 			(_current_screen as LoadScreen).show_load_failure(result)
 		return false
+	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 	match GameState.game_location:
 		GameState.LOCATION_TOWN:
 			_show_town_screen()
