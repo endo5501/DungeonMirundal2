@@ -146,7 +146,7 @@ func is_encounter_active() -> bool:
 	return _encounter_active
 
 func is_showing_return_dialog() -> bool:
-	return _return_dialog != null and _return_dialog.visible
+	return _return_dialog.visible
 
 func refresh_party_display(party_data: PartyData) -> void:
 	if _party_display != null and party_data != null:

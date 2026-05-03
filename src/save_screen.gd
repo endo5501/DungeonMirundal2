@@ -25,7 +25,6 @@ func _ready() -> void:
 	_overwrite_dialog = ConfirmDialog.new()
 	add_child(_overwrite_dialog)
 	_overwrite_dialog.confirmed.connect(_on_overwrite_confirmed)
-	_overwrite_dialog.cancelled.connect(_on_overwrite_cancelled)
 
 func setup(save_manager: SaveManager) -> void:
 	_save_manager = save_manager
@@ -35,7 +34,7 @@ func get_slot_count() -> int:
 	return _slots.size()
 
 func is_overwrite_dialog_visible() -> bool:
-	return _overwrite_dialog != null and _overwrite_dialog.visible
+	return _overwrite_dialog.visible
 
 func _build_ui() -> void:
 	_slots.clear()
@@ -117,9 +116,6 @@ func _on_overwrite_confirmed() -> void:
 		save_completed.emit()
 	else:
 		_status_label.text = SAVE_FAILURE_MESSAGE
-
-func _on_overwrite_cancelled() -> void:
-	pass
 
 static func _format_slot_label(s: Dictionary) -> String:
 	var loc: String

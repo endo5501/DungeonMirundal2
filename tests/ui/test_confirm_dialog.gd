@@ -140,3 +140,25 @@ func test_ui_up_moves_selection_to_yes():
 	dialog.setup("確認", 1)  # start on いいえ
 	dialog._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
 	assert_eq(dialog.get_selected_index(), 0)
+
+
+# --- 8. Public confirm()/cancel() helpers ---
+
+func test_confirm_helper_emits_confirmed_and_hides():
+	var dialog := _make_dialog()
+	dialog.setup("確認")
+	watch_signals(dialog)
+	dialog.confirm()
+	assert_signal_emitted(dialog, "confirmed")
+	assert_signal_not_emitted(dialog, "cancelled")
+	assert_false(dialog.visible)
+
+
+func test_cancel_helper_emits_cancelled_and_hides():
+	var dialog := _make_dialog()
+	dialog.setup("確認")
+	watch_signals(dialog)
+	dialog.cancel()
+	assert_signal_emitted(dialog, "cancelled")
+	assert_signal_not_emitted(dialog, "confirmed")
+	assert_false(dialog.visible)

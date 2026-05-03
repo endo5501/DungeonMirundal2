@@ -197,8 +197,7 @@ func test_confirmed_delete_returns_focus_to_buttons():
 	entrance.selected_index = 0
 	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
 	assert_eq(entrance._mode, DungeonEntrance.Mode.DELETE_CONFIRM)
-	entrance._delete_dialog._menu.selected_index = 0  # はい
-	entrance._delete_dialog._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion
+	entrance._delete_dialog.confirm()
 	assert_eq(_registry.size(), 1, "one dungeon should remain after deleting one of two")
 	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should reset to BUTTONS after confirmed delete")
 
@@ -209,8 +208,7 @@ func test_enter_after_last_delete_does_not_reopen_dialog():
 	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
 	entrance.selected_index = 0
 	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
-	entrance._delete_dialog._menu.selected_index = 0  # はい
-	entrance._delete_dialog._unhandled_input(_make_key_event(KEY_ENTER))  # confirm deletion, registry now empty
+	entrance._delete_dialog.confirm()
 	assert_eq(_registry.size(), 0)
 	assert_eq(entrance._focus, DungeonEntrance.Focus.BUTTONS, "focus should not remain on LIST_FOR_DELETE after last dungeon is deleted")
 	# A subsequent Enter must not reopen the delete dialog (would crash with selected_index=-1)
@@ -225,8 +223,7 @@ func test_cancelled_delete_keeps_focus_on_list():
 	entrance._focus = DungeonEntrance.Focus.LIST_FOR_DELETE
 	entrance.selected_index = 0
 	entrance._unhandled_input(_make_key_event(KEY_ENTER))  # open confirm dialog
-	# default いいえ (index 1) — accept cancels deletion
-	entrance._delete_dialog._unhandled_input(_make_key_event(KEY_ENTER))
+	entrance._delete_dialog.cancel()
 	assert_eq(_registry.size(), 2, "no dungeon should be deleted on cancel")
 	assert_eq(entrance._focus, DungeonEntrance.Focus.LIST_FOR_DELETE, "focus should remain on LIST_FOR_DELETE after cancel so user can pick a different target")
 

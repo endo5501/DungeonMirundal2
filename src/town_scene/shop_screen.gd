@@ -297,27 +297,22 @@ func _handle_list_input(event: InputEventKey, count: int, on_accept: Callable) -
 
 
 func _input_buy(event: InputEventKey) -> void:
-	if _handle_list_input(event, get_buy_catalog().size(), _do_buy):
+	var catalog := get_buy_catalog()
+	if _handle_list_input(event, catalog.size(), func(i: int) -> void: buy(catalog[i])):
 		_rebuild()
 		get_viewport().set_input_as_handled()
 
 
 func _input_sell(event: InputEventKey) -> void:
-	if _handle_list_input(event, get_sell_candidates().size(), _do_sell):
+	var candidates := get_sell_candidates()
+	var on_accept := func(i: int) -> void:
+		sell(candidates[i])
+		var remaining := candidates.size() - 1
+		if _selected_index >= remaining:
+			_selected_index = maxi(0, remaining - 1)
+	if _handle_list_input(event, candidates.size(), on_accept):
 		_rebuild()
 		get_viewport().set_input_as_handled()
-
-
-func _do_buy(index: int) -> void:
-	buy(get_buy_catalog()[index])
-
-
-func _do_sell(index: int) -> void:
-	var candidates := get_sell_candidates()
-	sell(candidates[index])
-	var remaining := get_sell_candidates().size()
-	if _selected_index >= remaining:
-		_selected_index = maxi(0, remaining - 1)
 
 
 func enter_buy() -> void:

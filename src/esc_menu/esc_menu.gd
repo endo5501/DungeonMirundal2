@@ -147,9 +147,9 @@ func go_back() -> void:
 			_switch_view(View.MAIN_MENU)
 
 func handle_input(event: InputEvent) -> bool:
+	# ConfirmDialog and the flow Controls own their own input while visible.
 	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW:
 		return false
-	# ConfirmDialog handles its own input while visible.
 	if _current_view == View.QUIT_DIALOG:
 		return false
 	if event.is_action_pressed("ui_up"):
@@ -177,11 +177,6 @@ func _move_cursor(direction: int) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
-		return
-	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW:
-		return
-	# ConfirmDialog handles its own input while visible.
-	if _current_view == View.QUIT_DIALOG:
 		return
 	if handle_input(event):
 		get_viewport().set_input_as_handled()

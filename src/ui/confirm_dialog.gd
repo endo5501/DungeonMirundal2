@@ -18,9 +18,9 @@ func _init() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 
 func _ready() -> void:
-	if _container == null:
-		_build_ui()
+	_build_ui()
 	visible = false
+	set_process_unhandled_input(false)
 
 func _build_ui() -> void:
 	_container = CenterContainer.new()
@@ -49,20 +49,25 @@ func _build_ui() -> void:
 		_menu_rows.append(CursorMenuRow.create(vbox, OPTIONS[i], 18))
 
 func setup(message: String, default_index: int = DEFAULT_NO_INDEX) -> void:
-	if _container == null:
-		_build_ui()
 	_message_label.text = message
 	_menu.selected_index = default_index
 	_menu.update_rows(_menu_rows)
 	visible = true
+	set_process_unhandled_input(true)
 
 func get_message() -> String:
-	if _message_label == null:
-		return ""
-	return _message_label.text
+	return _message_label.text if _message_label != null else ""
 
 func get_selected_index() -> int:
 	return _menu.selected_index
+
+# Public test helpers — let tests drive the dialog without poking _menu.
+func confirm() -> void:
+	_menu.selected_index = DEFAULT_YES_INDEX
+	_on_accept()
+
+func cancel() -> void:
+	_on_cancel()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
@@ -75,13 +80,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if consumed:
 		get_viewport().set_input_as_handled()
 
-func _on_accept() -> void:
+func _hide() -> void:
 	visible = false
-	if _menu.selected_index == DEFAULT_YES_INDEX:
+	set_process_unhandled_input(false)
+
+func _on_accept() -> void:
+	var was_yes := _menu.selected_index == DEFAULT_YES_INDEX
+	_hide()
+	if was_yes:
 		confirmed.emit()
 	else:
 		cancelled.emit()
 
 func _on_cancel() -> void:
-	visible = false
+	_hide()
 	cancelled.emit()
