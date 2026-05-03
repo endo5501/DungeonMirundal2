@@ -27,6 +27,20 @@ func move_backward(wiz_map: WizMap) -> bool:
 	position += Direction.offset(back_dir)
 	return true
 
+func strafe_left(wiz_map: WizMap) -> bool:
+	var dir := Direction.turn_left(facing)
+	if not wiz_map.can_move(position.x, position.y, dir):
+		return false
+	position += Direction.offset(dir)
+	return true
+
+func strafe_right(wiz_map: WizMap) -> bool:
+	var dir := Direction.turn_right(facing)
+	if not wiz_map.can_move(position.x, position.y, dir):
+		return false
+	position += Direction.offset(dir)
+	return true
+
 func to_dict() -> Dictionary:
 	return {
 		"position": [position.x, position.y],

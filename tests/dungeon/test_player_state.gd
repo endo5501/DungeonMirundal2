@@ -123,3 +123,39 @@ func test_move_backward_does_not_change_facing():
 	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
 	ps.move_backward(wm)
 	assert_eq(ps.facing, Direction.NORTH)
+
+# --- strafe_left / strafe_right ---
+
+func test_strafe_left_facing_north_moves_west():
+	var wm = WizMap.new(10)
+	wm.set_edge(5, 5, Direction.WEST, EdgeType.OPEN)
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var result = ps.strafe_left(wm)
+	assert_true(result)
+	assert_eq(ps.position, Vector2i(4, 5))
+	assert_eq(ps.facing, Direction.NORTH)
+
+func test_strafe_right_facing_north_moves_east():
+	var wm = WizMap.new(10)
+	wm.set_edge(5, 5, Direction.EAST, EdgeType.OPEN)
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var result = ps.strafe_right(wm)
+	assert_true(result)
+	assert_eq(ps.position, Vector2i(6, 5))
+	assert_eq(ps.facing, Direction.NORTH)
+
+func test_strafe_left_facing_east_moves_north():
+	var wm = WizMap.new(10)
+	wm.set_edge(5, 5, Direction.NORTH, EdgeType.OPEN)
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.EAST)
+	var result = ps.strafe_left(wm)
+	assert_true(result)
+	assert_eq(ps.position, Vector2i(5, 4))
+	assert_eq(ps.facing, Direction.EAST)
+
+func test_strafe_blocked_by_wall():
+	var wm = WizMap.new(10)
+	var ps = PlayerState.new(Vector2i(5, 5), Direction.NORTH)
+	var result = ps.strafe_left(wm)
+	assert_false(result)
+	assert_eq(ps.position, Vector2i(5, 5))

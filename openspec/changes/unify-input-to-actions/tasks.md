@@ -1,26 +1,26 @@
 ## 1. project.godot にカスタムアクションを追加
 
-- [ ] 1.1 Godot エディタで Project Settings → Input Map を開く
-- [ ] 1.2 `move_forward` アクションを追加し、KEY_W と KEY_UP をバインド
-- [ ] 1.3 `move_back` アクションを追加し、KEY_S と KEY_DOWN をバインド
-- [ ] 1.4 `strafe_left` アクションを追加し、KEY_A をバインド
-- [ ] 1.5 `strafe_right` アクションを追加し、KEY_D をバインド
-- [ ] 1.6 `turn_left` アクションを追加し、KEY_LEFT をバインド
-- [ ] 1.7 `turn_right` アクションを追加し、KEY_RIGHT をバインド
-- [ ] 1.8 `toggle_full_map` アクションを追加し、KEY_M をバインド
-- [ ] 1.9 `project.godot` を保存し、`[input]` セクションが追加されていることを確認
+- [x] 1.1 Godot エディタで Project Settings → Input Map を開く
+- [x] 1.2 `move_forward` アクションを追加し、KEY_W と KEY_UP をバインド
+- [x] 1.3 `move_back` アクションを追加し、KEY_S と KEY_DOWN をバインド
+- [x] 1.4 `strafe_left` アクションを追加し、KEY_A をバインド
+- [x] 1.5 `strafe_right` アクションを追加し、KEY_D をバインド
+- [x] 1.6 `turn_left` アクションを追加し、KEY_LEFT をバインド
+- [x] 1.7 `turn_right` アクションを追加し、KEY_RIGHT をバインド
+- [x] 1.8 `toggle_full_map` アクションを追加し、KEY_M をバインド
+- [x] 1.9 `project.godot` を保存し、`[input]` セクションが追加されていることを確認
 
 ## 2. TestHelpers の action event ヘルパー確認
 
-- [ ] 2.1 `tests/test_helpers.gd` に `make_action_event(action: StringName, pressed: bool = true) -> InputEventAction` が存在することを確認(C4a で追加済みのはず、なければ追加)
-- [ ] 2.2 GUT 実行時に `is_action_pressed("move_forward")` が `make_action_event("move_forward")` で true を返すことを smoke test で確認
+- [x] 2.1 `tests/test_helpers.gd` に `make_action_event(action: StringName, pressed: bool = true) -> InputEventAction` が存在することを確認(C4a で追加済みのはず、なければ追加)
+- [x] 2.2 GUT 実行時に `is_action_pressed("move_forward")` が `make_action_event("move_forward")` で true を返すことを smoke test で確認
 
 ## 3. dungeon_screen.gd の action 化 (TDD)
 
-- [ ] 3.1 `tests/dungeon/test_dungeon_screen_encounter.gd` の `make_key_event(KEY_UP/W/S/...)` 呼び出しを `make_action_event("move_forward"/...)` に置換
-- [ ] 3.2 `tests/dungeon/test_dungeon_screen_full_map.gd` の同様の置換
-- [ ] 3.3 既存テストが失敗することを確認(production がまだ keycode のため)
-- [ ] 3.4 `src/dungeon_scene/dungeon_screen.gd` の `_unhandled_input` を action ベースに書き換え:
+- [x] 3.1 `tests/dungeon/test_dungeon_screen_encounter.gd` の `make_key_event(KEY_UP/W/S/...)` 呼び出しを `make_action_event("move_forward"/...)` に置換
+- [x] 3.2 `tests/dungeon/test_dungeon_screen_full_map.gd` の同様の置換
+- [x] 3.3 既存テストが失敗することを確認(production がまだ keycode のため)
+- [x] 3.4 `src/dungeon_scene/dungeon_screen.gd` の `_unhandled_input` を action ベースに書き換え:
   - `KEY_W/UP` → `is_action_pressed("move_forward")`
   - `KEY_S/DOWN` → `is_action_pressed("move_back")`
   - `KEY_A` → `is_action_pressed("strafe_left")`
@@ -30,7 +30,7 @@
   - `KEY_M` → `is_action_pressed("toggle_full_map")`
   - `KEY_ESCAPE` → `is_action_pressed("ui_cancel")` (帰還ダイアログ用)
   - `KEY_ENTER/SPACE` → `is_action_pressed("ui_accept")` (帰還ダイアログ用)
-- [ ] 3.5 全テスト通過を確認しコミット
+- [x] 3.5 全テスト通過を確認しコミット
 
 ## 4. dungeon_scene 系の action 化
 
