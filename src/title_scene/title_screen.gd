@@ -62,16 +62,10 @@ func _ready() -> void:
 	_menu.update_rows(_rows)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_down"):
-		_menu.move_cursor(1)
-		_menu.update_rows(_rows)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_menu.move_cursor(-1)
-		_menu.update_rows(_rows)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		confirm_selection()
+	# ESC is intentionally ignored on the title screen: there is no parent screen
+	# to return to. We deliberately omit on_back so MenuController.route returns
+	# false for ui_cancel, leaving set_input_as_handled uncalled.
+	if MenuController.route(event, _menu, _rows, confirm_selection):
 		get_viewport().set_input_as_handled()
 
 func get_menu_items() -> Array[String]:
