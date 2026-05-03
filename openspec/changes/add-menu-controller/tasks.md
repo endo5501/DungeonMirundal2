@@ -13,8 +13,8 @@
 - [x] 2.6 `route(event_ui_down, ..., on_cursor_changed)` で `on_cursor_changed` が `update_rows` の後に 1 回呼ばれるテスト
 - [x] 2.7 未対応 event(ui_left など)で false が返り、menu の状態が変わらないテスト
 - [x] 2.8 テストを実行し全て失敗することを確認しコミット (Red)
-- [ ] 2.9 `src/ui/menu_controller.gd` を新規作成、`class_name MenuController extends RefCounted` で static `route` を実装
-- [ ] 2.10 全テスト通過を確認しコミット (Green)
+- [x] 2.9 `src/ui/menu_controller.gd` を新規作成、`class_name MenuController extends RefCounted` で static `route` を実装
+- [x] 2.10 全テスト通過を確認しコミット (Green)
 
 ## 3. title_screen の MenuController 採用 (TDD)
 
