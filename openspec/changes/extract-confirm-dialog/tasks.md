@@ -27,11 +27,11 @@
 
 ## 4. save_screen の上書き確認置換 (TDD)
 
-- [ ] 4.1 既存 `test_save_screen.gd` のうち `is_overwrite_dialog_visible()` を assert している箇所を確認し、ConfirmDialog の visible を参照するよう書き換え
-- [ ] 4.2 `src/save_screen.gd` から `_build_overwrite_dialog` / `_handle_overwrite_input` を削除
-- [ ] 4.3 `_overwrite_dialog: ConfirmDialog` フィールドを追加、シグナル接続
-- [ ] 4.4 `is_overwrite_dialog_visible()` の getter は `_overwrite_dialog.visible` を返す形にして、テスト互換性を維持
-- [ ] 4.5 全テスト通過を確認しコミット
+- [x] 4.1 既存 `test_save_screen.gd` のうち `is_overwrite_dialog_visible()` を assert している箇所を確認し、ConfirmDialog の visible を参照するよう書き換え
+- [x] 4.2 `src/save_screen.gd` から `_build_overwrite_dialog` / `_handle_overwrite_input` を削除
+- [x] 4.3 `_overwrite_dialog: ConfirmDialog` フィールドを追加、シグナル接続
+- [x] 4.4 `is_overwrite_dialog_visible()` の getter は `_overwrite_dialog.visible` を返す形にして、テスト互換性を維持
+- [x] 4.5 全テスト通過を確認しコミット
 
 ## 5. esc_menu の終了確認置換 (TDD)
 

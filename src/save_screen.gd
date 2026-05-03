@@ -5,7 +5,7 @@ signal save_completed
 signal back_requested
 
 const NEW_SAVE_LABEL := "新規保存"
-const OVERWRITE_OPTIONS: Array[String] = ["はい", "いいえ"]
+const OVERWRITE_MESSAGE := "上書きしますか？"
 
 const SAVE_FAILURE_MESSAGE := "保存に失敗しました"
 
@@ -17,14 +17,15 @@ var _title_label: Label
 var _container: VBoxContainer
 var _status_label: Label
 
-var _overwrite_visible := false
 var _overwrite_slot: int = -1
-var _overwrite_menu: CursorMenu
-var _overwrite_rows: Array[CursorMenuRow] = []
-var _overwrite_container: CenterContainer
+var _overwrite_dialog: ConfirmDialog
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_overwrite_dialog = ConfirmDialog.new()
+	add_child(_overwrite_dialog)
+	_overwrite_dialog.confirmed.connect(_on_overwrite_confirmed)
+	_overwrite_dialog.cancelled.connect(_on_overwrite_cancelled)
 
 func setup(save_manager: SaveManager) -> void:
 	_save_manager = save_manager
@@ -34,7 +35,7 @@ func get_slot_count() -> int:
 	return _slots.size()
 
 func is_overwrite_dialog_visible() -> bool:
-	return _overwrite_visible
+	return _overwrite_dialog != null and _overwrite_dialog.visible
 
 func _build_ui() -> void:
 	_slots.clear()
@@ -87,37 +88,9 @@ func _build_ui() -> void:
 func get_status_text() -> String:
 	return _status_label.text if _status_label != null else ""
 
-func _build_overwrite_dialog() -> void:
-	_overwrite_menu = CursorMenu.new(OVERWRITE_OPTIONS)
-	_overwrite_menu.selected_index = 1  # default to いいえ
-
-	_overwrite_container = CenterContainer.new()
-	_overwrite_container.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(_overwrite_container)
-
-	var overwrite_panel := PanelContainer.new()
-	overwrite_panel.custom_minimum_size = Vector2(300, 120)
-	_overwrite_container.add_child(overwrite_panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	overwrite_panel.add_child(vbox)
-
-	var msg := Label.new()
-	msg.text = "上書きしますか？"
-	msg.add_theme_font_size_override("font_size", 20)
-	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(msg)
-
-	_overwrite_rows.clear()
-	for i in range(_overwrite_menu.size()):
-		_overwrite_rows.append(CursorMenuRow.create(vbox, _overwrite_menu.items[i], 18))
-	_overwrite_menu.update_rows(_overwrite_rows)
-
 func _unhandled_input(event: InputEvent) -> void:
-	if _overwrite_visible:
-		if MenuController.route(event, _overwrite_menu, _overwrite_rows, _on_overwrite_accept, cancel_overwrite):
-			get_viewport().set_input_as_handled()
+	# ConfirmDialog handles its own input while visible.
+	if is_overwrite_dialog_visible():
 		return
 	if MenuController.route(event, _menu, _menu_rows, _on_slot_selected, back_requested.emit):
 		get_viewport().set_input_as_handled()
@@ -135,23 +108,18 @@ func _on_slot_selected() -> void:
 	else:
 		# Show overwrite dialog
 		_overwrite_slot = selected["slot_number"]
-		_overwrite_visible = true
-		_build_overwrite_dialog()
+		_overwrite_dialog.setup(OVERWRITE_MESSAGE, ConfirmDialog.DEFAULT_NO_INDEX)
 
-func _on_overwrite_accept() -> void:
-	if _overwrite_menu.selected_index != 0:
-		cancel_overwrite()
-		return
+func _on_overwrite_confirmed() -> void:
 	var ok := _save_manager.save(_overwrite_slot)
-	_overwrite_visible = false
-	if _overwrite_container:
-		_overwrite_container.queue_free()
-		_overwrite_container = null
 	if ok:
 		_status_label.text = ""
 		save_completed.emit()
 	else:
 		_status_label.text = SAVE_FAILURE_MESSAGE
+
+func _on_overwrite_cancelled() -> void:
+	pass
 
 static func _format_slot_label(s: Dictionary) -> String:
 	var loc: String
@@ -170,9 +138,3 @@ static func _format_slot_label(s: Dictionary) -> String:
 		parts.append("Lv.%d" % lv)
 	parts.append(loc)
 	return "  ".join(parts)
-
-func cancel_overwrite() -> void:
-	_overwrite_visible = false
-	if _overwrite_container:
-		_overwrite_container.queue_free()
-		_overwrite_container = null

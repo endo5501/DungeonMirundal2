@@ -79,8 +79,8 @@ func test_overwrite_confirm_saves():
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	# Confirm overwrite (select "はい" which is first)
-	screen._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
-	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
+	screen._overwrite_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
+	screen._overwrite_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(screen, "save_completed")
 
 func test_overwrite_cancel_returns_to_list():
@@ -90,7 +90,7 @@ func test_overwrite_cancel_returns_to_list():
 	screen.setup(_save_manager)
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
-	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	screen._overwrite_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_false(screen.is_overwrite_dialog_visible())
 
 # --- ESC to close ---
@@ -132,8 +132,8 @@ func test_overwrite_failure_shows_status_label():
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
 	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	# "はい" is selected after ui_up from default index 1
-	screen._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
-	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
+	screen._overwrite_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
+	screen._overwrite_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_not_emitted(screen, "save_completed")
 	assert_ne(screen.get_status_text(), "")
 
