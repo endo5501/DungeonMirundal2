@@ -34,10 +34,10 @@
 - [x] 4.2 「new_game を 2 度呼んでも item_repository が保持される」テスト追加
 - [x] 4.3 「_ready が idempotent(2 度呼んでも既存 guild が再構築されない)」テスト追加
 - [x] 4.4 テスト Red(item_repository 保持はおそらく既に通る、対称性テストが Red)
-- [ ] 4.5 `src/game_state.gd` に `_initialize_state(reset_for_new_game: bool = false)` ヘルパーを追加
-- [ ] 4.6 `_ready` を `_initialize_state(false)` 呼び出しに置換
-- [ ] 4.7 `new_game` を `_initialize_state(true)` 呼び出しに置換
-- [ ] 4.8 テスト Green コミット
+- [x] 4.5 `src/game_state.gd` に `_initialize_state(reset_for_new_game: bool = false)` ヘルパーを追加
+- [x] 4.6 `_ready` を `_initialize_state(false)` 呼び出しに置換
+- [x] 4.7 `new_game` を `_initialize_state(true)` 呼び出しに置換
+- [x] 4.8 テスト Green コミット
 
 ## 5. 暗黙 Variant の型明示
 

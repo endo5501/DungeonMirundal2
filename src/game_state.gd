@@ -15,20 +15,28 @@ var item_repository: ItemRepository
 
 
 func _ready() -> void:
-	if item_repository == null:
-		var loader := DataLoader.new()
-		item_repository = loader.load_all_items()
-	if inventory == null:
-		inventory = Inventory.new()
+	_initialize_state(false)
 
 
 func new_game() -> void:
-	guild = Guild.new()
-	dungeon_registry = DungeonRegistry.new()
-	inventory = Inventory.new()
-	inventory.gold = INITIAL_GOLD
-	game_location = LOCATION_TOWN
-	current_dungeon_index = -1
+	_initialize_state(true)
+
+
+func _initialize_state(reset_for_new_game: bool) -> void:
+	if item_repository == null:
+		var loader := DataLoader.new()
+		item_repository = loader.load_all_items()
+	if reset_for_new_game or guild == null:
+		guild = Guild.new()
+	if reset_for_new_game or dungeon_registry == null:
+		dungeon_registry = DungeonRegistry.new()
+	if reset_for_new_game or inventory == null:
+		inventory = Inventory.new()
+		if reset_for_new_game:
+			inventory.gold = INITIAL_GOLD
+	if reset_for_new_game:
+		game_location = LOCATION_TOWN
+		current_dungeon_index = -1
 
 
 func heal_party() -> void:
