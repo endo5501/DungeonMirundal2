@@ -42,11 +42,11 @@
 
 ## 6. shop_screen の _handle_list_input 統合 (TDD)
 
-- [ ] 6.1 `tests/town/test_shop_screen.gd` の既存 buy / sell テストが共通ヘルパー経由でも通ることを確認
-- [ ] 6.2 `src/town_scene/shop_screen.gd` に `_handle_list_input(event, count, on_accept: Callable) -> bool` を追加
-- [ ] 6.3 `_input_buy` を `_handle_list_input` 呼び出しに簡素化
-- [ ] 6.4 `_input_sell` を `_handle_list_input` 呼び出しに簡素化(sell 後の `_selected_index` 補正は on_accept 内で実行)
-- [ ] 6.5 全テスト通過を確認しコミット
+- [x] 6.1 `tests/town/test_shop_screen.gd` の既存 buy / sell テストが共通ヘルパー経由でも通ることを確認
+- [x] 6.2 `src/town_scene/shop_screen.gd` に `_handle_list_input(event, count, on_accept: Callable) -> bool` を追加
+- [x] 6.3 `_input_buy` を `_handle_list_input` 呼び出しに簡素化
+- [x] 6.4 `_input_sell` を `_handle_list_input` 呼び出しに簡素化(sell 後の `_selected_index` 補正は on_accept 内で実行)
+- [x] 6.5 全テスト通過を確認しコミット
 
 ## 7. 動作確認
 
