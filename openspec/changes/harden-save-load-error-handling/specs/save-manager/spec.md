@@ -26,7 +26,7 @@ SaveManager SHALL provide a `save(slot_number: int) -> bool` method that seriali
 ## ADDED Requirements
 
 ### Requirement: SaveManager exposes structured load failure reasons
-SaveManager SHALL define a public enum `LoadResult { OK, FILE_NOT_FOUND, PARSE_ERROR, VERSION_TOO_NEW, RESTORE_FAILED }`. The `load(slot_number: int)` method SHALL return one of these enum values, allowing callers to distinguish between the failure causes and surface differentiated UI messages. `push_error` SHALL accompany every non-OK result.
+SaveManager SHALL define a public enum `LoadResult { OK, FILE_NOT_FOUND, PARSE_ERROR, VERSION_TOO_NEW, RESTORE_FAILED }`. The `load(slot_number: int)` method SHALL return one of `OK`, `FILE_NOT_FOUND`, `PARSE_ERROR`, or `VERSION_TOO_NEW`, allowing callers to distinguish between the failure causes and surface differentiated UI messages. `push_error` SHALL accompany every non-OK result. The `RESTORE_FAILED` value is reserved for a future change that adds restore-failure detection (snapshot/rollback of GameState plus null-returning `from_dict` on `Inventory` / `DungeonRegistry`); the current implementation does NOT return this value, but `LoadScreen.show_load_failure` already maps it to a user-facing message so the future detection path can be wired in without further UI work.
 
 #### Scenario: ファイルが存在しない場合
 - **WHEN** save_001.json が存在しない状態で `load(1)` を呼び出す
@@ -40,13 +40,13 @@ SaveManager SHALL define a public enum `LoadResult { OK, FILE_NOT_FOUND, PARSE_E
 - **WHEN** save_001.json の `version` が `CURRENT_VERSION + 1` 以上の状態で `load(1)` を呼び出す
 - **THEN** `LoadResult.VERSION_TOO_NEW` が返る
 
-#### Scenario: 復元中に致命的失敗
-- **WHEN** JSON は読めたがフィールドの型が想定外で `Inventory.from_dict` 等が破綻する場合
-- **THEN** `LoadResult.RESTORE_FAILED` が返る(GameState は安全な状態に保たれる)
-
 #### Scenario: 成功時
 - **WHEN** 正常な save_001.json で `load(1)` を呼び出す
 - **THEN** `LoadResult.OK` が返り、GameState が復元される
+
+#### Scenario: RESTORE_FAILED は将来の検出機構用に予約される
+- **WHEN** 現在の `load()` 実装で内部復元(Inventory.from_dict 等)が型不正データに遭遇する
+- **THEN** GDScript には例外機構が無く、from_dict 側に失敗通知の口も無いため、現実装は GameState を部分復元したまま `LoadResult.OK` を返す可能性がある(既存挙動の維持)。`RESTORE_FAILED` の発行は将来 change で `Inventory.from_dict` / `DungeonRegistry.from_dict` の null 化と `GameState.snapshot()`/`restore()` 機構が整ったときに有効化される
 
 ## MODIFIED Requirements
 

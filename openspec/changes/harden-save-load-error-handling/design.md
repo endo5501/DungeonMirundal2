@@ -97,3 +97,12 @@
 - **[エラーラベルの重ね表示]** 連続失敗時に古いラベルが残る可能性 → 成功時に必ず `text = ""` でクリアする。
 - **[`Character.from_dict` の null 返却の連鎖]** Guild.from_dict だけでなく他の呼び出し元(現状なし、しかし)に伝播する → 他の呼び出し元は CharacterCreation の Character.create() であり、from_dict は使っていない。安全。
 - **[`DataLoader` の `push_error` がノイズになるシナリオ]** 開発中に意図的に空ディレクトリを作る場面は無さそう → 念のため `_load_resources` 呼び出し元(load_all_races など)が空でも進めるよう既存挙動は維持。
+
+## Out of Scope (Reserved for Future Change)
+
+- **[`LoadResult.RESTORE_FAILED` の検出経路]** enum 値と LoadScreen 文言は本 change で確立するが、実際に `load()` から返す検出ロジックは含めない。理由:
+  - GDScript に例外機構が無く、復元中の型不正を try/catch で捕まえられない
+  - `Inventory.from_dict` / `DungeonRegistry.from_dict` が成功/失敗を返す契約になっていない(本 change で行ったのは Character/Guild の null 化のみ)
+  - 仕様の「GameState は安全な状態に保たれる」を満たすには load 前 snapshot + 失敗時 restore の機構が必要
+  - これらの工事は本 change のスコープ「失敗を呼び出し元に必ず伝える契約」を超え、別 change `add-restore-failure-detection` 等で扱うのが適切
+  - UI 側(`LoadScreen.show_load_failure`)は `RESTORE_FAILED` への対応を済ませているので、後続 change は SaveManager 内部の検出ロジック追加だけで完結する
