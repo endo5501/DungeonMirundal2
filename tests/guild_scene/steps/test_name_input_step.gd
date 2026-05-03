@@ -19,7 +19,7 @@ class FakeContext:
 		advance_calls += 1
 
 
-var _step
+var _step: NameInputStep
 var _ctx: FakeContext
 var _content: VBoxContainer
 

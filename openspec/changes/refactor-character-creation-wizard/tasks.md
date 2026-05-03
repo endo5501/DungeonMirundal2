@@ -8,11 +8,11 @@
 
 ## 2. NameInputStep の抽出 (TDD)
 
-- [ ] 2.1 `tests/guild_scene/steps/test_name_input_step.gd` を作成、`build` で LineEdit が作られるテスト、`handle_input` で ui_accept (focus 制御) と ui_cancel が CANCEL を返すテスト
-- [ ] 2.2 既存 `_input_step1` ロジックの移植先テスト(focus 当たってない時の ui_accept で focus、focus 当たってる時の ui_accept で advance 想定)
-- [ ] 2.3 テスト Red 確認しコミット
-- [ ] 2.4 `src/guild_scene/steps/name_input_step.gd` を実装
-- [ ] 2.5 テスト Green 確認しコミット
+- [x] 2.1 `tests/guild_scene/steps/test_name_input_step.gd` を作成、`build` で LineEdit が作られるテスト、`handle_input` で ui_accept (focus 制御) と ui_cancel が CANCEL を返すテスト
+- [x] 2.2 既存 `_input_step1` ロジックの移植先テスト(focus 当たってない時の ui_accept で focus、focus 当たってる時の ui_accept で advance 想定)
+- [x] 2.3 テスト Red 確認しコミット
+- [x] 2.4 `src/guild_scene/steps/name_input_step.gd` を実装
+- [x] 2.5 テスト Green 確認しコミット
 
 ## 3. RaceSelectionStep の抽出 (TDD)
 
