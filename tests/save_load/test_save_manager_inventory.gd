@@ -70,7 +70,7 @@ func test_load_restores_inventory_gold():
 	GameState.inventory.gold = 750
 	_save_manager.save(1)
 	GameState.new_game()  # wipe state
-	assert_true(_save_manager.load(1))
+	assert_eq(_save_manager.load(1), SaveManager.LoadResult.OK)
 	assert_eq(GameState.inventory.gold, 750)
 
 
@@ -103,6 +103,6 @@ func test_load_legacy_save_without_inventory_key_defaults_empty():
 	var f := FileAccess.open(TEST_SAVE_DIR + "save_001.json", FileAccess.WRITE)
 	f.store_string(JSON.stringify(legacy, "\t"))
 	f.close()
-	assert_true(_save_manager.load(1))
+	assert_eq(_save_manager.load(1), SaveManager.LoadResult.OK)
 	assert_eq(GameState.inventory.gold, 0)
 	assert_eq(GameState.inventory.list().size(), 0)
