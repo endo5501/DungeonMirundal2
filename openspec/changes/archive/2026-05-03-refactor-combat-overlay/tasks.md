@@ -2,9 +2,9 @@
 
 - [x] 1.1 `tests/combat/test_battle_summary.gd` を作成、`BattleSummary.new(exp, gold, level_ups)` の値保持テスト
 - [x] 1.2 `BattleSummary.empty()` が 0/0/[] を返すテスト
-- [ ] 1.3 テスト Red コミット
+- [x] 1.3 テスト Red コミット
 - [x] 1.4 `src/combat/battle_summary.gd` を実装
-- [ ] 1.5 テスト Green コミット
+- [x] 1.5 テスト Green コミット
 
 ## 2. BattleResolver の追加 (TDD)
 
@@ -12,9 +12,9 @@
 - [x] 2.2 ゴールド drop の min/max 範囲テスト(rng を seed 付きで)
 - [x] 2.3 レベルアップ検出テスト(participants の level が上がった場合のみ level_ups に含まれる)
 - [x] 2.4 ESCAPED / DEFEATED で empty() が返るテスト
-- [ ] 2.5 テスト Red コミット
+- [x] 2.5 テスト Red コミット
 - [x] 2.6 `src/combat/battle_resolver.gd` を実装、`resolve_rewards` static 関数、`_collect_participant_characters` / `_collect_dead_monsters` / `_compute_gold_drop` / `_detect_level_ups` を private 関数として
-- [ ] 2.7 テスト Green コミット
+- [x] 2.7 テスト Green コミット
 
 ## 3. CombatOverlay から BattleResolver 利用への置換 (TDD)
 
@@ -28,9 +28,9 @@
 
 - [x] 4.1 `tests/combat/test_combat_input_router.gd` を作成、各 phase で適切な panel に input が届くテスト
 - [x] 4.2 ITEM_SELECT / IDLE / RESOLVING で false が返るテスト
-- [ ] 4.3 テスト Red コミット
+- [x] 4.3 テスト Red コミット
 - [x] 4.4 `src/combat/combat_input_router.gd` を実装
-- [ ] 4.5 テスト Green コミット
+- [x] 4.5 テスト Green コミット
 
 ## 5. CombatOverlay の per-phase ハンドラ撤廃 (TDD)
 
@@ -42,7 +42,7 @@
 ## 6. ItemUseFlow を CombatOverlay で利用 (TDD)
 
 - [x] 6.1 `tests/combat/test_combat_overlay.gd` に「アイテムコマンド → ItemUseFlow が visible」「flow_completed("") でコマンドメニュー復帰」「flow_completed("...") で advance_to_next_actor」テストを追加
-- [ ] 6.2 テスト Red 確認(現実装は CombatItemSelector を使っている)
+- [x] 6.2 テスト Red 確認(現実装は CombatItemSelector を使っている)
 - [x] 6.3 `combat_overlay.gd` の `_build_combat_ui` で `_item_use_flow = ItemUseFlow.new()` を生成・add_child
 - [x] 6.4 `_show_item_use_flow()` メソッドを追加、コマンドメニューで OPT_ITEM 選択時に呼ぶ
 - [x] 6.5 `_on_item_use_flow_completed(message)` を ItemUseFlow.flow_completed に connect
@@ -54,7 +54,7 @@
 
 - [x] 7.1 `tests/combat/test_turn_engine.gd` (既存)に「死んだターゲットへの攻撃で retargeted_from が記録される」テストを追加
 - [x] 7.2 `tests/combat/test_combat_log.gd` に「retargeted_from が空でないとき log 行に元ターゲット名が含まれる」テストを追加
-- [ ] 7.3 テスト Red コミット
+- [x] 7.3 テスト Red コミット
 - [x] 7.4 `src/combat/turn_report.gd` の ReportAction クラスに `retargeted_from: String = ""` フィールドを追加
 - [x] 7.5 `src/combat/turn_engine.gd:_resolve_attack` でリターゲット時に `retargeted_from` を記録
 - [x] 7.6 `src/combat/combat_log.gd:append_from_report_action` で retargeted_from が空でない場合の表示ロジックを追加
@@ -63,7 +63,7 @@
 ## 8. ログ再生の Timer 化 (TDD)
 
 - [x] 8.1 `tests/combat/test_combat_overlay.gd` に「`cancel_log_playback()` でペンディングのログが再生されない」テストを追加
-- [ ] 8.2 テスト Red コミット
+- [x] 8.2 テスト Red コミット
 - [x] 8.3 `combat_overlay.gd:_play_log_sequentially` を Timer ノードベースに書き換え、`_log_pending_actions: Array`, `_log_timer: Timer` フィールドを追加
 - [x] 8.4 `_show_next_log_line()`, `_on_log_timer()`, `cancel_log_playback()` を実装
 - [x] 8.5 旧 `await get_tree().create_timer(...).timeout` を削除
@@ -82,6 +82,6 @@
 ## 10. 仕上げ
 
 - [x] 10.1 `openspec validate refactor-combat-overlay --strict`
-- [ ] 10.2 `/simplify`スキルでコードレビューを実施
-- [ ] 10.3 `/opsx:verify refactor-combat-overlay`
-- [ ] 10.4 `/opsx:archive refactor-combat-overlay`
+- [x] 10.2 `/simplify`スキルでコードレビューを実施
+- [x] 10.3 `/opsx:verify refactor-combat-overlay`
+- [x] 10.4 `/opsx:archive refactor-combat-overlay`
