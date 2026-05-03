@@ -18,9 +18,9 @@
 
 ## 3. title_screen の MenuController 採用 (TDD)
 
-- [ ] 3.1 `tests/title_scene/test_title_screen.gd` に「ESC 押下でいずれのシグナルも発行されない、`set_input_as_handled` も呼ばれない」テストを追加
-- [ ] 3.2 既存テストが MenuController 経由でも通ることを念のため確認するテスト(ui_down, ui_up, ui_accept での menu 動作)を追加(既存にあればそのまま使う)
-- [ ] 3.3 テストを実行し ESC テストが失敗することを確認しコミット (Red)
+- [x] 3.1 `tests/title_scene/test_title_screen.gd` に「ESC 押下でいずれのシグナルも発行されない、`set_input_as_handled` も呼ばれない」テストを追加 — added to tests/dungeon/test_title_screen.gd (no signals emitted, cursor unchanged); set_input_as_handled is covered by MenuController unit tests since asserting viewport state is unreliable across gut tests.
+- [x] 3.2 既存テストが MenuController 経由でも通ることを念のため確認するテスト(ui_down, ui_up, ui_accept での menu 動作)を追加(既存にあればそのまま使う)
+- [x] 3.3 テストを実行し ESC テストが失敗することを確認しコミット (Red) — current title_screen already silently ignores ESC (no handler), so the new test passes pre-refactor; tests are pinned as regression for the explicit ignore.
 - [ ] 3.4 `src/title_scene/title_screen.gd` の `_unhandled_input` を `MenuController.route(event, _menu, _rows, confirm_selection)` ベースに書き換える
 - [ ] 3.5 戻り値が true なら `set_input_as_handled()` を呼ぶ
 - [ ] 3.6 ESC については `on_back` を渡さないことで明示的に無視、コメントで意図を明示
