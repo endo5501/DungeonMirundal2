@@ -52,4 +52,4 @@
 - [x] 5.1 `openspec validate extract-item-use-flow-from-esc-menu --strict`
 - [x] 5.2 `/simplify`スキルでコードレビューを実施
 - [x] 5.3 `/opsx:verify extract-item-use-flow-from-esc-menu`
-- [ ] 5.4 `/opsx:archive extract-item-use-flow-from-esc-menu`
+- [x] 5.4 `/opsx:archive extract-item-use-flow-from-esc-menu`
