@@ -42,6 +42,7 @@
 ## 7. 仕上げ
 
 - [ ] 7.1 `openspec validate make-dungeon-tests-deterministic --strict`
-- [ ] 7.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイートが通ることを確認
-- [ ] 7.3 `/opsx:verify make-dungeon-tests-deterministic`
-- [ ] 7.4 `/opsx:archive make-dungeon-tests-deterministic`
+- [ ] 7.2 `/simplify`スキルでコードレビューを実施
+- [ ] 7.3 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイートが通ることを確認
+- [ ] 7.4 `/opsx:verify make-dungeon-tests-deterministic`
+- [ ] 7.5 `/opsx:archive make-dungeon-tests-deterministic`

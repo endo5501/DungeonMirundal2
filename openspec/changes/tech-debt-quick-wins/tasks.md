@@ -72,5 +72,6 @@
 ## 12. 仕上げ
 
 - [ ] 12.1 `openspec validate tech-debt-quick-wins --strict`
-- [ ] 12.2 `/opsx:verify tech-debt-quick-wins`
-- [ ] 12.3 `/opsx:archive tech-debt-quick-wins`
+- [ ] 12.2 `/simplify`スキルでコードレビューを実施
+- [ ] 12.3 `/opsx:verify tech-debt-quick-wins`
+- [ ] 12.4 `/opsx:archive tech-debt-quick-wins`

@@ -61,5 +61,6 @@
 ## 8. 仕上げ
 
 - [ ] 8.1 `openspec validate extract-confirm-dialog --strict`
-- [ ] 8.2 `/opsx:verify extract-confirm-dialog`
-- [ ] 8.3 `/opsx:archive extract-confirm-dialog`
+- [ ] 8.2 `/simplify`スキルでコードレビューを実施
+- [ ] 8.3 `/opsx:verify extract-confirm-dialog`
+- [ ] 8.4 `/opsx:archive extract-confirm-dialog`

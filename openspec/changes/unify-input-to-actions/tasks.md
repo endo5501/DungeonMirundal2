@@ -79,5 +79,6 @@
 ## 10. 仕上げ
 
 - [ ] 10.1 `openspec validate unify-input-to-actions --strict`
-- [ ] 10.2 `/opsx:verify unify-input-to-actions`
-- [ ] 10.3 `/opsx:archive unify-input-to-actions`
+- [ ] 10.2 `/simplify`スキルでコードレビューを実施
+- [ ] 10.3 `/opsx:verify unify-input-to-actions`
+- [ ] 10.4 `/opsx:archive unify-input-to-actions`

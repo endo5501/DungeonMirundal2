@@ -49,5 +49,6 @@
 ## 7. 仕上げ
 
 - [ ] 7.1 `openspec validate unify-equipment-slot-enums --strict`
-- [ ] 7.2 `/opsx:verify unify-equipment-slot-enums`
-- [ ] 7.3 `/opsx:archive unify-equipment-slot-enums`
+- [ ] 7.2 `/simplify`スキルでコードレビューを実施
+- [ ] 7.3 `/opsx:verify unify-equipment-slot-enums`
+- [ ] 7.4 `/opsx:archive unify-equipment-slot-enums`

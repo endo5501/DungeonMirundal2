@@ -82,5 +82,6 @@
 ## 10. 仕上げ
 
 - [ ] 10.1 `openspec validate refactor-combat-overlay --strict`
-- [ ] 10.2 `/opsx:verify refactor-combat-overlay`
-- [ ] 10.3 `/opsx:archive refactor-combat-overlay`
+- [ ] 10.2 `/simplify`スキルでコードレビューを実施
+- [ ] 10.3 `/opsx:verify refactor-combat-overlay`
+- [ ] 10.4 `/opsx:archive refactor-combat-overlay`

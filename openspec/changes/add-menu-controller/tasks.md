@@ -50,5 +50,6 @@
 ## 7. 仕上げ
 
 - [ ] 7.1 `openspec validate add-menu-controller --strict` で妥当性確認
-- [ ] 7.2 `/opsx:verify add-menu-controller` で実装と仕様の整合確認
-- [ ] 7.3 `/opsx:archive add-menu-controller` でアーカイブ
+- [ ] 7.2 `/simplify`スキルでコードレビューを実施
+- [ ] 7.3 `/opsx:verify add-menu-controller` で実装と仕様の整合確認
+- [ ] 7.4 `/opsx:archive add-menu-controller` でアーカイブ

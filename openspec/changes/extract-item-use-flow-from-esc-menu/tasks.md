@@ -50,5 +50,6 @@
 ## 5. 仕上げ
 
 - [ ] 5.1 `openspec validate extract-item-use-flow-from-esc-menu --strict`
-- [ ] 5.2 `/opsx:verify extract-item-use-flow-from-esc-menu`
-- [ ] 5.3 `/opsx:archive extract-item-use-flow-from-esc-menu`
+- [ ] 5.2 `/simplify`スキルでコードレビューを実施
+- [ ] 5.3 `/opsx:verify extract-item-use-flow-from-esc-menu`
+- [ ] 5.4 `/opsx:archive extract-item-use-flow-from-esc-menu`

@@ -50,5 +50,6 @@
 ## 6. 仕上げ
 
 - [ ] 6.1 `openspec validate cleanup-main-and-encounter-wiring --strict`
-- [ ] 6.2 `/opsx:verify cleanup-main-and-encounter-wiring`
-- [ ] 6.3 `/opsx:archive cleanup-main-and-encounter-wiring`
+- [ ] 6.2 `/simplify`スキルでコードレビューを実施
+- [ ] 6.3 `/opsx:verify cleanup-main-and-encounter-wiring`
+- [ ] 6.4 `/opsx:archive cleanup-main-and-encounter-wiring`
