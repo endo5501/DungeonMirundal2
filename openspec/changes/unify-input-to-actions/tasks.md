@@ -41,9 +41,9 @@
 
 ## 5. esc_menu の action 化
 
-- [ ] 5.1 `tests/esc_menu/test_esc_menu.gd` の keycode マッチを action マッチに置換
-- [ ] 5.2 `src/esc_menu/esc_menu.gd` の `_unhandled_input` を action ベースに書き換え(MenuController 採用は C6 で行う)
-- [ ] 5.3 全テスト通過を確認しコミット
+- [x] 5.1 `tests/esc_menu/test_esc_menu.gd` の keycode マッチを action マッチに置換
+- [x] 5.2 `src/esc_menu/esc_menu.gd` の `_unhandled_input` を action ベースに書き換え(MenuController 採用は C6 で行う)
+- [x] 5.3 全テスト通過を確認しコミット
 
 ## 6. save_screen / load_screen の MenuController 採用 + action 化
 

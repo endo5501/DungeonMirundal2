@@ -323,17 +323,11 @@ func test_equip_from_other_character_unequips_them():
 
 # --- 10. Input handling ---
 
-func _make_key_event(keycode: int) -> InputEventKey:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.pressed = true
-	return event
-
 func test_handle_input_down_moves_cursor():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
-	menu.handle_input(_make_key_event(KEY_DOWN))
+	menu.handle_input(TestHelpers.make_action_event(&"ui_down"))
 	# Should move to index 1 (ゲームを保存, now enabled)
 	assert_eq(menu.get_main_menu().selected_index, 1)
 
@@ -341,7 +335,7 @@ func test_handle_input_enter_selects():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
-	menu.handle_input(_make_key_event(KEY_ENTER))
+	menu.handle_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
 
 func test_handle_input_escape_goes_back():
@@ -349,5 +343,5 @@ func test_handle_input_escape_goes_back():
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
-	menu.handle_input(_make_key_event(KEY_ESCAPE))
+	menu.handle_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_eq(menu.get_current_view(), EscMenu.View.MAIN_MENU)

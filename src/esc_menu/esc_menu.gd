@@ -213,25 +213,29 @@ func go_back() -> void:
 		View.QUIT_DIALOG:
 			_switch_view(View.MAIN_MENU)
 
-func handle_input(event: InputEventKey) -> void:
+func handle_input(event: InputEvent) -> bool:
 	var current_menu := _get_current_menu()
-	match event.keycode:
-		KEY_UP, KEY_W:
-			if current_menu:
-				current_menu.move_cursor(-1)
-				_update_current_labels()
-			else:
-				_cursor_move_in_view(-1)
-		KEY_DOWN, KEY_S:
-			if current_menu:
-				current_menu.move_cursor(1)
-				_update_current_labels()
-			else:
-				_cursor_move_in_view(1)
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			select_current_item()
-		KEY_ESCAPE:
-			go_back()
+	if event.is_action_pressed(&"ui_up"):
+		if current_menu:
+			current_menu.move_cursor(-1)
+			_update_current_labels()
+		else:
+			_cursor_move_in_view(-1)
+		return true
+	if event.is_action_pressed(&"ui_down"):
+		if current_menu:
+			current_menu.move_cursor(1)
+			_update_current_labels()
+		else:
+			_cursor_move_in_view(1)
+		return true
+	if event.is_action_pressed(&"ui_accept"):
+		select_current_item()
+		return true
+	if event.is_action_pressed(&"ui_cancel"):
+		go_back()
+		return true
+	return false
 
 
 func _cursor_move_in_view(direction: int) -> void:
@@ -268,12 +272,8 @@ func _cursor_move_in_view(direction: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if not event is InputEventKey:
-		return
-	if not event.pressed or event.echo:
-		return
-	handle_input(event as InputEventKey)
-	get_viewport().set_input_as_handled()
+	if handle_input(event):
+		get_viewport().set_input_as_handled()
 
 func _switch_view(view: View) -> void:
 	_current_view = view
