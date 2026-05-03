@@ -22,17 +22,17 @@
 
 ## 4. テストディレクトリ整理
 
-- [ ] 4.1 空ディレクトリ `tests/dungeon_scene/` を削除する(`.gitkeep` がある場合はそれも)
+- [x] 4.1 空ディレクトリ `tests/dungeon_scene/` を削除する(`.gitkeep` がある場合はそれも)
 
 ## 5. HasMpSlot テスト追加 (TDD)
 
-- [ ] 5.1 `tests/items/test_has_mp_slot.gd` を新規作成
-- [ ] 5.2 max_mp > 0 の対象に対して `is_satisfied` が true を返すテスト
-- [ ] 5.3 max_mp == 0 の対象に対して `is_satisfied` が false を返すテスト
-- [ ] 5.4 max_mp プロパティを持たない対象に対して `is_satisfied` が false を返すテスト
-- [ ] 5.5 null 対象に対して `is_satisfied` が false を返すテスト
-- [ ] 5.6 `reason()` が "MP を持たない職業" を返すテスト
-- [ ] 5.7 全テスト通過を確認しコミット
+- [x] 5.1 `tests/items/test_has_mp_slot.gd` を新規作成
+- [x] 5.2 max_mp > 0 の対象に対して `is_satisfied` が true を返すテスト
+- [x] 5.3 max_mp == 0 の対象に対して `is_satisfied` が false を返すテスト
+- [x] 5.4 max_mp プロパティを持たない対象に対して `is_satisfied` が false を返すテスト
+- [x] 5.5 null 対象に対して `is_satisfied` が false を返すテスト
+- [x] 5.6 `reason()` が "MP を持たない職業" を返すテスト
+- [x] 5.7 全テスト通過を確認しコミット
 
 ## 6. project-setup spec の更新
 
