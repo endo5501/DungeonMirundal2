@@ -1,8 +1,8 @@
 ## 1. F010: DungeonView fallback の削除 (TDD)
 
-- [ ] 1.1 `tests/dungeon_scene/test_dungeon_scene.gd` (or 既存)で `refresh(empty_array)` を呼んでいるテストがないことを grep で確認
-- [ ] 1.2 `src/dungeon_scene/dungeon_scene.gd` から `_dungeon_view: DungeonView` フィールドおよび関連の fallback 分岐を削除
-- [ ] 1.3 全テスト通過を確認しコミット
+- [x] 1.1 `tests/dungeon_scene/test_dungeon_scene.gd` (or 既存)で `refresh(empty_array)` を呼んでいるテストがないことを grep で確認
+- [x] 1.2 `src/dungeon_scene/dungeon_scene.gd` から `_dungeon_view: DungeonView` フィールドおよび関連の fallback 分岐を削除
+- [x] 1.3 全テスト通過を確認しコミット
 
 ## 2. F015: TempleScreen.revive の重複 gold check 削除 (TDD)
 

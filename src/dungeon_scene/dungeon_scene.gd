@@ -8,7 +8,6 @@ var _camera: Camera3D
 var _mesh_instance: MeshInstance3D
 var _mesh: ImmediateMesh
 var _material: ShaderMaterial
-var _dungeon_view: DungeonView
 var _cell_mesh_builder: CellMeshBuilder
 
 var wiz_map: WizMap
@@ -16,7 +15,6 @@ var player_state: PlayerState
 var _cached_visible_cells: Array[Vector2i] = []
 
 func _ready() -> void:
-	_dungeon_view = DungeonView.new()
 	_cell_mesh_builder = CellMeshBuilder.new()
 
 	_camera = Camera3D.new()
@@ -52,14 +50,10 @@ func _ready() -> void:
 	_mesh_instance.material_override = _material
 	add_child(_mesh_instance)
 
-func refresh(visible_cells: Array[Vector2i] = []) -> void:
+func refresh(visible_cells: Array[Vector2i]) -> void:
 	if wiz_map == null or player_state == null:
 		return
-	if visible_cells.size() > 0:
-		_cached_visible_cells = visible_cells
-	else:
-		_cached_visible_cells = _dungeon_view.get_render_cells(
-			wiz_map, player_state.position, player_state.facing)
+	_cached_visible_cells = visible_cells
 	_update_camera()
 	_rebuild_mesh()
 
