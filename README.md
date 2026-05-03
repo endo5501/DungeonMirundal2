@@ -100,6 +100,10 @@ godot --headless --export-release "Windows Desktop" build/DungeonMirundal2.exe
 
 リリースビルドでは `assert()` は無効化されます。
 
+## セーブ互換性についての注意
+
+`data/items/potion.tres` は `data/items/healing_potion.tres` にリネームされ、`item_id` も `&"potion"` から `&"healing_potion"` に変更されました(2026-05 のリファクタ)。これより前のセーブで `potion` を所持している場合、ロード時に当該アイテムは復元されず欠落します(他の所持品・装備への影響はありません)。
+
 ## 新しいclass_nameを追加した場合
 
 GDScriptで `class_name` を使った新しいスクリプトを追加した後、テスト実行前にインポートが必要です。

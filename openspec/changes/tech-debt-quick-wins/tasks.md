@@ -30,11 +30,11 @@
 
 ## 6. F032: potion.tres → healing_potion.tres リネーム
 
-- [ ] 6.1 Godot エディタで `data/items/potion.tres` を開き、`item_id` を `&"healing_potion"` に変更、ファイル名を `healing_potion.tres` にリネーム(エディタの "Save As" 経由が安全)
-- [ ] 6.2 旧 `potion.tres` を削除
-- [ ] 6.3 `data/items/potion.tres` への参照(あれば)を全て `healing_potion.tres` に置換
-- [ ] 6.4 README に「v??? 以前のセーブで potion を持っている場合、復元時に欠落する」旨を追記
-- [ ] 6.5 全テスト通過を確認しコミット
+- [x] 6.1 Godot エディタで `data/items/potion.tres` を開き、`item_id` を `&"healing_potion"` に変更、ファイル名を `healing_potion.tres` にリネーム(エディタの "Save As" 経由が安全)
+- [x] 6.2 旧 `potion.tres` を削除
+- [x] 6.3 `data/items/potion.tres` への参照(あれば)を全て `healing_potion.tres` に置換
+- [x] 6.4 README に「v??? 以前のセーブで potion を持っている場合、復元時に欠落する」旨を追記
+- [x] 6.5 全テスト通過を確認しコミット
 
 ## 7. F040: SaveManager の JSON フォーマット圧縮 (TDD)
 
