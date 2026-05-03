@@ -42,6 +42,7 @@ func _load_resources(dir_path: String) -> Array:
 	var results: Array = []
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
+		push_error("DataLoader: cannot open %s (DirAccess.get_open_error=%d)" % [dir_path, DirAccess.get_open_error()])
 		return results
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
