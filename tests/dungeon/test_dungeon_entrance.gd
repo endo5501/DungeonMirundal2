@@ -1,13 +1,30 @@
 extends GutTest
 
 var _registry: DungeonRegistry
+var _empty_guild: Guild
+var _staffed_guild: Guild
 
 func before_each():
 	_registry = DungeonRegistry.new()
+	_empty_guild = Guild.new()
+	_staffed_guild = _make_staffed_guild()
+
+func _assign_one_party_member(guild: Guild) -> void:
+	var race := load("res://data/races/human.tres") as RaceData
+	var job := load("res://data/jobs/fighter.tres") as JobData
+	var allocation := {&"STR": 2, &"INT": 1, &"PIE": 1, &"VIT": 2, &"AGI": 1, &"LUC": 1}
+	var ch := Character.create("Hero", race, job, allocation)
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+
+func _make_staffed_guild() -> Guild:
+	var guild := Guild.new()
+	_assign_one_party_member(guild)
+	return guild
 
 func _make_entrance() -> DungeonEntrance:
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, false)
+	entrance.setup(_registry, _empty_guild)
 	return entrance
 
 func _make_key_event(keycode: int) -> InputEventKey:
@@ -45,15 +62,27 @@ func test_enter_disabled_when_no_dungeons():
 func test_enter_disabled_when_no_party():
 	_registry.create("迷宮", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, false)  # has_party = false
+	entrance.setup(_registry, _empty_guild)
 	assert_true(entrance.is_enter_disabled())
 
 func test_enter_enabled_when_dungeon_selected_and_party_exists():
 	_registry.create("迷宮", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)  # has_party = true
+	entrance.setup(_registry, _staffed_guild)
 	entrance.selected_index = 0
 	assert_false(entrance.is_enter_disabled())
+
+func test_enter_disabled_reflects_current_guild_state():
+	_registry.create("迷宮", DungeonRegistry.SIZE_SMALL)
+	var guild := Guild.new()
+	var entrance := DungeonEntrance.new()
+	entrance.setup(_registry, guild)
+	entrance.selected_index = 0
+	assert_true(entrance.is_enter_disabled(),
+		"setup with empty guild should leave enter disabled")
+	_assign_one_party_member(guild)
+	assert_false(entrance.is_enter_disabled(),
+		"adding a party member after setup should re-enable enter on the next query")
 
 # --- Delete button state ---
 
@@ -72,7 +101,7 @@ func test_delete_enabled_when_dungeon_selected():
 func test_enter_emits_signal_with_index():
 	_registry.create("迷宮", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	entrance.selected_index = 0
 	watch_signals(entrance)
 	entrance.do_enter()
@@ -126,13 +155,13 @@ func test_non_empty_registry_focuses_buttons():
 func test_non_empty_registry_initial_cursor_on_enter():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	assert_eq(entrance._button_menu.selected_index, 0, "cursor should start on 潜入する (index 0) when registry has entries")
 
 func test_activate_enter_moves_focus_to_list():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	add_child_autofree(entrance)
 	entrance._button_menu.selected_index = 0
 	entrance._unhandled_input(_make_key_event(KEY_ENTER))
@@ -149,7 +178,7 @@ func test_activate_delete_moves_focus_to_list():
 func test_esc_in_enter_list_focus_returns_to_buttons():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	add_child_autofree(entrance)
 	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
 	watch_signals(entrance)
@@ -169,7 +198,7 @@ func test_enter_in_enter_list_focus_emits_signal():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	add_child_autofree(entrance)
 	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
 	entrance.selected_index = 1
@@ -181,7 +210,7 @@ func test_up_down_in_list_focus_moves_list_cursor():
 	_registry.create("A", DungeonRegistry.SIZE_SMALL)
 	_registry.create("B", DungeonRegistry.SIZE_MEDIUM)
 	var entrance := DungeonEntrance.new()
-	entrance.setup(_registry, true)
+	entrance.setup(_registry, _staffed_guild)
 	add_child_autofree(entrance)
 	entrance._focus = DungeonEntrance.Focus.LIST_FOR_ENTER
 	entrance.selected_index = 0

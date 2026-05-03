@@ -78,6 +78,7 @@ func _show_title_screen() -> void:
 
 func _on_start_new_game() -> void:
 	GameState.new_game()
+	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 	_show_town_screen()
 
 func _on_continue_game() -> void:
@@ -103,12 +104,20 @@ func _on_quit_game() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
-	if _current_screen is TitleScreen or _esc_menu.is_menu_visible():
-		return
-	if _encounter_coordinator != null and _encounter_coordinator.is_encounter_active():
+	if not _should_open_esc_menu():
 		return
 	_on_esc_key_pressed()
 	get_viewport().set_input_as_handled()
+
+
+func _should_open_esc_menu() -> bool:
+	if _current_screen is TitleScreen:
+		return false
+	if _esc_menu.is_menu_visible():
+		return false
+	if _encounter_coordinator != null and _encounter_coordinator.is_encounter_active():
+		return false
+	return true
 
 func _on_esc_key_pressed() -> void:
 	_esc_menu.show_menu()
@@ -167,9 +176,8 @@ func _on_guild_back() -> void:
 # --- Dungeon Entrance ---
 
 func _on_open_dungeon_entrance() -> void:
-	var has_party := GameState.guild.has_party_members()
 	var screen := DungeonEntrance.new()
-	screen.setup(GameState.dungeon_registry, has_party)
+	screen.setup(GameState.dungeon_registry, GameState.guild)
 	screen.enter_dungeon.connect(_on_enter_dungeon)
 	screen.back_requested.connect(_on_dungeon_entrance_back)
 	_switch_screen(screen)
@@ -196,7 +204,6 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	if _encounter_coordinator == null:
 		return
-	_refresh_combat_overlay_dependencies()
 	# TODO: use the dungeon's current floor once multi-floor dungeons land.
 	var table: EncounterTableData = _encounter_tables_by_floor.get(1, null)
 	if table == null:
@@ -204,11 +211,6 @@ func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	_encounter_coordinator.set_table(table)
 	_encounter_coordinator.attach_screen(screen)
 
-
-func _refresh_combat_overlay_dependencies() -> void:
-	if _combat_overlay == null or GameState.guild == null:
-		return
-	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 
 func _on_return_to_town() -> void:
 	GameState.heal_party()
@@ -261,6 +263,7 @@ func _load_game(slot_number: int) -> bool:
 		if _current_screen is LoadScreen:
 			(_current_screen as LoadScreen).show_load_failure(result)
 		return false
+	_combat_overlay.setup_dependencies(GameState.guild, _equipment_provider, _encounter_rng)
 	match GameState.game_location:
 		GameState.LOCATION_TOWN:
 			_show_town_screen()

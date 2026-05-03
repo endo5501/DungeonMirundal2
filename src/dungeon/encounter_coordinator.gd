@@ -24,7 +24,7 @@ func set_overlay(overlay: EncounterOverlay) -> void:
 
 func _ready() -> void:
 	if _overlay == null:
-		_overlay = EncounterOverlay.new()
+		_overlay = SimpleEncounterOverlay.new()
 	_overlay.encounter_resolved.connect(_on_encounter_resolved)
 	add_child(_overlay)
 

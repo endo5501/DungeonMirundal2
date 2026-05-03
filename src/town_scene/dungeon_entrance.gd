@@ -11,7 +11,7 @@ const BUTTON_ITEMS: Array[String] = ["潜入する", "新規生成", "破棄", "
 const FONT_SIZE := 18
 
 var _registry: DungeonRegistry
-var _has_party: bool
+var _guild: Guild
 var selected_index: int = -1
 var _mode: Mode = Mode.LIST
 var _focus: Focus = Focus.BUTTONS
@@ -26,9 +26,9 @@ var _delete_dialog: ConfirmDialog
 func _init() -> void:
 	_button_menu = CursorMenu.new(BUTTON_ITEMS)
 
-func setup(registry: DungeonRegistry, has_party: bool) -> void:
+func setup(registry: DungeonRegistry, guild: Guild) -> void:
 	_registry = registry
-	_has_party = has_party
+	_guild = guild
 	_focus = Focus.BUTTONS
 	if _registry.size() > 0:
 		selected_index = 0
@@ -246,7 +246,9 @@ func get_dungeon_count() -> int:
 	return _registry.size()
 
 func is_enter_disabled() -> bool:
-	return _registry == null or _registry.size() == 0 or not _has_party
+	if _registry == null or _registry.size() == 0:
+		return true
+	return _guild == null or not _guild.has_party_members()
 
 func is_delete_disabled() -> bool:
 	return _registry == null or _registry.size() == 0
