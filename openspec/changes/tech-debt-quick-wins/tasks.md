@@ -50,10 +50,10 @@
 
 ## 9. F043: item_use_context.gd の移動
 
-- [ ] 9.1 Godot エディタを開いて、`src/items/conditions/item_use_context.gd` を `src/items/item_use_context.gd` に移動(エディタの File System ドックでドラッグ or `git mv` 後にエディタを再起動)
-- [ ] 9.2 同様に `item_effect_result.gd` を移動
-- [ ] 9.3 `.gd.uid` ファイルも一緒に移動されていることを確認
-- [ ] 9.4 全テスト通過を確認しコミット
+- [x] 9.1 Godot エディタを開いて、`src/items/conditions/item_use_context.gd` を `src/items/item_use_context.gd` に移動(エディタの File System ドックでドラッグ or `git mv` 後にエディタを再起動)
+- [x] 9.2 同様に `item_effect_result.gd` を移動 (was actually under src/items/effects/)
+- [x] 9.3 `.gd.uid` ファイルも一緒に移動されていることを確認
+- [x] 9.4 全テスト通過を確認しコミット
 
 ## 10. F045: town_screen.select_item の定数化
 
