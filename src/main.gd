@@ -103,12 +103,20 @@ func _on_quit_game() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
-	if _current_screen is TitleScreen or _esc_menu.is_menu_visible():
-		return
-	if _encounter_coordinator != null and _encounter_coordinator.is_encounter_active():
+	if not _should_open_esc_menu():
 		return
 	_on_esc_key_pressed()
 	get_viewport().set_input_as_handled()
+
+
+func _should_open_esc_menu() -> bool:
+	if _current_screen is TitleScreen:
+		return false
+	if _esc_menu.is_menu_visible():
+		return false
+	if _encounter_coordinator != null and _encounter_coordinator.is_encounter_active():
+		return false
+	return true
 
 func _on_esc_key_pressed() -> void:
 	_esc_menu.show_menu()

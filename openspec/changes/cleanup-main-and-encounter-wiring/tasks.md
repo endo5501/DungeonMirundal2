@@ -14,11 +14,11 @@
 
 ## 2. main.gd の ESC ゲート集約 (TDD)
 
-- [ ] 2.1 `tests/test_main.gd` (or 既存)に `_should_open_esc_menu` の各ケーステストを追加
-- [ ] 2.2 テスト Red コミット
-- [ ] 2.3 `src/main.gd` に `_should_open_esc_menu() -> bool` メソッドを追加、3 ゲートを内部評価
-- [ ] 2.4 `_unhandled_input` を `_should_open_esc_menu` 経由に書き換え
-- [ ] 2.5 テスト Green コミット
+- [x] 2.1 `tests/test_main.gd` (or 既存)に `_should_open_esc_menu` の各ケーステストを追加
+- [x] 2.2 テスト Red コミット
+- [x] 2.3 `src/main.gd` に `_should_open_esc_menu() -> bool` メソッドを追加、3 ゲートを内部評価
+- [x] 2.4 `_unhandled_input` を `_should_open_esc_menu` 経由に書き換え
+- [x] 2.5 テスト Green コミット
 
 ## 3. _refresh_combat_overlay_dependencies の削除 (TDD)
 
