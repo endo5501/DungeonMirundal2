@@ -20,7 +20,7 @@ func to_dict() -> Dictionary:
 static func from_dict(data: Dictionary, repository: ItemRepository) -> ItemInstance:
 	if repository == null:
 		return null
-	var id_raw = data.get("item_id", &"")
+	var id_raw: Variant = data.get("item_id", &"")
 	var id := StringName(id_raw) if not (id_raw is StringName) else id_raw as StringName
 	var resolved := repository.find(id)
 	if resolved == null:

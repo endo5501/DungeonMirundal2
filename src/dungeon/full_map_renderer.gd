@@ -46,7 +46,7 @@ func _draw_cell(img: Image, wiz_map: WizMap, explored_map: ExploredMap,
 		var color := _edge_color(edge, cx, cy, dir, explored_map)
 		_draw_edge_line(img, cx, cy, dir, color, cell_px, floor_px)
 
-	var tile = wiz_map.cell(cx, cy).tile
+	var tile: int = wiz_map.cell(cx, cy).tile
 	if tile == TileType.START:
 		_draw_marker(img, cx, cy, cell_px, floor_px, COLOR_START)
 	elif tile == TileType.GOAL:

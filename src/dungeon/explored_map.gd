@@ -9,7 +9,7 @@ func _init() -> void:
 func mark_visited(pos: Vector2i) -> void:
 	_visited[pos] = true
 
-func mark_visible(cells: Array) -> void:
+func mark_visible(cells: Array[Vector2i]) -> void:
 	for cell in cells:
 		mark_visited(cell)
 

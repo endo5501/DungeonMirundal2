@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1")
+id = &"human"
 race_name = "Human"
 base_str = 8
 base_int = 8

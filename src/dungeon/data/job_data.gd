@@ -1,6 +1,7 @@
 class_name JobData
 extends Resource
 
+@export var id: StringName
 @export var job_name: String
 @export var base_hp: int
 @export var has_magic: bool

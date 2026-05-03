@@ -38,7 +38,9 @@ func add_gold(amount: int) -> void:
 
 
 func spend_gold(amount: int) -> bool:
-	if amount <= 0:
+	if amount == 0:
+		return true
+	if amount < 0:
 		return false
 	if amount > gold:
 		return false

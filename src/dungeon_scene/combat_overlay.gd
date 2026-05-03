@@ -394,11 +394,12 @@ func _build_party_combatants() -> Array:
 	var combatants: Array = []
 	if _guild == null:
 		return combatants
-	var rows: Array = _guild.get_party_characters()
+	var rows: Array[Array] = _guild.get_party_characters()
 	for row in rows:
-		for ch in row:
+		# row contents are Character | null.
+		for ch: Variant in row:
 			if ch != null:
-				combatants.append(PartyCombatant.new(ch, _equipment_provider))
+				combatants.append(PartyCombatant.new(ch as Character, _equipment_provider))
 	return combatants
 
 

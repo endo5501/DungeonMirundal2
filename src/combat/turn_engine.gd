@@ -60,8 +60,11 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 	state = State.RESOLVING
 
 	# Apply Defend commands first so defender flag is set for the whole turn.
+	# Commands share no class hierarchy; the closest common static type is RefCounted.
 	for i in range(party.size()):
-		var cmd = _pending_commands.get(i, null)
+		var cmd: RefCounted = _pending_commands.get(i, null) as RefCounted
+		if cmd == null:
+			continue
 		if cmd is DefendCommand:
 			(cmd as DefendCommand).apply_to(party[i])
 			report.add_defend(party[i])
@@ -95,7 +98,9 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			var idx := party.find(actor)
 			if idx < 0:
 				continue
-			var cmd = _pending_commands.get(idx, null)
+			var cmd: RefCounted = _pending_commands.get(idx, null) as RefCounted
+			if cmd == null:
+				continue
 			if cmd is ItemCommand:
 				var handled := _resolve_item(actor, cmd as ItemCommand, report)
 				if handled == ItemResolution.TOWN_ESCAPE:

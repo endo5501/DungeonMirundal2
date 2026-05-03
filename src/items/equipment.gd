@@ -105,7 +105,7 @@ static func from_dict(data: Dictionary, inventory: Inventory) -> Equipment:
 		var key: String = SLOT_KEYS[slot]
 		if not data.has(key):
 			continue
-		var raw = data.get(key)
+		var raw: Variant = data.get(key)
 		if raw == null:
 			continue
 		var idx := int(raw)

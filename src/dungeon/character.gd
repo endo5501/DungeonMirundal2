@@ -93,8 +93,8 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 		stats_str[String(key)] = base_stats.get(key, 0)
 	var d := {
 		"character_name": character_name,
-		"race_id": race.resource_path.get_file().get_basename(),
-		"job_id": job.resource_path.get_file().get_basename(),
+		"race_id": _resolve_race_id(),
+		"job_id": _resolve_job_id(),
 		"level": level,
 		"base_stats": stats_str,
 		"current_hp": current_hp,
@@ -106,6 +106,23 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 	if inventory != null:
 		d["equipment"] = equipment.to_dict(inventory)
 	return d
+
+
+func _resolve_race_id() -> String:
+	return _resolve_resource_id(race, "RaceData")
+
+
+func _resolve_job_id() -> String:
+	return _resolve_resource_id(job, "JobData")
+
+
+func _resolve_resource_id(res: Resource, kind: String) -> String:
+	if res != null and res.id != &"":
+		return String(res.id)
+	if res == null:
+		return ""
+	push_warning("Character.to_dict: %s.id is empty for %s, falling back to resource_path" % [kind, res.resource_path])
+	return res.resource_path.get_file().get_basename()
 
 static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
 	# ResourceLoader.exists() is load-bearing: calling load() on a missing path

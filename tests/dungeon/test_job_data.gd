@@ -111,3 +111,26 @@ func test_exp_to_reach_level_three_returns_second_entry():
 func test_exp_to_reach_level_out_of_range_returns_last_entry():
 	_fighter.exp_table = PackedInt64Array([1000, 2000, 3000])
 	assert_eq(_fighter.exp_to_reach_level(10), 3000)
+
+
+# --- tighten-types-and-contracts: id field ---
+
+func test_job_data_has_id_field():
+	var job := JobData.new()
+	job.id = &"fighter"
+	assert_eq(job.id, &"fighter")
+	assert_typeof(job.id, TYPE_STRING_NAME)
+
+
+func test_job_data_id_defaults_to_empty_string_name():
+	var job := JobData.new()
+	assert_eq(job.id, &"")
+
+
+func test_loaded_job_tres_files_have_id_matching_filename():
+	var loader := DataLoader.new()
+	var jobs := loader.load_all_jobs()
+	assert_gt(jobs.size(), 0)
+	for job in jobs:
+		var basename := job.resource_path.get_file().get_basename()
+		assert_eq(String(job.id), basename, "job %s id should equal filename" % job.resource_path)

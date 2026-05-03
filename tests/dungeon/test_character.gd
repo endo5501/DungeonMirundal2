@@ -177,3 +177,38 @@ func test_from_dict_without_inventory_yields_empty_equipment():
 	var restored := Character.from_dict(d)
 	assert_not_null(restored.equipment)
 	assert_eq(restored.equipment.all_equipped().size(), 0)
+
+
+# --- tighten-types-and-contracts: to_dict uses RaceData.id / JobData.id ---
+
+func test_to_dict_race_id_comes_from_id_field_not_resource_path():
+	_human.id = &"custom_race"
+	_fighter_job.id = &"custom_job"
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	var d := ch.to_dict()
+	assert_eq(d["race_id"], "custom_race")
+	assert_eq(d["job_id"], "custom_job")
+
+
+func test_to_dict_falls_back_to_resource_path_when_race_id_empty():
+	# Simulate legacy data: id is empty, but resource_path points to a real file.
+	# Build standalone resources so we don't mutate Godot's cached singletons.
+	var legacy_race := RaceData.new()
+	legacy_race.race_name = "Human"
+	legacy_race.base_str = 8
+	legacy_race.base_int = 8
+	legacy_race.base_pie = 8
+	legacy_race.base_vit = 8
+	legacy_race.base_agi = 8
+	legacy_race.base_luc = 8
+	legacy_race.take_over_path("res://data/races/human.tres")
+	var legacy_job := JobData.new()
+	legacy_job.job_name = "Fighter"
+	legacy_job.base_hp = 10
+	legacy_job.take_over_path("res://data/jobs/fighter.tres")
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", legacy_race, legacy_job, allocation)
+	var d := ch.to_dict()
+	assert_eq(d["race_id"], "human")
+	assert_eq(d["job_id"], "fighter")
