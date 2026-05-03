@@ -25,8 +25,8 @@
 
 - [x] 3.1 `tests/items/test_inventory.gd` に「spend_gold(0) が true を返し、gold は変わらない」テスト追加
 - [x] 3.2 テスト Red コミット
-- [ ] 3.3 `src/items/inventory.gd:spend_gold` を amount==0 で true 返却に変更
-- [ ] 3.4 テスト Green コミット
+- [x] 3.3 `src/items/inventory.gd:spend_gold` を amount==0 で true 返却に変更
+- [x] 3.4 テスト Green コミット
 
 ## 4. GameState の初期化対称化 (TDD)
 
