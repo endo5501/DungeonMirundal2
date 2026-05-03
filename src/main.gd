@@ -240,8 +240,13 @@ func _on_load_requested() -> void:
 	_switch_screen(screen)
 
 func _on_load_slot_selected(slot_number: int) -> void:
+	var result := GameState.save_manager.load(slot_number)
+	if result != SaveManager.LoadResult.OK:
+		if _current_screen is LoadScreen:
+			(_current_screen as LoadScreen).show_load_failure(result)
+		return
 	_esc_menu.hide_menu()
-	_load_game(slot_number)
+	_apply_loaded_state()
 
 func _on_load_back() -> void:
 	_restore_current_screen()
@@ -259,7 +264,12 @@ func _restore_current_screen() -> void:
 func _load_game(slot_number: int) -> void:
 	var result := GameState.save_manager.load(slot_number)
 	if result != SaveManager.LoadResult.OK:
+		if _current_screen is LoadScreen:
+			(_current_screen as LoadScreen).show_load_failure(result)
 		return
+	_apply_loaded_state()
+
+func _apply_loaded_state() -> void:
 	match GameState.game_location:
 		GameState.LOCATION_TOWN:
 			_show_town_screen()
