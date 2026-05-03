@@ -1,9 +1,9 @@
 ## 1. TestHelpers 拡張
 
-- [ ] 1.1 `tests/test_helpers.gd` に `make_corridor_fixture(start: Vector2i, dir: int, length: int = 3) -> WizMap` を追加(start から dir 方向へ length セル分 OPEN を確保した 8x8 フィクスチャ)
-- [ ] 1.2 `make_blocked_fixture(start: Vector2i) -> WizMap` を追加(start を全方向 WALL に閉じ込めた 8x8 フィクスチャ)
-- [ ] 1.3 `make_neighbor_to_start_fixture(start: Vector2i, dir: int) -> WizMap` を追加(start のある方向の隣接セルから dir 反対向きで forward すると start に着くフィクスチャ。F012 の test_start_tile_return_dialog_suppressed 用)
-- [ ] 1.4 ヘルパー単体テスト `tests/test_test_helpers.gd` を追加し、各フィクスチャが要求 topology を満たすことを検証する
+- [x] 1.1 `tests/test_helpers.gd` に `make_corridor_fixture(start: Vector2i, dir: int, length: int = 3) -> WizMap` を追加(start から dir 方向へ length セル分 OPEN を確保した 8x8 フィクスチャ)
+- [x] 1.2 `make_blocked_fixture(start: Vector2i) -> WizMap` を追加(start を全方向 WALL に閉じ込めた 8x8 フィクスチャ)
+- [x] 1.3 `make_neighbor_to_start_fixture(start: Vector2i, dir: int) -> WizMap` を追加(start のある方向の隣接セルから dir 反対向きで forward すると start に着くフィクスチャ。F012 の test_start_tile_return_dialog_suppressed 用)
+- [x] 1.4 ヘルパー単体テスト `tests/test_test_helpers.gd` を追加し、各フィクスチャが要求 topology を満たすことを検証する
 
 ## 2. test_dungeon_screen_encounter.gd の決定化 (TDD)
 
