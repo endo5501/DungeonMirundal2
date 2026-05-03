@@ -214,28 +214,28 @@ func go_back() -> void:
 			_switch_view(View.MAIN_MENU)
 
 func handle_input(event: InputEvent) -> bool:
-	var current_menu := _get_current_menu()
-	if event.is_action_pressed(&"ui_up"):
-		if current_menu:
-			current_menu.move_cursor(-1)
-			_update_current_labels()
-		else:
-			_cursor_move_in_view(-1)
+	if event.is_action_pressed("ui_up"):
+		_move_cursor_or_view(-1)
 		return true
-	if event.is_action_pressed(&"ui_down"):
-		if current_menu:
-			current_menu.move_cursor(1)
-			_update_current_labels()
-		else:
-			_cursor_move_in_view(1)
+	if event.is_action_pressed("ui_down"):
+		_move_cursor_or_view(1)
 		return true
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		select_current_item()
 		return true
-	if event.is_action_pressed(&"ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		go_back()
 		return true
 	return false
+
+
+func _move_cursor_or_view(direction: int) -> void:
+	var current_menu := _get_current_menu()
+	if current_menu:
+		current_menu.move_cursor(direction)
+		_update_current_labels()
+	else:
+		_cursor_move_in_view(direction)
 
 
 func _cursor_move_in_view(direction: int) -> void:

@@ -208,7 +208,7 @@ func _input_step2(event: InputEvent) -> void:
 		if current_step == 3:
 			_build_step_ui()
 		get_viewport().set_input_as_handled()
-	elif _is_back_pressed(event):
+	elif event.is_action_pressed("step_back"):
 		go_back()
 		_build_step_ui()
 		get_viewport().set_input_as_handled()
@@ -234,7 +234,7 @@ func _input_step3(event: InputEvent) -> void:
 		decrement_stat(Character.STAT_KEYS[_cursor_index])
 		_rebuild_step3_values()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"reroll_stats"):
+	elif event.is_action_pressed("reroll_stats"):
 		reroll_bonus()
 		_rebuild_step3_values()
 		get_viewport().set_input_as_handled()
@@ -243,7 +243,7 @@ func _input_step3(event: InputEvent) -> void:
 		if current_step == 4:
 			_build_step_ui()
 		get_viewport().set_input_as_handled()
-	elif _is_back_pressed(event):
+	elif event.is_action_pressed("step_back"):
 		go_back()
 		_build_step_ui()
 		get_viewport().set_input_as_handled()
@@ -280,7 +280,7 @@ func _input_step4(event: InputEvent) -> void:
 			if current_step == 5:
 				_build_step_ui()
 		get_viewport().set_input_as_handled()
-	elif _is_back_pressed(event):
+	elif event.is_action_pressed("step_back"):
 		go_back()
 		_build_step_ui()
 		get_viewport().set_input_as_handled()
@@ -292,16 +292,13 @@ func _input_step5(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept"):
 		confirm_creation()
 		get_viewport().set_input_as_handled()
-	elif _is_back_pressed(event):
+	elif event.is_action_pressed("step_back"):
 		go_back()
 		_build_step_ui()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		cancel()
 		get_viewport().set_input_as_handled()
-
-func _is_back_pressed(event: InputEvent) -> bool:
-	return event.is_action_pressed(&"step_back")
 
 func _on_name_submitted(_text: String) -> void:
 	_name_input = _name_edit.text

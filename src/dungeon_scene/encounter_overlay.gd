@@ -85,7 +85,7 @@ func is_active() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_active:
 		return
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		resolve()
 		get_viewport().set_input_as_handled()
 

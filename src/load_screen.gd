@@ -99,7 +99,7 @@ func show_load_failure(result: SaveManager.LoadResult) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _no_saves:
-		if event.is_action_pressed(&"ui_cancel"):
+		if event.is_action_pressed("ui_cancel"):
 			back_requested.emit()
 			get_viewport().set_input_as_handled()
 		return

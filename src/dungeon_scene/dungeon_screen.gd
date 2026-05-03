@@ -86,7 +86,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _player_state == null or _wiz_map == null:
 		return
 
-	if event.is_action_pressed(&"toggle_full_map"):
+	if event.is_action_pressed("toggle_full_map"):
 		if _encounter_active or _showing_return_dialog:
 			return
 		_toggle_full_map_overlay()
@@ -103,22 +103,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	if event.is_action_pressed(&"move_forward"):
+	if event.is_action_pressed("move_forward"):
 		if _player_state.move_forward(_wiz_map):
 			_on_position_changed()
-	elif event.is_action_pressed(&"move_back"):
+	elif event.is_action_pressed("move_back"):
 		if _player_state.move_backward(_wiz_map):
 			_on_position_changed()
-	elif event.is_action_pressed(&"strafe_left"):
+	elif event.is_action_pressed("strafe_left"):
 		if _player_state.strafe_left(_wiz_map):
 			_on_position_changed()
-	elif event.is_action_pressed(&"strafe_right"):
+	elif event.is_action_pressed("strafe_right"):
 		if _player_state.strafe_right(_wiz_map):
 			_on_position_changed()
-	elif event.is_action_pressed(&"turn_left"):
+	elif event.is_action_pressed("turn_left"):
 		_player_state.turn_left()
 		_refresh_all()
-	elif event.is_action_pressed(&"turn_right"):
+	elif event.is_action_pressed("turn_right"):
 		_player_state.turn_right()
 		_refresh_all()
 
@@ -199,17 +199,17 @@ func _update_return_dialog_rows() -> void:
 		_return_dialog_rows[i].set_selected(i == _return_dialog_selected)
 
 func _handle_return_dialog_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"ui_up"):
+	if event.is_action_pressed("ui_up"):
 		_return_dialog_selected = 0
 		_update_return_dialog_rows()
-	elif event.is_action_pressed(&"ui_down"):
+	elif event.is_action_pressed("ui_down"):
 		_return_dialog_selected = 1
 		_update_return_dialog_rows()
-	elif event.is_action_pressed(&"ui_accept"):
+	elif event.is_action_pressed("ui_accept"):
 		if _return_dialog_selected == 0:
 			return_to_town.emit()
 		_close_return_dialog()
-	elif event.is_action_pressed(&"ui_cancel"):
+	elif event.is_action_pressed("ui_cancel"):
 		_close_return_dialog()
 
 func _close_return_dialog() -> void:

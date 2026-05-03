@@ -152,7 +152,7 @@ func _compute_render_target() -> Vector2i:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if event.is_action_pressed(&"ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		close()
 		var vp := get_viewport()
 		if vp != null:

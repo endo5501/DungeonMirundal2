@@ -403,49 +403,49 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_command_menu_event(event: InputEvent) -> bool:
-	if event.is_action_pressed(&"ui_up"):
+	if event.is_action_pressed("ui_up"):
 		_command_menu.move_up()
 		return true
-	if event.is_action_pressed(&"ui_down"):
+	if event.is_action_pressed("ui_down"):
 		_command_menu.move_down()
 		return true
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		command_menu_select(_command_menu.get_selected_index())
 		return true
 	return false
 
 
 func _handle_target_select_event(event: InputEvent) -> bool:
-	if event.is_action_pressed(&"ui_up"):
+	if event.is_action_pressed("ui_up"):
 		_target_selector.move_up()
 		return true
-	if event.is_action_pressed(&"ui_down"):
+	if event.is_action_pressed("ui_down"):
 		_target_selector.move_down()
 		return true
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		target_select(_target_selector.get_selected_index())
 		return true
 	return false
 
 
 func _handle_item_select_event(event: InputEvent) -> bool:
-	if event.is_action_pressed(&"ui_up"):
+	if event.is_action_pressed("ui_up"):
 		_item_selector.move_up()
 		return true
-	if event.is_action_pressed(&"ui_down"):
+	if event.is_action_pressed("ui_down"):
 		_item_selector.move_down()
 		return true
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		_item_selector.confirm_current()
 		return true
-	if event.is_action_pressed(&"ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		_on_item_selector_cancelled()
 		return true
 	return false
 
 
 func _handle_result_event(event: InputEvent) -> bool:
-	if event.is_action_pressed(&"ui_accept"):
+	if event.is_action_pressed("ui_accept"):
 		confirm_result()
 		return true
 	return false

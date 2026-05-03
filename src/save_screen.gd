@@ -116,7 +116,7 @@ func _build_overwrite_dialog() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _overwrite_visible:
-		if _handle_overwrite_input(event):
+		if MenuController.route(event, _overwrite_menu, _overwrite_rows, _on_overwrite_accept, cancel_overwrite):
 			get_viewport().set_input_as_handled()
 		return
 	if MenuController.route(event, _menu, _menu_rows, _on_slot_selected, back_requested.emit):
@@ -138,34 +138,20 @@ func _on_slot_selected() -> void:
 		_overwrite_visible = true
 		_build_overwrite_dialog()
 
-func _handle_overwrite_input(event: InputEvent) -> bool:
-	if event.is_action_pressed(&"ui_up"):
-		_overwrite_menu.move_cursor(-1)
-		_overwrite_menu.update_rows(_overwrite_rows)
-		return true
-	if event.is_action_pressed(&"ui_down"):
-		_overwrite_menu.move_cursor(1)
-		_overwrite_menu.update_rows(_overwrite_rows)
-		return true
-	if event.is_action_pressed(&"ui_accept"):
-		if _overwrite_menu.selected_index == 0:  # はい
-			var ok := _save_manager.save(_overwrite_slot)
-			_overwrite_visible = false
-			if _overwrite_container:
-				_overwrite_container.queue_free()
-				_overwrite_container = null
-			if ok:
-				_status_label.text = ""
-				save_completed.emit()
-			else:
-				_status_label.text = SAVE_FAILURE_MESSAGE
-		else:  # いいえ
-			cancel_overwrite()
-		return true
-	if event.is_action_pressed(&"ui_cancel"):
+func _on_overwrite_accept() -> void:
+	if _overwrite_menu.selected_index != 0:
 		cancel_overwrite()
-		return true
-	return false
+		return
+	var ok := _save_manager.save(_overwrite_slot)
+	_overwrite_visible = false
+	if _overwrite_container:
+		_overwrite_container.queue_free()
+		_overwrite_container = null
+	if ok:
+		_status_label.text = ""
+		save_completed.emit()
+	else:
+		_status_label.text = SAVE_FAILURE_MESSAGE
 
 static func _format_slot_label(s: Dictionary) -> String:
 	var loc: String

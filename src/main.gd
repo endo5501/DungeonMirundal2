@@ -101,7 +101,7 @@ func _on_quit_game() -> void:
 # --- ESC Menu ---
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed(&"ui_cancel"):
+	if not event.is_action_pressed("ui_cancel"):
 		return
 	if _current_screen is TitleScreen or _esc_menu.is_menu_visible():
 		return

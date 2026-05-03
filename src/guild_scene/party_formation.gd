@@ -161,14 +161,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
-	if event.is_action_pressed(&"edit_name"):
+	if event.is_action_pressed("edit_name"):
 		_editing_name = true
 		_name_edit.grab_focus()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		go_back()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed(&"cycle_party_view"):
+	elif event.is_action_pressed("cycle_party_view"):
 		_mode = 1 - _mode
 		_rebuild_display()
 		get_viewport().set_input_as_handled()
