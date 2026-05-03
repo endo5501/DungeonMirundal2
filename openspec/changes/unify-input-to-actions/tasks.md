@@ -56,9 +56,9 @@
 
 ## 7. main.gd の action 化
 
-- [ ] 7.1 `tests/save_load/test_main_*.gd` または `tests/test_main.gd` で main の keycode 比較が action ベースになっても通ることを確認
-- [ ] 7.2 `src/main.gd` の `_unhandled_input` の `KEY_ESCAPE` を `is_action_pressed("ui_cancel")` に置換
-- [ ] 7.3 全テスト通過を確認しコミット
+- [x] 7.1 `tests/save_load/test_main_*.gd` または `tests/test_main.gd` で main の keycode 比較が action ベースになっても通ることを確認
+- [x] 7.2 `src/main.gd` の `_unhandled_input` の `KEY_ESCAPE` を `is_action_pressed("ui_cancel")` に置換
+- [x] 7.3 全テスト通過を確認しコミット
 
 ## 8. character_list / shop_screen の混在解消
 
