@@ -39,3 +39,26 @@ func test_elf_race_has_asymmetric_stats():
 func test_race_data_is_resource():
 	var race := RaceData.new()
 	assert_true(race is Resource)
+
+
+# --- tighten-types-and-contracts: id field ---
+
+func test_race_data_has_id_field():
+	var race := RaceData.new()
+	race.id = &"human"
+	assert_eq(race.id, &"human")
+	assert_typeof(race.id, TYPE_STRING_NAME)
+
+
+func test_race_data_id_defaults_to_empty_string_name():
+	var race := RaceData.new()
+	assert_eq(race.id, &"")
+
+
+func test_loaded_race_tres_files_have_id_matching_filename():
+	var loader := DataLoader.new()
+	var races := loader.load_all_races()
+	assert_gt(races.size(), 0)
+	for race in races:
+		var basename := race.resource_path.get_file().get_basename()
+		assert_eq(String(race.id), basename, "race %s id should equal filename" % race.resource_path)
