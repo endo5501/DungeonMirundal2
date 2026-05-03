@@ -35,9 +35,9 @@
 
 ## 5. temple_screen の MenuController 採用 (TDD)
 
-- [ ] 5.1 既存 `tests/town/test_temple_screen.gd` を読み、外部挙動を確認
-- [ ] 5.2 `src/town_scene/temple_screen.gd` の `_unhandled_input` を MenuController.route ベースに書き換える(temple は ESC で町に戻るので `on_back` を渡す)
-- [ ] 5.3 全テスト通過を確認しコミット
+- [x] 5.1 既存 `tests/town/test_temple_screen.gd` を読み、外部挙動を確認 — covers revive cost / success / blocked / dead-vs-alive checks; cursor movement is not asserted, so the migration to CursorMenu is safe.
+- [x] 5.2 `src/town_scene/temple_screen.gd` の `_unhandled_input` を MenuController.route ベースに書き換える(temple は ESC で町に戻るので `on_back` を渡す)。Internally migrated from a manual `_selected_index` to `CursorMenu` so MenuController.route applies. Living members are passed as disabled_indices, matching the original "(生存)" greying.
+- [x] 5.3 全テスト通過を確認しコミット
 
 ## 6. 動作確認
 

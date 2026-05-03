@@ -8,10 +8,11 @@ const REVIVE_COST_PER_LEVEL: int = 100
 
 var _inventory: Inventory
 var _guild: Guild
-var _selected_index: int = 0
 var _last_message: String = ""
 
 var _root: VBoxContainer
+var _menu: CursorMenu = CursorMenu.new([], [])
+var _rows: Array[CursorMenuRow] = []
 
 
 func setup(inventory: Inventory, guild: Guild) -> void:
@@ -75,6 +76,8 @@ func revive(character: Character) -> bool:
 func _rebuild() -> void:
 	for child in _root.get_children():
 		child.queue_free()
+	_rows = []
+
 	var title := Label.new()
 	title.text = "教会"
 	title.add_theme_font_size_override("font_size", 24)
@@ -91,15 +94,25 @@ func _rebuild() -> void:
 		var empty := Label.new()
 		empty.text = "  (パーティにメンバーがいません)"
 		_root.add_child(empty)
+		_menu = CursorMenu.new([], [])
 	else:
+		var member_texts: Array[String] = []
+		var living_indices: Array[int] = []
 		for i in range(members.size()):
 			var ch: Character = members[i]
 			var status := "(死亡)" if is_dead(ch) else "(生存)"
-			var row := CursorMenuRow.create(_root,
-				"%s Lv%d  %s  蘇生費: %d G" % [ch.character_name, ch.level, status, revive_cost(ch)],
-				FONT_SIZE)
-			row.set_selected(i == _selected_index)
-			row.set_disabled(not is_dead(ch))
+			member_texts.append(
+				"%s Lv%d  %s  蘇生費: %d G" % [ch.character_name, ch.level, status, revive_cost(ch)]
+			)
+			if not is_dead(ch):
+				living_indices.append(i)
+		var prev_index := _menu.selected_index
+		_menu = CursorMenu.new(member_texts, living_indices)
+		_menu.selected_index = clamp(prev_index, 0, members.size() - 1)
+		_menu.ensure_valid_selection()
+		for txt in member_texts:
+			_rows.append(CursorMenuRow.create(_root, txt, FONT_SIZE))
+		_menu.update_rows(_rows)
 
 	if _last_message != "":
 		var msg := Label.new()
@@ -118,21 +131,18 @@ func _rebuild() -> void:
 # ---- input ----
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo:
-		return
+	if MenuController.route(event, _menu, _rows, _accept_selected, _request_back):
+		get_viewport().set_input_as_handled()
+
+
+func _accept_selected() -> void:
 	var members := get_party_members()
-	if event.is_action_pressed("ui_down") and members.size() > 0:
-		_selected_index = (_selected_index + 1) % members.size()
-		_rebuild()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up") and members.size() > 0:
-		_selected_index = (_selected_index - 1 + members.size()) % members.size()
-		_rebuild()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept") and members.size() > 0:
-		revive(members[_selected_index])
-		_rebuild()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_cancel"):
-		back_requested.emit()
-		get_viewport().set_input_as_handled()
+	var idx := _menu.selected_index
+	if idx < 0 or idx >= members.size():
+		return
+	revive(members[idx])
+	_rebuild()
+
+
+func _request_back() -> void:
+	back_requested.emit()
