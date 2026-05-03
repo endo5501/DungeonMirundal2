@@ -115,6 +115,22 @@ func test_spend_gold_negative_is_rejected():
 	assert_eq(inv.gold, 100)
 
 
+# --- tighten-types-and-contracts: spend_gold(0) is a successful no-op ---
+
+func test_spend_gold_zero_returns_true_and_keeps_gold():
+	var inv := Inventory.new()
+	inv.gold = 100
+	assert_true(inv.spend_gold(0))
+	assert_eq(inv.gold, 100)
+
+
+func test_spend_gold_zero_on_empty_balance_still_succeeds():
+	var inv := Inventory.new()
+	inv.gold = 0
+	assert_true(inv.spend_gold(0))
+	assert_eq(inv.gold, 0)
+
+
 # --- 2.5: serialization ---
 
 func test_to_dict_emits_gold_and_items():
