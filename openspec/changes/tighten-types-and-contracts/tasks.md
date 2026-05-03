@@ -41,16 +41,16 @@
 
 ## 5. 暗黙 Variant の型明示
 
-- [ ] 5.1 `src/dungeon/wiz_map.gd:124` の `var tmp = ...` に型注釈
-- [ ] 5.2 `src/items/equipment.gd:116` の `var raw = ...` に型注釈(または `as int` キャスト)
-- [ ] 5.3 `src/dungeon_scene/combat_overlay.gd:234` の `var ch = ...` に Variant 注釈 + コメント
-- [ ] 5.4 `src/items/item_instance.gd:23` の暗黙型を明示
-- [ ] 5.5 `src/items/effects/heal_hp_effect.gd:10` の暗黙型を明示
-- [ ] 5.6 `src/items/effects/heal_mp_effect.gd:10` の暗黙型を明示
-- [ ] 5.7 `src/dungeon/full_map_renderer.gd:49` の暗黙型を明示
-- [ ] 5.8 `src/guild_scene/party_formation.gd:126` の暗黙型を明示
-- [ ] 5.9 `src/combat/turn_engine.gd:64,98` の `var cmd = _pending_commands.get(...)` を `var cmd: CombatCommand = ... as CombatCommand` に変更、null チェック追加
-- [ ] 5.10 全テスト通過を確認しコミット
+- [x] 5.1 `src/dungeon/wiz_map.gd:124` の `var tmp = ...` に型注釈
+- [x] 5.2 `src/items/equipment.gd:116` の `var raw = ...` に型注釈(または `as int` キャスト)
+- [x] 5.3 `src/dungeon_scene/combat_overlay.gd:234` の `var ch = ...` に Variant 注釈 + コメント
+- [x] 5.4 `src/items/item_instance.gd:23` の暗黙型を明示
+- [x] 5.5 `src/items/effects/heal_hp_effect.gd:10` の暗黙型を明示
+- [x] 5.6 `src/items/effects/heal_mp_effect.gd:10` の暗黙型を明示
+- [x] 5.7 `src/dungeon/full_map_renderer.gd:49` の暗黙型を明示
+- [x] 5.8 `src/guild_scene/party_formation.gd:126` の暗黙型を明示
+- [x] 5.9 `src/combat/turn_engine.gd:64,98` の `var cmd = _pending_commands.get(...)` を `var cmd: CombatCommand = ... as CombatCommand` に変更、null チェック追加
+- [x] 5.10 全テスト通過を確認しコミット
 
 ## 6. Typed array シグネチャの導入
 

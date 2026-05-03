@@ -121,7 +121,7 @@ func add_extra_links(rng: RandomNumberGenerator, count: int) -> void:
 	var limit := mini(count, candidates.size())
 	for i in range(limit):
 		var j := rng.randi_range(i, candidates.size() - 1)
-		var tmp = candidates[i]
+		var tmp: Array = candidates[i]
 		candidates[i] = candidates[j]
 		candidates[j] = tmp
 	for i in range(limit):

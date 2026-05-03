@@ -123,7 +123,7 @@ func _build_grid_slot(parent: Control, slot_idx: int) -> void:
 	slot.set_meta("cursor_slot", cursor_slot)
 	slot.set_meta("cursor_label", cursor_label)
 
-	var ch = _party_slots[slot_idx]
+	var ch: Character = _party_slots[slot_idx]
 	var name_label := Label.new()
 	name_label.text = ch.character_name if ch != null else "---"
 	name_label.add_theme_font_size_override("font_size", FONT_SIZE)

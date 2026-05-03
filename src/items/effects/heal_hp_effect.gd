@@ -7,7 +7,8 @@ extends ItemEffect
 func apply(targets: Array, _context) -> ItemEffectResult:
 	if targets.is_empty():
 		return ItemEffectResult.failure("対象がいません")
-	var target = targets[0]
+	# target is duck-typed (Character | CombatActor — anything with current_hp/max_hp).
+	var target: Variant = targets[0]
 	if target == null:
 		return ItemEffectResult.failure("対象が無効です")
 	var before: int = target.current_hp
