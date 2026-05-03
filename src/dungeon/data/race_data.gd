@@ -1,6 +1,7 @@
 class_name RaceData
 extends Resource
 
+@export var id: StringName
 @export var race_name: String
 @export var base_str: int
 @export var base_int: int

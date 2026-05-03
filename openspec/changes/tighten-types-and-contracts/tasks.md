@@ -5,11 +5,11 @@
 - [x] 1.3 `tests/data/test_data_files.gd` (新規 or 既存) で全 `data/races/*.tres` の `id` が ファイル名 basename と一致することを assert するテスト追加
 - [x] 1.4 `data/jobs/*.tres` についても同様のテスト追加
 - [x] 1.5 テスト Red コミット
-- [ ] 1.6 `src/data/race_data.gd` に `@export var id: StringName` を追加
-- [ ] 1.7 `src/data/job_data.gd` に同様
-- [ ] 1.8 各 `data/races/*.tres` ファイルを Godot エディタで開いて `id` 値を設定(human.tres → "human" など)
-- [ ] 1.9 各 `data/jobs/*.tres` についても同様
-- [ ] 1.10 テスト Green コミット
+- [x] 1.6 `src/data/race_data.gd` に `@export var id: StringName` を追加
+- [x] 1.7 `src/data/job_data.gd` に同様
+- [x] 1.8 各 `data/races/*.tres` ファイルを Godot エディタで開いて `id` 値を設定(human.tres → "human" など)
+- [x] 1.9 各 `data/jobs/*.tres` についても同様
+- [x] 1.10 テスト Green コミット
 
 ## 2. Character.to_dict の id 経由化 (TDD)
 

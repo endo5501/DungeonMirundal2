@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1")
+id = &"samurai"
 job_name = "Samurai"
 base_hp = 8
 has_magic = true
