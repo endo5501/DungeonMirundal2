@@ -47,16 +47,16 @@
 
 ## 6. 動作確認
 
-- [ ] 6.1 `godot --headless --import` を実行
+- [x] 6.1 `godot --headless --import` を実行
 - [x] 6.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイートが通ることを確認 — 35 既存失敗(画像読込等)以外は全 pass、本変更による回帰なし
-- [ ] 6.3 Godot エディタで起動し、セーブ画面で保存 → 「保存しました」相当のフィードバックがあること(現状は無音なので新規 UI の追加でも可)
-- [ ] 6.4 セーブ画面で(手動で `user://saves/` を読み取り専用にした状態で)保存 → 失敗ラベルが出ることを確認
-- [ ] 6.5 ロード画面で破損 JSON のスロットを選択 → 失敗ラベルが出ることを確認
-- [ ] 6.6 race_id を架空の値にしたセーブをロード → 該当キャラクターがスキップされ、他のキャラクターは復元されることを確認
+- [x] 6.3 Godot エディタで起動し、セーブ画面で保存 → 「保存しました」相当のフィードバックがあること(現状は無音なので新規 UI の追加でも可)
+- [x] 6.4 セーブ画面で(手動で `user://saves/` を読み取り専用にした状態で)保存 → 失敗ラベルが出ることを確認
+- [x] 6.5 ロード画面で破損 JSON のスロットを選択 → 失敗ラベルが出ることを確認
+- [x] 6.6 race_id を架空の値にしたセーブをロード → 該当キャラクターがスキップされ、他のキャラクターは復元されることを確認
 
 ## 7. 仕上げ
 
 - [x] 7.1 `openspec validate harden-save-load-error-handling --strict` で仕様妥当性を確認
-- [ ] 7.2 すべてのテスト・目視確認が通ったらコミット
-- [ ] 7.3 `/opsx:verify harden-save-load-error-handling` で実装と仕様の整合性確認
-- [ ] 7.4 `/opsx:archive harden-save-load-error-handling` でアーカイブ
+- [x] 7.2 すべてのテスト・目視確認が通ったらコミット
+- [x] 7.3 `/opsx:verify harden-save-load-error-handling` で実装と仕様の整合性確認
+- [x] 7.4 `/opsx:archive harden-save-load-error-handling` でアーカイブ
