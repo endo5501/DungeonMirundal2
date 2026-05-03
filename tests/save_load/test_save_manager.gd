@@ -139,6 +139,7 @@ func test_load_restores_dungeon_registry():
 func test_load_nonexistent_returns_file_not_found():
 	var result: int = _save_manager.load(999)
 	assert_eq(result, SaveManager.LoadResult.FILE_NOT_FOUND)
+	assert_push_error("file not found")
 
 func test_load_returns_parse_error_on_corrupt_json():
 	_save_manager._ensure_dir()
@@ -148,6 +149,7 @@ func test_load_returns_parse_error_on_corrupt_json():
 	f.close()
 	var result: int = _save_manager.load(1)
 	assert_eq(result, SaveManager.LoadResult.PARSE_ERROR)
+	assert_push_error("parse error")
 
 func test_load_returns_version_too_new_when_version_exceeds_current():
 	_save_manager._ensure_dir()
@@ -161,6 +163,7 @@ func test_load_returns_version_too_new_when_version_exceeds_current():
 	f.close()
 	var result: int = _save_manager.load(1)
 	assert_eq(result, SaveManager.LoadResult.VERSION_TOO_NEW)
+	assert_push_error("version too new")
 
 # --- list_saves() tests ---
 

@@ -3,6 +3,14 @@ extends RefCounted
 
 const CURRENT_VERSION := 1
 
+enum LoadResult {
+	OK,
+	FILE_NOT_FOUND,
+	PARSE_ERROR,
+	VERSION_TOO_NEW,
+	RESTORE_FAILED,
+}
+
 var _save_dir: String
 
 func _init(save_dir: String = "user://saves/") -> void:
@@ -18,7 +26,7 @@ func _ensure_dir() -> void:
 	if not DirAccess.dir_exists_absolute(_save_dir):
 		DirAccess.make_dir_recursive_absolute(_save_dir)
 
-func save(slot_number: int) -> void:
+func save(slot_number: int) -> bool:
 	_ensure_dir()
 	var inv: Inventory = GameState.inventory
 	var data := {
@@ -31,29 +39,38 @@ func save(slot_number: int) -> void:
 		"dungeons": GameState.dungeon_registry.to_dict()["dungeons"],
 	}
 	var json_str := JSON.stringify(data, "\t")
-	var f := FileAccess.open(_slot_path(slot_number), FileAccess.WRITE)
+	var slot_path := _slot_path(slot_number)
+	var f := FileAccess.open(slot_path, FileAccess.WRITE)
 	if f == null:
-		return
+		push_error("SaveManager.save: cannot open %s for writing (err=%d)" % [slot_path, FileAccess.get_open_error()])
+		return false
 	f.store_string(json_str)
 	f.close()
-	var lf := FileAccess.open(_last_slot_path(), FileAccess.WRITE)
+	var last_path := _last_slot_path()
+	var lf := FileAccess.open(last_path, FileAccess.WRITE)
 	if lf == null:
-		return
+		push_error("SaveManager.save: cannot open %s for writing (err=%d)" % [last_path, FileAccess.get_open_error()])
+		return false
 	lf.store_string(str(slot_number))
 	lf.close()
+	return true
 
-func load(slot_number: int) -> bool:
-	var f := FileAccess.open(_slot_path(slot_number), FileAccess.READ)
+func load(slot_number: int) -> LoadResult:
+	var slot_path := _slot_path(slot_number)
+	var f := FileAccess.open(slot_path, FileAccess.READ)
 	if f == null:
-		return false
+		push_error("SaveManager.load: file not found at %s" % slot_path)
+		return LoadResult.FILE_NOT_FOUND
 	var json := JSON.new()
 	var err := json.parse(f.get_as_text())
 	f.close()
 	if err != OK:
-		return false
+		push_error("SaveManager.load: JSON parse error at %s (err=%d)" % [slot_path, err])
+		return LoadResult.PARSE_ERROR
 	var data: Dictionary = json.data
 	if int(data.get("version", 0)) > CURRENT_VERSION:
-		return false
+		push_error("SaveManager.load: version too new at %s (saw %d, current %d)" % [slot_path, int(data.get("version", 0)), CURRENT_VERSION])
+		return LoadResult.VERSION_TOO_NEW
 	# Restore inventory first so equipment indices can resolve to ItemInstances.
 	var inv_data: Dictionary = data.get("inventory", {})
 	GameState.inventory = Inventory.from_dict(inv_data, GameState.item_repository)
@@ -61,7 +78,7 @@ func load(slot_number: int) -> bool:
 	GameState.dungeon_registry = DungeonRegistry.from_dict({"dungeons": data.get("dungeons", [])})
 	GameState.game_location = data.get("game_location", GameState.LOCATION_TOWN)
 	GameState.current_dungeon_index = int(data.get("current_dungeon_index", -1))
-	return true
+	return LoadResult.OK
 
 func list_saves() -> Array[Dictionary]:
 	if not DirAccess.dir_exists_absolute(_save_dir):

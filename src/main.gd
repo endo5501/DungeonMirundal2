@@ -257,8 +257,8 @@ func _restore_current_screen() -> void:
 # --- Load Game ---
 
 func _load_game(slot_number: int) -> void:
-	var ok := GameState.save_manager.load(slot_number)
-	if not ok:
+	var result := GameState.save_manager.load(slot_number)
+	if result != SaveManager.LoadResult.OK:
 		return
 	match GameState.game_location:
 		GameState.LOCATION_TOWN:
