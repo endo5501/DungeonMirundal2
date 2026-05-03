@@ -47,12 +47,12 @@
 
 ## 6. save_screen / load_screen の MenuController 採用 + action 化
 
-- [ ] 6.1 `tests/save_load/test_save_screen.gd` の keycode を action に置換
-- [ ] 6.2 `tests/save_load/test_load_screen.gd` の keycode を action に置換
-- [ ] 6.3 既存テストが失敗することを確認
-- [ ] 6.4 `src/save_screen.gd` の `_unhandled_input` を `MenuController.route` ベースに書き換え、上書き確認ダイアログは別ハンドラに残す(action ベース)
-- [ ] 6.5 `src/load_screen.gd` の `_unhandled_input` を `MenuController.route` ベースに書き換え、no-saves 状態は `ui_cancel` のみ処理
-- [ ] 6.6 全テスト通過を確認しコミット
+- [x] 6.1 `tests/save_load/test_save_screen.gd` の keycode を action に置換
+- [x] 6.2 `tests/save_load/test_load_screen.gd` の keycode を action に置換
+- [x] 6.3 既存テストが失敗することを確認
+- [x] 6.4 `src/save_screen.gd` の `_unhandled_input` を `MenuController.route` ベースに書き換え、上書き確認ダイアログは別ハンドラに残す(action ベース)
+- [x] 6.5 `src/load_screen.gd` の `_unhandled_input` を `MenuController.route` ベースに書き換え、no-saves 状態は `ui_cancel` のみ処理
+- [x] 6.6 全テスト通過を確認しコミット
 
 ## 7. main.gd の action 化
 

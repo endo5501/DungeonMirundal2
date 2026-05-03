@@ -26,12 +26,6 @@ func _clean_test_dir():
 			saves_dir.list_dir_end()
 		dir.remove("test_saves_lscreen")
 
-func _make_key_event(keycode: int) -> InputEventKey:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.pressed = true
-	return event
-
 # --- Display tests ---
 
 func test_load_screen_shows_no_saves_message_when_empty():
@@ -58,7 +52,7 @@ func test_select_slot_emits_load_requested():
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_ENTER))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(screen, "load_requested")
 
 # --- ESC to close ---
@@ -68,7 +62,7 @@ func test_esc_emits_back_requested():
 	add_child_autofree(screen)
 	screen.setup(_save_manager)
 	watch_signals(screen)
-	screen._unhandled_input(_make_key_event(KEY_ESCAPE))
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_signal_emitted(screen, "back_requested")
 
 # --- Failure UI ---
