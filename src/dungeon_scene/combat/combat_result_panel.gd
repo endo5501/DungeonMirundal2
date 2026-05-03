@@ -37,16 +37,18 @@ func _build_ui() -> void:
 	vbox.add_child(_hint_label)
 
 
-func show_result(outcome: EncounterOutcome, level_ups: Array) -> void:
+func show_result(outcome: EncounterOutcome, summary: BattleSummary) -> void:
 	_ensure_ready()
+	if summary == null:
+		summary = BattleSummary.empty()
 	var title_text: String = ""
 	var body_lines: Array = []
 	match outcome.result:
 		EncounterOutcome.Result.CLEARED:
 			title_text = "勝利！"
-			body_lines.append("獲得経験値: %d" % outcome.gained_experience)
-			body_lines.append("獲得ゴールド: %d" % outcome.gained_gold)
-			for entry in level_ups:
+			body_lines.append("獲得経験値: %d" % summary.gained_experience)
+			body_lines.append("獲得ゴールド: %d" % summary.gained_gold)
+			for entry in summary.level_ups:
 				var name: String = entry.get("name", "")
 				var new_level: int = int(entry.get("new_level", 0))
 				body_lines.append("%s は Lv%d になった！" % [name, new_level])

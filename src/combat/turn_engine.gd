@@ -177,14 +177,16 @@ func _character_of(combatant: CombatActor):
 
 func _resolve_attack(attacker: CombatActor, target: CombatActor, rng: RandomNumberGenerator, report: TurnReport) -> void:
 	var effective_target: CombatActor = target
+	var retargeted_from := ""
 	if effective_target == null or not effective_target.is_alive():
+		retargeted_from = effective_target.actor_name if effective_target != null else ""
 		effective_target = _pick_living_same_side_as(target, attacker)
 	if effective_target == null:
 		return
 	var damage := DamageCalculator.calculate(attacker, effective_target, rng)
 	var defended := effective_target.is_defending()
 	effective_target.take_damage(damage)
-	report.add_attack(attacker, effective_target, damage, defended)
+	report.add_attack(attacker, effective_target, damage, defended, retargeted_from)
 	if not effective_target.is_alive():
 		report.add_defeated(effective_target)
 

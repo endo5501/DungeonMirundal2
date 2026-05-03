@@ -65,6 +65,36 @@ func _make_character(name: String, job_name: String) -> Character:
 	return ch
 
 
+func _make_potion() -> Item:
+	var it := Item.new()
+	it.item_id = &"potion"
+	it.item_name = "Potion"
+	it.category = Item.ItemCategory.CONSUMABLE
+	it.equip_slot = Item.EquipSlot.NONE
+	var e := HealHpEffect.new()
+	e.power = 5
+	it.effect = e
+	var tc: Array[TargetCondition] = [AliveOnly.new()]
+	it.target_conditions = tc
+	return it
+
+
+func _make_wounded_only_potion() -> Item:
+	var it := _make_potion()
+	var tc: Array[TargetCondition] = [AliveOnly.new(), NotFullHp.new()]
+	it.target_conditions = tc
+	return it
+
+
+func _make_leather_armor() -> Item:
+	var it := Item.new()
+	it.item_id = &"leather_armor"
+	it.item_name = "Leather Armor"
+	it.category = Item.ItemCategory.ARMOR
+	it.equip_slot = Item.EquipSlot.ARMOR
+	return it
+
+
 func _make_guild_with_party() -> Guild:
 	var g := Guild.new()
 	var c1 := _make_character("P1", "Fighter")
@@ -267,6 +297,85 @@ func test_defend_selection_advances_to_next_actor():
 	assert_eq(current.actor_name, "P2")
 
 
+func test_item_command_shows_item_use_flow():
+	GameState.inventory = Inventory.new()
+	GameState.inventory.add(ItemInstance.new(_make_potion(), true))
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_ITEM)
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.ITEM_SELECT)
+	assert_true(overlay._item_use_panel.visible)
+	assert_true(overlay.get_item_use_flow().visible)
+
+
+func test_item_command_hides_non_consumable_items():
+	GameState.inventory = Inventory.new()
+	GameState.inventory.add(ItemInstance.new(_make_leather_armor(), true))
+	GameState.inventory.add(ItemInstance.new(_make_potion(), true))
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_ITEM)
+	var items := overlay.get_item_use_flow()._list_items()
+	assert_eq(items.size(), 1)
+	assert_eq(items[0].item.item_name, "Potion")
+
+
+func test_item_target_selection_lists_only_valid_targets_in_combat():
+	GameState.inventory = Inventory.new()
+	GameState.inventory.add(ItemInstance.new(_make_wounded_only_potion(), true))
+	var chars: Array = _guild.get_all_characters()
+	chars[0].current_hp = 10
+	chars[1].current_hp = chars[1].max_hp
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_ITEM)
+	overlay.get_item_use_flow().handle_input(TestHelpers.make_action_event(&"ui_accept"))
+	var targets := overlay.get_item_use_flow()._list_targets()
+	assert_eq(targets.size(), 1)
+	assert_eq(targets[0].character_name, "P1")
+
+
+func test_item_use_flow_cancel_returns_to_command_menu():
+	GameState.inventory = Inventory.new()
+	GameState.inventory.add(ItemInstance.new(_make_potion(), true))
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_ITEM)
+	overlay.get_item_use_flow().flow_completed.emit("")
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.COMMAND_MENU)
+	assert_false(overlay.get_item_use_flow().visible)
+	assert_eq(overlay.get_current_command_actor().actor_name, "P1")
+
+
+func test_item_use_flow_selection_queues_command_and_advances_to_next_actor():
+	GameState.inventory = Inventory.new()
+	var potion_inst := ItemInstance.new(_make_potion(), true)
+	GameState.inventory.add(potion_inst)
+	var chars: Array = _guild.get_all_characters()
+	chars[0].current_hp = 10
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_ITEM)
+	overlay.get_item_use_flow().handle_input(TestHelpers.make_action_event(&"ui_accept"))
+	overlay.get_item_use_flow().handle_input(TestHelpers.make_action_event(&"ui_accept"))
+	overlay.get_item_use_flow().handle_input(TestHelpers.make_action_event(&"ui_accept"))
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.COMMAND_MENU)
+	assert_false(overlay.get_item_use_flow().visible)
+	assert_eq(overlay.get_current_command_actor().actor_name, "P2")
+	assert_eq(chars[0].current_hp, 10)
+	assert_true(GameState.inventory.contains(potion_inst))
+
+
 func test_target_select_then_remaining_defend_triggers_resolution():
 	var overlay := CombatOverlay.new()
 	add_child_autofree(overlay)
@@ -318,6 +427,23 @@ func test_combat_log_formats_attack_action():
 	assert_true(text.contains("8"), "log should mention damage: %s" % text)
 
 
+func test_cancel_log_playback_prevents_pending_lines():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.log_line_delay = 0.05
+	overlay._is_active = true
+	var report := TurnReport.new()
+	report.actions = [
+		{"type": "defend", "attacker_name": "P1"},
+		{"type": "defend", "attacker_name": "P2"},
+	]
+	overlay._play_log_sequentially(report)
+	assert_eq(overlay.get_combat_log_lines().size(), 1)
+	overlay.cancel_log_playback()
+	await get_tree().create_timer(0.08).timeout
+	assert_eq(overlay.get_combat_log_lines().size(), 1)
+
+
 # --- ResultPanel ---
 
 func test_result_panel_shows_cleared_message_and_exp():
@@ -327,8 +453,7 @@ func test_result_panel_shows_cleared_message_and_exp():
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	# Force CLEARED outcome with known exp
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
-	outcome.gained_experience = 40
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.new(40, 0, []))
 	var text := overlay.get_result_panel_text()
 	assert_true(text.contains("40"), "result text should mention exp: %s" % text)
 
@@ -341,9 +466,7 @@ func test_result_panel_cleared_shows_gold():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
-	outcome.gained_experience = 10
-	outcome.gained_gold = 25
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.new(10, 25, []))
 	var text := overlay.get_result_panel_text()
 	assert_true(text.contains("25"), "result text should mention gold: %s" % text)
 
@@ -355,7 +478,7 @@ func test_result_panel_wiped_hides_gold():
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.WIPED)
 	outcome.gained_gold = 99  # should still not display anything gold-related on WIPED
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.new(0, 99, []))
 	var text := overlay.get_result_panel_text()
 	assert_false(text.contains("99"), "wiped result should not display gold: %s" % text)
 
@@ -367,36 +490,9 @@ func test_result_panel_escaped_hides_gold():
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.ESCAPED)
 	outcome.gained_gold = 77
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.new(0, 77, []))
 	var text := overlay.get_result_panel_text()
 	assert_false(text.contains("77"), "escaped result should not display gold: %s" % text)
-
-
-func test_compute_gold_drop_sums_per_monster_rolls():
-	var overlay := CombatOverlay.new()
-	add_child_autofree(overlay)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = TEST_SEED
-	overlay.setup_dependencies(_guild, _provider, rng)
-	# Build dead monsters with known gold ranges
-	var md_a := MonsterData.new()
-	md_a.monster_id = &"a"
-	md_a.monster_name = "A"
-	md_a.max_hp_min = 1
-	md_a.max_hp_max = 1
-	md_a.gold_min = 3
-	md_a.gold_max = 3  # always 3
-	var md_b := MonsterData.new()
-	md_b.monster_id = &"b"
-	md_b.monster_name = "B"
-	md_b.max_hp_min = 1
-	md_b.max_hp_max = 1
-	md_b.gold_min = 10
-	md_b.gold_max = 10  # always 10
-	var m_a := Monster.new(md_a, rng)
-	var m_b := Monster.new(md_b, rng)
-	var total: int = overlay._compute_gold_drop([m_a, m_b])
-	assert_eq(total, 13)
 
 
 func test_result_panel_shows_wiped_message():
@@ -405,7 +501,7 @@ func test_result_panel_shows_wiped_message():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.WIPED)
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.empty())
 	var text := overlay.get_result_panel_text()
 	assert_true(text.length() > 0, "result text should not be empty")
 
@@ -416,7 +512,7 @@ func test_result_panel_shows_escape_message():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.ESCAPED)
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.empty())
 	var text := overlay.get_result_panel_text()
 	assert_true(text.length() > 0)
 
@@ -427,9 +523,8 @@ func test_result_panel_lists_level_ups():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
-	outcome.gained_experience = 100
 	# Simulate P1 leveled up from 1 to 2
-	overlay.show_result(outcome, [{"name": "P1", "new_level": 2}])
+	overlay.show_result(outcome, BattleSummary.new(100, 0, [{"name": "P1", "new_level": 2}]))
 	var text := overlay.get_result_panel_text()
 	assert_true(text.contains("P1"), "should mention leveled character: %s" % text)
 	assert_true(text.contains("2"), "should mention new level: %s" % text)
@@ -441,9 +536,8 @@ func test_result_confirm_emits_encounter_resolved():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	var outcome := EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
-	outcome.gained_experience = 0
 	watch_signals(overlay)
-	overlay.show_result(outcome, [])
+	overlay.show_result(outcome, BattleSummary.empty())
 	overlay.confirm_result()
 	assert_signal_emitted(overlay, "encounter_resolved")
 
@@ -476,6 +570,6 @@ func test_enter_at_result_phase_resolves_encounter():
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 1}))
 	watch_signals(overlay)
-	overlay.show_result(EncounterOutcome.new(EncounterOutcome.Result.CLEARED), [])
+	overlay.show_result(EncounterOutcome.new(EncounterOutcome.Result.CLEARED), BattleSummary.empty())
 	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(overlay, "encounter_resolved")
