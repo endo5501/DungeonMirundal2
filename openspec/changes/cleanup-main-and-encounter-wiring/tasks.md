@@ -31,14 +31,14 @@
 
 ## 4. DungeonEntrance.setup のシグネチャ変更 (TDD)
 
-- [ ] 4.1 `tests/town/test_dungeon_entrance.gd` の `setup(registry, true)` 形式の呼び出しを `setup(registry, guild)` に書き換え
-- [ ] 4.2 「パーティが空 Guild の場合に enter が disabled」テスト
-- [ ] 4.3 「パーティが 1 人いる Guild の場合に enter が enabled」テスト
-- [ ] 4.4 テスト Red コミット
-- [ ] 4.5 `src/town_scene/dungeon_entrance.gd:setup` を `setup(registry: DungeonRegistry, guild: Guild)` 形式に変更
-- [ ] 4.6 内部で `_has_party = _guild.has_party_members()` のような snapshot を保持しないようにし、UI 構築時およびイベント発生時に `_guild.has_party_members()` を直接 query する
-- [ ] 4.7 `src/main.gd:_on_open_dungeon_entrance` から `var has_party := GameState.guild.has_party_members()` を削除し、`screen.setup(GameState.dungeon_registry, GameState.guild)` を呼ぶ
-- [ ] 4.8 テスト Green コミット
+- [x] 4.1 `tests/town/test_dungeon_entrance.gd` の `setup(registry, true)` 形式の呼び出しを `setup(registry, guild)` に書き換え
+- [x] 4.2 「パーティが空 Guild の場合に enter が disabled」テスト
+- [x] 4.3 「パーティが 1 人いる Guild の場合に enter が enabled」テスト
+- [x] 4.4 テスト Red コミット
+- [x] 4.5 `src/town_scene/dungeon_entrance.gd:setup` を `setup(registry: DungeonRegistry, guild: Guild)` 形式に変更
+- [x] 4.6 内部で `_has_party = _guild.has_party_members()` のような snapshot を保持しないようにし、UI 構築時およびイベント発生時に `_guild.has_party_members()` を直接 query する
+- [x] 4.7 `src/main.gd:_on_open_dungeon_entrance` から `var has_party := GameState.guild.has_party_members()` を削除し、`screen.setup(GameState.dungeon_registry, GameState.guild)` を呼ぶ
+- [x] 4.8 テスト Green コミット
 
 ## 5. 動作確認
 

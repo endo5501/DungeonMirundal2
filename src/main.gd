@@ -176,9 +176,8 @@ func _on_guild_back() -> void:
 # --- Dungeon Entrance ---
 
 func _on_open_dungeon_entrance() -> void:
-	var has_party := GameState.guild.has_party_members()
 	var screen := DungeonEntrance.new()
-	screen.setup(GameState.dungeon_registry, has_party)
+	screen.setup(GameState.dungeon_registry, GameState.guild)
 	screen.enter_dungeon.connect(_on_enter_dungeon)
 	screen.back_requested.connect(_on_dungeon_entrance_back)
 	_switch_screen(screen)
