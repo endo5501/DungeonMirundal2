@@ -77,4 +77,4 @@
 - [x] 9.1 `openspec validate tighten-types-and-contracts --strict`
 - [x] 9.2 `/simplify`スキルでコードレビューを実施
 - [x] 9.3 `/opsx:verify tighten-types-and-contracts`
-- [ ] 9.4 `/opsx:archive tighten-types-and-contracts`
+- [x] 9.4 `/opsx:archive tighten-types-and-contracts`
