@@ -1,13 +1,13 @@
 ## 1. ItemUseFlow の抽出 (TDD)
 
-- [ ] 1.1 `tests/esc_menu/flows/test_item_use_flow.gd` を作成、`ItemUseFlow.new()` が SELECT_ITEM サブビューで初期化されるテスト
-- [ ] 1.2 アイテム選択 → SELECT_TARGET 遷移テスト
-- [ ] 1.3 対象選択 → CONFIRM 遷移テスト
-- [ ] 1.4 「はい」確認 → effect 適用 → RESULT 遷移テスト
-- [ ] 1.5 RESULT で ui_accept → flow_completed(message) シグナルテスト
-- [ ] 1.6 各サブビューでの ui_cancel による前ビュー戻り / フローキャンセルテスト
-- [ ] 1.7 ItemUseContext.in_combat フィルタテスト(戦闘専用アイテムが in_combat=false で表示されないなど)
-- [ ] 1.8 テストを Red 確認しコミット
+- [x] 1.1 `tests/esc_menu/flows/test_item_use_flow.gd` を作成、`ItemUseFlow.new()` が SELECT_ITEM サブビューで初期化されるテスト
+- [x] 1.2 アイテム選択 → SELECT_TARGET 遷移テスト
+- [x] 1.3 対象選択 → CONFIRM 遷移テスト
+- [x] 1.4 「はい」確認 → effect 適用 → RESULT 遷移テスト
+- [x] 1.5 RESULT で ui_accept → flow_completed(message) シグナルテスト
+- [x] 1.6 各サブビューでの ui_cancel による前ビュー戻り / フローキャンセルテスト
+- [x] 1.7 ItemUseContext.in_combat フィルタテスト(戦闘専用アイテムが in_combat=false で表示されないなど)
+- [x] 1.8 テストを Red 確認しコミット
 - [ ] 1.9 `src/esc_menu/flows/item_use_flow.gd` を実装(`ItemUseFlow extends Control`、SubView enum、setup、handle_input、各サブビュー UI 構築)
 - [ ] 1.10 EscMenu の旧 `_build_items_*` / `_input_items_*` / `_handle_item_use_*` メソッドのロジックを ItemUseFlow に移植
 - [ ] 1.11 テスト Green 確認しコミット
