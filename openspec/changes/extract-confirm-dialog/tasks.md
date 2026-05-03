@@ -12,11 +12,11 @@
 
 ## 2. dungeon_screen の帰還ダイアログ置換 (TDD)
 
-- [ ] 2.1 `tests/dungeon/test_dungeon_screen.gd` (or 既存)で「START タイル上で帰還ダイアログが表示される」「はいで町遷移」「いいえ/ESC で残る」テストを ConfirmDialog 経由でも通るよう更新
-- [ ] 2.2 `src/dungeon_scene/dungeon_screen.gd` から `_show_return_dialog` 旧実装と関連入力ハンドラを削除
-- [ ] 2.3 `_return_dialog: ConfirmDialog` フィールドを追加、_ready で生成、シグナル接続
-- [ ] 2.4 `is_showing_return_dialog()` を `_return_dialog.visible` で代替
-- [ ] 2.5 全テスト通過を確認しコミット
+- [x] 2.1 `tests/dungeon/test_dungeon_screen.gd` (or 既存)で「START タイル上で帰還ダイアログが表示される」「はいで町遷移」「いいえ/ESC で残る」テストを ConfirmDialog 経由でも通るよう更新
+- [x] 2.2 `src/dungeon_scene/dungeon_screen.gd` から `_show_return_dialog` 旧実装と関連入力ハンドラを削除
+- [x] 2.3 `_return_dialog: ConfirmDialog` フィールドを追加、_ready で生成、シグナル接続
+- [x] 2.4 `is_showing_return_dialog()` を `_return_dialog.visible` で代替
+- [x] 2.5 全テスト通過を確認しコミット
 
 ## 3. dungeon_entrance の削除確認置換 (TDD)
 

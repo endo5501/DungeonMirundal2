@@ -1,7 +1,9 @@
 extends GutTest
 
 # DungeonScreen ESC key behavior:
-# - Dialog showing: ESC closes dialog AND consumes the event (blocks propagation)
+# - Dialog showing: ConfirmDialog handles the cancel internally (dialog closes,
+#   cancelled signal fires). DungeonScreen's _unhandled_input early-returns
+#   without consuming the event since ConfirmDialog owns input while visible.
 # - No dialog: ESC is NOT consumed (propagates to main.gd for ESC menu)
 
 func _make_key_event(keycode: int) -> InputEventKey:
@@ -26,14 +28,11 @@ func test_esc_not_consumed_when_no_dialog():
 	var wiz_map := _make_map_with_start_at(Vector2i(3, 3))
 	var ps := PlayerState.new(Vector2i(4, 4), Direction.NORTH)
 	screen.setup(wiz_map, ps)
-	# ESC when no dialog should NOT be consumed by DungeonScreen
-	# (i.e., _showing_return_dialog is false, ESC match is removed)
-	assert_false(screen._showing_return_dialog)
-	# The ESC key should not trigger any dialog
-	# We verify by checking the dialog is still not showing after ESC
+	assert_false(screen.is_showing_return_dialog())
+	# ESC when no dialog must not raise the dialog
 	var event := _make_key_event(KEY_ESCAPE)
 	screen._unhandled_input(event)
-	assert_false(screen._showing_return_dialog)
+	assert_false(screen.is_showing_return_dialog())
 
 func test_esc_closes_return_dialog():
 	var screen := DungeonScreen.new()
@@ -41,11 +40,10 @@ func test_esc_closes_return_dialog():
 	var wiz_map := _make_map_with_start_at(Vector2i(3, 3))
 	var ps := PlayerState.new(Vector2i(3, 3), Direction.NORTH)
 	screen.setup(wiz_map, ps)
-	# Dialog should have been shown by moving onto start tile
-	# But setup doesn't trigger it, so we manually show it
-	screen._show_return_dialog()
-	assert_true(screen._showing_return_dialog)
-	# ESC should close the dialog
+	# Trigger the dialog via the public path
+	screen.check_start_tile_return()
+	assert_true(screen.is_showing_return_dialog())
+	# ConfirmDialog owns its input handling
 	var event := _make_key_event(KEY_ESCAPE)
-	screen._unhandled_input(event)
-	assert_false(screen._showing_return_dialog)
+	screen._return_dialog._unhandled_input(event)
+	assert_false(screen.is_showing_return_dialog())
