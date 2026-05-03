@@ -60,64 +60,6 @@ func test_equip_slot_enum_includes_none():
 	assert_true(Item.EquipSlot.NONE != Item.EquipSlot.WEAPON)
 
 
-# --- Task 1.3: category/equip_slot consistency ---
-
-func test_weapon_category_maps_to_weapon_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.WEAPON
-	item.equip_slot = Item.EquipSlot.WEAPON
-	assert_true(item.is_slot_consistent())
-
-
-func test_armor_category_maps_to_armor_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.ARMOR
-	item.equip_slot = Item.EquipSlot.ARMOR
-	assert_true(item.is_slot_consistent())
-
-
-func test_helmet_category_maps_to_helmet_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.HELMET
-	item.equip_slot = Item.EquipSlot.HELMET
-	assert_true(item.is_slot_consistent())
-
-
-func test_shield_category_maps_to_shield_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.SHIELD
-	item.equip_slot = Item.EquipSlot.SHIELD
-	assert_true(item.is_slot_consistent())
-
-
-func test_gauntlet_category_maps_to_gauntlet_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.GAUNTLET
-	item.equip_slot = Item.EquipSlot.GAUNTLET
-	assert_true(item.is_slot_consistent())
-
-
-func test_accessory_category_maps_to_accessory_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.ACCESSORY
-	item.equip_slot = Item.EquipSlot.ACCESSORY
-	assert_true(item.is_slot_consistent())
-
-
-func test_other_category_uses_none_slot():
-	var item := Item.new()
-	item.category = Item.ItemCategory.OTHER
-	item.equip_slot = Item.EquipSlot.NONE
-	assert_true(item.is_slot_consistent())
-
-
-func test_mismatched_category_and_slot_is_inconsistent():
-	var item := Item.new()
-	item.category = Item.ItemCategory.WEAPON
-	item.equip_slot = Item.EquipSlot.ARMOR  # mismatched
-	assert_false(item.is_slot_consistent())
-
-
 # --- Task 1.1: data-load-time validation of category/equip_slot pairing ---
 
 func _expected_slot_for_category(category: int) -> int:

@@ -18,10 +18,10 @@
 
 ## 3. Item.is_slot_consistent の削除 (TDD)
 
-- [ ] 3.1 `tests/items/test_item.gd` から `is_slot_consistent` を直接呼ぶテストを削除(代替テストは 1.1 で追加済み)
-- [ ] 3.2 `src/items/item.gd` から `func is_slot_consistent()` を削除
-- [ ] 3.3 grep で `is_slot_consistent` 残存呼び出しがないことを確認
-- [ ] 3.4 テスト通過を確認しコミット
+- [x] 3.1 `tests/items/test_item.gd` から `is_slot_consistent` を直接呼ぶテストを削除(代替テストは 1.1 で追加済み)
+- [x] 3.2 `src/items/item.gd` から `func is_slot_consistent()` を削除
+- [x] 3.3 grep で `is_slot_consistent` 残存呼び出しがないことを確認
+- [x] 3.4 テスト通過を確認しコミット
 
 ## 4. 呼び出し側の更新 (TDD)
 

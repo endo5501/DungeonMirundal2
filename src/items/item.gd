@@ -19,27 +19,6 @@ enum EquipSlot { NONE, WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY }
 @export var target_conditions: Array[TargetCondition] = []
 
 
-func is_slot_consistent() -> bool:
-	match category:
-		ItemCategory.WEAPON:
-			return equip_slot == EquipSlot.WEAPON
-		ItemCategory.ARMOR:
-			return equip_slot == EquipSlot.ARMOR
-		ItemCategory.HELMET:
-			return equip_slot == EquipSlot.HELMET
-		ItemCategory.SHIELD:
-			return equip_slot == EquipSlot.SHIELD
-		ItemCategory.GAUNTLET:
-			return equip_slot == EquipSlot.GAUNTLET
-		ItemCategory.ACCESSORY:
-			return equip_slot == EquipSlot.ACCESSORY
-		ItemCategory.OTHER:
-			return equip_slot == EquipSlot.NONE
-		ItemCategory.CONSUMABLE:
-			return equip_slot == EquipSlot.NONE
-	return false
-
-
 func is_consumable() -> bool:
 	return category == ItemCategory.CONSUMABLE
 
