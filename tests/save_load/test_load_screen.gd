@@ -70,3 +70,37 @@ func test_esc_emits_back_requested():
 	watch_signals(screen)
 	screen._unhandled_input(_make_key_event(KEY_ESCAPE))
 	assert_signal_emitted(screen, "back_requested")
+
+# --- Failure UI ---
+
+func test_show_load_failure_file_not_found():
+	_save_manager.save(1)
+	var screen := LoadScreen.new()
+	add_child_autofree(screen)
+	screen.setup(_save_manager)
+	screen.show_load_failure(SaveManager.LoadResult.FILE_NOT_FOUND)
+	assert_eq(screen.get_status_text(), "セーブファイルが見つかりません")
+
+func test_show_load_failure_parse_error():
+	_save_manager.save(1)
+	var screen := LoadScreen.new()
+	add_child_autofree(screen)
+	screen.setup(_save_manager)
+	screen.show_load_failure(SaveManager.LoadResult.PARSE_ERROR)
+	assert_eq(screen.get_status_text(), "セーブデータが破損しています")
+
+func test_show_load_failure_version_too_new():
+	_save_manager.save(1)
+	var screen := LoadScreen.new()
+	add_child_autofree(screen)
+	screen.setup(_save_manager)
+	screen.show_load_failure(SaveManager.LoadResult.VERSION_TOO_NEW)
+	assert_eq(screen.get_status_text(), "未対応のセーブデータです(新しいバージョン)")
+
+func test_show_load_failure_restore_failed():
+	_save_manager.save(1)
+	var screen := LoadScreen.new()
+	add_child_autofree(screen)
+	screen.setup(_save_manager)
+	screen.show_load_failure(SaveManager.LoadResult.RESTORE_FAILED)
+	assert_eq(screen.get_status_text(), "ロードに失敗しました")
