@@ -10,6 +10,13 @@ static func make_key_event(keycode: int, pressed: bool = true, echo: bool = fals
 	return event
 
 
+static func make_action_event(action: StringName, pressed: bool = true) -> InputEventAction:
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = pressed
+	return event
+
+
 # Build a deterministic 8x8 WizMap with the START tile placed at start_pos.
 # Used by tests that need a reproducible map without running the full dungeon
 # creation pipeline.

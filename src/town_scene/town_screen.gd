@@ -149,18 +149,10 @@ func _load_facility_image(index: int) -> Texture2D:
 	return null
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_down"):
-		_menu.move_cursor(1)
-		_menu.update_rows(_rows)
-		_update_illustration()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_menu.move_cursor(-1)
-		_menu.update_rows(_rows)
-		_update_illustration()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		confirm_selection()
+	if MenuController.route(
+		event, _menu, _rows, confirm_selection,
+		Callable(), _update_illustration
+	):
 		get_viewport().set_input_as_handled()
 
 func get_menu_items() -> Array[String]:

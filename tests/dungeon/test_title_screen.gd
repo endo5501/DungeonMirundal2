@@ -112,3 +112,45 @@ func test_center_container_covers_full_rect():
 	assert_not_null(center)
 	assert_eq(center.anchor_right, 1.0, "CenterContainer should span full width")
 	assert_eq(center.anchor_bottom, 1.0, "CenterContainer should span full height")
+
+# --- _unhandled_input via MenuController ---
+
+func _make_screen_in_tree() -> TitleScreen:
+	var screen := TitleScreen.new()
+	add_child_autofree(screen)
+	return screen
+
+func test_ui_down_via_unhandled_input_moves_cursor():
+	var screen := _make_screen_in_tree()
+	var initial := screen.selected_index
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_down"))
+	assert_ne(screen.selected_index, initial, "ui_down should move cursor")
+
+func test_ui_up_via_unhandled_input_moves_cursor():
+	var screen := _make_screen_in_tree()
+	var initial := screen.selected_index
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_up"))
+	assert_ne(screen.selected_index, initial, "ui_up should move cursor")
+
+func test_ui_accept_via_unhandled_input_emits_signal():
+	var screen := _make_screen_in_tree()
+	# Default state: selected_index == 1 (新規ゲーム), enabled.
+	watch_signals(screen)
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
+	assert_signal_emitted(screen, "start_new_game")
+
+func test_ui_cancel_does_not_emit_any_signal():
+	var screen := _make_screen_in_tree()
+	watch_signals(screen)
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_signal_not_emitted(screen, "start_new_game")
+	assert_signal_not_emitted(screen, "continue_game")
+	assert_signal_not_emitted(screen, "load_game")
+	assert_signal_not_emitted(screen, "quit_game")
+
+func test_ui_cancel_does_not_change_cursor():
+	var screen := _make_screen_in_tree()
+	var initial := screen.selected_index
+	screen._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_eq(screen.selected_index, initial,
+		"ESC must not move cursor on title_screen")
