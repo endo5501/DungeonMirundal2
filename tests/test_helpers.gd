@@ -41,12 +41,10 @@ static func make_corridor_fixture(start: Vector2i, dir: int, length: int = 3) ->
 	return wm
 
 
-# Build an 8x8 WizMap with START at `start` and every edge around `start`
-# explicitly walled, so move_forward fails in every direction from `start`.
+# Build an 8x8 WizMap with START at `start`. WizMap.new() initialises every
+# edge to WALL, so move_forward already fails in every direction.
 static func make_blocked_fixture(start: Vector2i) -> WizMap:
 	var wm := WizMap.new(8)
-	for dir in Direction.ALL:
-		wm.set_edge(start.x, start.y, dir, EdgeType.WALL)
 	wm.cell(start.x, start.y).tile = TileType.START
 	return wm
 
