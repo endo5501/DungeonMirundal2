@@ -38,10 +38,10 @@
 
 ## 7. F040: SaveManager の JSON フォーマット圧縮 (TDD)
 
-- [ ] 7.1 `tests/save_load/test_save_manager.gd` に「セーブファイルにタブ文字が含まれない」「旧形式(タブ含む)も読み込める」テスト追加
-- [ ] 7.2 テスト Red 確認
-- [ ] 7.3 `src/save_manager.gd:33` の `JSON.stringify(data, "\t")` を `JSON.stringify(data)` に変更
-- [ ] 7.4 テスト Green 確認しコミット
+- [x] 7.1 `tests/save_load/test_save_manager.gd` に「セーブファイルにタブ文字が含まれない」「旧形式(タブ含む)も読み込める」テスト追加
+- [x] 7.2 テスト Red 確認
+- [x] 7.3 `src/save_manager.gd:33` の `JSON.stringify(data, "\t")` を `JSON.stringify(data)` に変更
+- [x] 7.4 テスト Green 確認しコミット
 
 ## 8. F042: README のバージョン記述
 

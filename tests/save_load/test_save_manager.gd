@@ -182,6 +182,39 @@ func test_load_returns_version_too_new_when_version_exceeds_current():
 	assert_eq(result, SaveManager.LoadResult.VERSION_TOO_NEW)
 	assert_push_error("version too new")
 
+# --- F040: JSON formatting tests ---
+
+func test_save_file_contains_no_tab_characters():
+	_setup_game_with_character()
+	_save_manager.save(1)
+	var f := FileAccess.open(TEST_SAVE_DIR + "save_001.json", FileAccess.READ)
+	var raw := f.get_as_text()
+	f.close()
+	assert_false(raw.contains("\t"),
+		"new save files must not contain tab characters (compact JSON)")
+
+
+func test_load_accepts_legacy_tab_indented_save():
+	# Write a save in the legacy tab-indented format and verify load() works.
+	_save_manager._ensure_dir()
+	var path := TEST_SAVE_DIR + "save_001.json"
+	var data := {
+		"version": SaveManager.CURRENT_VERSION,
+		"last_saved": "legacy",
+		"game_location": "town",
+		"current_dungeon_index": -1,
+		"inventory": {"gold": 0, "items": []},
+		"guild": {"characters": [], "party": [[null, null, null], [null, null, null]]},
+		"dungeons": [],
+	}
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(data, "\t"))
+	f.close()
+	var result: int = _save_manager.load(1)
+	assert_eq(result, SaveManager.LoadResult.OK,
+		"legacy tab-indented saves must continue to load")
+
+
 # --- list_saves() tests ---
 
 func test_list_saves_empty():

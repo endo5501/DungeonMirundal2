@@ -38,7 +38,7 @@ func save(slot_number: int) -> bool:
 		"guild": GameState.guild.to_dict(inv),
 		"dungeons": GameState.dungeon_registry.to_dict()["dungeons"],
 	}
-	var json_str := JSON.stringify(data, "\t")
+	var json_str := JSON.stringify(data)
 	var slot_path := _slot_path(slot_number)
 	var f := FileAccess.open(slot_path, FileAccess.WRITE)
 	if f == null:
