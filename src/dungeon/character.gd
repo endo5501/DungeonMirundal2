@@ -109,17 +109,20 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 
 
 func _resolve_race_id() -> String:
-	if race != null and race.id != &"":
-		return String(race.id)
-	push_warning("Character.to_dict: RaceData.id is empty for %s, falling back to resource_path" % [race.resource_path if race != null else "<null>"])
-	return race.resource_path.get_file().get_basename() if race != null else ""
+	return _resolve_resource_id(race, "RaceData")
 
 
 func _resolve_job_id() -> String:
-	if job != null and job.id != &"":
-		return String(job.id)
-	push_warning("Character.to_dict: JobData.id is empty for %s, falling back to resource_path" % [job.resource_path if job != null else "<null>"])
-	return job.resource_path.get_file().get_basename() if job != null else ""
+	return _resolve_resource_id(job, "JobData")
+
+
+func _resolve_resource_id(res: Resource, kind: String) -> String:
+	if res != null and res.id != &"":
+		return String(res.id)
+	if res == null:
+		return ""
+	push_warning("Character.to_dict: %s.id is empty for %s, falling back to resource_path" % [kind, res.resource_path])
+	return res.resource_path.get_file().get_basename()
 
 static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
 	# ResourceLoader.exists() is load-bearing: calling load() on a missing path
