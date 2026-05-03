@@ -7,12 +7,12 @@
 
 ## 2. test_dungeon_screen_encounter.gd の決定化 (TDD)
 
-- [ ] 2.1 `test_forward_move_emits_step_taken` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
-- [ ] 2.2 `test_blocked_move_does_not_emit_step_taken` を `make_blocked_fixture` ベースに書き換え、`pending` を削除
-- [ ] 2.3 `test_movement_blocked_when_encounter_active` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
-- [ ] 2.4 `test_encounter_active_clears_back_to_normal_movement` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
-- [ ] 2.5 `test_start_tile_return_dialog_suppressed_when_encounter_activates_during_step` を `make_neighbor_to_start_fixture` ベースに書き換え、`pending` を削除
-- [ ] 2.6 全テスト通過を確認しコミット
+- [x] 2.1 `test_forward_move_emits_step_taken` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
+- [x] 2.2 `test_blocked_move_does_not_emit_step_taken` を `make_blocked_fixture` ベースに書き換え、`pending` を削除
+- [x] 2.3 `test_movement_blocked_when_encounter_active` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
+- [x] 2.4 `test_encounter_active_clears_back_to_normal_movement` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
+- [x] 2.5 `test_start_tile_return_dialog_suppressed_when_encounter_activates_during_step` を `make_neighbor_to_start_fixture` ベースに書き換え、`pending` を削除
+- [x] 2.6 全テスト通過を確認しコミット
 
 ## 3. test_dungeon_screen_full_map.gd の決定化 (TDD)
 
