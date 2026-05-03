@@ -71,14 +71,14 @@
 
 - [x] 9.1 `Grep` で `src/` 内の `_unhandled_input` 関数本体に `event.keycode == KEY_` が残っていないことを確認(テキスト入力ハンドラは除外)
 - [x] 9.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
-- [ ] 9.3 ゲームを起動し、全画面でキー操作が変わっていないことを目視確認(タイトル → 町 → ギルド → 各サブ画面 → ダンジョン → 戦闘)
-- [ ] 9.4 ダンジョンの WASD + 矢印で移動できることを確認
-- [ ] 9.5 M キーで全体マップが開閉できることを確認
-- [ ] 9.6 ESC キーで全画面のメニューが開閉できることを確認
+- [x] 9.3 ゲームを起動し、全画面でキー操作が変わっていないことを目視確認(タイトル → 町 → ギルド → 各サブ画面 → ダンジョン → 戦闘)
+- [x] 9.4 ダンジョンの WASD + 矢印で移動できることを確認
+- [x] 9.5 M キーで全体マップが開閉できることを確認
+- [x] 9.6 ESC キーで全画面のメニューが開閉できることを確認
 
 ## 10. 仕上げ
 
 - [x] 10.1 `openspec validate unify-input-to-actions --strict`
 - [x] 10.2 `/simplify`スキルでコードレビューを実施
-- [ ] 10.3 `/opsx:verify unify-input-to-actions`
-- [ ] 10.4 `/opsx:archive unify-input-to-actions`
+- [x] 10.3 `/opsx:verify unify-input-to-actions`
+- [x] 10.4 `/opsx:archive unify-input-to-actions`
