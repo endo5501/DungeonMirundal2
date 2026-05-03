@@ -16,9 +16,9 @@
 
 ## 3. test_dungeon_screen_full_map.gd の決定化 (TDD)
 
-- [ ] 3.1 `test_forward_move_blocked_while_overlay_visible` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
-- [ ] 3.2 `test_movement_resumes_after_overlay_closes` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
-- [ ] 3.3 全テスト通過を確認しコミット
+- [x] 3.1 `test_forward_move_blocked_while_overlay_visible` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
+- [x] 3.2 `test_movement_resumes_after_overlay_closes` を `make_corridor_fixture` ベースに書き換え、`pending` を削除
+- [x] 3.3 全テスト通過を確認しコミット
 
 ## 4. テストディレクトリ整理
 
