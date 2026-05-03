@@ -64,10 +64,10 @@
 
 ## 11. 動作確認
 
-- [ ] 11.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
-- [ ] 11.2 ゲーム起動 → 各画面遷移を目視確認
-- [ ] 11.3 既存セーブのロードが問題なく動くこと(potion を持っているセーブは欠落する点は許容)
-- [ ] 11.4 新規セーブを作って `user://saves/save_*.json` が小さくなっていることを確認
+- [x] 11.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
+- [ ] 11.2 ゲーム起動 → 各画面遷移を目視確認 (manual, requires user)
+- [ ] 11.3 既存セーブのロードが問題なく動くこと(potion を持っているセーブは欠落する点は許容) (manual)
+- [ ] 11.4 新規セーブを作って `user://saves/save_*.json` が小さくなっていることを確認 (manual)
 
 ## 12. 仕上げ
 

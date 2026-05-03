@@ -14,6 +14,8 @@ git clone git@github.com:endo5501/DungeonMirundal2.git
 cd DungeonMirundal2
 ```
 
+> **セーブデータ互換性の注意:** 2026-05 のリファクタで `data/items/potion.tres` を `healing_potion.tres` にリネームし、`item_id` を `&"potion"` から `&"healing_potion"` に変更しました。これ以前のセーブで `potion` を所持している場合、ロード時に当該アイテムは復元されず欠落します(他の所持品・装備には影響しません)。
+
 初回はGodotにclass_nameを認識させるためインポートが必要です。
 
 ```bash
@@ -99,10 +101,6 @@ godot --headless --export-release "Windows Desktop" build/DungeonMirundal2.exe
 ```
 
 リリースビルドでは `assert()` は無効化されます。
-
-## セーブ互換性についての注意
-
-`data/items/potion.tres` は `data/items/healing_potion.tres` にリネームされ、`item_id` も `&"potion"` から `&"healing_potion"` に変更されました(2026-05 のリファクタ)。これより前のセーブで `potion` を所持している場合、ロード時に当該アイテムは復元されず欠落します(他の所持品・装備への影響はありません)。
 
 ## 新しいclass_nameを追加した場合
 

@@ -195,7 +195,7 @@ func test_save_file_contains_no_tab_characters():
 
 
 func test_load_accepts_legacy_tab_indented_save():
-	# Write a save in the legacy tab-indented format and verify load() works.
+	# Regression: pre-F040 saves used tab indentation; load() must remain compatible.
 	_save_manager._ensure_dir()
 	var path := TEST_SAVE_DIR + "save_001.json"
 	var data := {
