@@ -31,13 +31,13 @@
 - [x] 3.3 「ItemUseFlow.flow_completed 発行で PARTY_MENU に戻る」テストを追加
 - [x] 3.4 同様に EquipmentFlow についてのテストを追加
 - [x] 3.5 テスト Red 確認(現実装は旧構造のまま)
-- [ ] 3.6 `src/esc_menu/esc_menu.gd` の View enum を 6 値に縮小(`ITEMS_FLOW`, `EQUIPMENT_FLOW` を追加、旧 7 値を削除)
-- [ ] 3.7 EscMenu に `_item_use_flow: ItemUseFlow` と `_equipment_flow: EquipmentFlow` フィールドを追加、`_build_ui` で生成して add_child
-- [ ] 3.8 メニュー選択時に Flow.setup を呼んで visible 切替する関数を追加
-- [ ] 3.9 旧 `_build_items_*`, `_input_items_*`, `_build_equipment_*`, `_input_equipment_*` メソッドを削除
-- [ ] 3.10 旧 `_items_index`, `_item_use_instance`, `_item_use_target_index`, `_item_use_confirm_index`, `_item_use_last_message`, `_equipment_character_index`, `_equipment_slot_index`, `_equipment_candidate_index` フィールドを削除
-- [ ] 3.11 `_unhandled_input` の `_current_view == ITEMS_FLOW or EQUIPMENT_FLOW` early return を追加
-- [ ] 3.12 テスト Green 確認しコミット
+- [x] 3.6 `src/esc_menu/esc_menu.gd` の View enum を 6 値に縮小(`ITEMS_FLOW`, `EQUIPMENT_FLOW` を追加、旧 7 値を削除)
+- [x] 3.7 EscMenu に `_item_use_flow: ItemUseFlow` と `_equipment_flow: EquipmentFlow` フィールドを追加、`_build_ui` で生成して add_child
+- [x] 3.8 メニュー選択時に Flow.setup を呼んで visible 切替する関数を追加
+- [x] 3.9 旧 `_build_items_*`, `_input_items_*`, `_build_equipment_*`, `_input_equipment_*` メソッドを削除
+- [x] 3.10 旧 `_items_index`, `_item_use_instance`, `_item_use_target_index`, `_item_use_confirm_index`, `_item_use_last_message`, `_equipment_character_index`, `_equipment_slot_index`, `_equipment_candidate_index` フィールドを削除
+- [x] 3.11 `_unhandled_input` の `_current_view == ITEMS_FLOW or EQUIPMENT_FLOW` early return を追加
+- [x] 3.12 テスト Green 確認しコミット
 
 ## 4. 動作確認
 
