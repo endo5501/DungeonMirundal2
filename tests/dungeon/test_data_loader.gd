@@ -202,3 +202,11 @@ func test_load_all_items_has_every_equip_slot_covered():
 				covered = true
 				break
 		assert_true(covered, "no item for slot %d" % slot)
+
+
+# --- missing-directory diagnostics ---
+
+func test_load_resources_missing_dir_returns_empty_and_logs_error():
+	var results: Array = _loader._load_resources("res://this_dir_does_not_exist_xyz/")
+	assert_eq(results.size(), 0)
+	assert_push_error("cannot open")
