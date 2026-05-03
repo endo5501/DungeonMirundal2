@@ -36,13 +36,13 @@
 
 ## 6. project-setup spec の更新
 
-- [ ] 6.1 spec delta が `openspec/changes/make-dungeon-tests-deterministic/specs/project-setup/spec.md` に追加されていることを確認
-- [ ] 6.2 既存テストファイル全体を grep して `pending(` の用法をレビューし、入力データ不適合での skip が他に残っていないことを確認
+- [x] 6.1 spec delta が `openspec/changes/make-dungeon-tests-deterministic/specs/project-setup/spec.md` に追加されていることを確認
+- [x] 6.2 既存テストファイル全体を grep して `pending(` の用法をレビューし、入力データ不適合での skip が他に残っていないことを確認
 
 ## 7. 仕上げ
 
-- [ ] 7.1 `openspec validate make-dungeon-tests-deterministic --strict`
-- [ ] 7.2 `/simplify`スキルでコードレビューを実施
-- [ ] 7.3 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイートが通ることを確認
+- [x] 7.1 `openspec validate make-dungeon-tests-deterministic --strict`
+- [x] 7.2 `/simplify`スキルでコードレビューを実施
+- [x] 7.3 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイートが通ることを確認
 - [ ] 7.4 `/opsx:verify make-dungeon-tests-deterministic`
 - [ ] 7.5 `/opsx:archive make-dungeon-tests-deterministic`
