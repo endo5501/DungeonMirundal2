@@ -1,14 +1,14 @@
 ## 1. ConfirmDialog の追加 (TDD)
 
-- [ ] 1.1 `tests/ui/test_confirm_dialog.gd` を作成、setup でメッセージ表示・default_index 反映テスト
-- [ ] 1.2 「はい」選択 + ui_accept で confirmed シグナル発行テスト
-- [ ] 1.3 「いいえ」選択 + ui_accept で cancelled シグナル発行テスト
-- [ ] 1.4 ui_cancel で常に cancelled テスト
-- [ ] 1.5 setup を再度呼ぶと再表示されるテスト
-- [ ] 1.6 visible=false の状態で input が来ても何も起きないテスト
-- [ ] 1.7 テスト Red コミット
-- [ ] 1.8 `src/ui/confirm_dialog.gd` を実装、内部で MenuController.route を利用
-- [ ] 1.9 テスト Green コミット
+- [x] 1.1 `tests/ui/test_confirm_dialog.gd` を作成、setup でメッセージ表示・default_index 反映テスト
+- [x] 1.2 「はい」選択 + ui_accept で confirmed シグナル発行テスト
+- [x] 1.3 「いいえ」選択 + ui_accept で cancelled シグナル発行テスト
+- [x] 1.4 ui_cancel で常に cancelled テスト
+- [x] 1.5 setup を再度呼ぶと再表示されるテスト
+- [x] 1.6 visible=false の状態で input が来ても何も起きないテスト
+- [x] 1.7 テスト Red コミット
+- [x] 1.8 `src/ui/confirm_dialog.gd` を実装、内部で MenuController.route を利用
+- [x] 1.9 テスト Green コミット
 
 ## 2. dungeon_screen の帰還ダイアログ置換 (TDD)
 
