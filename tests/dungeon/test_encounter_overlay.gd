@@ -122,10 +122,7 @@ func test_confirm_key_dismisses_overlay():
 	add_child_autofree(overlay)
 	watch_signals(overlay)
 	overlay.start_encounter(_make_party({&"slime": 1}))
-	var event := InputEventKey.new()
-	event.keycode = KEY_ENTER
-	event.pressed = true
-	overlay._unhandled_input(event)
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(overlay, "encounter_resolved")
 	assert_false(overlay.visible)
 
@@ -135,9 +132,6 @@ func test_other_keys_do_not_dismiss():
 	add_child_autofree(overlay)
 	watch_signals(overlay)
 	overlay.start_encounter(_make_party({&"slime": 1}))
-	var event := InputEventKey.new()
-	event.keycode = KEY_A
-	event.pressed = true
-	overlay._unhandled_input(event)
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_signal_not_emitted(overlay, "encounter_resolved")
 	assert_true(overlay.visible)

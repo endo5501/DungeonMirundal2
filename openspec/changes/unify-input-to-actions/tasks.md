@@ -34,10 +34,10 @@
 
 ## 4. dungeon_scene 系の action 化
 
-- [ ] 4.1 `src/dungeon_scene/full_map_overlay.gd` の ESC キー処理を `is_action_pressed("ui_cancel")` に置換、対応するテストも更新
-- [ ] 4.2 `src/dungeon_scene/encounter_overlay.gd` の確認キー処理を `is_action_pressed("ui_accept")` に置換、対応するテストも更新
-- [ ] 4.3 `src/dungeon_scene/combat_overlay.gd` の入力処理を action ベースに書き換え(per-phase ルータ化は C7 で行うので、本 change では keycode → action のみ)、対応するテストも更新
-- [ ] 4.4 各ファイルごとにテスト通過を確認しコミット
+- [x] 4.1 `src/dungeon_scene/full_map_overlay.gd` の ESC キー処理を `is_action_pressed("ui_cancel")` に置換、対応するテストも更新
+- [x] 4.2 `src/dungeon_scene/encounter_overlay.gd` の確認キー処理を `is_action_pressed("ui_accept")` に置換、対応するテストも更新
+- [x] 4.3 `src/dungeon_scene/combat_overlay.gd` の入力処理を action ベースに書き換え(per-phase ルータ化は C7 で行うので、本 change では keycode → action のみ)、対応するテストも更新
+- [x] 4.4 各ファイルごとにテスト通過を確認しコミット
 
 ## 5. esc_menu の action 化
 

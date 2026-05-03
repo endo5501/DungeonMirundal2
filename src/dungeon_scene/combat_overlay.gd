@@ -382,23 +382,18 @@ func get_result_panel_text() -> String:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_active:
 		return
-	if not event is InputEventKey:
-		return
-	var key := event as InputEventKey
-	if not key.pressed or key.echo:
-		return
 	var handled := false
 	match _current_phase:
 		Phase.COMMAND_MENU:
-			handled = _handle_command_menu_key(key)
+			handled = _handle_command_menu_event(event)
 		Phase.TARGET_SELECT:
-			handled = _handle_target_select_key(key)
+			handled = _handle_target_select_event(event)
 		Phase.ITEM_SELECT:
-			handled = _handle_item_select_key(key)
+			handled = _handle_item_select_event(event)
 		Phase.ITEM_TARGET:
-			handled = _handle_target_select_key(key)
+			handled = _handle_target_select_event(event)
 		Phase.RESULT:
-			handled = _handle_result_key(key)
+			handled = _handle_result_event(event)
 		_:
 			handled = false
 	if handled:
@@ -407,56 +402,52 @@ func _unhandled_input(event: InputEvent) -> void:
 			viewport.set_input_as_handled()
 
 
-func _handle_command_menu_key(key: InputEventKey) -> bool:
-	match key.keycode:
-		KEY_UP, KEY_W:
-			_command_menu.move_up()
-			return true
-		KEY_DOWN, KEY_S:
-			_command_menu.move_down()
-			return true
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			command_menu_select(_command_menu.get_selected_index())
-			return true
+func _handle_command_menu_event(event: InputEvent) -> bool:
+	if event.is_action_pressed(&"ui_up"):
+		_command_menu.move_up()
+		return true
+	if event.is_action_pressed(&"ui_down"):
+		_command_menu.move_down()
+		return true
+	if event.is_action_pressed(&"ui_accept"):
+		command_menu_select(_command_menu.get_selected_index())
+		return true
 	return false
 
 
-func _handle_target_select_key(key: InputEventKey) -> bool:
-	match key.keycode:
-		KEY_UP, KEY_W:
-			_target_selector.move_up()
-			return true
-		KEY_DOWN, KEY_S:
-			_target_selector.move_down()
-			return true
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			target_select(_target_selector.get_selected_index())
-			return true
+func _handle_target_select_event(event: InputEvent) -> bool:
+	if event.is_action_pressed(&"ui_up"):
+		_target_selector.move_up()
+		return true
+	if event.is_action_pressed(&"ui_down"):
+		_target_selector.move_down()
+		return true
+	if event.is_action_pressed(&"ui_accept"):
+		target_select(_target_selector.get_selected_index())
+		return true
 	return false
 
 
-func _handle_item_select_key(key: InputEventKey) -> bool:
-	match key.keycode:
-		KEY_UP, KEY_W:
-			_item_selector.move_up()
-			return true
-		KEY_DOWN, KEY_S:
-			_item_selector.move_down()
-			return true
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			_item_selector.confirm_current()
-			return true
-		KEY_ESCAPE:
-			_on_item_selector_cancelled()
-			return true
+func _handle_item_select_event(event: InputEvent) -> bool:
+	if event.is_action_pressed(&"ui_up"):
+		_item_selector.move_up()
+		return true
+	if event.is_action_pressed(&"ui_down"):
+		_item_selector.move_down()
+		return true
+	if event.is_action_pressed(&"ui_accept"):
+		_item_selector.confirm_current()
+		return true
+	if event.is_action_pressed(&"ui_cancel"):
+		_on_item_selector_cancelled()
+		return true
 	return false
 
 
-func _handle_result_key(key: InputEventKey) -> bool:
-	match key.keycode:
-		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-			confirm_result()
-			return true
+func _handle_result_event(event: InputEvent) -> bool:
+	if event.is_action_pressed(&"ui_accept"):
+		confirm_result()
+		return true
 	return false
 
 
