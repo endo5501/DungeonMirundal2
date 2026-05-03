@@ -41,7 +41,7 @@
 
 ## 4. 動作確認
 
-- [ ] 4.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
+- [x] 4.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過 (1234/1234 passing)
 - [ ] 4.2 ゲーム起動 → ESC → パーティ → アイテム → アイテム選択 → 対象選択 → 確認 → 使用 → 結果 → 戻る、の全フロー目視確認
 - [ ] 4.3 ESC → パーティ → 装備 → キャラ選択 → スロット選択 → 候補選択 → 装備変更、の全フロー目視確認
 - [ ] 4.4 装備のスワップ(他キャラから取り上げる挙動)を目視確認
@@ -49,7 +49,7 @@
 
 ## 5. 仕上げ
 
-- [ ] 5.1 `openspec validate extract-item-use-flow-from-esc-menu --strict`
+- [x] 5.1 `openspec validate extract-item-use-flow-from-esc-menu --strict`
 - [ ] 5.2 `/simplify`スキルでコードレビューを実施
 - [ ] 5.3 `/opsx:verify extract-item-use-flow-from-esc-menu`
 - [ ] 5.4 `/opsx:archive extract-item-use-flow-from-esc-menu`
