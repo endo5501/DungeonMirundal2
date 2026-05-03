@@ -22,3 +22,27 @@ static func make_test_map(start_pos: Vector2i = Vector2i(7, 7)) -> WizMap:
 				wm.cell(x, y).tile = TileType.FLOOR
 	wm.cell(start_pos.x, start_pos.y).tile = TileType.START
 	return wm
+
+
+# Build an 8x8 WizMap with START at `start` and a corridor opened in `dir`
+# direction for `length` cells. All other edges remain WALL, so callers can
+# rely on (start + dir * k) being walkable for k in [1, length] and any other
+# direction being blocked.
+static func make_corridor_fixture(start: Vector2i, dir: int, length: int = 3) -> WizMap:
+	# Stub: not yet implemented.
+	return WizMap.new(8)
+
+
+# Build an 8x8 WizMap with START at `start` and every edge around `start`
+# explicitly walled, so move_forward fails in every direction from `start`.
+static func make_blocked_fixture(start: Vector2i) -> WizMap:
+	# Stub: not yet implemented.
+	return WizMap.new(8)
+
+
+# Build an 8x8 WizMap so that, from the cell adjacent to `start` opposite
+# `dir`, walking forward in `dir` lands on the START tile.
+# Example: start=(4,4), dir=NORTH → cell (4,5) opens NORTH onto (4,4).
+static func make_neighbor_to_start_fixture(start: Vector2i, dir: int) -> WizMap:
+	# Stub: not yet implemented.
+	return WizMap.new(8)
