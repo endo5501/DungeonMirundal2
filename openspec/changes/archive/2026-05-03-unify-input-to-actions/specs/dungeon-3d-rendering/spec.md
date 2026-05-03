@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
-### Requirement: DungeonScreen toggles the FullMapOverlay with the toggle_full_map action
-DungeonScreen SHALL listen for `is_action_pressed("toggle_full_map")` in `_unhandled_input` and SHALL toggle the visibility of `FullMapOverlay` on action press. The action SHALL be ignored when an encounter is active or when the return-to-town dialog is visible.
+### Requirement: DungeonScreen toggles the FullMapOverlay with the M key
+DungeonScreen SHALL listen for `is_action_pressed("toggle_full_map")` (the InputMap action bound to KEY_M) in `_unhandled_input` and SHALL toggle the visibility of `FullMapOverlay` on action press. The action SHALL be ignored when an encounter is active or when the return-to-town dialog is visible.
 
 #### Scenario: toggle_full_map opens the overlay when closed
 - **WHEN** DungeonScreen is active (no encounter, no return dialog) and the overlay is hidden, and an event matching `is_action_pressed("toggle_full_map")` is dispatched

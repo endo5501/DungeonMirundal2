@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
-### Requirement: FullMapOverlay closes on ui_cancel action
-FullMapOverlay SHALL listen for `is_action_pressed("ui_cancel")` in `_unhandled_input` and SHALL invoke `close()` and `get_viewport().set_input_as_handled()` so that the ESC press does NOT propagate to `main.gd` and open the ESC menu.
+### Requirement: FullMapOverlay closes on ESC and consumes the input
+FullMapOverlay SHALL listen for `is_action_pressed("ui_cancel")` (the InputMap action bound to KEY_ESCAPE) in `_unhandled_input` and SHALL invoke `close()` and `get_viewport().set_input_as_handled()` so that the ESC press does NOT propagate to `main.gd` and open the ESC menu.
 
 #### Scenario: ui_cancel action closes the overlay without opening ESC menu
 - **WHEN** the FullMapOverlay is visible and `is_action_pressed("ui_cancel")` is dispatched

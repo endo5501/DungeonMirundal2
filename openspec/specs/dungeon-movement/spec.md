@@ -1,8 +1,6 @@
 ## Purpose
 ダンジョン内の移動・回転・壁衝突判定などの操作を規定する。前進・後退・左右旋回・壁接触時の抑止、階段昇降のトリガ条件を対象とする。
-
 ## Requirements
-
 ### Requirement: PlayerState tracks position and direction
 PlayerState SHALL maintain the player's current grid position (x, y) and facing direction (NORTH, EAST, SOUTH, WEST).
 
@@ -75,19 +73,40 @@ PlayerState SHALL use WizMap.can_move() to determine if movement is allowed. Mov
 - **THEN** move_forward SHALL return true
 
 ### Requirement: Keyboard input controls movement
-DungeonScreen SHALL accept keyboard input to control player movement. Up arrow or W SHALL trigger move forward. Down arrow or S SHALL trigger move backward. Left arrow or A SHALL trigger turn left. Right arrow or D SHALL trigger turn right.
+DungeonScreen SHALL handle movement input via the following `InputMap` actions (each bound to the appropriate keys in `project.godot`) instead of direct keycode comparison:
 
-#### Scenario: Up arrow moves forward
-- **WHEN** user presses the Up arrow key
-- **THEN** the system SHALL call move_forward on PlayerState
+- `move_forward`: advance one cell in the current facing direction
+- `move_back`: retreat one cell against the current facing direction
+- `strafe_left`: side-step one cell to the player's left without rotating
+- `strafe_right`: side-step one cell to the player's right without rotating
+- `turn_left`: rotate the facing 90° counter-clockwise (no position change)
+- `turn_right`: rotate the facing 90° clockwise (no position change)
 
-#### Scenario: Left arrow turns left
-- **WHEN** user presses the Left arrow key
-- **THEN** the system SHALL call turn_left on PlayerState
+Each action SHALL trigger its corresponding movement only when no encounter is active and no return-to-town dialog is showing and the full map overlay is not visible.
 
-#### Scenario: Movement input updates 3D view
-- **WHEN** user presses a movement key and the move succeeds
-- **THEN** the DungeonScene SHALL update to reflect the new position and direction
+#### Scenario: move_forward action moves the player one cell ahead
+- **WHEN** the player faces NORTH and an event matching `is_action_pressed("move_forward")` is dispatched
+- **THEN** the player position SHALL update by `Direction.offset(NORTH)`, `step_taken` SHALL be emitted, and the dungeon SHALL re-render
+
+#### Scenario: turn_left action rotates the facing 90° counter-clockwise
+- **WHEN** the player faces NORTH and `is_action_pressed("turn_left")` is dispatched
+- **THEN** the player facing SHALL be `WEST`, the player position SHALL be unchanged, and `step_taken` SHALL NOT be emitted
+
+#### Scenario: strafe_left moves the player one cell to the left without rotating
+- **WHEN** the player faces NORTH and `is_action_pressed("strafe_left")` is dispatched and the WEST edge is open
+- **THEN** the player position SHALL update by `Direction.offset(WEST)`, the facing SHALL remain `NORTH`, and `step_taken` SHALL be emitted
+
+#### Scenario: Movement is blocked while encounter is active
+- **WHEN** `set_encounter_active(true)` has been called and `is_action_pressed("move_forward")` is dispatched
+- **THEN** the player position SHALL NOT change and `step_taken` SHALL NOT be emitted
+
+#### Scenario: Movement is blocked while return dialog is showing
+- **WHEN** the return-to-town dialog is visible and `is_action_pressed("move_forward")` is dispatched
+- **THEN** the player position SHALL NOT change
+
+#### Scenario: Movement is blocked while full map overlay is visible
+- **WHEN** the full map overlay is visible and `is_action_pressed("move_forward")` is dispatched
+- **THEN** the player position SHALL NOT change
 
 ### Requirement: DungeonScreen notifies observers of successful position changes
 DungeonScreen SHALL emit a signal or invoke an injected callback when the player successfully changes grid position (not merely rotation), enabling encounter detection to run per step without coupling DungeonScreen to the encounter subsystem.
@@ -125,3 +144,4 @@ DungeonScreen SHALL ignore movement, rotation, and return-dialog input while the
 #### Scenario: ESC is not intercepted to open the ESC menu during encounter
 - **WHEN** the EncounterOverlay is visible and the user presses ESC
 - **THEN** the ESC menu SHALL NOT open
+

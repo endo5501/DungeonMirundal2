@@ -1,8 +1,6 @@
 ## Purpose
 main.gd を中心とする画面切替の共通仕組みを規定する。Screen の add/remove、前画面ポインタの扱い、ESC キーによる戻る操作の一元化を対象とする。
-
 ## Requirements
-
 ### Requirement: main.gd manages top-level screen switching
 main.gd SHALL manage a single current screen as a child node. Switching screens SHALL queue_free the current screen and add the new screen as a child. main.gd SHALL handle game state loading and restore the appropriate screen based on game_location.
 
@@ -111,3 +109,19 @@ main.gd SHALL update GameState.game_location whenever screen transitions occur t
 #### Scenario: Exploration data is preserved across re-entry
 - **WHEN** a dungeon has partially explored cells, the party returns to town, and then re-enters the same dungeon via the entrance screen
 - **THEN** the `explored_map` SHALL remain unchanged (previously visited cells are still marked as visited after re-entry)
+
+### Requirement: main.gd のトップレベル ESC は ui_cancel action で処理される
+SHALL: `Main._unhandled_input` のトップレベル ESC 処理は `is_action_pressed("ui_cancel")` で行う。`event is InputEventKey and event.keycode == KEY_ESCAPE` の組み合わせを使ってはならない。
+
+#### Scenario: ui_cancel が ESCメニューを開く
+- **WHEN** 町画面/ダンジョン画面/ギルド画面表示中(タイトル画面以外、子画面が ESC を消費していない状態)で `is_action_pressed("ui_cancel")` がディスパッチされる
+- **THEN** ESCメニューがオーバーレイ表示される
+
+#### Scenario: 子画面が消費した ui_cancel は ESCメニューを開かない
+- **WHEN** ダンジョン画面の帰還ダイアログが ui_cancel を `set_input_as_handled` で消費する
+- **THEN** main.gd の `_unhandled_input` には届かず、ESCメニューは開かない
+
+#### Scenario: タイトル画面では ui_cancel を無視する
+- **WHEN** タイトル画面表示中に `is_action_pressed("ui_cancel")` がディスパッチされる
+- **THEN** ESCメニューは開かない(タイトル画面の判定で early return する)
+

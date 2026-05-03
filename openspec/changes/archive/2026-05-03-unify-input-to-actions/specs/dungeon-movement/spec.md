@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
-### Requirement: Dungeon movement uses InputMap actions
-DungeonScreen SHALL handle movement input via the following `InputMap` actions instead of direct keycode comparison:
+### Requirement: Keyboard input controls movement
+DungeonScreen SHALL handle movement input via the following `InputMap` actions (each bound to the appropriate keys in `project.godot`) instead of direct keycode comparison:
 
 - `move_forward`: advance one cell in the current facing direction
 - `move_back`: retreat one cell against the current facing direction
