@@ -2,6 +2,14 @@ extends GutTest
 
 const TEST_SAVE_DIR := "user://test_saves/"
 
+# Stub: routes last_slot.txt into a directory that does not exist so
+# FileAccess.open returns null only for the last_slot write, while the
+# slot file body still succeeds. Lets us exercise the "body OK, pointer
+# write failed" path required by the save-manager spec.
+class _LastSlotFailingSaveManager extends SaveManager:
+	func _last_slot_path() -> String:
+		return "user://nonexistent_dir_for_last_slot_test/last_slot.txt"
+
 var _save_manager: SaveManager
 
 func before_each():
@@ -39,6 +47,15 @@ func test_save_returns_true_on_success():
 	_setup_game_with_character()
 	var ok: bool = _save_manager.save(1)
 	assert_true(ok)
+
+func test_save_returns_false_when_only_last_slot_write_fails():
+	_setup_game_with_character()
+	var stub := _LastSlotFailingSaveManager.new(TEST_SAVE_DIR)
+	var ok: bool = stub.save(1)
+	assert_false(ok)
+	# Slot body should still have been written (failure occurred after).
+	assert_true(FileAccess.file_exists(TEST_SAVE_DIR + "save_001.json"))
+	assert_push_error("last_slot")
 
 func test_save_creates_file():
 	_setup_game_with_character()
