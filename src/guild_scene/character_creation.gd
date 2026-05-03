@@ -234,7 +234,7 @@ func _input_step3(event: InputEvent) -> void:
 		decrement_stat(Character.STAT_KEYS[_cursor_index])
 		_rebuild_step3_values()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
+	elif event.is_action_pressed(&"reroll_stats"):
 		reroll_bonus()
 		_rebuild_step3_values()
 		get_viewport().set_input_as_handled()
@@ -301,7 +301,7 @@ func _input_step5(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _is_back_pressed(event: InputEvent) -> bool:
-	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE
+	return event.is_action_pressed(&"step_back")
 
 func _on_name_submitted(_text: String) -> void:
 	_name_input = _name_edit.text

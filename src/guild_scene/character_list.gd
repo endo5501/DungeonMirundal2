@@ -139,7 +139,7 @@ func _input_list(event: InputEvent) -> void:
 		_view_mode = 1
 		_rebuild_display()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_D:
+	elif event.is_action_pressed(&"delete_character"):
 		if can_delete(_cursor_index):
 			request_delete(_cursor_index)
 			_confirm_cursor = 0
@@ -151,7 +151,7 @@ func _input_list(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _input_detail(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") or _is_back_pressed(event):
+	if event.is_action_pressed("ui_cancel") or event.is_action_pressed(&"step_back"):
 		_view_mode = 0
 		_rebuild_display()
 		get_viewport().set_input_as_handled()
@@ -172,9 +172,6 @@ func _input_delete_confirm(event: InputEvent) -> void:
 			_cursor_index = maxi(0, _characters.size() - 1)
 		_rebuild_display()
 		get_viewport().set_input_as_handled()
-
-func _is_back_pressed(event: InputEvent) -> bool:
-	return event is InputEventKey and event.pressed and event.keycode == KEY_BACKSPACE
 
 func refresh() -> void:
 	_characters = _guild.get_all_characters()

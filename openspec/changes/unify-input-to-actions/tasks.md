@@ -62,15 +62,15 @@
 
 ## 8. character_list / shop_screen の混在解消
 
-- [ ] 8.1 `src/guild_scene/character_list.gd` で残っている `KEY_*` 比較を action に置換
-- [ ] 8.2 `src/town_scene/shop_screen.gd` で残っている `KEY_*` 比較を action に置換(あれば)
-- [ ] 8.3 対応するテストを action ベースに合わせる
-- [ ] 8.4 全テスト通過を確認しコミット
+- [x] 8.1 `src/guild_scene/character_list.gd` で残っている `KEY_*` 比較を action に置換
+- [x] 8.2 `src/town_scene/shop_screen.gd` で残っている `KEY_*` 比較を action に置換(あれば — 該当なし、既に action 化済み)
+- [x] 8.3 対応するテストを action ベースに合わせる
+- [x] 8.4 全テスト通過を確認しコミット
 
 ## 9. 全体検証
 
-- [ ] 9.1 `Grep` で `src/` 内の `_unhandled_input` 関数本体に `event.keycode == KEY_` が残っていないことを確認(テキスト入力ハンドラは除外)
-- [ ] 9.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
+- [x] 9.1 `Grep` で `src/` 内の `_unhandled_input` 関数本体に `event.keycode == KEY_` が残っていないことを確認(テキスト入力ハンドラは除外)
+- [x] 9.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
 - [ ] 9.3 ゲームを起動し、全画面でキー操作が変わっていないことを目視確認(タイトル → 町 → ギルド → 各サブ画面 → ダンジョン → 戦闘)
 - [ ] 9.4 ダンジョンの WASD + 矢印で移動できることを確認
 - [ ] 9.5 M キーで全体マップが開閉できることを確認
