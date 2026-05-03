@@ -23,10 +23,10 @@
 
 ## 4. BonusAllocationStep の抽出 (TDD)
 
-- [ ] 4.1 `tests/guild_scene/steps/test_bonus_allocation_step.gd` を作成、ui_up/ui_down で cursor 移動、ui_left/ui_right で stat 増減、KEY_R で reroll、ui_accept で残り 0 のとき ADVANCE / それ以外 STAY、ui_back で BACK、ui_cancel で CANCEL
-- [ ] 4.2 テスト Red コミット
-- [ ] 4.3 `src/guild_scene/steps/bonus_allocation_step.gd` を実装(MenuController に乗らないので独自 input)
-- [ ] 4.4 テスト Green コミット
+- [x] 4.1 `tests/guild_scene/steps/test_bonus_allocation_step.gd` を作成、ui_up/ui_down で cursor 移動、ui_left/ui_right で stat 増減、KEY_R で reroll、ui_accept で残り 0 のとき ADVANCE / それ以外 STAY、ui_back で BACK、ui_cancel で CANCEL
+- [x] 4.2 テスト Red コミット
+- [x] 4.3 `src/guild_scene/steps/bonus_allocation_step.gd` を実装(MenuController に乗らないので独自 input)
+- [x] 4.4 テスト Green コミット
 
 ## 5. JobSelectionStep の抽出 (TDD)
 
