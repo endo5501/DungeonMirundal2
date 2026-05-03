@@ -30,10 +30,10 @@
 
 ## 4. GameState の初期化対称化 (TDD)
 
-- [ ] 4.1 `tests/game_state/test_game_state.gd` (新規 or 既存) に new_game 後の各フィールドの値テスト
-- [ ] 4.2 「new_game を 2 度呼んでも item_repository が保持される」テスト追加
-- [ ] 4.3 「_ready が idempotent(2 度呼んでも既存 guild が再構築されない)」テスト追加
-- [ ] 4.4 テスト Red(item_repository 保持はおそらく既に通る、対称性テストが Red)
+- [x] 4.1 `tests/game_state/test_game_state.gd` (新規 or 既存) に new_game 後の各フィールドの値テスト
+- [x] 4.2 「new_game を 2 度呼んでも item_repository が保持される」テスト追加
+- [x] 4.3 「_ready が idempotent(2 度呼んでも既存 guild が再構築されない)」テスト追加
+- [x] 4.4 テスト Red(item_repository 保持はおそらく既に通る、対称性テストが Red)
 - [ ] 4.5 `src/game_state.gd` に `_initialize_state(reset_for_new_game: bool = false)` ヘルパーを追加
 - [ ] 4.6 `_ready` を `_initialize_state(false)` 呼び出しに置換
 - [ ] 4.7 `new_game` を `_initialize_state(true)` 呼び出しに置換

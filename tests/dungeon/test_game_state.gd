@@ -149,6 +149,58 @@ func test_new_game_preserves_item_repository():
 	assert_eq(gs.item_repository, repo)
 
 
+# --- tighten-types-and-contracts: _initialize_state symmetry ---
+
+func test_new_game_called_twice_keeps_item_repository():
+	var gs := GameStateScript.new()
+	var repo := ItemRepository.new()
+	gs.item_repository = repo
+	gs.new_game()
+	gs.new_game()
+	assert_eq(gs.item_repository, repo)
+
+
+func test_new_game_resets_inventory_and_gold():
+	var gs := GameStateScript.new()
+	gs.new_game()
+	gs.inventory.add_gold(1000)
+	gs.new_game()
+	assert_eq(gs.inventory.gold, 500)
+
+
+func test_new_game_resets_game_location_to_town():
+	var gs := GameStateScript.new()
+	gs.new_game()
+	gs.game_location = GameStateScript.LOCATION_DUNGEON
+	gs.current_dungeon_index = 3
+	gs.new_game()
+	assert_eq(gs.game_location, GameStateScript.LOCATION_TOWN)
+	assert_eq(gs.current_dungeon_index, -1)
+
+
+func test_initialize_state_preserves_existing_guild_when_not_resetting():
+	var gs := GameStateScript.new()
+	gs.guild = Guild.new()
+	var existing_guild := gs.guild
+	gs._initialize_state(false)
+	assert_eq(gs.guild, existing_guild)
+
+
+func test_initialize_state_creates_guild_when_null_and_not_resetting():
+	var gs := GameStateScript.new()
+	gs.guild = null
+	gs._initialize_state(false)
+	assert_not_null(gs.guild)
+
+
+func test_initialize_state_resets_guild_when_resetting():
+	var gs := GameStateScript.new()
+	gs.guild = Guild.new()
+	var prev_guild := gs.guild
+	gs._initialize_state(true)
+	assert_ne(gs.guild, prev_guild)
+
+
 func test_heal_party_skips_dead_members():
 	var gs := GameStateScript.new()
 	gs.new_game()
