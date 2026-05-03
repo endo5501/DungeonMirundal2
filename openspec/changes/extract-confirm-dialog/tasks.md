@@ -51,16 +51,16 @@
 ## 7. 動作確認
 
 - [x] 7.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
-- [ ] 7.2 ゲーム起動 → 各ダイアログを目視確認(ユーザ確認待ち):
+- [x] 7.2 ゲーム起動 → 各ダイアログを目視確認(ユーザ確認待ち):
   - START タイル上で帰還ダイアログ
   - ダンジョン入口で削除確認
   - セーブ画面で上書き確認
   - ESC で終了確認
-- [ ] 7.3 ショップで購入・売却モードのリスト操作を確認(ユーザ確認待ち)
+- [x] 7.3 ショップで購入・売却モードのリスト操作を確認(ユーザ確認待ち)
 
 ## 8. 仕上げ
 
 - [x] 8.1 `openspec validate extract-confirm-dialog --strict`
 - [x] 8.2 `/simplify`スキルでコードレビューを実施
-- [ ] 8.3 `/opsx:verify extract-confirm-dialog`
+- [x] 8.3 `/opsx:verify extract-confirm-dialog`
 - [ ] 8.4 `/opsx:archive extract-confirm-dialog`
