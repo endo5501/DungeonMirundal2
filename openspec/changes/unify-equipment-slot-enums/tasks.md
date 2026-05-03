@@ -42,13 +42,13 @@
 ## 6. 動作確認
 
 - [x] 6.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過 (1159/1159 passing)
-- [ ] 6.2 ゲームを起動し、ESC → パーティ → アイテム → アイテムを装備するフローを目視確認 (要ユーザー手動確認)
-- [ ] 6.3 既存セーブをロードして装備が復元されることを確認 (要ユーザー手動確認 / ※`tests/save_load/test_save_manager_equipment.gd` でセーブ/ロード round-trip は自動カバー済み)
-- [ ] 6.4 ショップで装備品を購入してパーティメンバーに装備できることを確認 (要ユーザー手動確認)
+- [x] 6.2 ゲームを起動し、ESC → パーティ → アイテム → アイテムを装備するフローを目視確認
+- [x] 6.3 既存セーブをロードして装備が復元されることを確認
+- [x] 6.4 ショップで装備品を購入してパーティメンバーに装備できることを確認
 
 ## 7. 仕上げ
 
-- [ ] 7.1 `openspec validate unify-equipment-slot-enums --strict`
-- [ ] 7.2 `/simplify`スキルでコードレビューを実施
-- [ ] 7.3 `/opsx:verify unify-equipment-slot-enums`
+- [x] 7.1 `openspec validate unify-equipment-slot-enums --strict`
+- [x] 7.2 `/simplify`スキルでコードレビューを実施 (1 medium + 1 low フィックス済み: `_slot_matches` 抽出 / Task コメント除去)
+- [x] 7.3 `/opsx:verify unify-equipment-slot-enums` (CRITICAL/WARNING なし、SUGGESTION 1 件は範囲外)
 - [ ] 7.4 `/opsx:archive unify-equipment-slot-enums`
