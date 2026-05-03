@@ -54,9 +54,9 @@
 
 ## 6. Typed array シグネチャの導入
 
-- [ ] 6.1 `src/dungeon/explored_map.gd:12` の `mark_visible(cells: Array)` を `mark_visible(cells: Array[Vector2i])` に
-- [ ] 6.2 `src/dungeon/guild.gd:get_party_characters` を `Array[Array]` で返却
-- [ ] 6.3 各テストが通過することを確認しコミット
+- [x] 6.1 `src/dungeon/explored_map.gd:12` の `mark_visible(cells: Array)` を `mark_visible(cells: Array[Vector2i])` に
+- [x] 6.2 `src/dungeon/guild.gd:get_party_characters` を `Array[Array]` で返却
+- [x] 6.3 各テストが通過することを確認しコミット
 
 ## 7. 冗長キャスト削除と target 型ドキュメント
 

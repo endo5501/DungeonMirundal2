@@ -42,8 +42,9 @@ func get_party_data() -> PartyData:
 	return PartyData.new(_row_to_party_member_data(_front_row), _row_to_party_member_data(_back_row))
 
 
-func get_party_characters() -> Array:
-	# Returns [front_row, back_row] where each row is an Array of 3 (Character or null).
+func get_party_characters() -> Array[Array]:
+	# Returns [front_row, back_row] where each inner Array holds 3 entries
+	# (Character or null). The inner Array stays untyped so null is allowed.
 	return [_front_row.duplicate(), _back_row.duplicate()]
 
 func get_character_at(row: int, position: int) -> Character:

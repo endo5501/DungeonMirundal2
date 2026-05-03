@@ -394,7 +394,7 @@ func _build_party_combatants() -> Array:
 	var combatants: Array = []
 	if _guild == null:
 		return combatants
-	var rows: Array = _guild.get_party_characters()
+	var rows: Array[Array] = _guild.get_party_characters()
 	for row in rows:
 		# row is Array (front_row or back_row); contents are Character | null,
 		# so ch is statically Variant — narrow before use.
