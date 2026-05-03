@@ -1,8 +1,6 @@
 ## Purpose
 ダンジョン入口画面の一覧表示・新規生成・破棄および入場フローを規定する。DungeonRegistry との連携、空状態時の誘導表示、パーティ未編成時の入場抑止を対象とする。
-
 ## Requirements
-
 ### Requirement: Dungeon entrance displays dungeon list
 DungeonEntrance SHALL display a list of all dungeons from DungeonRegistry, showing each dungeon's name, map size (e.g. "16x16"), and exploration percentage. When DungeonRegistry is empty, the list area SHALL display the guidance message "まず「新規生成」でダンジョンを作成してください" in the normal enabled text color.
 
@@ -119,3 +117,19 @@ When `setup()` is called with an empty `DungeonRegistry`, `DungeonEntrance` SHAL
 #### Scenario: Non-empty registry starts with cursor on 潜入する
 - **WHEN** `DungeonEntrance` is shown with at least one registered dungeon
 - **THEN** the focus SHALL be on the button row and the cursor SHALL be on `潜入する`
+
+### Requirement: ダンジョン削除確認ダイアログは ConfirmDialog で構築される
+SHALL: ダンジョン入口画面で「削除」を選択した時の確認ダイアログは、`ConfirmDialog` の子インスタンスを利用して構築される。`DungeonEntrance` 内でインライン実装する確認 UI コードは存在しない。
+
+#### Scenario: 削除確認ダイアログ表示時に ConfirmDialog が使われる
+- **WHEN** ダンジョン入口で削除アクションがトリガされる
+- **THEN** `_delete_dialog.setup("削除しますか？", 1)` が呼ばれ、ConfirmDialog が visible になる
+
+#### Scenario: 「はい」確定でダンジョンが削除される
+- **WHEN** ConfirmDialog が `confirmed` シグナルを発行
+- **THEN** 対応するダンジョンが `DungeonRegistry` から削除される
+
+#### Scenario: 「いいえ」または ESC で削除がキャンセルされる
+- **WHEN** ConfirmDialog が `cancelled` シグナルを発行
+- **THEN** ダイアログが閉じ、ダンジョンは削除されずに入口画面に戻る
+
