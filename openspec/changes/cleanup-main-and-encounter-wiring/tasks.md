@@ -1,16 +1,16 @@
 ## 1. EncounterOverlay の抽象化と SimpleEncounterOverlay 抽出 (TDD)
 
-- [ ] 1.1 `tests/dungeon_scene/test_simple_encounter_overlay.gd` を新規作成、`start_encounter` で UI が visible になるテスト、ui_accept で encounter_resolved 発行テスト
-- [ ] 1.2 既存 `tests/dungeon_scene/test_encounter_overlay.gd` (あれば)が `EncounterOverlay.new()` を直接 instantiate しているテストを `SimpleEncounterOverlay.new()` に変更
-- [ ] 1.3 テスト Red コミット
-- [ ] 1.4 `src/dungeon_scene/simple_encounter_overlay.gd` を新規実装、現在の `encounter_overlay.gd` の `_build_ui` ロジックをコピー
-- [ ] 1.5 `src/dungeon_scene/encounter_overlay.gd` を抽象基底に変更:
+- [x] 1.1 `tests/dungeon_scene/test_simple_encounter_overlay.gd` を新規作成、`start_encounter` で UI が visible になるテスト、ui_accept で encounter_resolved 発行テスト
+- [x] 1.2 既存 `tests/dungeon_scene/test_encounter_overlay.gd` (あれば)が `EncounterOverlay.new()` を直接 instantiate しているテストを `SimpleEncounterOverlay.new()` に変更
+- [x] 1.3 テスト Red コミット
+- [x] 1.4 `src/dungeon_scene/simple_encounter_overlay.gd` を新規実装、現在の `encounter_overlay.gd` の `_build_ui` ロジックをコピー
+- [x] 1.5 `src/dungeon_scene/encounter_overlay.gd` を抽象基底に変更:
   - `_ready` を削除(または空に)
   - `_build_ui` を削除
   - `start_encounter` を `push_error` で override 強制
   - `encounter_resolved` シグナルだけ残す
-- [ ] 1.6 `src/dungeon_scene/encounter_coordinator.gd:_ready` で `SimpleEncounterOverlay.new()` を instantiate するように変更
-- [ ] 1.7 テスト Green コミット
+- [x] 1.6 `src/dungeon_scene/encounter_coordinator.gd:_ready` で `SimpleEncounterOverlay.new()` を instantiate するように変更
+- [x] 1.7 テスト Green コミット
 
 ## 2. main.gd の ESC ゲート集約 (TDD)
 
