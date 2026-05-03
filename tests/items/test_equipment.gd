@@ -195,8 +195,6 @@ func test_equipping_keeps_instance_in_inventory():
 	assert_true(_inventory.contains(sword))
 
 
-# --- Task 2.2: equip(NONE, ...) is rejected as SLOT_MISMATCH ---
-
 func test_equip_with_none_slot_returns_slot_mismatch():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
@@ -204,8 +202,6 @@ func test_equip_with_none_slot_returns_slot_mismatch():
 	assert_false(result.success)
 	assert_eq(result.reason, Equipment.FailReason.SLOT_MISMATCH)
 
-
-# --- Task 2.3: item.equip_slot can be passed directly to equip ---
 
 func test_equip_accepts_item_equip_slot_directly():
 	var eq := Equipment.new()

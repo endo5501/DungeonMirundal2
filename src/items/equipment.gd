@@ -22,10 +22,14 @@ const ALL_SLOTS: Array[int] = [
 ]
 
 
+static func _slot_matches(item: Item, slot: int) -> bool:
+	return slot != Item.EquipSlot.NONE and item.equip_slot == slot
+
+
 static func can_equip(item: Item, slot: int, character: Character) -> bool:
 	if item == null or character == null or character.job == null:
 		return false
-	if slot == Item.EquipSlot.NONE or item.equip_slot != slot:
+	if not _slot_matches(item, slot):
 		return false
 	return item.allowed_jobs.has(StringName(character.job.job_name))
 
@@ -56,7 +60,7 @@ func get_equipped(slot: int) -> ItemInstance:
 func equip(slot: int, instance: ItemInstance, character: Character) -> EquipResult:
 	if instance == null or instance.item == null:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
-	if slot == Item.EquipSlot.NONE or instance.item.equip_slot != slot:
+	if not _slot_matches(instance.item, slot):
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
 	if character == null or character.job == null \
 			or not instance.item.allowed_jobs.has(StringName(character.job.job_name)):

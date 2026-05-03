@@ -60,8 +60,6 @@ func test_equip_slot_enum_includes_none():
 	assert_true(Item.EquipSlot.NONE != Item.EquipSlot.WEAPON)
 
 
-# --- Task 1.1: data-load-time validation of category/equip_slot pairing ---
-
 func _expected_slot_for_category(category: int) -> int:
 	match category:
 		Item.ItemCategory.WEAPON: return Item.EquipSlot.WEAPON
