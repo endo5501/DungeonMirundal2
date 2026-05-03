@@ -20,10 +20,10 @@
 
 ## 3. dungeon_entrance の削除確認置換 (TDD)
 
-- [ ] 3.1 既存テストを ConfirmDialog 経由で通るよう更新
-- [ ] 3.2 `src/town_scene/dungeon_entrance.gd:179-234` のインライン実装を削除
-- [ ] 3.3 ConfirmDialog インスタンスを保持してシグナル接続
-- [ ] 3.4 全テスト通過を確認しコミット
+- [x] 3.1 既存テストを ConfirmDialog 経由で通るよう更新
+- [x] 3.2 `src/town_scene/dungeon_entrance.gd:179-234` のインライン実装を削除
+- [x] 3.3 ConfirmDialog インスタンスを保持してシグナル接続
+- [x] 3.4 全テスト通過を確認しコミット
 
 ## 4. save_screen の上書き確認置換 (TDD)
 
