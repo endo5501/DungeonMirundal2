@@ -57,10 +57,10 @@
 
 ## 10. F045: town_screen.select_item の定数化
 
-- [ ] 10.1 `src/town_scene/town_screen.gd` を確認し、`select_item` の `match index: 0:..1:..` が生数値で書かれているか grep
-- [ ] 10.2 既に定数化されていればスキップ、なければ `MAIN_IDX_GUILD = 0`, `MAIN_IDX_SHOP = 1` 等の定数を定義
-- [ ] 10.3 `match index:` を `MAIN_IDX_*` で書き換える
-- [ ] 10.4 全テスト通過を確認しコミット
+- [x] 10.1 `src/town_scene/town_screen.gd` を確認し、`select_item` の `match index: 0:..1:..` が生数値で書かれているか grep
+- [x] 10.2 既に定数化されていればスキップ、なければ `MAIN_IDX_GUILD = 0`, `MAIN_IDX_SHOP = 1` 等の定数を定義
+- [x] 10.3 `match index:` を `MAIN_IDX_*` で書き換える
+- [x] 10.4 全テスト通過を確認しコミット
 
 ## 11. 動作確認
 

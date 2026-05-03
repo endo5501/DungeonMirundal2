@@ -6,6 +6,11 @@ signal open_shop
 signal open_temple
 signal open_dungeon_entrance
 
+const MAIN_IDX_GUILD := 0
+const MAIN_IDX_SHOP := 1
+const MAIN_IDX_TEMPLE := 2
+const MAIN_IDX_DUNGEON_ENTRANCE := 3
+
 const MENU_ITEMS: Array[String] = [
 	"冒険者ギルド",
 	"商店",
@@ -190,7 +195,7 @@ func select_item(index: int) -> void:
 	if _menu.is_disabled(index):
 		return
 	match index:
-		0: open_guild.emit()
-		1: open_shop.emit()
-		2: open_temple.emit()
-		3: open_dungeon_entrance.emit()
+		MAIN_IDX_GUILD: open_guild.emit()
+		MAIN_IDX_SHOP: open_shop.emit()
+		MAIN_IDX_TEMPLE: open_temple.emit()
+		MAIN_IDX_DUNGEON_ENTRANCE: open_dungeon_entrance.emit()
