@@ -16,10 +16,10 @@
 
 ## 3. RaceSelectionStep の抽出 (TDD)
 
-- [ ] 3.1 `tests/guild_scene/steps/test_race_selection_step.gd` を作成、種族リスト表示テスト、ui_up/ui_down で cursor 移動、ui_accept で ADVANCE、ui_back で BACK、ui_cancel で CANCEL
-- [ ] 3.2 テスト Red コミット
-- [ ] 3.3 `src/guild_scene/steps/race_selection_step.gd` を実装、MenuController を活用
-- [ ] 3.4 テスト Green コミット
+- [x] 3.1 `tests/guild_scene/steps/test_race_selection_step.gd` を作成、種族リスト表示テスト、ui_up/ui_down で cursor 移動、ui_accept で ADVANCE、ui_back で BACK、ui_cancel で CANCEL
+- [x] 3.2 テスト Red コミット
+- [x] 3.3 `src/guild_scene/steps/race_selection_step.gd` を実装、MenuController を活用
+- [x] 3.4 テスト Green コミット
 
 ## 4. BonusAllocationStep の抽出 (TDD)
 
