@@ -1,5 +1,5 @@
 {
-	"dirs": ["res://tests/dungeon/", "res://tests/guild_scene/", "res://tests/guild_scene/steps/", "res://tests/esc_menu/", "res://tests/save_load/", "res://tests/combat/", "res://tests/items/", "res://tests/town/"],
+	"dirs": ["res://tests/dungeon/", "res://tests/guild_scene/", "res://tests/guild_scene/steps/", "res://tests/esc_menu/", "res://tests/esc_menu/flows/", "res://tests/save_load/", "res://tests/combat/", "res://tests/items/", "res://tests/town/"],
 	"prefix": "test_",
 	"suffix": ".gd",
 	"should_exit": true

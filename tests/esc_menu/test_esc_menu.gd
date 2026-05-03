@@ -164,164 +164,125 @@ func test_esc_from_status_returns_to_party_menu():
 	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
 
 
-# --- items-and-economy: item view / equipment view ---
+# --- 10. Items flow delegation ---
 
-func test_select_item_opens_items_view():
-	var menu := EscMenu.new()
-	add_child_autofree(menu)
+func _open_party_menu(menu: EscMenu) -> void:
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
+
+
+func test_select_items_switches_to_items_flow_view():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
 	menu.select_current_item()
-	assert_eq(menu.get_current_view(), EscMenu.View.ITEMS)
+	assert_eq(menu.get_current_view(), EscMenu.View.ITEMS_FLOW)
 
 
-func test_esc_from_items_returns_to_party_menu():
+func test_select_items_makes_item_use_flow_visible():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
 	menu.select_current_item()
-	menu.go_back()
+	assert_true(menu._item_use_flow.visible)
+
+
+func test_item_use_flow_completed_returns_to_party_menu():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()  # → ITEMS_FLOW
+	menu._item_use_flow.flow_completed.emit("")
 	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
+	assert_false(menu._item_use_flow.visible)
 
 
-func test_select_equipment_opens_character_view():
+func test_item_use_flow_town_return_emits_return_to_town():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()
-	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
-	menu.select_current_item()
-	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_CHARACTER)
+	watch_signals(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()  # → ITEMS_FLOW
+	menu._item_use_flow.town_return_requested.emit()
+	assert_signal_emitted(menu, "return_to_town_requested")
+	assert_false(menu.is_menu_visible())
 
 
-func test_equipment_character_to_slot_via_select():
+# --- 11. Equipment flow delegation ---
+
+func test_select_equipment_switches_to_equipment_flow_view():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
 	menu.select_current_item()
-	menu.select_current_item()
-	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_SLOT)
+	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_FLOW)
 
 
-func test_esc_from_equipment_slot_returns_to_character():
+func test_select_equipment_makes_equipment_flow_visible():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
 	menu.select_current_item()
-	menu.select_current_item()  # char → slot
-	menu.go_back()
-	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_CHARACTER)
+	assert_true(menu._equipment_flow.visible)
 
 
-func test_esc_from_equipment_character_returns_to_party():
+func test_equipment_flow_completed_returns_to_party_menu():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
-	menu.select_current_item()
-	menu.go_back()
+	menu.select_current_item()  # → EQUIPMENT_FLOW
+	menu._equipment_flow.flow_completed.emit()
 	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
+	assert_false(menu._equipment_flow.visible)
 
 
-# --- items-and-economy: equipment candidate fixes ---
+# --- 11b. Flow Controls do not consume input while EscMenu is hidden ---
+# Regression: CanvasLayer.visible does not propagate to Control children's
+# `visible` property. Without explicit reset, ItemUseFlow / EquipmentFlow
+# would keep `visible = true` (default) even when the EscMenu CanvasLayer
+# is hidden — their _unhandled_input would then steal keys from screens
+# like TitleScreen.
 
-func _setup_guild_with_two_fighters_and_weapons() -> Array:
-	# Returns [fighter_a, fighter_b, sword_a_instance, sword_b_instance]
-	if GameState.item_repository == null:
-		GameState.item_repository = DataLoader.new().load_all_items()
-	GameState.new_game()
-	var repo := GameState.item_repository
-	var inv := GameState.inventory
-	var human := load("res://data/races/human.tres") as RaceData
-	var fighter := load("res://data/jobs/fighter.tres") as JobData
-	var alloc := {&"STR": 2, &"INT": 1, &"PIE": 1, &"VIT": 2, &"AGI": 1, &"LUC": 1}
-	var fa := Character.create("Alice", human, fighter, alloc)
-	var fb := Character.create("Bob", human, fighter, alloc)
-	GameState.guild.register(fa)
-	GameState.guild.register(fb)
-	GameState.guild.assign_to_party(fa, 0, 0)
-	GameState.guild.assign_to_party(fb, 0, 1)
-	var long_sword := repo.find(&"long_sword")
-	var a_inst := ItemInstance.new(long_sword, true)
-	var b_inst := ItemInstance.new(long_sword, true)
-	inv.add(a_inst)
-	inv.add(b_inst)
-	fa.equipment.equip(Item.EquipSlot.WEAPON, a_inst, fa)
-	fb.equipment.equip(Item.EquipSlot.WEAPON, b_inst, fb)
-	return [fa, fb, a_inst, b_inst]
+func test_flows_hidden_when_menu_initially_hidden():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._item_use_flow.visible)
+	assert_false(menu._equipment_flow.visible)
 
 
-func _open_equipment_candidate_for(menu: EscMenu, character_index: int, slot_index: int) -> void:
-	menu.show_menu()
-	menu.select_current_item()  # → party menu
+func test_flows_hidden_after_hide_menu_from_items_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()  # → ITEMS_FLOW (flow visible)
+	assert_true(menu._item_use_flow.visible)
+	menu.hide_menu()
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._item_use_flow.visible)
+
+
+func test_flows_hidden_after_hide_menu_from_equipment_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
 	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
-	menu.select_current_item()  # → equipment character
-	menu._equipment_character_index = character_index
-	menu.select_current_item()  # → slot
-	menu._equipment_slot_index = slot_index
-	menu.select_current_item()  # → candidate
+	menu.select_current_item()  # → EQUIPMENT_FLOW (flow visible)
+	assert_true(menu._equipment_flow.visible)
+	menu.hide_menu()
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._equipment_flow.visible)
 
 
-func test_candidate_cursor_can_reach_last_item():
-	var setup := _setup_guild_with_two_fighters_and_weapons()
-	var menu := EscMenu.new()
-	add_child_autofree(menu)
-	_open_equipment_candidate_for(menu, 0, 0)  # Alice, weapon
-	var candidates_count: int = menu.get_equipment_candidates().size()
-	# Navigate down `candidates_count` times — we should land on the last real candidate
-	for i in range(candidates_count):
-		menu._cursor_move_in_view(1)
-	# After moving `candidates_count` times from index 0 ([はずす]),
-	# we should be at index == candidates_count (the last candidate row)
-	assert_eq(menu._equipment_candidate_index, candidates_count)
-
-
-func test_candidate_cursor_wraps_through_unequip_entry():
-	var setup := _setup_guild_with_two_fighters_and_weapons()
-	var menu := EscMenu.new()
-	add_child_autofree(menu)
-	_open_equipment_candidate_for(menu, 0, 0)
-	var rows: int = menu.get_equipment_candidates().size() + 1
-	# Wrapping: moving down `rows` times returns to 0
-	for i in range(rows):
-		menu._cursor_move_in_view(1)
-	assert_eq(menu._equipment_candidate_index, 0)
-
-
-func test_equip_from_other_character_unequips_them():
-	var setup := _setup_guild_with_two_fighters_and_weapons()
-	var alice: Character = setup[0]
-	var bob: Character = setup[1]
-	var b_inst: ItemInstance = setup[3]
-	var menu := EscMenu.new()
-	add_child_autofree(menu)
-	_open_equipment_candidate_for(menu, 0, 0)  # Alice, weapon
-
-	# Find Bob's sword (b_inst) in Alice's candidate list
-	var candidates := menu.get_equipment_candidates()
-	var target_idx := -1
-	for i in range(candidates.size()):
-		if candidates[i] == b_inst:
-			target_idx = i
-			break
-	assert_gte(target_idx, 0, "bob's sword should appear in candidates")
-
-	menu._equipment_candidate_index = target_idx + 1  # +1 for [はずす]
-	menu._confirm_equipment_candidate()
-
-	# Alice now holds Bob's instance, Bob's weapon slot is empty
-	assert_eq(alice.equipment.get_equipped(Item.EquipSlot.WEAPON), b_inst)
-	assert_null(bob.equipment.get_equipped(Item.EquipSlot.WEAPON))
-
-# --- 10. Input handling ---
+# --- 12. Input handling ---
 
 func test_handle_input_down_moves_cursor():
 	var menu := EscMenu.new()
@@ -345,3 +306,29 @@ func test_handle_input_escape_goes_back():
 	menu.select_current_item()  # → party menu
 	menu.handle_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_eq(menu.get_current_view(), EscMenu.View.MAIN_MENU)
+
+
+# --- 13. Input is delegated to flow when in flow view ---
+
+func test_handle_input_ignored_in_items_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()  # → ITEMS_FLOW
+	# handle_input on the menu should NOT route to its own go_back/select_current_item;
+	# the ItemUseFlow handles input via its own _unhandled_input.
+	var handled: bool = menu.handle_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_false(handled)
+	assert_eq(menu.get_current_view(), EscMenu.View.ITEMS_FLOW)
+
+
+func test_handle_input_ignored_in_equipment_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()  # → EQUIPMENT_FLOW
+	var handled: bool = menu.handle_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_false(handled)
+	assert_eq(menu.get_current_view(), EscMenu.View.EQUIPMENT_FLOW)
