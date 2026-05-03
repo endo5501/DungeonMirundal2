@@ -25,7 +25,4 @@ static func grant(character: Character, inventory: Inventory, repository: ItemRe
 			continue
 		var instance := ItemInstance.new(item, true)
 		inventory.add(instance)
-		var slot := Equipment.slot_from_item_slot(item.equip_slot)
-		if slot < 0:
-			continue
-		character.equipment.equip(slot, instance, character)
+		character.equipment.equip(item.equip_slot, instance, character)

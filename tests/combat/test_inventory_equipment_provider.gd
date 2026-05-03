@@ -64,7 +64,7 @@ func test_single_weapon_adds_attack_bonus():
 	var ch := _make_fighter(14, 12, 9)
 	var sword := _make_item(&"sword", Item.EquipSlot.WEAPON, 6, 0, 0, ["Fighter"])
 	var inst := ItemInstance.new(sword, true)
-	ch.equipment.equip(Equipment.EquipSlot.WEAPON, inst, ch)
+	ch.equipment.equip(Item.EquipSlot.WEAPON, inst, ch)
 	assert_eq(provider.get_attack(ch), 14 / 2 + 6)
 
 
@@ -73,7 +73,7 @@ func test_single_armor_adds_defense_bonus():
 	var ch := _make_fighter(14, 12, 9)
 	var armor := _make_item(&"armor", Item.EquipSlot.ARMOR, 0, 3, 0, ["Fighter"])
 	var inst := ItemInstance.new(armor, true)
-	ch.equipment.equip(Equipment.EquipSlot.ARMOR, inst, ch)
+	ch.equipment.equip(Item.EquipSlot.ARMOR, inst, ch)
 	assert_eq(provider.get_defense(ch), 12 / 3 + 3)
 
 
@@ -82,7 +82,7 @@ func test_accessory_adds_agility_bonus():
 	var ch := _make_fighter(14, 12, 9)
 	var ring := _make_item(&"ring", Item.EquipSlot.ACCESSORY, 0, 0, 2, ["Fighter"])
 	var inst := ItemInstance.new(ring, true)
-	ch.equipment.equip(Equipment.EquipSlot.ACCESSORY, inst, ch)
+	ch.equipment.equip(Item.EquipSlot.ACCESSORY, inst, ch)
 	assert_eq(provider.get_agility(ch), 9 + 2)
 
 
@@ -93,8 +93,8 @@ func test_multiple_defense_items_sum():
 	var ch := _make_fighter(14, 12, 9)
 	var armor := _make_item(&"armor", Item.EquipSlot.ARMOR, 0, 4, 0, ["Fighter"])
 	var shield := _make_item(&"shield", Item.EquipSlot.SHIELD, 0, 2, 0, ["Fighter"])
-	ch.equipment.equip(Equipment.EquipSlot.ARMOR, ItemInstance.new(armor, true), ch)
-	ch.equipment.equip(Equipment.EquipSlot.SHIELD, ItemInstance.new(shield, true), ch)
+	ch.equipment.equip(Item.EquipSlot.ARMOR, ItemInstance.new(armor, true), ch)
+	ch.equipment.equip(Item.EquipSlot.SHIELD, ItemInstance.new(shield, true), ch)
 	assert_eq(provider.get_defense(ch), 12 / 3 + 4 + 2)
 
 
@@ -105,11 +105,11 @@ func test_identified_and_unidentified_give_same_stats():
 	var ch := _make_fighter(14, 12, 9)
 	var sword := _make_item(&"sword", Item.EquipSlot.WEAPON, 5, 0, 0, ["Fighter"])
 
-	ch.equipment.equip(Equipment.EquipSlot.WEAPON, ItemInstance.new(sword, true), ch)
+	ch.equipment.equip(Item.EquipSlot.WEAPON, ItemInstance.new(sword, true), ch)
 	var atk_identified := provider.get_attack(ch)
 
-	ch.equipment.unequip(Equipment.EquipSlot.WEAPON)
-	ch.equipment.equip(Equipment.EquipSlot.WEAPON, ItemInstance.new(sword, false), ch)
+	ch.equipment.unequip(Item.EquipSlot.WEAPON)
+	ch.equipment.equip(Item.EquipSlot.WEAPON, ItemInstance.new(sword, false), ch)
 	var atk_unidentified := provider.get_attack(ch)
 
 	assert_eq(atk_identified, atk_unidentified)

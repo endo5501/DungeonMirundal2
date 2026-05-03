@@ -47,9 +47,3 @@ On success, the method SHALL return an `EquipResult` with `success == true` and 
 - **WHEN** a Mage character attempts to equip an Item whose `allowed_jobs` does not contain `Mage`
 - **THEN** the result SHALL have `success == false` and `reason == JOB_NOT_ALLOWED`, and the targeted slot SHALL remain unchanged
 
-## REMOVED Requirements
-
-### Requirement: Equipment provides slot_from_item_slot conversion helper
-**Reason**: With `Item.EquipSlot` as the single source of truth, `Equipment.EquipSlot` no longer exists, so no conversion helper between two enums is needed. Callers pass `Item.EquipSlot` values directly to `Equipment.equip` / `unequip` / `get_equipped`.
-
-**Migration**: All call sites of `Equipment.slot_from_item_slot(item.equip_slot)` SHALL be replaced with `item.equip_slot` directly.

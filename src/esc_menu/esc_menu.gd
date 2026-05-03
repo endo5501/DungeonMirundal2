@@ -22,14 +22,6 @@ const PARTY_IDX_ITEMS := 1
 const PARTY_IDX_EQUIPMENT := 2
 
 const EQUIPMENT_SLOT_LABELS: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
-const EQUIPMENT_SLOT_VALUES: Array[int] = [
-	Equipment.EquipSlot.WEAPON,
-	Equipment.EquipSlot.ARMOR,
-	Equipment.EquipSlot.HELMET,
-	Equipment.EquipSlot.SHIELD,
-	Equipment.EquipSlot.GAUNTLET,
-	Equipment.EquipSlot.ACCESSORY,
-]
 
 const QUIT_ITEMS: Array[String] = ["はい", "いいえ"]
 const QUIT_IDX_YES := 0
@@ -250,7 +242,7 @@ func _cursor_move_in_view(direction: int) -> void:
 			_equipment_character_index = (_equipment_character_index + direction + members.size()) % members.size()
 			_refresh_equipment_character_view()
 		View.EQUIPMENT_SLOT:
-			_equipment_slot_index = (_equipment_slot_index + direction + EQUIPMENT_SLOT_VALUES.size()) % EQUIPMENT_SLOT_VALUES.size()
+			_equipment_slot_index = (_equipment_slot_index + direction + Equipment.ALL_SLOTS.size()) % Equipment.ALL_SLOTS.size()
 			_refresh_equipment_slot_view()
 		View.EQUIPMENT_CANDIDATE:
 			var rows := get_equipment_candidates().size() + 1
@@ -680,7 +672,7 @@ func _refresh_equipment_slot_view() -> void:
 	if ch == null:
 		return
 	for i in range(EQUIPMENT_SLOT_LABELS.size()):
-		var slot_value := EQUIPMENT_SLOT_VALUES[i]
+		var slot_value := Equipment.ALL_SLOTS[i]
 		var equipped := ch.equipment.get_equipped(slot_value)
 		var equipped_name := "なし"
 		if equipped != null and equipped.item != null:
@@ -735,9 +727,9 @@ func get_equipment_candidates() -> Array[ItemInstance]:
 	var inv := _get_inventory()
 	if ch == null or inv == null:
 		return results
-	if _equipment_slot_index < 0 or _equipment_slot_index >= EQUIPMENT_SLOT_VALUES.size():
+	if _equipment_slot_index < 0 or _equipment_slot_index >= Equipment.ALL_SLOTS.size():
 		return results
-	var slot_value := EQUIPMENT_SLOT_VALUES[_equipment_slot_index]
+	var slot_value := Equipment.ALL_SLOTS[_equipment_slot_index]
 	for inst in inv.list():
 		if inst.item != null and Equipment.can_equip(inst.item, slot_value, ch):
 			results.append(inst)
@@ -748,7 +740,7 @@ func _confirm_equipment_candidate() -> void:
 	var ch := _get_selected_character()
 	if ch == null:
 		return
-	var slot_value := EQUIPMENT_SLOT_VALUES[_equipment_slot_index]
+	var slot_value := Equipment.ALL_SLOTS[_equipment_slot_index]
 	if _equipment_candidate_index == 0:
 		ch.equipment.unequip(slot_value)
 	else:

@@ -133,7 +133,7 @@ func test_equipped_instance_is_blocked_from_sell():
 	ch.base_stats = {&"STR": 10, &"INT": 10, &"PIE": 10, &"VIT": 10, &"AGI": 10, &"LUC": 10}
 	ch.max_hp = 10
 	ch.current_hp = 10
-	ch.equipment.equip(Equipment.EquipSlot.ARMOR, inst, ch)
+	ch.equipment.equip(Item.EquipSlot.ARMOR, inst, ch)
 	_guild.register(ch)
 	var s := _make_screen()
 	var candidates := s.get_sell_candidates()

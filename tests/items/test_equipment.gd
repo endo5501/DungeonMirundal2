@@ -68,12 +68,12 @@ func _inst_by_id(id: StringName) -> ItemInstance:
 func test_new_equipment_has_all_six_slots_empty():
 	var eq := Equipment.new()
 	for slot in [
-		Equipment.EquipSlot.WEAPON,
-		Equipment.EquipSlot.ARMOR,
-		Equipment.EquipSlot.HELMET,
-		Equipment.EquipSlot.SHIELD,
-		Equipment.EquipSlot.GAUNTLET,
-		Equipment.EquipSlot.ACCESSORY,
+		Item.EquipSlot.WEAPON,
+		Item.EquipSlot.ARMOR,
+		Item.EquipSlot.HELMET,
+		Item.EquipSlot.SHIELD,
+		Item.EquipSlot.GAUNTLET,
+		Item.EquipSlot.ACCESSORY,
 	]:
 		assert_null(eq.get_equipped(slot))
 
@@ -88,61 +88,61 @@ func test_all_equipped_on_empty_is_empty():
 func test_equip_succeeds_when_slot_and_job_match():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
-	var result := eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
+	var result := eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
 	assert_true(result.success)
 	assert_null(result.previous)
-	assert_eq(eq.get_equipped(Equipment.EquipSlot.WEAPON), sword)
+	assert_eq(eq.get_equipped(Item.EquipSlot.WEAPON), sword)
 
 
 func test_equip_returns_previous_on_replace():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
 	var another := ItemInstance.new(sword.item, true)
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
-	var result := eq.equip(Equipment.EquipSlot.WEAPON, another, _fighter)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
+	var result := eq.equip(Item.EquipSlot.WEAPON, another, _fighter)
 	assert_true(result.success)
 	assert_eq(result.previous, sword)
-	assert_eq(eq.get_equipped(Equipment.EquipSlot.WEAPON), another)
+	assert_eq(eq.get_equipped(Item.EquipSlot.WEAPON), another)
 
 
 func test_equip_fails_on_slot_mismatch():
 	var eq := Equipment.new()
 	var armor := _inst_by_id(&"leather_armor")
-	var result := eq.equip(Equipment.EquipSlot.WEAPON, armor, _fighter)
+	var result := eq.equip(Item.EquipSlot.WEAPON, armor, _fighter)
 	assert_false(result.success)
 	assert_eq(result.reason, Equipment.FailReason.SLOT_MISMATCH)
-	assert_null(eq.get_equipped(Equipment.EquipSlot.WEAPON))
+	assert_null(eq.get_equipped(Item.EquipSlot.WEAPON))
 
 
 func test_equip_fails_on_job_not_allowed():
 	var eq := Equipment.new()
 	var staff := _inst_by_id(&"staff")
-	var result := eq.equip(Equipment.EquipSlot.WEAPON, staff, _fighter)
+	var result := eq.equip(Item.EquipSlot.WEAPON, staff, _fighter)
 	assert_false(result.success)
 	assert_eq(result.reason, Equipment.FailReason.JOB_NOT_ALLOWED)
-	assert_null(eq.get_equipped(Equipment.EquipSlot.WEAPON))
+	assert_null(eq.get_equipped(Item.EquipSlot.WEAPON))
 
 
 func test_unequip_returns_previous_and_clears():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
-	var prev := eq.unequip(Equipment.EquipSlot.WEAPON)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
+	var prev := eq.unequip(Item.EquipSlot.WEAPON)
 	assert_eq(prev, sword)
-	assert_null(eq.get_equipped(Equipment.EquipSlot.WEAPON))
+	assert_null(eq.get_equipped(Item.EquipSlot.WEAPON))
 
 
 func test_unequip_empty_returns_null():
 	var eq := Equipment.new()
-	assert_null(eq.unequip(Equipment.EquipSlot.WEAPON))
+	assert_null(eq.unequip(Item.EquipSlot.WEAPON))
 
 
 func test_all_equipped_returns_non_null_slots():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
 	var armor := _inst_by_id(&"leather_armor")
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
-	eq.equip(Equipment.EquipSlot.ARMOR, armor, _fighter)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
+	eq.equip(Item.EquipSlot.ARMOR, armor, _fighter)
 	var all := eq.all_equipped()
 	assert_eq(all.size(), 2)
 	assert_true(all.has(sword))
@@ -155,8 +155,8 @@ func test_to_dict_uses_inventory_indices():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
 	var armor := _inst_by_id(&"leather_armor")
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
-	eq.equip(Equipment.EquipSlot.ARMOR, armor, _fighter)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
+	eq.equip(Item.EquipSlot.ARMOR, armor, _fighter)
 	var d := eq.to_dict(_inventory)
 	assert_eq(d.get("weapon"), _inventory.index_of(sword))
 	assert_eq(d.get("armor"), _inventory.index_of(armor))
@@ -167,23 +167,23 @@ func test_from_dict_restores_slot_references():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
 	var armor := _inst_by_id(&"leather_armor")
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
-	eq.equip(Equipment.EquipSlot.ARMOR, armor, _fighter)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
+	eq.equip(Item.EquipSlot.ARMOR, armor, _fighter)
 	var restored := Equipment.from_dict(eq.to_dict(_inventory), _inventory)
-	assert_eq(restored.get_equipped(Equipment.EquipSlot.WEAPON), sword)
-	assert_eq(restored.get_equipped(Equipment.EquipSlot.ARMOR), armor)
-	assert_null(restored.get_equipped(Equipment.EquipSlot.HELMET))
+	assert_eq(restored.get_equipped(Item.EquipSlot.WEAPON), sword)
+	assert_eq(restored.get_equipped(Item.EquipSlot.ARMOR), armor)
+	assert_null(restored.get_equipped(Item.EquipSlot.HELMET))
 
 
 func test_from_dict_missing_key_returns_empty_equipment():
 	var eq := Equipment.from_dict({}, _inventory)
 	for slot in [
-		Equipment.EquipSlot.WEAPON,
-		Equipment.EquipSlot.ARMOR,
-		Equipment.EquipSlot.HELMET,
-		Equipment.EquipSlot.SHIELD,
-		Equipment.EquipSlot.GAUNTLET,
-		Equipment.EquipSlot.ACCESSORY,
+		Item.EquipSlot.WEAPON,
+		Item.EquipSlot.ARMOR,
+		Item.EquipSlot.HELMET,
+		Item.EquipSlot.SHIELD,
+		Item.EquipSlot.GAUNTLET,
+		Item.EquipSlot.ACCESSORY,
 	]:
 		assert_null(eq.get_equipped(slot))
 
@@ -191,5 +191,21 @@ func test_from_dict_missing_key_returns_empty_equipment():
 func test_equipping_keeps_instance_in_inventory():
 	var eq := Equipment.new()
 	var sword := _inst_by_id(&"long_sword")
-	eq.equip(Equipment.EquipSlot.WEAPON, sword, _fighter)
+	eq.equip(Item.EquipSlot.WEAPON, sword, _fighter)
 	assert_true(_inventory.contains(sword))
+
+
+func test_equip_with_none_slot_returns_slot_mismatch():
+	var eq := Equipment.new()
+	var sword := _inst_by_id(&"long_sword")
+	var result := eq.equip(Item.EquipSlot.NONE, sword, _fighter)
+	assert_false(result.success)
+	assert_eq(result.reason, Equipment.FailReason.SLOT_MISMATCH)
+
+
+func test_equip_accepts_item_equip_slot_directly():
+	var eq := Equipment.new()
+	var sword := _inst_by_id(&"long_sword")
+	var result := eq.equip(sword.item.equip_slot, sword, _fighter)
+	assert_true(result.success)
+	assert_eq(eq.get_equipped(Item.EquipSlot.WEAPON), sword)
