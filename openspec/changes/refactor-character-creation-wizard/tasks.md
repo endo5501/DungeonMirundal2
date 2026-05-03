@@ -63,5 +63,5 @@
 
 - [x] 9.1 `openspec validate refactor-character-creation-wizard --strict`
 - [x] 9.2 `/simplify`スキルでコードレビューを実施
-- [ ] 9.3 `/opsx:verify refactor-character-creation-wizard`
+- [x] 9.3 `/opsx:verify refactor-character-creation-wizard`
 - [ ] 9.4 `/opsx:archive refactor-character-creation-wizard`
