@@ -62,21 +62,27 @@ func _resolve_race_id() -> String:
 - fallback で警告を出し、徐々に移行
 - 全 `.tres` 更新後に fallback を削除する別 change を切る(または C11 quick wins で)
 
-### Decision 3: turn_engine の `_pending_commands.get()` は具象型キャスト
+### Decision 3: turn_engine の `_pending_commands.get()` は型注釈 + null ガード
 
-**選択**:
+**選択(実装後の確定形)**:
 ```gdscript
 # Before
 var cmd = _pending_commands.get(idx)
 # After
-var cmd: CombatCommand = _pending_commands.get(idx) as CombatCommand
+var cmd: RefCounted = _pending_commands.get(idx, null) as RefCounted
 if cmd == null:
-    continue  # or skip
+    continue
 ```
 
 **理由**:
 - ホットパス(ターン解決毎に呼ばれる)で型推論を確実に
-- `as CombatCommand` で null になるのは型ミスマッチか not present の 2 ケース、いずれも skip 可
+- `as <T>` で null になるのは型ミスマッチか not present の 2 ケース、いずれも skip 可
+
+**当初案からの逸脱**:
+- 当初は `var cmd: CombatCommand` を提案したが、リポジトリには `CombatCommand` 基底クラスは存在せず、`AttackCommand` / `DefendCommand` / `EscapeCommand` / `ItemCommand` はすべて直接 `RefCounted` を継承している。
+- 共通基底クラスの導入は本 change のスコープ外の独立した refactor になるため、現存する最も近い共通静的型である `RefCounted` を採用した。
+- 後続の `is DefendCommand` / `is ItemCommand` / `as DefendCommand` / `as ItemCommand` チェックは `RefCounted` 経由でも従来通り機能する。
+- もし将来 `class_name CombatCommand extends RefCounted` を導入する場合は、`turn_engine.gd:65, 101` の `as RefCounted` を `as CombatCommand` に置き換える局所的な変更で済む。
 
 ### Decision 4: `get_party_characters()` は `Array[Array]` 型
 
