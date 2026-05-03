@@ -243,6 +243,45 @@ func test_equipment_flow_completed_returns_to_party_menu():
 	assert_false(menu._equipment_flow.visible)
 
 
+# --- 11b. Flow Controls do not consume input while EscMenu is hidden ---
+# Regression: CanvasLayer.visible does not propagate to Control children's
+# `visible` property. Without explicit reset, ItemUseFlow / EquipmentFlow
+# would keep `visible = true` (default) even when the EscMenu CanvasLayer
+# is hidden — their _unhandled_input would then steal keys from screens
+# like TitleScreen.
+
+func test_flows_hidden_when_menu_initially_hidden():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._item_use_flow.visible)
+	assert_false(menu._equipment_flow.visible)
+
+
+func test_flows_hidden_after_hide_menu_from_items_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_ITEMS
+	menu.select_current_item()  # → ITEMS_FLOW (flow visible)
+	assert_true(menu._item_use_flow.visible)
+	menu.hide_menu()
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._item_use_flow.visible)
+
+
+func test_flows_hidden_after_hide_menu_from_equipment_flow():
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	_open_party_menu(menu)
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_EQUIPMENT
+	menu.select_current_item()  # → EQUIPMENT_FLOW (flow visible)
+	assert_true(menu._equipment_flow.visible)
+	menu.hide_menu()
+	assert_false(menu.is_menu_visible())
+	assert_false(menu._equipment_flow.visible)
+
+
 # --- 12. Input handling ---
 
 func test_handle_input_down_moves_cursor():

@@ -53,6 +53,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	_build_ui()
+	# CanvasLayer.visible does not propagate to Control children's `visible`
+	# property, so the flows' _unhandled_input would keep firing while the
+	# menu is hidden. Switch to MAIN_MENU to set every container's visible
+	# flag explicitly before hiding the layer.
+	_switch_view(View.MAIN_MENU)
 	visible = false
 
 func _build_ui() -> void:
@@ -111,6 +116,10 @@ func show_menu() -> void:
 	_switch_view(View.MAIN_MENU)
 
 func hide_menu() -> void:
+	# Reset to MAIN_MENU so the flow Controls' `visible` flag is cleared —
+	# otherwise their _unhandled_input would keep consuming events on the
+	# next screen. CanvasLayer.visible alone does not propagate.
+	_switch_view(View.MAIN_MENU)
 	visible = false
 
 func get_current_view() -> View:
