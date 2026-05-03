@@ -85,8 +85,8 @@ func test_quit_dialog_confirm_emits_signal():
 	menu.get_main_menu().selected_index = 4
 	menu.select_current_item()  # → quit dialog
 	watch_signals(menu)
-	menu.get_quit_menu().selected_index = 0  # はい
-	menu.select_current_item()
+	menu._quit_dialog._menu.selected_index = 0  # はい
+	menu._quit_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(menu, "quit_to_title")
 
 func test_quit_dialog_cancel_returns_to_main():
@@ -95,8 +95,8 @@ func test_quit_dialog_cancel_returns_to_main():
 	menu.show_menu()
 	menu.get_main_menu().selected_index = 4
 	menu.select_current_item()  # → quit dialog
-	menu.get_quit_menu().selected_index = 1  # いいえ
-	menu.select_current_item()
+	# default いいえ — accept emits cancelled and returns to main
+	menu._quit_dialog._unhandled_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_eq(menu.get_current_view(), EscMenu.View.MAIN_MENU)
 
 # --- 7. Party menu ---

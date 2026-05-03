@@ -35,10 +35,10 @@
 
 ## 5. esc_menu の終了確認置換 (TDD)
 
-- [ ] 5.1 既存テストを更新
-- [ ] 5.2 `src/esc_menu/esc_menu.gd:124-126` のインライン実装(_quit_menu / _quit_dialog_container 等)を削除
-- [ ] 5.3 ConfirmDialog インスタンスを保持
-- [ ] 5.4 全テスト通過を確認しコミット
+- [x] 5.1 既存テストを更新
+- [x] 5.2 `src/esc_menu/esc_menu.gd:124-126` のインライン実装(_quit_menu / _quit_dialog_container 等)を削除
+- [x] 5.3 ConfirmDialog インスタンスを保持
+- [x] 5.4 全テスト通過を確認しコミット
 
 ## 6. shop_screen の _handle_list_input 統合 (TDD)
 
