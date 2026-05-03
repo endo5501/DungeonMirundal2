@@ -28,10 +28,10 @@
 
 ## 4. town_screen の MenuController 採用 (TDD)
 
-- [ ] 4.1 既存 `tests/town/test_town_screen.gd` を読み、外部挙動(menu 移動 + イラスト更新 + select_item)を網羅していることを確認
-- [ ] 4.2 不足があればテスト追加
-- [ ] 4.3 `src/town_scene/town_screen.gd` の `_unhandled_input` を `MenuController.route(event, _menu, _rows, confirm_selection, Callable(), _update_illustration)` に書き換える
-- [ ] 4.4 全テスト通過を確認しコミット
+- [x] 4.1 既存 `tests/town/test_town_screen.gd` を読み、外部挙動(menu 移動 + イラスト更新 + select_item)を網羅していることを確認 — covered by test_move_down_*, test_label_updates_when_cursor_moves, etc.
+- [x] 4.2 不足があればテスト追加 — coverage already sufficient (cursor moves + illustration texture/label tracking).
+- [x] 4.3 `src/town_scene/town_screen.gd` の `_unhandled_input` を `MenuController.route(event, _menu, _rows, confirm_selection, Callable(), _update_illustration)` に書き換える
+- [x] 4.4 全テスト通過を確認しコミット
 
 ## 5. temple_screen の MenuController 採用 (TDD)
 
