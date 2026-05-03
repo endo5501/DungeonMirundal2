@@ -43,13 +43,13 @@
 
 - [x] 6.1 `godot --headless --import` を実行
 - [x] 6.2 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過 — 1164/1164 passing.
-- [ ] 6.3 ゲームを起動し、タイトル画面でカーソル移動・選択・ESC 押下を目視確認 — manual verification by user.
-- [ ] 6.4 町画面でカーソル移動と各施設遷移を目視確認、イラストが更新されることを確認 — manual verification by user.
-- [ ] 6.5 教会画面でカーソル移動・選択・ESC で町に戻れることを確認 — manual verification by user.
+- [x] 6.3 ゲームを起動し、タイトル画面でカーソル移動・選択・ESC 押下を目視確認 — verified by user.
+- [x] 6.4 町画面でカーソル移動と各施設遷移を目視確認、イラストが更新されることを確認 — verified by user.
+- [x] 6.5 教会画面でカーソル移動・選択・ESC で町に戻れることを確認 — verified by user.
 
 ## 7. 仕上げ
 
 - [x] 7.1 `openspec validate add-menu-controller --strict` で妥当性確認
 - [x] 7.2 `/simplify`スキルでコードレビューを実施 — Three-agent review found one actionable item (trim verbose WHAT comments on menu_controller.gd header and title_screen.gd ESC block); applied. Other findings were out of scope (pre-existing TitleScreen.setup_save_state cursor reset; convention question on src/ui/ vs src/dungeon/, but tasks.md explicitly specifies src/ui/) or low value (stringly-typed action names — only used in one file).
 - [x] 7.3 `/opsx:verify add-menu-controller` で実装と仕様の整合確認 — Report: 30/35 tasks done (remaining: manual verify 6.3-6.5 + archive 7.4); 5/5 requirements implemented; 11/11 testable scenarios covered; all 6 design decisions followed. No critical or warning issues. Ready for archive.
-- [ ] 7.4 `/opsx:archive add-menu-controller` でアーカイブ
+- [x] 7.4 `/opsx:archive add-menu-controller` でアーカイブ
