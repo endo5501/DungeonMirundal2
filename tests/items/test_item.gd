@@ -116,3 +116,31 @@ func test_mismatched_category_and_slot_is_inconsistent():
 	item.category = Item.ItemCategory.WEAPON
 	item.equip_slot = Item.EquipSlot.ARMOR  # mismatched
 	assert_false(item.is_slot_consistent())
+
+
+# --- Task 1.1: data-load-time validation of category/equip_slot pairing ---
+
+func _expected_slot_for_category(category: int) -> int:
+	match category:
+		Item.ItemCategory.WEAPON: return Item.EquipSlot.WEAPON
+		Item.ItemCategory.ARMOR: return Item.EquipSlot.ARMOR
+		Item.ItemCategory.HELMET: return Item.EquipSlot.HELMET
+		Item.ItemCategory.SHIELD: return Item.EquipSlot.SHIELD
+		Item.ItemCategory.GAUNTLET: return Item.EquipSlot.GAUNTLET
+		Item.ItemCategory.ACCESSORY: return Item.EquipSlot.ACCESSORY
+		Item.ItemCategory.CONSUMABLE: return Item.EquipSlot.NONE
+		Item.ItemCategory.OTHER: return Item.EquipSlot.NONE
+	return -1
+
+
+func test_all_shipped_items_have_consistent_category_and_equip_slot():
+	var repo := DataLoader.new().load_all_items()
+	var items := repo.all()
+	assert_gt(items.size(), 0, "expected at least one .tres item to be loaded")
+	for item in items:
+		var expected: int = _expected_slot_for_category(item.category)
+		assert_ne(expected, -1,
+			"item %s has unrecognized category %d" % [item.item_id, item.category])
+		assert_eq(item.equip_slot, expected,
+			"item %s: category=%d expects equip_slot=%d but got %d"
+				% [item.item_id, item.category, expected, item.equip_slot])

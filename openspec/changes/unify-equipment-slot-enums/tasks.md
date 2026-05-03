@@ -1,7 +1,7 @@
 ## 1. is_slot_consistent の代替テストを先に追加 (TDD)
 
-- [ ] 1.1 `tests/items/test_item.gd` に「`data/items/*.tres` をロードしてカテゴリと equip_slot の整合を確認するテスト」を追加(category=WEAPON なら equip_slot=WEAPON、CONSUMABLE/OTHER なら NONE、等)
-- [ ] 1.2 テストを実行し既存実装で通ることを確認
+- [x] 1.1 `tests/items/test_item.gd` に「`data/items/*.tres` をロードしてカテゴリと equip_slot の整合を確認するテスト」を追加(category=WEAPON なら equip_slot=WEAPON、CONSUMABLE/OTHER なら NONE、等)
+- [x] 1.2 テストを実行し既存実装で通ることを確認
 
 ## 2. Equipment 内部の Item.EquipSlot 化 (TDD)
 
