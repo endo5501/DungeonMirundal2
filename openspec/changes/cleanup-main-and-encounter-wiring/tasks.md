@@ -43,13 +43,13 @@
 ## 5. 動作確認
 
 - [x] 5.1 `godot --headless -s addons/gut/gut_cmdln.gd` でフルテストスイート通過
-- [ ] 5.2 ゲーム起動 → タイトル → 新規 → 町 → ダンジョン入口 → ダンジョン → エンカウンタ → 戦闘終了 → 町、の全フロー目視確認
-- [ ] 5.3 ESC キーが各画面で適切に動くか確認(タイトル無視、町・ダンジョン・ギルドで開く、エンカウンタ中無視)
+- [x] 5.2 ゲーム起動 → タイトル → 新規 → 町 → ダンジョン入口 → ダンジョン → エンカウンタ → 戦闘終了 → 町、の全フロー目視確認
+- [x] 5.3 ESC キーが各画面で適切に動くか確認(タイトル無視、町・ダンジョン・ギルドで開く、エンカウンタ中無視)
 - [x] 5.4 SimpleEncounterOverlay は production では使われないが、テストが通ること
 
 ## 6. 仕上げ
 
 - [x] 6.1 `openspec validate cleanup-main-and-encounter-wiring --strict`
-- [ ] 6.2 `/simplify`スキルでコードレビューを実施
-- [ ] 6.3 `/opsx:verify cleanup-main-and-encounter-wiring`
+- [x] 6.2 `/simplify`スキルでコードレビューを実施
+- [x] 6.3 `/opsx:verify cleanup-main-and-encounter-wiring`
 - [ ] 6.4 `/opsx:archive cleanup-main-and-encounter-wiring`
