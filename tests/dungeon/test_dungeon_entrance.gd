@@ -9,14 +9,17 @@ func before_each():
 	_empty_guild = Guild.new()
 	_staffed_guild = _make_staffed_guild()
 
-func _make_staffed_guild() -> Guild:
-	var guild := Guild.new()
+func _assign_one_party_member(guild: Guild) -> void:
 	var race := load("res://data/races/human.tres") as RaceData
 	var job := load("res://data/jobs/fighter.tres") as JobData
 	var allocation := {&"STR": 2, &"INT": 1, &"PIE": 1, &"VIT": 2, &"AGI": 1, &"LUC": 1}
 	var ch := Character.create("Hero", race, job, allocation)
 	guild.register(ch)
 	guild.assign_to_party(ch, 0, 0)
+
+func _make_staffed_guild() -> Guild:
+	var guild := Guild.new()
+	_assign_one_party_member(guild)
 	return guild
 
 func _make_entrance() -> DungeonEntrance:
@@ -77,12 +80,7 @@ func test_enter_disabled_reflects_current_guild_state():
 	entrance.selected_index = 0
 	assert_true(entrance.is_enter_disabled(),
 		"setup with empty guild should leave enter disabled")
-	var race := load("res://data/races/human.tres") as RaceData
-	var job := load("res://data/jobs/fighter.tres") as JobData
-	var allocation := {&"STR": 2, &"INT": 1, &"PIE": 1, &"VIT": 2, &"AGI": 1, &"LUC": 1}
-	var ch := Character.create("Hero", race, job, allocation)
-	guild.register(ch)
-	guild.assign_to_party(ch, 0, 0)
+	_assign_one_party_member(guild)
 	assert_false(entrance.is_enter_disabled(),
 		"adding a party member after setup should re-enable enter on the next query")
 
