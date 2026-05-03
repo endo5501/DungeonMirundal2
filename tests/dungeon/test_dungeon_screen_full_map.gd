@@ -1,15 +1,6 @@
 extends GutTest
 
 
-func _find_open_forward_position(wm: WizMap) -> Vector2i:
-	for y in range(1, wm.map_size - 1):
-		for x in range(1, wm.map_size - 1):
-			var ps := PlayerState.new(Vector2i(x, y), Direction.NORTH)
-			if ps.move_forward(wm):
-				return Vector2i(x, y)
-	return Vector2i(-1, -1)
-
-
 # --- M key opens / closes overlay ---
 
 func test_m_key_opens_overlay():
@@ -65,14 +56,10 @@ func test_m_key_ignored_during_return_dialog():
 # --- Movement locked while overlay visible ---
 
 func test_forward_move_blocked_while_overlay_visible():
-	var wm := TestHelpers.make_test_map()
-	var open_pos := _find_open_forward_position(wm)
-	if open_pos == Vector2i(-1, -1):
-		pending("no open forward position in generated map; rerun with different seed")
-		return
+	var wm := TestHelpers.make_corridor_fixture(Vector2i(3, 5), Direction.NORTH, 3)
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
-	var ps := PlayerState.new(open_pos, Direction.NORTH)
+	var ps := PlayerState.new(Vector2i(3, 5), Direction.NORTH)
 	screen.setup(wm, ps)
 	screen._unhandled_input(TestHelpers.make_key_event(KEY_M))  # open overlay
 	var starting_pos := ps.position
@@ -94,14 +81,10 @@ func test_turn_blocked_while_overlay_visible():
 
 
 func test_movement_resumes_after_overlay_closes():
-	var wm := TestHelpers.make_test_map()
-	var open_pos := _find_open_forward_position(wm)
-	if open_pos == Vector2i(-1, -1):
-		pending("no open forward position")
-		return
+	var wm := TestHelpers.make_corridor_fixture(Vector2i(3, 5), Direction.NORTH, 3)
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
-	var ps := PlayerState.new(open_pos, Direction.NORTH)
+	var ps := PlayerState.new(Vector2i(3, 5), Direction.NORTH)
 	screen.setup(wm, ps)
 	screen._unhandled_input(TestHelpers.make_key_event(KEY_M))  # open
 	screen._unhandled_input(TestHelpers.make_key_event(KEY_M))  # close
