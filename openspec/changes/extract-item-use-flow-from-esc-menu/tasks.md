@@ -14,12 +14,12 @@
 
 ## 2. EquipmentFlow の抽出 (TDD)
 
-- [ ] 2.1 `tests/esc_menu/flows/test_equipment_flow.gd` を作成、CHARACTER → SLOT → CANDIDATE の遷移テスト
-- [ ] 2.2 装備変更が `Equipment.equip` / `unequip` を呼ぶことの検証
-- [ ] 2.3 他キャラ装備のスワップテスト
-- [ ] 2.4 各サブビューでの ui_cancel テスト
-- [ ] 2.5 CHARACTER での ui_cancel が flow_completed を発行することの検証
-- [ ] 2.6 テスト Red 確認しコミット
+- [x] 2.1 `tests/esc_menu/flows/test_equipment_flow.gd` を作成、CHARACTER → SLOT → CANDIDATE の遷移テスト
+- [x] 2.2 装備変更が `Equipment.equip` / `unequip` を呼ぶことの検証
+- [x] 2.3 他キャラ装備のスワップテスト
+- [x] 2.4 各サブビューでの ui_cancel テスト
+- [x] 2.5 CHARACTER での ui_cancel が flow_completed を発行することの検証
+- [x] 2.6 テスト Red 確認しコミット
 - [ ] 2.7 `src/esc_menu/flows/equipment_flow.gd` を実装
 - [ ] 2.8 EscMenu の旧 `_build_equipment_*` / `_input_equipment_*` メソッドのロジックを EquipmentFlow に移植
 - [ ] 2.9 テスト Green 確認しコミット
