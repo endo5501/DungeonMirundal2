@@ -215,9 +215,9 @@ func generate(
 	if room_attempts < 0:
 		room_attempts = maxi(20, map_size * 3)
 	if max_room_size < 0:
-		max_room_size = maxi(5, mini(8, map_size / 3 + 1) as int)
+		max_room_size = maxi(5, mini(8, map_size / 3 + 1))
 	if extra_links < 0:
-		extra_links = maxi(2, (map_size / 4) as int)
+		extra_links = maxi(2, map_size / 4)
 
 	carve_perfect_maze(rng)
 	generate_rooms(rng, room_attempts, min_room_size, max_room_size)

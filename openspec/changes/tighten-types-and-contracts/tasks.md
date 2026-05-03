@@ -60,9 +60,9 @@
 
 ## 7. 冗長キャスト削除と target 型ドキュメント
 
-- [ ] 7.1 `src/dungeon/wiz_map.gd:218,220` の冗長な `as int` キャストを削除
-- [ ] 7.2 `src/items/item.gd:get_target_failure_reason(target, ctx)` の `target` を `Variant` 型注釈、コメントで「Character | CombatActor」を明示
-- [ ] 7.3 全テスト通過を確認しコミット
+- [x] 7.1 `src/dungeon/wiz_map.gd:218,220` の冗長な `as int` キャストを削除
+- [x] 7.2 `src/items/item.gd:get_target_failure_reason(target, ctx)` の `target` を `Variant` 型注釈、コメントで「Character | CombatActor」を明示
+- [x] 7.3 全テスト通過を確認しコミット
 
 ## 8. 動作確認
 

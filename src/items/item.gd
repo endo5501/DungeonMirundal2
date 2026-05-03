@@ -34,7 +34,9 @@ func get_context_failure_reason(ctx: ItemUseContext) -> String:
 	return ""
 
 
-func get_target_failure_reason(target, ctx: ItemUseContext) -> String:
+# target is duck-typed: Character | CombatActor (anything addressable as a
+# target for an item). Static type is Variant; conditions narrow at runtime.
+func get_target_failure_reason(target: Variant, ctx: ItemUseContext) -> String:
 	for cond in target_conditions:
 		if not cond.is_satisfied(target, ctx):
 			return cond.reason()
