@@ -16,10 +16,10 @@
 - [x] 2.1 `tests/dungeon/test_character.gd` に「id 設定済み RaceData を使った to_dict が race_id = id 値を返す」テスト追加
 - [x] 2.2 「id 未設定の RaceData (id == &"") では resource_path から fallback する」テスト追加
 - [x] 2.3 テスト Red コミット
-- [ ] 2.4 `src/dungeon/character.gd:to_dict` の `race.resource_path.get_file().get_basename()` を `race.id != &"" ? String(race.id) : <fallback>` に変更
-- [ ] 2.5 同様に job_id の取得も修正
-- [ ] 2.6 fallback 経路で `push_warning` を出す
-- [ ] 2.7 テスト Green コミット
+- [x] 2.4 `src/dungeon/character.gd:to_dict` の `race.resource_path.get_file().get_basename()` を `race.id != &"" ? String(race.id) : <fallback>` に変更
+- [x] 2.5 同様に job_id の取得も修正
+- [x] 2.6 fallback 経路で `push_warning` を出す
+- [x] 2.7 テスト Green コミット
 
 ## 3. Inventory.spend_gold(0) を no-op true に (TDD)
 

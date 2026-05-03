@@ -93,8 +93,8 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 		stats_str[String(key)] = base_stats.get(key, 0)
 	var d := {
 		"character_name": character_name,
-		"race_id": race.resource_path.get_file().get_basename(),
-		"job_id": job.resource_path.get_file().get_basename(),
+		"race_id": _resolve_race_id(),
+		"job_id": _resolve_job_id(),
 		"level": level,
 		"base_stats": stats_str,
 		"current_hp": current_hp,
@@ -106,6 +106,20 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 	if inventory != null:
 		d["equipment"] = equipment.to_dict(inventory)
 	return d
+
+
+func _resolve_race_id() -> String:
+	if race != null and race.id != &"":
+		return String(race.id)
+	push_warning("Character.to_dict: RaceData.id is empty for %s, falling back to resource_path" % [race.resource_path if race != null else "<null>"])
+	return race.resource_path.get_file().get_basename() if race != null else ""
+
+
+func _resolve_job_id() -> String:
+	if job != null and job.id != &"":
+		return String(job.id)
+	push_warning("Character.to_dict: JobData.id is empty for %s, falling back to resource_path" % [job.resource_path if job != null else "<null>"])
+	return job.resource_path.get_file().get_basename() if job != null else ""
 
 static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
 	# ResourceLoader.exists() is load-bearing: calling load() on a missing path
