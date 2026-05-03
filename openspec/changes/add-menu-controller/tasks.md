@@ -51,5 +51,5 @@
 
 - [x] 7.1 `openspec validate add-menu-controller --strict` で妥当性確認
 - [x] 7.2 `/simplify`スキルでコードレビューを実施 — Three-agent review found one actionable item (trim verbose WHAT comments on menu_controller.gd header and title_screen.gd ESC block); applied. Other findings were out of scope (pre-existing TitleScreen.setup_save_state cursor reset; convention question on src/ui/ vs src/dungeon/, but tasks.md explicitly specifies src/ui/) or low value (stringly-typed action names — only used in one file).
-- [ ] 7.3 `/opsx:verify add-menu-controller` で実装と仕様の整合確認
+- [x] 7.3 `/opsx:verify add-menu-controller` で実装と仕様の整合確認 — Report: 30/35 tasks done (remaining: manual verify 6.3-6.5 + archive 7.4); 5/5 requirements implemented; 11/11 testable scenarios covered; all 6 design decisions followed. No critical or warning issues. Ready for archive.
 - [ ] 7.4 `/opsx:archive add-menu-controller` でアーカイブ
