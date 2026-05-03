@@ -51,4 +51,4 @@
 - [x] 7.1 `openspec validate unify-equipment-slot-enums --strict`
 - [x] 7.2 `/simplify`スキルでコードレビューを実施 (1 medium + 1 low フィックス済み: `_slot_matches` 抽出 / Task コメント除去)
 - [x] 7.3 `/opsx:verify unify-equipment-slot-enums` (CRITICAL/WARNING なし、SUGGESTION 1 件は範囲外)
-- [ ] 7.4 `/opsx:archive unify-equipment-slot-enums`
+- [x] 7.4 `/opsx:archive unify-equipment-slot-enums`
