@@ -67,14 +67,14 @@ func test_save_writes_equipment_slot_indices():
 func test_load_restores_equipment_references_to_inventory_instances():
 	var hero := _register_fighter_with_loadout()
 	# Snapshot equipped item ids
-	var weapon_id := hero.equipment.get_equipped(Equipment.EquipSlot.WEAPON).item.item_id
-	var armor_id := hero.equipment.get_equipped(Equipment.EquipSlot.ARMOR).item.item_id
+	var weapon_id := hero.equipment.get_equipped(Item.EquipSlot.WEAPON).item.item_id
+	var armor_id := hero.equipment.get_equipped(Item.EquipSlot.ARMOR).item.item_id
 	_save_manager.save(1)
 	GameState.new_game()
 	_save_manager.load(1)
 	var restored_ch: Character = GameState.guild.get_all_characters()[0]
-	var restored_weapon := restored_ch.equipment.get_equipped(Equipment.EquipSlot.WEAPON)
-	var restored_armor := restored_ch.equipment.get_equipped(Equipment.EquipSlot.ARMOR)
+	var restored_weapon := restored_ch.equipment.get_equipped(Item.EquipSlot.WEAPON)
+	var restored_armor := restored_ch.equipment.get_equipped(Item.EquipSlot.ARMOR)
 	assert_not_null(restored_weapon)
 	assert_not_null(restored_armor)
 	assert_eq(restored_weapon.item.item_id, weapon_id)

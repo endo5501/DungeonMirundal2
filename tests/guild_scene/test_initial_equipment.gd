@@ -37,15 +37,15 @@ func _make_character_for_job(job_name: String) -> Character:
 func test_fighter_receives_weapon_and_armor():
 	var ch := _make_character_for_job("Fighter")
 	InitialEquipment.grant(ch, _inventory, _repo)
-	assert_not_null(ch.equipment.get_equipped(Equipment.EquipSlot.WEAPON))
-	assert_not_null(ch.equipment.get_equipped(Equipment.EquipSlot.ARMOR))
+	assert_not_null(ch.equipment.get_equipped(Item.EquipSlot.WEAPON))
+	assert_not_null(ch.equipment.get_equipped(Item.EquipSlot.ARMOR))
 
 
 func test_mage_receives_staff_and_robe():
 	var ch := _make_character_for_job("Mage")
 	InitialEquipment.grant(ch, _inventory, _repo)
-	var weapon := ch.equipment.get_equipped(Equipment.EquipSlot.WEAPON)
-	var armor := ch.equipment.get_equipped(Equipment.EquipSlot.ARMOR)
+	var weapon := ch.equipment.get_equipped(Item.EquipSlot.WEAPON)
+	var armor := ch.equipment.get_equipped(Item.EquipSlot.ARMOR)
 	assert_not_null(weapon)
 	assert_not_null(armor)
 	assert_true(weapon.item.allowed_jobs.has(&"Mage"))

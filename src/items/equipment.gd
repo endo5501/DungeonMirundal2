@@ -1,43 +1,31 @@
 class_name Equipment
 extends RefCounted
 
-enum EquipSlot { WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY }
 enum FailReason { NONE, SLOT_MISMATCH, JOB_NOT_ALLOWED }
 
 const SLOT_KEYS: Dictionary = {
-	EquipSlot.WEAPON: "weapon",
-	EquipSlot.ARMOR: "armor",
-	EquipSlot.HELMET: "helmet",
-	EquipSlot.SHIELD: "shield",
-	EquipSlot.GAUNTLET: "gauntlet",
-	EquipSlot.ACCESSORY: "accessory",
+	Item.EquipSlot.WEAPON: "weapon",
+	Item.EquipSlot.ARMOR: "armor",
+	Item.EquipSlot.HELMET: "helmet",
+	Item.EquipSlot.SHIELD: "shield",
+	Item.EquipSlot.GAUNTLET: "gauntlet",
+	Item.EquipSlot.ACCESSORY: "accessory",
 }
 
 const ALL_SLOTS: Array[int] = [
-	EquipSlot.WEAPON,
-	EquipSlot.ARMOR,
-	EquipSlot.HELMET,
-	EquipSlot.SHIELD,
-	EquipSlot.GAUNTLET,
-	EquipSlot.ACCESSORY,
+	Item.EquipSlot.WEAPON,
+	Item.EquipSlot.ARMOR,
+	Item.EquipSlot.HELMET,
+	Item.EquipSlot.SHIELD,
+	Item.EquipSlot.GAUNTLET,
+	Item.EquipSlot.ACCESSORY,
 ]
-
-
-static func slot_from_item_slot(item_slot: int) -> int:
-	match item_slot:
-		Item.EquipSlot.WEAPON: return EquipSlot.WEAPON
-		Item.EquipSlot.ARMOR: return EquipSlot.ARMOR
-		Item.EquipSlot.HELMET: return EquipSlot.HELMET
-		Item.EquipSlot.SHIELD: return EquipSlot.SHIELD
-		Item.EquipSlot.GAUNTLET: return EquipSlot.GAUNTLET
-		Item.EquipSlot.ACCESSORY: return EquipSlot.ACCESSORY
-	return -1
 
 
 static func can_equip(item: Item, slot: int, character: Character) -> bool:
 	if item == null or character == null or character.job == null:
 		return false
-	if slot_from_item_slot(item.equip_slot) != slot:
+	if slot == Item.EquipSlot.NONE or item.equip_slot != slot:
 		return false
 	return item.allowed_jobs.has(StringName(character.job.job_name))
 
@@ -53,7 +41,7 @@ class EquipResult extends RefCounted:
 		reason = p_reason
 
 
-var _slots: Dictionary = {}  # EquipSlot -> ItemInstance
+var _slots: Dictionary = {}  # Item.EquipSlot -> ItemInstance
 
 
 func _init() -> void:
@@ -68,7 +56,7 @@ func get_equipped(slot: int) -> ItemInstance:
 func equip(slot: int, instance: ItemInstance, character: Character) -> EquipResult:
 	if instance == null or instance.item == null:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
-	if slot_from_item_slot(instance.item.equip_slot) != slot:
+	if slot == Item.EquipSlot.NONE or instance.item.equip_slot != slot:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
 	if character == null or character.job == null \
 			or not instance.item.allowed_jobs.has(StringName(character.job.job_name)):
@@ -121,5 +109,4 @@ static func from_dict(data: Dictionary, inventory: Inventory) -> Equipment:
 			continue
 		eq._slots[slot] = listed[idx]
 	return eq
-
 

@@ -160,7 +160,7 @@ func test_to_dict_with_inventory_includes_equipment():
 	var inv := Inventory.new()
 	var inst := ItemInstance.new(sword_item, true)
 	inv.add(inst)
-	ch.equipment.equip(Equipment.EquipSlot.WEAPON, inst, ch)
+	ch.equipment.equip(Item.EquipSlot.WEAPON, inst, ch)
 
 	var d := ch.to_dict(inv)
 	assert_true(d.has("equipment"))

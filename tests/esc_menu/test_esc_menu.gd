@@ -254,8 +254,8 @@ func _setup_guild_with_two_fighters_and_weapons() -> Array:
 	var b_inst := ItemInstance.new(long_sword, true)
 	inv.add(a_inst)
 	inv.add(b_inst)
-	fa.equipment.equip(Equipment.EquipSlot.WEAPON, a_inst, fa)
-	fb.equipment.equip(Equipment.EquipSlot.WEAPON, b_inst, fb)
+	fa.equipment.equip(Item.EquipSlot.WEAPON, a_inst, fa)
+	fb.equipment.equip(Item.EquipSlot.WEAPON, b_inst, fb)
 	return [fa, fb, a_inst, b_inst]
 
 
@@ -318,8 +318,8 @@ func test_equip_from_other_character_unequips_them():
 	menu._confirm_equipment_candidate()
 
 	# Alice now holds Bob's instance, Bob's weapon slot is empty
-	assert_eq(alice.equipment.get_equipped(Equipment.EquipSlot.WEAPON), b_inst)
-	assert_null(bob.equipment.get_equipped(Equipment.EquipSlot.WEAPON))
+	assert_eq(alice.equipment.get_equipped(Item.EquipSlot.WEAPON), b_inst)
+	assert_null(bob.equipment.get_equipped(Item.EquipSlot.WEAPON))
 
 # --- 10. Input handling ---
 
