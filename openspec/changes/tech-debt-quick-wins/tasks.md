@@ -13,13 +13,13 @@
 
 ## 3. F021: WizMap の冗長な as int キャスト削除
 
-- [ ] 3.1 `src/dungeon/wiz_map.gd:218,220` の `as int` キャストを削除
-- [ ] 3.2 全テスト通過を確認しコミット
+- [x] 3.1 `src/dungeon/wiz_map.gd:218,220` の `as int` キャストを削除 (already applied in commit de71da9)
+- [x] 3.2 全テスト通過を確認しコミット (no-op — already in tree)
 
 ## 4. F026: first_plan.md にバナー追加
 
-- [ ] 4.1 `docs/reference/first_plan.md` 冒頭に「これはプロジェクト初期のスナップショット。最新仕様は `openspec/specs/` を参照」のバナーを追加
-- [ ] 4.2 コミット
+- [x] 4.1 `docs/reference/first_plan.md` 冒頭に「これはプロジェクト初期のスナップショット。最新仕様は `openspec/specs/` を参照」のバナーを追加
+- [x] 4.2 コミット
 
 ## 5. F027: Equipment.equip を can_equip 経由に整理 (TDD)
 
