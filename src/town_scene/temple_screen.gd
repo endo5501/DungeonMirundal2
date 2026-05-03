@@ -60,9 +60,6 @@ func revive(character: Character) -> bool:
 		_last_message = "蘇生対象がいません"
 		return false
 	var cost := revive_cost(character)
-	if _inventory.gold < cost:
-		_last_message = "ゴールドが足りません"
-		return false
 	if not _inventory.spend_gold(cost):
 		_last_message = "ゴールドが足りません"
 		return false

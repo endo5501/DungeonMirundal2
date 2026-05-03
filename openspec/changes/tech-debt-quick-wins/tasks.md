@@ -6,10 +6,10 @@
 
 ## 2. F015: TempleScreen.revive の重複 gold check 削除 (TDD)
 
-- [ ] 2.1 既存 `tests/town/test_temple_screen.gd` の「ゴールド不足で revive 失敗」テストが残ることを確認
-- [ ] 2.2 `src/town_scene/temple_screen.gd:62-67` の `gold < cost` 早期 return を削除
-- [ ] 2.3 `spend_gold` の戻り値だけに依存するように分岐を整理
-- [ ] 2.4 全テスト通過を確認しコミット
+- [x] 2.1 既存 `tests/town/test_temple_screen.gd` の「ゴールド不足で revive 失敗」テストが残ることを確認
+- [x] 2.2 `src/town_scene/temple_screen.gd:62-67` の `gold < cost` 早期 return を削除
+- [x] 2.3 `spend_gold` の戻り値だけに依存するように分岐を整理
+- [x] 2.4 全テスト通過を確認しコミット
 
 ## 3. F021: WizMap の冗長な as int キャスト削除
 
