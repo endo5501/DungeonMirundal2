@@ -20,9 +20,9 @@
 - [x] 2.4 各サブビューでの ui_cancel テスト
 - [x] 2.5 CHARACTER での ui_cancel が flow_completed を発行することの検証
 - [x] 2.6 テスト Red 確認しコミット
-- [ ] 2.7 `src/esc_menu/flows/equipment_flow.gd` を実装
-- [ ] 2.8 EscMenu の旧 `_build_equipment_*` / `_input_equipment_*` メソッドのロジックを EquipmentFlow に移植
-- [ ] 2.9 テスト Green 確認しコミット
+- [x] 2.7 `src/esc_menu/flows/equipment_flow.gd` を実装
+- [x] 2.8 EscMenu の旧 `_build_equipment_*` / `_input_equipment_*` メソッドのロジックを EquipmentFlow に移植
+- [x] 2.9 テスト Green 確認しコミット
 
 ## 3. EscMenu のスリム化 (TDD)
 
