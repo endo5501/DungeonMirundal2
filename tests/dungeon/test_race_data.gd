@@ -62,3 +62,30 @@ func test_loaded_race_tres_files_have_id_matching_filename():
 	for race in races:
 		var basename := race.resource_path.get_file().get_basename()
 		assert_eq(String(race.id), basename, "race %s id should equal filename" % race.resource_path)
+
+
+# --- add-status-effect-infrastructure: resists dictionary ---
+
+func test_race_data_has_resists_field():
+	var race := RaceData.new()
+	assert_typeof(race.resists, TYPE_DICTIONARY)
+
+
+func test_race_data_resists_default_is_empty():
+	var race := RaceData.new()
+	assert_eq(race.resists.size(), 0)
+
+
+func test_race_data_resists_is_writable():
+	var race := RaceData.new()
+	race.resists = {&"poison": 0.2}
+	assert_eq(race.resists.get(&"poison"), 0.2)
+
+
+func test_loaded_race_tres_files_have_resists_dictionary():
+	var loader := DataLoader.new()
+	var races := loader.load_all_races()
+	assert_gt(races.size(), 0)
+	for race in races:
+		assert_typeof(race.resists, TYPE_DICTIONARY,
+			"race %s.resists should be Dictionary" % race.resource_path)

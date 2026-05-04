@@ -1,17 +1,25 @@
 class_name SpellResolution
 extends RefCounted
 
-# Each entry is a Dictionary with keys: actor (CombatActor), hp_delta (int), actor_name (String).
+# Each entry is a Dictionary with keys:
+#   actor (CombatActor), hp_delta (int), actor_name (String), events (Array).
 # Negative hp_delta = damage, positive = heal.
+# `events` holds zero or more event Dictionaries; producers append per-target
+# events such as {"type": "damage", "amount": int} or {"type": "inflict", ...}.
+# `hp_delta` MUST be kept consistent with the sum of HP-affecting events.
 var entries: Array = []
 
 
-func add_entry(actor: CombatActor, hp_delta: int) -> void:
-	entries.append({
+# Returns the appended Dictionary so callers can mutate `events` directly.
+func add_entry(actor: CombatActor, hp_delta: int) -> Dictionary:
+	var entry := {
 		"actor": actor,
 		"hp_delta": hp_delta,
 		"actor_name": actor.actor_name if actor != null else "",
-	})
+		"events": [],
+	}
+	entries.append(entry)
+	return entry
 
 
 func size() -> int:

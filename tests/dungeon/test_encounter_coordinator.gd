@@ -308,6 +308,105 @@ func assert_push_warning_message(_substring: String, _message: String) -> void:
 	# manually during integration.
 	pass
 
+# --- add-status-effect-infrastructure: dungeon step tick ---
+
+func _make_status_repo() -> StatusRepository:
+	var repo := StatusRepository.new()
+	var poison := StatusData.new()
+	poison.id = &"poison"
+	poison.scope = StatusData.Scope.PERSISTENT
+	poison.tick_in_dungeon = 3
+	repo.register(poison)
+	return repo
+
+
+func _make_character_with_hp(hp: int, statuses: Array[StringName] = []) -> Character:
+	var loader := DataLoader.new()
+	var human: RaceData
+	var fighter: JobData
+	for r in loader.load_all_races():
+		if r.race_name == "Human":
+			human = r
+	for j in loader.load_all_jobs():
+		if j.job_name == "Fighter":
+			fighter = j
+	var ch := Character.new()
+	ch.character_name = "Stepper"
+	ch.race = human
+	ch.job = fighter
+	ch.level = 1
+	ch.base_stats = {&"STR": 8, &"INT": 8, &"PIE": 8, &"VIT": 8, &"AGI": 8, &"LUC": 8}
+	ch.max_hp = max(hp, 10)
+	ch.current_hp = hp
+	ch.max_mp = 0
+	ch.current_mp = 0
+	ch.persistent_statuses = statuses
+	return ch
+
+
+func test_step_taken_invokes_dungeon_tick_on_each_party_character():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())  # never spawn an encounter
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(10, [&"poison"])
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	screen.step_taken.emit(Vector2i(4, 4))
+	# Poison ticks 3 → hp goes from 10 to 7.
+	assert_eq(ch.current_hp, 7)
+
+
+func test_step_taken_with_empty_persistent_statuses_does_nothing():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(10)  # no persistent statuses
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	screen.step_taken.emit(Vector2i(4, 4))
+	assert_eq(ch.current_hp, 10)
+
+
+func test_step_taken_skips_dead_party_members():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var dead_ch := _make_character_with_hp(0, [&"poison"])
+	guild.register(dead_ch)
+	guild.assign_to_party(dead_ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	screen.step_taken.emit(Vector2i(4, 4))
+	# Dead character is skipped; HP stays at 0.
+	assert_eq(dead_ch.current_hp, 0)
+
+
+func test_step_taken_without_guild_is_safe():
+	# Backwards-compat: existing call sites without set_guild() must not crash.
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	screen.step_taken.emit(Vector2i(4, 4))
+	# Reaching here means no crash occurred.
+	assert_false(coord.is_encounter_active(),
+		"non-triggering table + no guild must leave overlay inactive")
+
+
 func test_encounter_finished_carries_outcome():
 	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
 	add_child_autofree(coord)

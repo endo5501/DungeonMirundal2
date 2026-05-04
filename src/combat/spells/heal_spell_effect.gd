@@ -21,5 +21,6 @@ func apply(_caster: CombatActor, targets: Array, spell_rng: SpellRng) -> SpellRe
 		var max_value: int = target.max_hp
 		var healed: int = mini(max_value, before + heal)
 		target.current_hp = healed
-		resolution.add_entry(target, healed - before)
+		var entry := resolution.add_entry(target, healed - before)
+		(entry["events"] as Array).append({"type": "heal", "amount": healed - before})
 	return resolution

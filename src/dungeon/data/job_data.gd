@@ -19,6 +19,7 @@ extends Resource
 @export var required_vit: int
 @export var required_agi: int
 @export var required_luc: int
+@export var resists: Dictionary = {}  # StringName -> float in [0, 1]
 
 func is_magic_capable() -> bool:
 	return mage_school or priest_school

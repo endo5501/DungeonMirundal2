@@ -9,6 +9,7 @@ extends Resource
 @export var base_vit: int
 @export var base_agi: int
 @export var base_luc: int
+@export var resists: Dictionary = {}  # StringName -> float in [0, 1]
 
 func get_base_stats() -> Dictionary:
 	return {

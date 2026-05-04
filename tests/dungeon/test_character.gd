@@ -275,6 +275,23 @@ func test_to_dict_race_id_comes_from_id_field_not_resource_path():
 	assert_eq(d["job_id"], "custom_job")
 
 
+# --- add-status-effect-infrastructure: persistent_statuses ---
+
+func test_new_character_persistent_statuses_defaults_to_empty():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	assert_not_null(ch)
+	assert_eq(ch.persistent_statuses.size(), 0)
+
+
+func test_persistent_statuses_is_typed_string_name_array():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Test", _human, _fighter_job, allocation)
+	ch.persistent_statuses.append(&"poison")
+	assert_eq(ch.persistent_statuses[0], &"poison")
+	assert_typeof(ch.persistent_statuses[0], TYPE_STRING_NAME)
+
+
 func test_to_dict_falls_back_to_resource_path_when_race_id_empty():
 	# Simulate legacy data: id is empty, but resource_path points to a real file.
 	# Build standalone resources so we don't mutate Godot's cached singletons.

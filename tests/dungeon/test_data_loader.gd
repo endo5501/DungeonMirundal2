@@ -250,6 +250,22 @@ func test_load_spell_repository_returns_populated_repo():
 	assert_eq(repo.size(), 8)
 
 
+# --- status repository (add-status-effect-infrastructure) ---
+
+func test_load_status_repository_returns_repository():
+	var repo := _loader.load_status_repository()
+	assert_not_null(repo)
+	assert_is(repo, StatusRepository)
+
+
+func test_load_status_repository_caches_instance_across_calls():
+	# Calling twice on the same DataLoader should return the same instance,
+	# i.e. the second call must NOT rescan disk.
+	var first := _loader.load_status_repository()
+	var second := _loader.load_status_repository()
+	assert_same(first, second)
+
+
 # --- missing-directory diagnostics ---
 
 func test_load_resources_missing_dir_returns_empty_and_logs_error():

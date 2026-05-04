@@ -20,3 +20,4 @@ required_pie = 0
 required_vit = 0
 required_agi = 0
 required_luc = 0
+resists = {}

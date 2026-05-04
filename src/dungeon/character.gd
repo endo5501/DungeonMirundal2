@@ -15,6 +15,7 @@ var max_mp: int
 var accumulated_exp: int = 0
 var equipment: Equipment = Equipment.new()
 var known_spells: Array[StringName] = []
+var persistent_statuses: Array[StringName] = []
 
 static func create(
 	p_name: String,
@@ -97,6 +98,9 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 	var spell_strings: Array[String] = []
 	for sid in known_spells:
 		spell_strings.append(String(sid))
+	var status_strings: Array[String] = []
+	for sid in persistent_statuses:
+		status_strings.append(String(sid))
 	var d := {
 		"character_name": character_name,
 		"race_id": _resolve_race_id(),
@@ -109,6 +113,7 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 		"max_mp": max_mp,
 		"accumulated_exp": accumulated_exp,
 		"known_spells": spell_strings,
+		"persistent_statuses": status_strings,
 	}
 	if inventory != null:
 		d["equipment"] = equipment.to_dict(inventory)
@@ -234,6 +239,10 @@ static func from_dict(data: Dictionary, inventory: Inventory = null, repo: Spell
 			"Character.from_dict: known_spells missing; reconstructed from JobData.spell_progression for %s"
 			% data.get("character_name", "")
 		)
+	var status_raw: Array = data.get("persistent_statuses", [])
+	ch.persistent_statuses = []
+	for sid in status_raw:
+		ch.persistent_statuses.append(StringName(sid))
 	return ch
 
 func to_party_member_data() -> PartyMemberData:

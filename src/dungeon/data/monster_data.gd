@@ -11,6 +11,7 @@ extends Resource
 @export var experience: int
 @export var gold_min: int = 0
 @export var gold_max: int = 0
+@export var resists: Dictionary = {}  # StringName -> float in [0, 1]
 
 
 func is_valid() -> bool:

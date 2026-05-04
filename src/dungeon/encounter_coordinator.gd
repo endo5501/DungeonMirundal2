@@ -11,6 +11,8 @@ var _current_screen: DungeonScreen
 var _last_outcome: EncounterOutcome
 var _tables_by_floor: Dictionary = {}
 var _active_table: EncounterTableData
+var _status_repo: StatusRepository = null
+var _guild: Guild = null
 
 
 func _init(repository: MonsterRepository, rng: RandomNumberGenerator, cooldown_steps: int = 3) -> void:
@@ -96,9 +98,20 @@ func is_encounter_active() -> bool:
 	return _overlay != null and _overlay.is_active()
 
 
+func set_status_repo(repo: StatusRepository) -> void:
+	_status_repo = repo
+
+
+func set_guild(guild: Guild) -> void:
+	_guild = guild
+
+
 func _on_step_taken(_position: Vector2i) -> void:
 	if _current_screen == null:
 		return
+	# Apply persistent-status dungeon ticks (poison etc.) to every party member
+	# before any encounter check. Floored at HP=1; never kills.
+	_tick_party_step()
 	if _active_table == null:
 		return
 	if not _manager.should_trigger(_rng):
@@ -108,6 +121,20 @@ func _on_step_taken(_position: Vector2i) -> void:
 		return
 	_current_screen.set_encounter_active(true)
 	_overlay.start_encounter(party)
+
+
+func _tick_party_step() -> void:
+	if _guild == null:
+		return
+	var repo: StatusRepository = _status_repo
+	if repo == null:
+		repo = DataLoader.new().load_status_repository()
+	if repo == null:
+		return
+	for ch in _guild.get_all_characters():
+		if ch == null or ch.is_dead():
+			continue
+		StatusTickService.tick_character_step(ch, repo)
 
 
 func _on_floor_changed(new_floor: int) -> void:

@@ -172,3 +172,30 @@ func test_goblin_tres_has_gold_range():
 func test_bat_tres_has_gold_range():
 	var loaded := ResourceLoader.load("res://data/monsters/bat.tres") as MonsterData
 	assert_gte(loaded.gold_max, loaded.gold_min)
+
+
+# --- add-status-effect-infrastructure: resists dictionary ---
+
+func test_monster_data_has_resists_field():
+	var md := MonsterData.new()
+	assert_typeof(md.resists, TYPE_DICTIONARY)
+
+
+func test_monster_data_resists_default_is_empty():
+	var md := MonsterData.new()
+	assert_eq(md.resists.size(), 0)
+
+
+func test_monster_data_resists_is_writable():
+	var md := MonsterData.new()
+	md.resists = {&"sleep": 0.5}
+	assert_eq(md.resists.get(&"sleep"), 0.5)
+
+
+func test_loaded_monster_tres_files_have_resists_dictionary():
+	var loader := DataLoader.new()
+	var monsters := loader.load_all_monsters()
+	assert_gt(monsters.size(), 0)
+	for m in monsters:
+		assert_typeof(m.resists, TYPE_DICTIONARY,
+			"monster %s.resists should be Dictionary" % m.resource_path)

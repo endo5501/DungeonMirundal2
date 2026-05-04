@@ -20,3 +20,4 @@ required_pie = 15
 required_vit = 15
 required_agi = 15
 required_luc = 15
+resists = {}
