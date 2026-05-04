@@ -61,5 +61,5 @@
 
 ## 8. アーカイブ準備
 
-- [ ] 8.1 `/opsx:verify add-status-sleep-and-silence`
-- [ ] 8.2 `/opsx:archive add-status-sleep-and-silence`
+- [x] 8.1 `/opsx:verify add-status-sleep-and-silence`
+- [x] 8.2 `/opsx:archive add-status-sleep-and-silence`
