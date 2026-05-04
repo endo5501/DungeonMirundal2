@@ -55,11 +55,11 @@
 
 ## 6. 統合テストでバグ再現と修正の確認
 
-- [ ] 6.1 `tests/integration/test_esc_menu_heal_refreshes_status_bar.gd`(または相当する統合テスト場所)を作成: ダンジョン中で Character の HP を低くし、ESC メニュー経由で `SpellUseFlow` を走らせてヒールを適用し、PartyMemberPanel の HP 表示が更新されていることを検証
-- [ ] 6.2 戦闘経由(`CombatOverlay._refresh_panels` 発火)でも引き続き HP 表示が更新されることを既存テストでカバーされていなければ追加
-- [ ] 6.3 統合テストが PASS することを確認
-- [ ] 6.4 既存テスト全体を実行して回帰が無いことを確認(GUT runner)
-- [ ] 6.5 Godot エディタで実機確認: ダンジョン入場 → エンカウント → ダメージ受ける → 戦闘終了 → ESC メニュー → ヒール → ステータスバーが追従することを目視確認
+- [x] 6.1 `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` を作成: PartyDisplay を Character 配列にバインドした状態で `SpellUseFlow` の heal を走らせ、対応する Panel の `_data.current_hp` が新しい値を反映することを検証
+- [x] 6.2 戦闘経由は `tests/combat/test_party_combatant_signals.gd::test_take_damage_emits_hp_changed_with_new_value` と Section 4 の Panel シグナルテストで連鎖がカバーされているため、追加テストは不要(同じ Character セッター経由)
+- [x] 6.3 統合テストが PASS することを確認
+- [x] 6.4 既存テスト全体を実行して回帰が無いことを確認(8269 asserts、All tests passed)
+- [ ] 6.5 Godot エディタで実機確認: ヘッドレス環境のため実施不可。ユーザによる確認が必要(ダンジョン入場 → エンカウント → ダメージ受ける → 戦闘終了 → ESC メニュー → ヒール → ステータスバーが追従)
 - [ ] 6.6 ここでコミット: `Verify ESC menu heal refreshes dungeon status bar`
 
 ## 7. 仕上げ
