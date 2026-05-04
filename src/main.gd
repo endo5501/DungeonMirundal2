@@ -41,7 +41,11 @@ func _setup_encounter_coordinator() -> void:
 
 func _on_combat_party_state_changed() -> void:
 	if _current_screen is DungeonScreen and GameState.guild != null:
-		(_current_screen as DungeonScreen).refresh_party_display(GameState.guild.get_party_data())
+		# Re-bind to live Characters; bind_character is idempotent when the
+		# panel is already bound to the same Character, so this is cheap and
+		# guarantees post-combat panels stay in live-refresh mode regardless
+		# of how the screen was initially set up.
+		(_current_screen as DungeonScreen).bind_party(GameState.guild)
 
 
 func _on_encounter_finished(outcome: EncounterOutcome) -> void:
@@ -199,6 +203,10 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 	screen.return_to_town.connect(_on_return_to_town)
 	_switch_screen(screen)
 	screen.setup_from_data(dungeon_data, GameState.guild.get_party_data())
+	# Switch the party panels from snapshot mode into live-binding mode so
+	# state mutations from combat, ESC menu spells, or item use propagate to
+	# the status bar without explicit refresh calls.
+	screen.bind_party(GameState.guild)
 	_attach_encounter_coordinator_to_screen(screen)
 
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
