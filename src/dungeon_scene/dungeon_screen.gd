@@ -161,6 +161,17 @@ func refresh_party_display(party_data: PartyData) -> void:
 	if _party_display != null and party_data != null:
 		_party_display.setup(party_data)
 
+
+# Bind the party display's panels to the Guild's live Character objects so
+# subsequent state mutations (combat damage, ESC menu spell heals, item use)
+# refresh the corresponding panels automatically. Call after entering the
+# dungeon and any time the active party composition might have changed.
+func bind_party(guild: Guild) -> void:
+	if _party_display == null or guild == null:
+		return
+	var rows := guild.get_party_characters()
+	_party_display.bind_party_characters(rows[0], rows[1])
+
 func check_start_tile_return() -> void:
 	if _encounter_active or is_showing_return_dialog():
 		return

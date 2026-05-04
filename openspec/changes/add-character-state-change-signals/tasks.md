@@ -44,14 +44,14 @@
 
 ## 5. PartyDisplay と DungeonScreen の配線
 
-- [ ] 5.1 `tests/dungeon_scene/test_party_display_character_binding.gd` を作成: PartyDisplay に Character 配列を渡し、特定 Character の HP 変化で対応する Panel だけが再描画されることを検証
-- [ ] 5.2 「null スロットを含む Character 配列でも安全に動作する」ことを検証するテストを追加
-- [ ] 5.3 テストが期待通り失敗することを確認
-- [ ] 5.4 `src/dungeon_scene/party_display.gd` に「Character 配列を受け取って各 Panel に bind_character する」メソッド(例: `bind_party_characters(front: Array, back: Array)`)を追加
-- [ ] 5.5 5.1–5.2 のテストが PASS することを確認
-- [ ] 5.6 `src/dungeon_scene/dungeon_screen.gd` の初期化または `refresh_party_display` 周辺を、`GameState.guild` のパーティから Character 配列を取り出して `bind_party_characters` を呼ぶ実装に切替。既存の `refresh_party_display(party_data)` は呼ばれてもエラーにならない範囲で温存(後方互換)
-- [ ] 5.7 既存の `tests/dungeon_scene/` 配下のテストが回帰していないことを確認
-- [ ] 5.8 ここでコミット: `Bind PartyDisplay to live Characters in DungeonScreen`
+- [x] 5.1 `tests/dungeon_scene/test_party_display_character_binding.gd` を作成: PartyDisplay に Character 配列を渡し、特定 Character の HP 変化で対応する Panel だけが再描画されることを検証
+- [x] 5.2 「null スロットを含む Character 配列でも安全に動作する」ことを検証するテストを追加
+- [x] 5.3 テストが期待通り失敗することを確認(bind_party_characters 未実装で 3 件 FAIL)
+- [x] 5.4 `src/dungeon_scene/party_display.gd` に `bind_party_characters(front: Array, back: Array)` を追加
+- [x] 5.5 5.1–5.2 のテストが PASS することを確認(3/3 PASS)
+- [x] 5.6 `DungeonScreen.bind_party(guild)` を追加し、`main.gd` の `_show_dungeon_screen` と `_on_combat_party_state_changed` でこれを呼び出すように切替。`refresh_party_display(party_data)` はテスト用後方互換として温存
+- [x] 5.7 既存の `tests/dungeon_scene/` および全体テスト(8263 asserts)が回帰なし
+- [x] 5.8 ここでコミット: `Bind PartyDisplay to live Characters in DungeonScreen`
 
 ## 6. 統合テストでバグ再現と修正の確認
 

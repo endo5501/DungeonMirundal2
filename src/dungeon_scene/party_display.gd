@@ -53,3 +53,21 @@ func setup(party_data: PartyData) -> void:
 	for i in range(3):
 		_front_panels[i].set_member(front[i])
 		_back_panels[i].set_member(back[i])
+
+
+# Bind PartyDisplay to live Character objects so subsequent HP/MP/status
+# mutations on any of them refresh only the corresponding PartyMemberPanel.
+# Each row is an Array of length 3 whose entries are Character or null
+# (null means "empty slot — render nothing for that panel").
+func bind_party_characters(front_row: Array, back_row: Array) -> void:
+	for i in range(3):
+		var f: Character = front_row[i] if i < front_row.size() else null
+		var b: Character = back_row[i] if i < back_row.size() else null
+		if f != null:
+			_front_panels[i].bind_character(f)
+		else:
+			_front_panels[i].bind_character(null)
+		if b != null:
+			_back_panels[i].bind_character(b)
+		else:
+			_back_panels[i].bind_character(null)
