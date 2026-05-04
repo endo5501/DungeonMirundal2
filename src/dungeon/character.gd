@@ -236,6 +236,10 @@ static func from_dict(data: Dictionary, inventory: Inventory = null, repo: Spell
 		push_warning("Character.from_dict: job resource missing at %s (character_name=%s)" % [job_path, data.get("character_name", "")])
 		return null
 	var ch := Character.new()
+	# Suppress hp/mp/statuses signals while we populate fields from a serialized
+	# payload. We're (re)building state, not mutating it, so listeners shouldn't
+	# observe transient values. The flag is restored before we return ch below.
+	ch._suspend_signals = true
 	ch.character_name = data.get("character_name", "")
 	ch.level = data.get("level", 1)
 	ch.current_hp = data.get("current_hp", 0)
@@ -286,6 +290,7 @@ static func from_dict(data: Dictionary, inventory: Inventory = null, repo: Spell
 	ch.persistent_statuses = []
 	for sid in status_raw:
 		ch.persistent_statuses.append(StringName(sid))
+	ch._suspend_signals = false
 	return ch
 
 func to_party_member_data() -> PartyMemberData:
