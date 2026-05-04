@@ -13,8 +13,8 @@ func _make_overlay(dungeon_name: String = "テストダンジョン",
 		player_pos: Vector2i = Vector2i(3, 3),
 		explored_count: int = 2) -> FullMapOverlay:
 	_dungeon_data = DungeonData.create(dungeon_name, 42, map_size)
-	_wiz_map = _dungeon_data.wiz_map
-	_explored_map = _dungeon_data.explored_map
+	_wiz_map = _dungeon_data.floors[0].wiz_map
+	_explored_map = _dungeon_data.floors[0].explored_map
 	_explored_map.clear()
 	# Mark a deterministic set of cells regardless of generation
 	var marked := 0

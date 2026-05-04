@@ -204,11 +204,9 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	if _encounter_coordinator == null:
 		return
-	# TODO: use the dungeon's current floor once multi-floor dungeons land.
-	var table: EncounterTableData = _encounter_tables_by_floor.get(1, null)
-	if table == null:
-		return
-	_encounter_coordinator.set_table(table)
+	_encounter_coordinator.set_tables_by_floor(_encounter_tables_by_floor)
+	var current_floor_1based := _current_dungeon_data.player_state.current_floor + 1 if _current_dungeon_data != null else 1
+	_encounter_coordinator.set_floor(current_floor_1based)
 	_encounter_coordinator.attach_screen(screen)
 
 

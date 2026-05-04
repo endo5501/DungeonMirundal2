@@ -120,6 +120,28 @@ func test_loaded_floor_1_table_is_valid():
 	assert_gt(floor_1.probability_per_step, 0.0)
 
 
+func test_loaded_floor_2_table_is_valid():
+	var tables := _loader.load_all_encounter_tables()
+	var floor_2: EncounterTableData
+	for t in tables:
+		if t.floor == 2:
+			floor_2 = t
+			break
+	assert_not_null(floor_2)
+	assert_true(floor_2.is_valid())
+	assert_gt(floor_2.entries.size(), 0)
+	assert_gt(floor_2.probability_per_step, 0.0)
+
+
+func test_load_all_encounter_tables_returns_floor_1_and_2():
+	var tables := _loader.load_all_encounter_tables()
+	var floor_numbers: Array[int] = []
+	for t in tables:
+		floor_numbers.append(t.floor)
+	assert_true(floor_numbers.has(1), "encounter tables include floor 1")
+	assert_true(floor_numbers.has(2), "encounter tables include floor 2")
+
+
 # --- combat-system: per-level growth and exp_table ---
 
 func _find_job_by_name(name: String) -> JobData:

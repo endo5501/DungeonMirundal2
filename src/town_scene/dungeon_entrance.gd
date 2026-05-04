@@ -71,7 +71,7 @@ func _build_ui() -> void:
 			var dd := _registry.get_dungeon(i)
 			var row := CursorMenuRow.create(_vbox, dd.dungeon_name, FONT_SIZE)
 			var size_label := Label.new()
-			size_label.text = "%dx%d" % [dd.map_size, dd.map_size]
+			size_label.text = "全%d階" % dd.floors.size()
 			size_label.add_theme_font_size_override("font_size", FONT_SIZE)
 			row.add_extra_label(size_label)
 			var rate_label := Label.new()

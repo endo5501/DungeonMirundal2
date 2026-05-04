@@ -1,5 +1,44 @@
 extends GutTest
 
+# --- current_floor ---
+
+func test_current_floor_defaults_to_zero():
+	var ps = PlayerState.new(Vector2i(0, 0), Direction.NORTH)
+	assert_eq(ps.current_floor, 0)
+
+func test_current_floor_is_writable():
+	var ps = PlayerState.new(Vector2i(0, 0), Direction.NORTH)
+	ps.current_floor = 3
+	assert_eq(ps.current_floor, 3)
+
+# --- to_dict / from_dict round-trip ---
+
+func test_to_dict_includes_current_floor():
+	var ps = PlayerState.new(Vector2i(5, 7), Direction.NORTH)
+	ps.current_floor = 2
+	var d := ps.to_dict()
+	assert_eq(d.get("position", []), [5, 7])
+	assert_eq(int(d.get("facing", -1)), Direction.NORTH)
+	assert_eq(int(d.get("current_floor", -1)), 2)
+
+func test_from_dict_restores_current_floor():
+	var ps := PlayerState.from_dict({"position": [5, 7], "facing": Direction.NORTH, "current_floor": 2})
+	assert_eq(ps.position, Vector2i(5, 7))
+	assert_eq(ps.facing, Direction.NORTH)
+	assert_eq(ps.current_floor, 2)
+
+func test_from_dict_defaults_current_floor_to_zero_when_missing():
+	var ps := PlayerState.from_dict({"position": [5, 7], "facing": Direction.NORTH})
+	assert_eq(ps.current_floor, 0)
+
+func test_round_trip_preserves_current_floor():
+	var src = PlayerState.new(Vector2i(3, 4), Direction.EAST)
+	src.current_floor = 5
+	var restored := PlayerState.from_dict(src.to_dict())
+	assert_eq(restored.position, Vector2i(3, 4))
+	assert_eq(restored.facing, Direction.EAST)
+	assert_eq(restored.current_floor, 5)
+
 func test_initial_position_and_direction():
 	var ps = PlayerState.new(Vector2i(3, 4), Direction.NORTH)
 	assert_eq(ps.position, Vector2i(3, 4))
