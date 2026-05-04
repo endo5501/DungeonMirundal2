@@ -60,11 +60,11 @@
 - [x] 6.3 統合テストが PASS することを確認
 - [x] 6.4 既存テスト全体を実行して回帰が無いことを確認(8269 asserts、All tests passed)
 - [ ] 6.5 Godot エディタで実機確認: ヘッドレス環境のため実施不可。ユーザによる確認が必要(ダンジョン入場 → エンカウント → ダメージ受ける → 戦闘終了 → ESC メニュー → ヒール → ステータスバーが追従)
-- [ ] 6.6 ここでコミット: `Verify ESC menu heal refreshes dungeon status bar`
+- [x] 6.6 ここでコミット: `Verify ESC menu heal refreshes dungeon status bar`
 
 ## 7. 仕上げ
 
-- [ ] 7.1 全テストを実行し、PASS 件数と失敗件数を記録
-- [ ] 7.2 `openspec verify add-character-state-change-signals` を実行し、spec と実装の整合を確認
-- [ ] 7.3 design.md / proposal.md の Open Questions / Migration Plan に対し、実装中に判明した事項があれば追記
+- [x] 7.1 全テストを実行し、PASS 件数と失敗件数を記録(8273 asserts、All tests passed、0 failures)
+- [x] 7.2 `openspec validate add-character-state-change-signals --strict` を実行し PASS(`verify` サブコマンドは存在しないため `validate --strict` を使用)
+- [x] 7.3 design.md の Decision 8 を実装中に判明した「`refresh_party_display(party_data)` を経由すると Panel が live モードから格下げされる」問題を反映して更新
 - [ ] 7.4 PR を作成(変更概要、テスト方法、関連 in-progress changes との関係を記述)

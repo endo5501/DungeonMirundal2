@@ -86,6 +86,10 @@ var current_hp: int = 0:
 
 `CombatOverlay._refresh_panels()` の `party_state_changed.emit()` は今回そのまま残す。冗長だが、戦闘中はパーティ情報以外(モンスターパネル等)の更新も同じハンドラに乗っており、切り離しは別の change で扱うのが筋。Panel 側のシグナル直購読が追加されることで、戦闘中の HP 変化通知が **二重に** 走るが、`set_member` の同値比較で実害は無い(`PartyMemberPanel.set_member` 内部で `queue_redraw` が二度呼ばれる程度)。
 
+**実装中の修正**: 当初の想定では `main._on_combat_party_state_changed` がそのまま `refresh_party_display(party_data)` を呼び続ければ「二重に呼ばれるだけで実害無し」だった。しかし `refresh_party_display` の実装は内部で `_party_display.setup(party_data)` → 各 Panel に `set_member(PartyMemberData)` を呼ぶ経路で、`set_member` は **古い Character シグナル接続を切断する**。つまり戦闘終了直後に Panel が live モードからスナップショットモードに格下げされ、以降の HP 変化を拾えなくなる。
+
+修正: `main._on_combat_party_state_changed` を `screen.bind_party(GameState.guild)` に切り替えた(`bind_character` は同一 Character への再バインドで早期 return するので冪等)。これで Panel は常に live モードを維持する。`CombatOverlay` 側の `party_state_changed.emit()` 自体は変更不要。
+
 ## Risks / Trade-offs
 
 - **[Risk]** プロパティセッターでの自動発火は、テストコード等で意図せず Character.current_hp を書き換えている場所からも発火する → **Mitigation**: 値が変わらないときは発火しない条件で大半は問題なし。テストでは `_suspend_signals` を一時的に立てるヘルパは用意しない(用意するとプロダクションコードへの誘惑になる)。
