@@ -1,8 +1,6 @@
 ## Purpose
 消費アイテム（CONSUMABLE）のデータモデルと使用フローを規定する。ItemEffect / ContextCondition / TargetCondition の Resource 階層、Inventory.use_item による使用処理、および MVP 向け初期 4 アイテム（ポーション・マジックポーション・脱出の巻物・緊急脱出の巻物）の同梱を対象とする。
-
 ## Requirements
-
 ### Requirement: ItemEffect defines a pluggable use effect
 
 The system SHALL provide an abstract Resource class `ItemEffect` (`class_name ItemEffect extends Resource`) that declares a unified interface `apply(user, targets, context) -> ItemEffectResult`. Each concrete effect SHALL extend `ItemEffect` and implement `apply`. An `ItemEffectResult` SHALL indicate at least `success: bool` and an optional human-readable message.
@@ -134,7 +132,7 @@ The system SHALL ship four initial consumable `.tres` items under `data/items/`:
 
 | item_id | item_name | category | effect | context_conditions | target_conditions | price |
 |---|---|---|---|---|---|---|
-| `potion` | ポーション | CONSUMABLE | HealHpEffect | [] | [AliveOnly, NotFullHp] | 50 |
+| `healing_potion` | ポーション | CONSUMABLE | HealHpEffect | [] | [AliveOnly, NotFullHp] | 50 |
 | `magic_potion` | マジックポーション | CONSUMABLE | HealMpEffect | [] | [AliveOnly, HasMpSlot, NotFullMp] | 200 |
 | `escape_scroll` | 脱出の巻物 | CONSUMABLE | EscapeToTownEffect | [InDungeonOnly, NotInCombatOnly] | [] | 500 |
 | `emergency_escape_scroll` | 緊急脱出の巻物 | CONSUMABLE | EscapeToTownEffect | [InDungeonOnly] | [] | 2000 |
@@ -143,8 +141,24 @@ The numeric `power` for HealHp / HealMp SHALL be a tunable balance value set in 
 
 #### Scenario: Four consumables are loadable
 - **WHEN** `DataLoader.load_all_items()` is invoked on the shipped `data/items/` directory
-- **THEN** the resulting ItemRepository SHALL contain items with `item_id` equal to each of `potion`, `magic_potion`, `escape_scroll`, `emergency_escape_scroll`, each with `category == CONSUMABLE`
+- **THEN** the resulting ItemRepository SHALL contain items with `item_id` equal to each of `healing_potion`, `magic_potion`, `escape_scroll`, `emergency_escape_scroll`, each with `category == CONSUMABLE`
 
 #### Scenario: Escape scrolls differ only by NotInCombatOnly
 - **WHEN** `escape_scroll` and `emergency_escape_scroll` are inspected
 - **THEN** both SHALL use `EscapeToTownEffect`, `escape_scroll.context_conditions` SHALL include both `InDungeonOnly` and `NotInCombatOnly`, and `emergency_escape_scroll.context_conditions` SHALL include `InDungeonOnly` but NOT `NotInCombatOnly`
+
+### Requirement: 回復ポーションのアイテム名は healing_potion で統一される
+SHALL: 回復用消費アイテムの `.tres` ファイル名は `healing_potion.tres`、`item_id` は `&"healing_potion"` とし、`magic_potion.tres` (`item_id == &"magic_potion"`) と命名規約を揃える。旧 `potion.tres` は削除され、エイリアス機構は提供されない(既存セーブで `&"potion"` を持つ場合、復元時に当該アイテムは欠落する)。
+
+#### Scenario: healing_potion が ItemRepository に登録される
+- **WHEN** `DataLoader.load_all_items()` が呼ばれる
+- **THEN** ItemRepository には `find(&"healing_potion")` で見つかるアイテムが含まれる
+
+#### Scenario: 旧 potion アイテムは存在しない
+- **WHEN** `data/items/` を確認する
+- **THEN** `potion.tres` は存在しない(削除済み or リネーム済み)
+
+#### Scenario: 旧セーブのロードでは欠落する
+- **WHEN** `&"potion"` を持つ古いセーブをロードする
+- **THEN** `ItemInstance.from_dict({"item_id": &"potion"}, repo)` は null を返し、Inventory には追加されない(README に明記)
+

@@ -1,8 +1,6 @@
 ## Purpose
 セーブ／ロードの JSON ファイル入出力と last_slot 管理を規定する。スロット採番・上書き・検証・ファイル欠損時のフォールバック挙動を対象とする。
-
 ## Requirements
-
 ### Requirement: SaveManagerはゲーム状態をJSONファイルに保存する
 SaveManager SHALL provide a `save(slot_number: int) -> bool` method that serializes the current GameState to a JSON file at `user://saves/save_NNN.json` (zero-padded 3 digits) and returns whether the save succeeded. On failure (file open failure, write failure, last_slot pointer write failure), the method SHALL emit a `push_error` describing the cause and SHALL return `false`. On success, the method SHALL return `true`.
 
@@ -178,3 +176,15 @@ The system SHALL deserialize inventory before per-character equipment so that eq
 #### Scenario: Inventory is deserialized before Guild
 - **WHEN** `load(slot)` processes the save JSON
 - **THEN** the inventory SHALL be populated before any Character's equipment is restored, ensuring slot-index lookups succeed
+
+### Requirement: セーブ JSON はインデントなしで書き出される
+SHALL: `SaveManager.save()` は `JSON.stringify(data)` (インデントなし) で書き出す。タブ・改行を含むインデント形式は使用しない。これによりセーブファイルサイズを縮小する。読み込み側(`JSON.parse`)はインデントの有無に関係なくパースできるため、旧形式のセーブも問題なくロードできる。
+
+#### Scenario: 新セーブはインデントなし
+- **WHEN** `save(1)` を呼ぶ
+- **THEN** `save_001.json` の内容にタブ文字('\t')および冗長な改行は含まれない
+
+#### Scenario: 旧形式の save_*.json も読み込める
+- **WHEN** タブ・改行を含む形式の `save_*.json` を `load()` する
+- **THEN** `JSON.parse` がパースに成功し、ロードが成功する
+
