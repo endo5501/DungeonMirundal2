@@ -12,7 +12,7 @@ const OPT_ESCAPE: int = 3
 const OPT_CAST_MAGE: int = 4
 const OPT_CAST_PRIEST: int = 5
 
-const _LABELS: Dictionary = {
+const OPTION_LABELS: Dictionary = {
 	OPT_ATTACK: "こうげき",
 	OPT_DEFEND: "ぼうぎょ",
 	OPT_ITEM: "アイテム",
@@ -96,7 +96,7 @@ func confirm_current() -> void:
 func get_options() -> Array[String]:
 	var labels: Array[String] = []
 	for id in _option_ids:
-		labels.append(String(_LABELS.get(id, "")))
+		labels.append(String(OPTION_LABELS.get(id, "")))
 	return labels
 
 
@@ -106,6 +106,13 @@ func get_option_ids() -> Array[int]:
 
 func get_selected_index() -> int:
 	return _selected_index
+
+
+# The four options every living party combatant always has, regardless of
+# magic class. CAST_MAGE / CAST_PRIEST are inserted between OPT_DEFEND and
+# OPT_ITEM by _build_option_ids_for() based on the actor's job.
+static func base_option_ids() -> Array[int]:
+	return [OPT_ATTACK, OPT_DEFEND, OPT_ITEM, OPT_ESCAPE]
 
 
 func _build_option_ids_for(actor: CombatActor) -> Array[int]:
@@ -136,7 +143,7 @@ func _rebuild_rows() -> void:
 		_options_vbox.remove_child(child)
 		child.queue_free()
 	for id in _option_ids:
-		_rows.append(CursorMenuRow.create(_options_vbox, String(_LABELS.get(id, "")), 16))
+		_rows.append(CursorMenuRow.create(_options_vbox, String(OPTION_LABELS.get(id, "")), 16))
 
 
 func _refresh_rows() -> void:
