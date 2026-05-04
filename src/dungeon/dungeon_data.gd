@@ -1,7 +1,7 @@
 class_name DungeonData
 extends RefCounted
 
-const SEED_OFFSET_PER_FLOOR := 0x9E3779B1  # Fractional bits of the golden ratio
+const SEED_OFFSET_PER_FLOOR := 0x9E3779B1  # Regenerable from base_seed alone — keeps save files to one seed per dungeon.
 
 var dungeon_name: String
 var floors: Array[FloorData]
@@ -9,16 +9,10 @@ var player_state: PlayerState
 
 static func create(p_name: String, base_seed: int, p_size: int, floor_count: int = 1) -> DungeonData:
 	assert(floor_count >= 1, "floor_count must be >= 1, got %d" % floor_count)
-	var dd := DungeonData.new()
-	dd.dungeon_name = p_name
-	dd.floors = []
-	for i in range(floor_count):
-		var floor_seed := derive_floor_seed(base_seed, i)
-		var role := FloorRole.for_index(i, floor_count)
-		dd.floors.append(FloorData.create(floor_seed, p_size, role))
-	dd.player_state = PlayerState.new(find_start(dd.floors[0].wiz_map), Direction.NORTH)
-	dd.player_state.current_floor = 0
-	return dd
+	var sizes: Array = []
+	for _i in range(floor_count):
+		sizes.append(p_size)
+	return create_with_floor_sizes(p_name, base_seed, sizes)
 
 static func create_with_floor_sizes(p_name: String, base_seed: int, floor_sizes: Array) -> DungeonData:
 	assert(floor_sizes.size() >= 1, "floor_sizes must contain at least one entry")
@@ -30,21 +24,12 @@ static func create_with_floor_sizes(p_name: String, base_seed: int, floor_sizes:
 		var floor_seed := derive_floor_seed(base_seed, i)
 		var role := FloorRole.for_index(i, count)
 		dd.floors.append(FloorData.create(floor_seed, int(floor_sizes[i]), role))
-	dd.player_state = PlayerState.new(find_start(dd.floors[0].wiz_map), Direction.NORTH)
+	dd.player_state = PlayerState.new(find_tile(dd.floors[0].wiz_map, TileType.START), Direction.NORTH)
 	dd.player_state.current_floor = 0
 	return dd
 
 static func derive_floor_seed(base_seed: int, floor_index: int) -> int:
-	# Each floor's seed is derived deterministically from the base seed so the
-	# whole dungeon can be regenerated from base_seed alone.
 	return base_seed + floor_index * SEED_OFFSET_PER_FLOOR
-
-static func find_start(wiz_map: WizMap) -> Vector2i:
-	for y in range(wiz_map.map_size):
-		for x in range(wiz_map.map_size):
-			if wiz_map.cell(x, y).tile == TileType.START:
-				return Vector2i(x, y)
-	return Vector2i(0, 0)
 
 static func find_tile(wiz_map: WizMap, tile: int) -> Vector2i:
 	for y in range(wiz_map.map_size):
@@ -63,7 +48,7 @@ func current_explored_map() -> ExploredMap:
 	return current_floor_data().explored_map
 
 func reset_to_start() -> void:
-	var ps := PlayerState.new(find_start(floors[0].wiz_map), Direction.NORTH)
+	var ps := PlayerState.new(find_tile(floors[0].wiz_map, TileType.START), Direction.NORTH)
 	ps.current_floor = 0
 	player_state = ps
 

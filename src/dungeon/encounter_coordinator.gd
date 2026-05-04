@@ -56,20 +56,15 @@ func _resolve_table_for_floor(floor: int) -> EncounterTableData:
 		return null
 	if _tables_by_floor.has(floor):
 		return _tables_by_floor[floor]
-	# Fall back to the deepest registered floor that is <= requested floor.
-	var best_floor := -1
+	# Pick the deepest registered floor <= requested; if none qualifies (all
+	# registered floors are deeper than requested), fall back to the shallowest.
+	var keys: Array = []
 	for key in _tables_by_floor.keys():
-		var k := int(key)
-		if k <= floor and k > best_floor:
-			best_floor = k
-	if best_floor < 0:
-		# All registered floors are above the requested one; pick the smallest.
-		for key in _tables_by_floor.keys():
-			var k := int(key)
-			if best_floor < 0 or k < best_floor:
-				best_floor = k
-	push_warning("No encounter table for floor %d, using floor %d" % [floor, best_floor])
-	return _tables_by_floor[best_floor]
+		keys.append(int(key))
+	var below: Array = keys.filter(func(k: int) -> bool: return k <= floor)
+	var fallback_floor: int = below.max() if not below.is_empty() else keys.min()
+	push_warning("No encounter table for floor %d, using floor %d" % [floor, fallback_floor])
+	return _tables_by_floor[fallback_floor]
 
 
 func get_active_table() -> EncounterTableData:
@@ -80,8 +75,7 @@ func attach_screen(screen: DungeonScreen) -> void:
 	detach_screen()
 	_current_screen = screen
 	_current_screen.step_taken.connect(_on_step_taken)
-	if _current_screen.has_signal("floor_changed"):
-		_current_screen.floor_changed.connect(_on_floor_changed)
+	_current_screen.floor_changed.connect(_on_floor_changed)
 
 
 func detach_screen() -> void:
@@ -89,7 +83,7 @@ func detach_screen() -> void:
 		return
 	if _current_screen.step_taken.is_connected(_on_step_taken):
 		_current_screen.step_taken.disconnect(_on_step_taken)
-	if _current_screen.has_signal("floor_changed") and _current_screen.floor_changed.is_connected(_on_floor_changed):
+	if _current_screen.floor_changed.is_connected(_on_floor_changed):
 		_current_screen.floor_changed.disconnect(_on_floor_changed)
 	_current_screen = null
 

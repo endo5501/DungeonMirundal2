@@ -82,4 +82,4 @@
 - [x] 10.1 `openspec validate add-multi-floor-dungeons` が通ることを確認
 - [x] 10.2 不要になったコメント・dead code を削除（旧 single-floor 経路、`_wiz_map`/`_explored_map` の保持様式変更に伴うクリーンアップ）
 - [x] 10.3 変更内容を 1 つのコミットに集約してコミット（コミットメッセージは英語）
-- [ ] 10.4 `/simplify`スキルでコードレビューを実施
+- [x] 10.4 `/simplify`スキルでコードレビューを実施

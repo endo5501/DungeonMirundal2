@@ -34,7 +34,7 @@ func test_descend_dialog_shown_when_player_steps_on_stairs_down():
 	dd.player_state.position = Vector2i(4, 4)
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	assert_true(screen.is_showing_return_dialog())
 	assert_eq(screen.get_pending_dialog_message(), "下の階に降りますか?")
 
@@ -45,7 +45,7 @@ func test_ascend_dialog_shown_when_player_steps_on_stairs_up():
 	dd.player_state.position = Vector2i(5, 5)
 	dd.player_state.current_floor = 1
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	assert_true(screen.is_showing_return_dialog())
 	assert_eq(screen.get_pending_dialog_message(), "上の階に戻りますか?")
 
@@ -59,7 +59,7 @@ func test_confirm_descend_increments_current_floor():
 	dd.player_state.current_floor = 0
 	dd.player_state.facing = Direction.EAST
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	assert_eq(dd.player_state.current_floor, 1)
 
@@ -70,7 +70,7 @@ func test_confirm_descend_places_player_on_next_floor_stairs_up():
 	dd.player_state.position = Vector2i(4, 4)
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	var new_wm := dd.floors[1].wiz_map
 	var pos := dd.player_state.position
@@ -85,7 +85,7 @@ func test_confirm_descend_preserves_facing():
 	dd.player_state.current_floor = 0
 	dd.player_state.facing = Direction.EAST
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	assert_eq(dd.player_state.facing, Direction.EAST)
 
@@ -99,7 +99,7 @@ func test_confirm_ascend_decrements_current_floor():
 	dd.player_state.current_floor = 1
 	dd.player_state.facing = Direction.SOUTH
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	assert_eq(dd.player_state.current_floor, 0)
 
@@ -110,7 +110,7 @@ func test_confirm_ascend_places_player_on_prev_floor_stairs_down():
 	dd.player_state.position = Vector2i(5, 5)
 	dd.player_state.current_floor = 1
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	var prev_wm := dd.floors[0].wiz_map
 	var pos := dd.player_state.position
@@ -125,7 +125,7 @@ func test_confirm_ascend_preserves_facing():
 	dd.player_state.current_floor = 1
 	dd.player_state.facing = Direction.SOUTH
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.confirm_pending_dialog()
 	assert_eq(dd.player_state.facing, Direction.SOUTH)
 
@@ -139,7 +139,7 @@ func test_stair_dialog_suppressed_when_encounter_active():
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
 	screen.set_encounter_active(true)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	assert_false(screen.is_showing_return_dialog(),
 		"stair dialog must be suppressed while encounter is active")
 
@@ -152,10 +152,10 @@ func test_stair_dialog_appears_after_encounter_resolves():
 	screen.setup_from_data(dd)
 	# Simulate encounter active during step, then resolved
 	screen.set_encounter_active(true)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	assert_false(screen.is_showing_return_dialog())
 	screen.set_encounter_active(false)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	assert_true(screen.is_showing_return_dialog(),
 		"stair dialog must appear after encounter resolves if still on stair")
 
@@ -168,7 +168,7 @@ func test_floor_transition_does_not_emit_step_taken():
 	dd.player_state.position = Vector2i(4, 4)
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	watch_signals(screen)
 	screen.confirm_pending_dialog()
 	assert_signal_not_emitted(screen, "step_taken",
@@ -183,7 +183,7 @@ func test_floor_changed_emitted_on_descend():
 	dd.player_state.position = Vector2i(4, 4)
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	watch_signals(screen)
 	screen.confirm_pending_dialog()
 	assert_signal_emitted_with_parameters(screen, "floor_changed", [1])
@@ -195,7 +195,7 @@ func test_floor_changed_emitted_on_ascend():
 	dd.player_state.position = Vector2i(5, 5)
 	dd.player_state.current_floor = 1
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	watch_signals(screen)
 	screen.confirm_pending_dialog()
 	assert_signal_emitted_with_parameters(screen, "floor_changed", [0])
@@ -209,7 +209,7 @@ func test_cancel_descend_keeps_current_floor():
 	dd.player_state.position = Vector2i(4, 4)
 	dd.player_state.current_floor = 0
 	screen.setup_from_data(dd)
-	screen.check_stair_or_start_tile()
+	screen.check_start_tile_return()
 	screen.cancel_pending_dialog()
 	assert_eq(dd.player_state.current_floor, 0)
 	assert_eq(dd.player_state.position, Vector2i(4, 4))

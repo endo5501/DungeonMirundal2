@@ -52,7 +52,7 @@ func test_on_enter_dungeon_resets_player_state_to_start_tile():
 	var main := MainScript.new()
 	add_child_autofree(main)
 	main._on_enter_dungeon(0)
-	var start_pos := DungeonData.find_start(dd.floors[0].wiz_map)
+	var start_pos := DungeonData.find_tile(dd.floors[0].wiz_map, TileType.START)
 	assert_eq(dd.player_state.position, start_pos,
 		"player position should be reset to START tile")
 	assert_eq(dd.player_state.facing, Direction.NORTH,

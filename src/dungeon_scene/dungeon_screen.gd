@@ -162,9 +162,6 @@ func refresh_party_display(party_data: PartyData) -> void:
 		_party_display.setup(party_data)
 
 func check_start_tile_return() -> void:
-	check_stair_or_start_tile()
-
-func check_stair_or_start_tile() -> void:
 	if _encounter_active or is_showing_return_dialog():
 		return
 	_show_tile_dialog_for_current_position()
@@ -200,28 +197,17 @@ func _on_return_confirmed() -> void:
 		DialogContext.START_RETURN:
 			return_to_town.emit()
 		DialogContext.DESCEND:
-			_do_descend()
+			_change_floor(1, TileType.STAIRS_UP)
 		DialogContext.ASCEND:
-			_do_ascend()
+			_change_floor(-1, TileType.STAIRS_DOWN)
 
 func _on_return_cancelled() -> void:
 	_pending_dialog_context = DialogContext.NONE
 
-func _do_descend() -> void:
-	var next_floor := _player_state.current_floor + 1
-	var next_wm := _dungeon_data.floors[next_floor].wiz_map
-	var stair_pos := DungeonData.find_tile(next_wm, TileType.STAIRS_UP)
+func _change_floor(delta: int, target_tile: int) -> void:
+	var next_floor := _player_state.current_floor + delta
+	_player_state.position = DungeonData.find_tile(_dungeon_data.floors[next_floor].wiz_map, target_tile)
 	_player_state.current_floor = next_floor
-	_player_state.position = stair_pos
-	_switch_to_current_floor()
-	floor_changed.emit(next_floor)
-
-func _do_ascend() -> void:
-	var next_floor := _player_state.current_floor - 1
-	var next_wm := _dungeon_data.floors[next_floor].wiz_map
-	var stair_pos := DungeonData.find_tile(next_wm, TileType.STAIRS_DOWN)
-	_player_state.current_floor = next_floor
-	_player_state.position = stair_pos
 	_switch_to_current_floor()
 	floor_changed.emit(next_floor)
 

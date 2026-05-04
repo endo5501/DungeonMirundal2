@@ -386,20 +386,13 @@ func test_place_for_role_single_has_start_and_goal():
 	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 0)
 	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 0)
 
-func _find_tile(map: WizMap, tile: int) -> Vector2i:
-	for y in range(map.map_size):
-		for x in range(map.map_size):
-			if map.cell(x, y).tile == tile:
-				return Vector2i(x, y)
-	return Vector2i(-1, -1)
-
 func test_place_for_role_first_stairs_down_is_bfs_furthest_from_start():
 	var map := _build_carved_map(20, 42)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 100
 	map.place_for_role(rng, FloorRole.FIRST)
-	var start_pos := _find_tile(map, TileType.START)
-	var stairs_pos := _find_tile(map, TileType.STAIRS_DOWN)
+	var start_pos := DungeonData.find_tile(map, TileType.START)
+	var stairs_pos := DungeonData.find_tile(map, TileType.STAIRS_DOWN)
 	var dist := map.bfs(start_pos)
 	var max_dist := 0
 	for d in dist.values():
@@ -412,8 +405,8 @@ func test_place_for_role_middle_stairs_down_is_furthest_from_stairs_up():
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 100
 	map.place_for_role(rng, FloorRole.MIDDLE)
-	var up_pos := _find_tile(map, TileType.STAIRS_UP)
-	var down_pos := _find_tile(map, TileType.STAIRS_DOWN)
+	var up_pos := DungeonData.find_tile(map, TileType.STAIRS_UP)
+	var down_pos := DungeonData.find_tile(map, TileType.STAIRS_DOWN)
 	var dist := map.bfs(up_pos)
 	var max_dist := 0
 	for d in dist.values():
@@ -426,7 +419,7 @@ func test_place_for_role_first_start_is_in_room():
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 100
 	map.place_for_role(rng, FloorRole.FIRST)
-	var start_pos := _find_tile(map, TileType.START)
+	var start_pos := DungeonData.find_tile(map, TileType.START)
 	assert_true(map.in_any_room(start_pos.x, start_pos.y), "START must be inside a room")
 
 func test_place_for_role_middle_stairs_up_is_in_room():
@@ -434,7 +427,7 @@ func test_place_for_role_middle_stairs_up_is_in_room():
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 100
 	map.place_for_role(rng, FloorRole.MIDDLE)
-	var up_pos := _find_tile(map, TileType.STAIRS_UP)
+	var up_pos := DungeonData.find_tile(map, TileType.STAIRS_UP)
 	assert_true(map.in_any_room(up_pos.x, up_pos.y), "STAIRS_UP must be inside a room")
 
 # --- Stair tile walkability ---
