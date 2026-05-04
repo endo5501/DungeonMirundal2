@@ -372,6 +372,44 @@ func test_mage_cast_fire_damages_slime():
 		assert_lt(ch.current_mp, 10, "mage MP should be consumed by the cast")
 
 
+func test_spell_target_cancel_returns_to_spell_selector():
+	var g := _make_guild_solo("Mage")
+	for ch in g.get_all_characters():
+		ch.known_spells = [&"fire"] as Array[StringName]
+		ch.max_mp = 10
+		ch.current_mp = 10
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(g, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	# 魔術 → ファイア → SPELL_TARGET
+	overlay.command_menu_select(CombatCommandMenu.OPT_CAST_MAGE)
+	overlay.get_spell_selector().confirm_current()
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_TARGET)
+	# Back input emitted via the input router routes to request_cancel().
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_SELECT)
+	# MP not consumed.
+	for ch in g.get_all_characters():
+		assert_eq(ch.current_mp, 10)
+
+
+func test_spell_select_cancel_returns_to_command_menu():
+	var g := _make_guild_solo("Mage")
+	for ch in g.get_all_characters():
+		ch.known_spells = [&"fire"] as Array[StringName]
+		ch.max_mp = 10
+		ch.current_mp = 10
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(g, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	overlay.command_menu_select(CombatCommandMenu.OPT_CAST_MAGE)
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_SELECT)
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.COMMAND_MENU)
+
+
 func test_attack_selection_advances_to_target_select_phase():
 	var overlay := CombatOverlay.new()
 	add_child_autofree(overlay)

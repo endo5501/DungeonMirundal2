@@ -2,6 +2,7 @@ class_name CombatTargetSelector
 extends Control
 
 signal target_selected(target: CombatActor)
+signal cancelled
 
 var _title_label: Label
 var _options_vbox: VBoxContainer
@@ -103,6 +104,12 @@ func confirm_current() -> void:
 	if _targets.is_empty():
 		return
 	target_selected.emit(_targets[_selected_index])
+
+
+# Hook for the input router: emits `cancelled` so the CombatOverlay can revert
+# the spell-cast flow to the SpellSelector without submitting a Cast command.
+func request_cancel() -> void:
+	cancelled.emit()
 
 
 func select_at(index: int) -> void:

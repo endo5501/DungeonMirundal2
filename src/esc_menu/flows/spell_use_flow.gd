@@ -274,6 +274,13 @@ func _apply_cast_and_show_result() -> void:
 		_result_message = "詠唱に失敗した"
 		_switch_sub_view(SubView.RESULT)
 		return
+	# Defense in depth: even though _list_spells filters BATTLE_ONLY out of the
+	# selectable list, refuse to apply such a spell if it ever reaches here
+	# programmatically. MP is not consumed and the effect is not applied.
+	if _spell.scope != SpellData.Scope.OUTSIDE_OK:
+		_result_message = "%s は戦闘中のみ詠唱できる" % _spell.display_name
+		_switch_sub_view(SubView.RESULT)
+		return
 	if _caster.current_mp < _spell.mp_cost:
 		_result_message = "%s は MP が足りない" % _caster.character_name
 		_switch_sub_view(SubView.RESULT)

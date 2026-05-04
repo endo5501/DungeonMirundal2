@@ -38,12 +38,12 @@ When `TurnEngine.resolve_turn(rng)` reaches the caster's turn, the engine SHALL:
 
 ### Requirement: Cast actions are recorded in TurnReport with structure suitable for the combat log
 
-The system SHALL append cast actions to the TurnReport using a structure containing at minimum: `kind = "cast"`, `caster_name: String`, `spell_id: StringName`, `spell_display_name: String`, `entries: Array` of per-target deltas (`actor_name: String`, `hp_delta: int`), and optional `retargeted_from: String` (empty when no retarget). Skipped casts SHALL use `kind = "cast_skipped_no_mp"` or `kind = "cast_skipped_no_target"` with appropriate fields.
+The system SHALL append cast actions to the TurnReport using a structure containing at minimum: `type = "cast"`, `caster_name: String`, `spell_id: StringName`, `spell_display_name: String`, `entries: Array` of per-target deltas (`actor_name: String`, `hp_delta: int`), and optional `retargeted_from: String` (empty when no retarget). Skipped casts SHALL use `type = "cast_skipped_no_mp"` or `type = "cast_skipped_no_target"` with appropriate fields. The `type` key (rather than `kind`) is chosen for consistency with existing TurnReport entries (`attack`, `defend`, `escape`, `item_use`, `item_cancelled`, `defeated`).
 
 #### Scenario: Cast action entry exposes spell metadata
 - **WHEN** a fire spell is cast and resolved
-- **THEN** the corresponding TurnReport entry SHALL have `kind == "cast"`, `spell_id == &"fire"`, `spell_display_name == "ファイア"`, and at least one `entries` element with the target's name and HP delta
+- **THEN** the corresponding TurnReport entry SHALL have `type == "cast"`, `spell_id == &"fire"`, `spell_display_name == "ファイア"`, and at least one `entries` element with the target's name and HP delta
 
 #### Scenario: Cast skip is rendered with explanation
 - **WHEN** `cast_skipped_no_mp` is recorded for caster "Alice" attempting "ファイア"
-- **THEN** the TurnReport entry SHALL have `kind == "cast_skipped_no_mp"`, `caster_name == "Alice"`, `spell_display_name == "ファイア"`
+- **THEN** the TurnReport entry SHALL have `type == "cast_skipped_no_mp"`, `caster_name == "Alice"`, `spell_display_name == "ファイア"`

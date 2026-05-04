@@ -161,6 +161,24 @@ func test_mp_insufficient_keeps_spell_disabled():
 
 # --- flow_completed signal returns to caller ---
 
+func test_battle_only_spell_refused_programmatically():
+	# Mage knows fire (BATTLE_ONLY). Even if we bypass the UI filter and force
+	# the flow into _apply_cast_and_show_result, the cast must be refused: MP
+	# unchanged, target HP unchanged.
+	var mage := _make_char("M", "mage", [&"fire"], 5, 10, 10)
+	var ally := _make_char("A", "fighter", [], 0, 5, 12)
+	var party: Array[Character] = [mage, ally]
+	var flow := _setup_flow(party, 0)
+	# Manually wire the internal state to simulate a programmatic call.
+	flow._caster = mage
+	flow._spell = load("res://data/spells/fire.tres") as SpellData
+	flow._target = ally
+	flow._apply_cast_and_show_result()
+	assert_eq(flow.get_sub_view(), SpellUseFlow.SubView.RESULT)
+	assert_eq(mage.current_mp, 5, "MP must not be consumed")
+	assert_eq(ally.current_hp, 5, "ally HP must not change")
+
+
 func test_flow_completed_emits_with_message_after_result():
 	var priest := _make_char("Bob", "priest", [&"heal"], 5, 10, 10)
 	var hurt := _make_char("Alice", "fighter", [], 0, 4, 12)

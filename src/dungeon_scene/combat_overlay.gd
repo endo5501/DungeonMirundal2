@@ -228,6 +228,23 @@ func _on_spell_selector_cancelled() -> void:
 	_command_menu.show_for(_turn_engine.party[_current_actor_index])
 
 
+func _on_target_selector_cancelled() -> void:
+	# Only the spell flow expects to cancel out of target selection. The attack
+	# flow's TARGET_SELECT phase doesn't route ui_cancel, so this signal won't
+	# fire there.
+	if _current_phase != Phase.SPELL_TARGET:
+		return
+	_target_selector.hide_selector()
+	if _pending_cast_spell == null:
+		# Defensive: revert to CommandMenu if we somehow lost the spell.
+		_current_phase = Phase.COMMAND_MENU
+		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		return
+	var school: StringName = _pending_cast_spell.school
+	_pending_cast_spell = null
+	_show_spell_selector(school)
+
+
 func _submit_cast_with_target(target: CombatActor) -> void:
 	if _pending_cast_spell == null:
 		return
@@ -514,6 +531,7 @@ func _build_combat_ui() -> void:
 	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
 	_target_selector.visible = false
 	_target_selector.target_selected.connect(_handle_target_choice)
+	_target_selector.cancelled.connect(_on_target_selector_cancelled)
 	add_child(_target_selector)
 
 	_spell_selector = CombatSpellSelector.new()

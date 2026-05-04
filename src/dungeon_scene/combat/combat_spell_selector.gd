@@ -104,6 +104,12 @@ func confirm_current() -> void:
 	spell_selected.emit(entry.get("spell"))
 
 
+# Hook for the input router: emits `cancelled` so the CombatOverlay can revert
+# back to the CommandMenu without consuming the action.
+func request_cancel() -> void:
+	cancelled.emit()
+
+
 func get_entries() -> Array:
 	return _entries.duplicate()
 
