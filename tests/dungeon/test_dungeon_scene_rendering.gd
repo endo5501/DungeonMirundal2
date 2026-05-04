@@ -84,7 +84,7 @@ func test_environment_survives_refresh_without_wiz_map():
 	# must not be rebuilt on that code path.
 	var scene := _make_scene()
 	var we_before: WorldEnvironment = _first_child_of_type(scene, WorldEnvironment)
-	scene.refresh()
+	scene.refresh([])
 	var we_after: WorldEnvironment = _first_child_of_type(scene, WorldEnvironment)
 	assert_same(we_before, we_after,
 		"same WorldEnvironment instance persists across refresh()")

@@ -1,8 +1,6 @@
 ## Purpose
 教会サービス（蘇生・状態異常回復・寄進・祝福など）を規定する。サービス料金、成功／失敗確率、対象キャラクターの状態変化を対象とする。
-
 ## Requirements
-
 ### Requirement: TempleScreen is a town sub-screen for resurrection
 The system SHALL provide a `TempleScreen` (Control) that the player enters from TownScreen by selecting 「教会」. TempleScreen SHALL list every party member and SHALL distinguish living (current_hp > 0) from dead (current_hp <= 0) members visually.
 
@@ -57,3 +55,15 @@ The system SHALL NOT allow the player to select a character with `current_hp > 0
 #### Scenario: Living character is skipped
 - **WHEN** the player attempts to select a living character on TempleScreen
 - **THEN** the selection SHALL be rejected with an "蘇生対象がいません" (or equivalent) message, or the selection cursor SHALL skip living entries
+
+### Requirement: TempleScreen.revive は spend_gold の戻り値だけに依存する
+SHALL: `TempleScreen.revive` は `spend_gold(cost)` の戻り値のみで成功/失敗を判定する。`gold < cost` を事前に check して early return する重複ガードは存在しない。
+
+#### Scenario: spend_gold が false ならエラーメッセージを表示する
+- **WHEN** ゴールドが不足している状態で revive を実行
+- **THEN** `_inventory.spend_gold(cost)` が false を返し、エラーメッセージが表示される
+
+#### Scenario: 旧 gold < cost 重複ガードは存在しない
+- **WHEN** `temple_screen.gd:revive` を grep
+- **THEN** `if gold < cost: ...` のような事前 check は存在しない(spend_gold の戻り値だけが分岐に使われる)
+

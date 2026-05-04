@@ -4,7 +4,7 @@ Wizardry風一人称ダンジョン探索RPG（Godot 4.x）
 
 ## 必要環境
 
-- [Godot Engine 4.6+](https://godotengine.org/download/) (Standard版)
+- [Godot Engine 4.6.x](https://godotengine.org/download/) (Standard版)
 - Git
 
 ## セットアップ
@@ -13,6 +13,8 @@ Wizardry風一人称ダンジョン探索RPG（Godot 4.x）
 git clone git@github.com:endo5501/DungeonMirundal2.git
 cd DungeonMirundal2
 ```
+
+> **セーブデータ互換性の注意:** 2026-05 のリファクタで `data/items/potion.tres` を `healing_potion.tres` にリネームし、`item_id` を `&"potion"` から `&"healing_potion"` に変更しました。これ以前のセーブで `potion` を所持している場合、ロード時に当該アイテムは復元されず欠落します(他の所持品・装備には影響しません)。
 
 初回はGodotにclass_nameを認識させるためインポートが必要です。
 

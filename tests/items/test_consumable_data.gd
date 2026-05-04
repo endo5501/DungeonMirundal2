@@ -9,7 +9,7 @@ func before_all():
 
 
 func test_potion_is_loaded():
-	var potion := _repo.find(&"potion")
+	var potion := _repo.find(&"healing_potion")
 	assert_not_null(potion)
 	assert_eq(potion.category, Item.ItemCategory.CONSUMABLE)
 	assert_eq(potion.equip_slot, Item.EquipSlot.NONE)
@@ -17,13 +17,13 @@ func test_potion_is_loaded():
 
 
 func test_potion_has_heal_hp_effect():
-	var potion := _repo.find(&"potion")
+	var potion := _repo.find(&"healing_potion")
 	assert_is(potion.effect, HealHpEffect)
 	assert_eq((potion.effect as HealHpEffect).power, 20)
 
 
 func test_potion_has_alive_and_not_full_hp_conditions():
-	var potion := _repo.find(&"potion")
+	var potion := _repo.find(&"healing_potion")
 	assert_eq(potion.target_conditions.size(), 2)
 	assert_eq(potion.context_conditions.size(), 0)
 

@@ -60,14 +60,13 @@ func get_equipped(slot: int) -> ItemInstance:
 func equip(slot: int, instance: ItemInstance, character: Character) -> EquipResult:
 	if instance == null or instance.item == null:
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
+	if can_equip(instance.item, slot, character):
+		var previous: ItemInstance = _slots.get(slot, null)
+		_slots[slot] = instance
+		return EquipResult.new(true, previous, FailReason.NONE)
 	if not _slot_matches(instance.item, slot):
 		return EquipResult.new(false, null, FailReason.SLOT_MISMATCH)
-	if character == null or character.job == null \
-			or not instance.item.allowed_jobs.has(StringName(character.job.job_name)):
-		return EquipResult.new(false, null, FailReason.JOB_NOT_ALLOWED)
-	var previous: ItemInstance = _slots.get(slot, null)
-	_slots[slot] = instance
-	return EquipResult.new(true, previous, FailReason.NONE)
+	return EquipResult.new(false, null, FailReason.JOB_NOT_ALLOWED)
 
 
 func unequip(slot: int) -> ItemInstance:
