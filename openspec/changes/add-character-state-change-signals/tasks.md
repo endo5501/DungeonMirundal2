@@ -21,14 +21,14 @@
 
 ## 3. PartyCombatant の発火経路統合
 
-- [ ] 3.1 `tests/combat/test_party_combatant_signals.gd` を作成: `take_damage(5)` で wrap した Character の `hp_changed` がちょうど 1 回 `(15, max_hp)` で発火することを検証する失敗テスト
-- [ ] 3.2 `spend_mp(2)` で `mp_changed` が `(3, max_mp)` で発火することを検証するテストを追加
-- [ ] 3.3 `commit_persistent_to_character` で配列内容が変わったときだけ `statuses_changed` が発火することを検証するテストを 2 ケース(変化あり/なし)追加
-- [ ] 3.4 テストが期待通り失敗することを確認(セッター経由になっていないので発火が無いか、発火しすぎる)
-- [ ] 3.5 `src/combat/party_combatant.gd` の `_write_current_hp` / `_write_current_mp` を確認(プロパティ代入経由なので 1.5 のセッター対応で自動的に通る想定)。テストが PASS することを確認
-- [ ] 3.6 `commit_persistent_to_character` の最後の `character.persistent_statuses = persistent` がプロパティセッター経由で値比較した上で発火することを確認(1.6 で対応済み想定)
-- [ ] 3.7 既存の `tests/combat/test_party_combatant.gd`(あれば) と既存戦闘系テストが回帰していないことを確認
-- [ ] 3.8 ここでコミット: `Route PartyCombatant writes through Character setters`
+- [x] 3.1 `tests/combat/test_party_combatant_signals.gd` を作成: `take_damage(5)` で wrap した Character の `hp_changed` がちょうど 1 回 `(15, max_hp)` で発火することを検証する失敗テスト
+- [x] 3.2 `spend_mp(2)` で `mp_changed` が `(3, max_mp)` で発火することを検証するテストを追加
+- [x] 3.3 `commit_persistent_to_character` で配列内容が変わったときだけ `statuses_changed` が発火することを検証するテストを 2 ケース(変化あり/なし)追加
+- [x] 3.4 テストが期待通り失敗することを確認(注: 1.5/1.6 のセッター実装が既存経路に自動的に効いたため、今回は最初から PASS)
+- [x] 3.5 `src/combat/party_combatant.gd` の `_write_current_hp` / `_write_current_mp` を確認(プロパティ代入経由なので 1.5 のセッター対応で自動的に通った)。テストが PASS することを確認
+- [x] 3.6 `commit_persistent_to_character` の最後の `character.persistent_statuses = persistent` がプロパティセッター経由で値比較した上で発火することを確認(1.6 で対応済み)
+- [x] 3.7 既存の `tests/combat/test_party_combatant.gd` と既存戦闘系テストが回帰していないことを確認(全 PASS, 8248 asserts)
+- [x] 3.8 ここでコミット: `Route PartyCombatant writes through Character setters`
 
 ## 4. PartyMemberPanel のシグナル購読
 
