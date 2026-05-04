@@ -62,7 +62,7 @@ The system SHALL provide .tres resource files for exactly eight jobs: Fighter, M
 - **WHEN** job data files are loaded
 - **THEN** `mage_school` SHALL be true for Mage, Bishop, Samurai (others false), and `priest_school` SHALL be true for Priest, Bishop, Lord (others false). Fighter, Thief, and Ninja SHALL have both flags false.
 
-### Requirement: Per-level growth fields apply by school flags
+### Requirement: JobData declares per-level HP and MP growth
 
 `JobData` SHALL declare per-level growth fields `hp_per_level: int` and `mp_per_level: int`, so that level-up can apply job-specific HP (and, for magic-capable jobs, MP) gains. `mp_per_level` SHALL only take effect for jobs whose `mage_school` or `priest_school` is `true`. For jobs with both flags false, `mp_per_level` SHALL be `0`.
 
