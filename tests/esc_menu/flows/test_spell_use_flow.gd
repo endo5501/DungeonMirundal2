@@ -193,3 +193,37 @@ func test_flow_completed_emits_with_message_after_result():
 	# Confirm RESULT.
 	flow.handle_input(TestHelpers.make_action_event(&"ui_accept"))
 	assert_signal_emitted(flow, "flow_completed")
+
+
+# --- default lazy SpellRng path (no set_rng call) ---
+
+func test_flow_lazily_constructs_spell_rng_when_set_rng_not_called():
+	# This test deliberately avoids set_rng() to exercise SpellUseFlow's lazy
+	# default-construction branch (`_get_spell_rng()` building `SpellRng.new(null)`
+	# on first invocation). All other tests in this file call set_rng via
+	# _setup_flow(), so without this case the lazy path would be unreachable
+	# under test, even though the spell-casting spec mandates it
+	# ("Default SpellRng is created when none is injected").
+	#
+	# Heal: base_heal=8, spread=2 → roll ∈ {-2,-1,0,1,2} → heal ∈ {6..10}
+	# Ally starts current_hp=4, max_hp=12 → post-heal current_hp ∈ {10,11,12}
+	var priest := _make_char("Bob", "priest", [&"heal"], 5, 10, 10)
+	var hurt := _make_char("Alice", "fighter", [], 0, 4, 12)
+	var party: Array[Character] = [priest, hurt]
+	var flow := SpellUseFlow.new()
+	add_child_autofree(flow)
+	# Intentionally NOT calling flow.set_rng(...); the flow must build its own.
+	flow.setup(party)
+	flow.handle_input(TestHelpers.make_action_event(&"ui_accept"))  # caster
+	flow.handle_input(TestHelpers.make_action_event(&"ui_accept"))  # spell
+	flow.handle_input(TestHelpers.make_action_event(&"ui_down"))    # target = Alice
+	flow.handle_input(TestHelpers.make_action_event(&"ui_accept"))
+	# The cast must complete without crashing on a null _spell_rng.
+	assert_eq(flow.get_sub_view(), SpellUseFlow.SubView.RESULT,
+		"flow must reach RESULT view even without an injected SpellRng")
+	# MP is consumed deterministically regardless of the random roll.
+	assert_eq(priest.current_mp, 3, "priest MP must drop by mp_cost=2")
+	# HP is bounded by the spread; we can't predict the exact value but the
+	# range is provable from base/spread above.
+	assert_true(hurt.current_hp >= 10 and hurt.current_hp <= 12,
+		"ally HP must land in [10, 12] given heal base=8 spread=2 and starting 4/12 (got %d)" % hurt.current_hp)
