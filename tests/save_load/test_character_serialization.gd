@@ -107,3 +107,71 @@ func test_from_dict_returns_null_when_job_missing():
 	var restored := Character.from_dict(d)
 	assert_null(restored)
 	assert_push_warning("job")
+
+
+# --- add-magic-system: known_spells round-trip ---
+
+func test_to_dict_includes_known_spells_as_string_array():
+	var race := load("res://data/races/human.tres") as RaceData
+	var job := load("res://data/jobs/mage.tres") as JobData
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("Mage", race, job, allocation)
+	var d := ch.to_dict()
+	assert_true(d.has("known_spells"))
+	var spells: Array = d["known_spells"]
+	assert_true(spells.has("fire"))
+	assert_true(spells.has("frost"))
+	# Stored as strings, not StringNames
+	for s in spells:
+		assert_typeof(s, TYPE_STRING)
+
+
+func test_from_dict_restores_known_spells_as_string_names():
+	var race := load("res://data/races/human.tres") as RaceData
+	var job := load("res://data/jobs/mage.tres") as JobData
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("Mage", race, job, allocation)
+	var d := ch.to_dict()
+	var restored := Character.from_dict(d)
+	assert_not_null(restored)
+	assert_true(restored.known_spells.has(&"fire"))
+	assert_true(restored.known_spells.has(&"frost"))
+	for sid in restored.known_spells:
+		assert_typeof(sid, TYPE_STRING_NAME)
+
+
+func test_from_dict_legacy_save_without_known_spells_replays_progression():
+	# Build a dict that omits "known_spells" and represents a Lv3 Mage,
+	# simulating a save written before add-magic-system.
+	var d := {
+		"character_name": "Legacy",
+		"race_id": "human",
+		"job_id": "mage",
+		"level": 3,
+		"base_stats": {"STR": 8, "INT": 11, "PIE": 8, "VIT": 8, "AGI": 8, "LUC": 8},
+		"current_hp": 8,
+		"max_hp": 8,
+		"current_mp": 9,
+		"max_mp": 9,
+		"accumulated_exp": 1100,
+	}
+	var restored := Character.from_dict(d)
+	assert_not_null(restored)
+	# Replay should grant lv1 + lv3 mage spells.
+	for sid in [&"fire", &"frost", &"flame", &"blizzard"]:
+		assert_true(restored.known_spells.has(sid), "legacy migration missing %s" % sid)
+	assert_push_warning("known_spells missing")
+
+
+func test_from_dict_drops_unknown_spell_ids():
+	var race := load("res://data/races/human.tres") as RaceData
+	var job := load("res://data/jobs/mage.tres") as JobData
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("Mage", race, job, allocation)
+	var d := ch.to_dict()
+	d["known_spells"] = ["fire", "obsolete_xyz_spell"]
+	var restored := Character.from_dict(d)
+	assert_not_null(restored)
+	assert_true(restored.known_spells.has(&"fire"))
+	assert_false(restored.known_spells.has(&"obsolete_xyz_spell"))
+	assert_push_warning("unknown spell")

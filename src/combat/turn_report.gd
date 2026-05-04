@@ -73,3 +73,44 @@ func add_item_cancelled(actor: CombatActor, item_name: String) -> void:
 		"damage": 0,
 		"defended": false,
 	})
+
+
+func add_cast(
+	caster: CombatActor,
+	spell: SpellData,
+	resolution: SpellResolution,
+	retargeted_from: String = ""
+) -> void:
+	var entries: Array = []
+	if resolution != null:
+		for e in resolution.entries:
+			entries.append({
+				"actor_name": e.get("actor_name", ""),
+				"hp_delta": int(e.get("hp_delta", 0)),
+			})
+	actions.append({
+		"type": "cast",
+		"caster_name": caster.actor_name if caster != null else "",
+		"spell_id": spell.id if spell != null else &"",
+		"spell_display_name": spell.display_name if spell != null else "",
+		"entries": entries,
+		"retargeted_from": retargeted_from,
+	})
+
+
+func add_cast_skipped_no_mp(caster: CombatActor, spell: SpellData) -> void:
+	actions.append({
+		"type": "cast_skipped_no_mp",
+		"caster_name": caster.actor_name if caster != null else "",
+		"spell_id": spell.id if spell != null else &"",
+		"spell_display_name": spell.display_name if spell != null else "",
+	})
+
+
+func add_cast_skipped_no_target(caster: CombatActor, spell: SpellData) -> void:
+	actions.append({
+		"type": "cast_skipped_no_target",
+		"caster_name": caster.actor_name if caster != null else "",
+		"spell_id": spell.id if spell != null else &"",
+		"spell_display_name": spell.display_name if spell != null else "",
+	})

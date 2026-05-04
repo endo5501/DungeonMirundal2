@@ -6,8 +6,10 @@ static func route(event: InputEvent, phase: int, panels: Dictionary) -> bool:
 	match phase:
 		CombatOverlay.Phase.COMMAND_MENU:
 			return _route_to_panel(event, panels.get("command_menu", null))
-		CombatOverlay.Phase.TARGET_SELECT, CombatOverlay.Phase.ITEM_TARGET:
+		CombatOverlay.Phase.TARGET_SELECT, CombatOverlay.Phase.ITEM_TARGET, CombatOverlay.Phase.SPELL_TARGET:
 			return _route_to_panel(event, panels.get("target_selector", null))
+		CombatOverlay.Phase.SPELL_SELECT:
+			return _route_to_panel(event, panels.get("spell_selector", null))
 		CombatOverlay.Phase.RESULT:
 			return _route_to_panel(event, panels.get("result_panel", null))
 		_:

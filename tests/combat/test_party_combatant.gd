@@ -124,3 +124,32 @@ func test_stub_provider_substitution_is_honored():
 	assert_eq(pc.get_attack(), 42)
 	assert_eq(pc.get_defense(), 7)
 	assert_eq(pc.get_agility(), 99)
+
+
+# --- add-magic-system: MP proxies to Character ---
+
+func test_current_mp_reads_character_current_mp():
+	var ch := _make_character("Mage", _mage_job, _default_stats())
+	ch.max_mp = 8
+	ch.current_mp = 5
+	var pc := PartyCombatant.new(ch, DummyEquipmentProvider.new())
+	assert_eq(pc.current_mp, 5)
+	assert_eq(pc.max_mp, 8)
+
+
+func test_spend_mp_writes_back_to_character():
+	var ch := _make_character("Mage", _mage_job, _default_stats())
+	ch.max_mp = 5
+	ch.current_mp = 5
+	var pc := PartyCombatant.new(ch, DummyEquipmentProvider.new())
+	assert_true(pc.spend_mp(2))
+	assert_eq(ch.current_mp, 3)
+
+
+func test_spend_mp_fails_without_writing_when_insufficient():
+	var ch := _make_character("Mage", _mage_job, _default_stats())
+	ch.max_mp = 1
+	ch.current_mp = 1
+	var pc := PartyCombatant.new(ch, DummyEquipmentProvider.new())
+	assert_false(pc.spend_mp(2))
+	assert_eq(ch.current_mp, 1)

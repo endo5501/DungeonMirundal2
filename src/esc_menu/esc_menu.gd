@@ -6,7 +6,7 @@ signal save_requested
 signal load_requested
 signal return_to_town_requested
 
-enum View { MAIN_MENU, PARTY_MENU, STATUS, QUIT_DIALOG, ITEMS_FLOW, EQUIPMENT_FLOW }
+enum View { MAIN_MENU, PARTY_MENU, STATUS, QUIT_DIALOG, ITEMS_FLOW, EQUIPMENT_FLOW, SPELL_FLOW }
 
 const MAIN_MENU_ITEMS: Array[String] = ["パーティ", "ゲームを保存", "ゲームをロード", "設定", "終了"]
 const MAIN_MENU_DISABLED: Array[int] = [3]
@@ -15,11 +15,11 @@ const MAIN_IDX_SAVE := 1
 const MAIN_IDX_LOAD := 2
 const MAIN_IDX_QUIT := 4
 
-const PARTY_MENU_ITEMS: Array[String] = ["ステータス", "アイテム", "装備"]
-const PARTY_MENU_DISABLED: Array[int] = []
+const PARTY_MENU_ITEMS: Array[String] = ["ステータス", "アイテム", "装備", "じゅもん"]
 const PARTY_IDX_STATUS := 0
 const PARTY_IDX_ITEMS := 1
 const PARTY_IDX_EQUIPMENT := 2
+const PARTY_IDX_SPELL := 3
 
 const QUIT_MESSAGE := "タイトルに戻りますか？"
 
@@ -40,11 +40,12 @@ var _party_menu_rows: Array[CursorMenuRow] = []
 
 var _item_use_flow: ItemUseFlow
 var _equipment_flow: EquipmentFlow
+var _spell_use_flow: SpellUseFlow
 
 func _init() -> void:
 	layer = 10
 	_main_menu = CursorMenu.new(MAIN_MENU_ITEMS, MAIN_MENU_DISABLED)
-	_party_menu = CursorMenu.new(PARTY_MENU_ITEMS, PARTY_MENU_DISABLED)
+	_party_menu = CursorMenu.new(PARTY_MENU_ITEMS, _compute_party_menu_disabled())
 
 func _ready() -> void:
 	_build_ui()
@@ -92,6 +93,10 @@ func _build_ui() -> void:
 	_equipment_flow = EquipmentFlow.new()
 	_equipment_flow.flow_completed.connect(_on_equipment_flow_completed)
 	root_vbox.add_child(_equipment_flow)
+
+	_spell_use_flow = SpellUseFlow.new()
+	_spell_use_flow.flow_completed.connect(_on_spell_use_flow_completed)
+	root_vbox.add_child(_spell_use_flow)
 
 	# Overlay-style ConfirmDialog covers the whole CanvasLayer when active.
 	_quit_dialog = ConfirmDialog.new()
@@ -148,7 +153,7 @@ func go_back() -> void:
 
 func handle_input(event: InputEvent) -> bool:
 	# ConfirmDialog and the flow Controls own their own input while visible.
-	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW:
+	if _current_view == View.ITEMS_FLOW or _current_view == View.EQUIPMENT_FLOW or _current_view == View.SPELL_FLOW:
 		return false
 	if _current_view == View.QUIT_DIALOG:
 		return false
@@ -188,12 +193,15 @@ func _switch_view(view: View) -> void:
 	_status_container.visible = (view == View.STATUS)
 	_item_use_flow.visible = (view == View.ITEMS_FLOW)
 	_equipment_flow.visible = (view == View.EQUIPMENT_FLOW)
+	if _spell_use_flow != null:
+		_spell_use_flow.visible = (view == View.SPELL_FLOW)
 	if view != View.QUIT_DIALOG:
 		_quit_dialog.visible = false
 
 	match view:
 		View.PARTY_MENU:
 			_party_menu.selected_index = 0
+			_party_menu.disabled_indices = _compute_party_menu_disabled()
 			_party_menu.update_rows(_party_menu_rows)
 		View.QUIT_DIALOG:
 			_quit_dialog.setup(QUIT_MESSAGE, ConfirmDialog.DEFAULT_NO_INDEX)
@@ -203,6 +211,9 @@ func _switch_view(view: View) -> void:
 			_item_use_flow.setup(make_item_use_context(), _get_inventory(), _get_guild_members())
 		View.EQUIPMENT_FLOW:
 			_equipment_flow.setup(_get_guild_members(), _get_inventory())
+		View.SPELL_FLOW:
+			if _spell_use_flow != null:
+				_spell_use_flow.setup(_get_guild_members())
 		View.MAIN_MENU:
 			_main_menu.update_rows(_main_menu_rows)
 
@@ -238,6 +249,8 @@ func on_save_completed() -> void:
 	hide_menu()
 
 func _handle_party_menu_select() -> void:
+	if _party_menu.disabled_indices.has(_party_menu.selected_index):
+		return
 	match _party_menu.selected_index:
 		PARTY_IDX_STATUS:
 			_switch_view(View.STATUS)
@@ -245,6 +258,8 @@ func _handle_party_menu_select() -> void:
 			_switch_view(View.ITEMS_FLOW)
 		PARTY_IDX_EQUIPMENT:
 			_switch_view(View.EQUIPMENT_FLOW)
+		PARTY_IDX_SPELL:
+			_switch_view(View.SPELL_FLOW)
 
 func _on_quit_confirmed() -> void:
 	quit_to_title.emit()
@@ -265,6 +280,23 @@ func _on_item_use_town_return() -> void:
 
 func _on_equipment_flow_completed() -> void:
 	_switch_view(View.PARTY_MENU)
+
+
+func _on_spell_use_flow_completed(_message: String) -> void:
+	_switch_view(View.PARTY_MENU)
+
+
+func _compute_party_menu_disabled() -> Array[int]:
+	var disabled: Array[int] = []
+	var members := _get_guild_members()
+	var has_magic := false
+	for ch in members:
+		if ch != null and ch.job != null and ch.job.is_magic_capable():
+			has_magic = true
+			break
+	if not has_magic:
+		disabled.append(PARTY_IDX_SPELL)
+	return disabled
 
 
 func _refresh_status_view() -> void:

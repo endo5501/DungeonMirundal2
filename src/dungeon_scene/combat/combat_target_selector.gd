@@ -7,7 +7,7 @@ var _title_label: Label
 var _options_vbox: VBoxContainer
 var _rows: Array[CursorMenuRow] = []
 var _selected_index: int = 0
-var _targets: Array = []  # Array[CombatActor] living
+var _targets: Array = []  # Array[CombatActor] of cursor entries
 
 
 func _ready() -> void:
@@ -30,12 +30,51 @@ func _build_ui() -> void:
 	vbox.add_child(_options_vbox)
 
 
+# Default mode (used by AttackCommand): cursor over each living monster individually.
 func show_with(monsters: Array) -> void:
 	_ensure_ready()
 	_targets.clear()
 	for m in monsters:
 		if m != null and m.is_alive():
 			_targets.append(m)
+	_selected_index = 0
+	visible = true
+	_rebuild_rows()
+	_refresh_rows()
+
+
+# Spell-aware mode: build the cursor list per `spell.target_type`. For
+# `ALLY_ALL`, no prompt is shown — the selector stays hidden and immediately
+# emits a single confirmation; the receiver's CastCommand should pass `null`
+# as `target` and the engine will fan out to all living party members.
+func show_for_spell(spell: SpellData, party: Array, monsters: Array) -> void:
+	_ensure_ready()
+	_targets.clear()
+	match spell.target_type:
+		SpellData.TargetType.ENEMY_ONE:
+			for m in monsters:
+				if m != null and m.is_alive():
+					_targets.append(m)
+		SpellData.TargetType.ENEMY_GROUP:
+			# One representative living monster per species id.
+			var seen: Dictionary = {}
+			for m in monsters:
+				if m == null or not m.is_alive():
+					continue
+				var sid: StringName = m.get_species_id()
+				if seen.has(sid):
+					continue
+				seen[sid] = true
+				_targets.append(m)
+		SpellData.TargetType.ALLY_ONE:
+			for p in party:
+				if p != null and p.is_alive():
+					_targets.append(p)
+		SpellData.TargetType.ALLY_ALL:
+			# No interactive prompt; immediately confirm with a null target.
+			visible = false
+			target_selected.emit(null)
+			return
 	_selected_index = 0
 	visible = true
 	_rebuild_rows()

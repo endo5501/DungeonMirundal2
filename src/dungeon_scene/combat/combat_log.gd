@@ -88,11 +88,36 @@ func _format_action(action: Dictionary) -> String:
 		"item_use":
 			var item_name: String = action.get("item_name", "")
 			var message: String = action.get("message", "")
-			if target.length() > 0:
-				return "%s は %s を使った！ %s" % [attacker, item_name, message]
 			return "%s は %s を使った！ %s" % [attacker, item_name, message]
 		"item_cancelled":
 			var cancelled_item: String = action.get("item_name", "")
 			return "%s は 行動不能で %s を使えなかった" % [attacker, cancelled_item]
+		"cast":
+			return _format_cast_action(action)
+		"cast_skipped_no_mp":
+			var caster_no_mp: String = action.get("caster_name", "")
+			var spell_no_mp: String = action.get("spell_display_name", "")
+			return "%s は %s を唱えようとしたが MP が足りない" % [caster_no_mp, spell_no_mp]
+		"cast_skipped_no_target":
+			var caster_no_t: String = action.get("caster_name", "")
+			var spell_no_t: String = action.get("spell_display_name", "")
+			return "%s の %s は対象がいなくなり不発に終わった" % [caster_no_t, spell_no_t]
 		_:
 			return ""
+
+
+func _format_cast_action(action: Dictionary) -> String:
+	var caster: String = action.get("caster_name", "")
+	var spell: String = action.get("spell_display_name", "")
+	var entries: Array = action.get("entries", [])
+	var retargeted: String = action.get("retargeted_from", "")
+	var prefix: String
+	if retargeted != "":
+		prefix = "%s は %s を唱えた！ (%s が倒れたため再ターゲット)" % [caster, spell, retargeted]
+	else:
+		prefix = "%s は %s を唱えた！" % [caster, spell]
+	if entries.is_empty():
+		return prefix
+	var parts: Array[String] = [prefix]
+	parts.append_array(SpellResolution.format_entries(entries))
+	return "\n".join(parts)

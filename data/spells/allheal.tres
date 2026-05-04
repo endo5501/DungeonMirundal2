@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/heal_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="HealSE_allheal"]
+script = ExtResource("2")
+base_heal = 6
+spread = 2
+
+[resource]
+script = ExtResource("1")
+id = &"allheal"
+display_name = "オールヒール"
+school = &"priest"
+level = 2
+mp_cost = 5
+target_type = 3
+scope = 1
+effect = SubResource("HealSE_allheal")

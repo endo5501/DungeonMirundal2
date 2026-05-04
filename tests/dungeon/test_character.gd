@@ -27,7 +27,8 @@ func before_each():
 	_fighter_job = JobData.new()
 	_fighter_job.job_name = "Fighter"
 	_fighter_job.base_hp = 10
-	_fighter_job.has_magic = false
+	_fighter_job.mage_school = false
+	_fighter_job.priest_school = false
 	_fighter_job.base_mp = 0
 	_fighter_job.required_str = 0
 	_fighter_job.required_int = 0
@@ -39,7 +40,8 @@ func before_each():
 	_mage_job = JobData.new()
 	_mage_job.job_name = "Mage"
 	_mage_job.base_hp = 4
-	_mage_job.has_magic = true
+	_mage_job.mage_school = true
+	_mage_job.priest_school = false
 	_mage_job.base_mp = 5
 	_mage_job.required_str = 0
 	_mage_job.required_int = 11
@@ -177,6 +179,88 @@ func test_from_dict_without_inventory_yields_empty_equipment():
 	var restored := Character.from_dict(d)
 	assert_not_null(restored.equipment)
 	assert_eq(restored.equipment.all_equipped().size(), 0)
+
+
+# --- add-magic-system: known_spells on creation ---
+
+func _human_loaded() -> RaceData:
+	return load("res://data/races/human.tres") as RaceData
+
+
+func _job_loaded(filename: String) -> JobData:
+	return load("res://data/jobs/" + filename + ".tres") as JobData
+
+
+func test_mage_lv1_starts_with_lv1_mage_spells():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	assert_not_null(ch)
+	assert_true(ch.known_spells.has(&"fire"))
+	assert_true(ch.known_spells.has(&"frost"))
+	assert_eq(ch.known_spells.size(), 2)
+
+
+func test_priest_lv1_starts_with_lv1_priest_spells():
+	var allocation := {&"STR": 0, &"INT": 0, &"PIE": 3, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("P", _human_loaded(), _job_loaded("priest"), allocation)
+	assert_not_null(ch)
+	assert_true(ch.known_spells.has(&"heal"))
+	assert_true(ch.known_spells.has(&"holy"))
+	assert_eq(ch.known_spells.size(), 2)
+
+
+func test_bishop_lv1_starts_with_no_spells_until_lv2():
+	# Bishop needs INT>=12 and PIE>=12 → 4+4 bonus on Human (8 base each).
+	var allocation := {&"STR": 0, &"INT": 4, &"PIE": 4, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
+	assert_not_null(ch)
+	assert_eq(ch.known_spells.size(), 0)
+
+
+func test_fighter_has_empty_known_spells():
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("F", _human_loaded(), _job_loaded("fighter"), allocation)
+	assert_eq(ch.known_spells.size(), 0)
+
+
+func test_mage_level_up_to_lv3_grants_lv2_spells():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	# Single-level cascade: gain enough to push from 1 to 3.
+	var t3: int = ch.job.exp_to_reach_level(3)
+	ch.gain_experience(t3)
+	assert_gte(ch.level, 3)
+	assert_true(ch.known_spells.has(&"fire"))
+	assert_true(ch.known_spells.has(&"frost"))
+	assert_true(ch.known_spells.has(&"flame"))
+	assert_true(ch.known_spells.has(&"blizzard"))
+
+
+func test_bishop_level_up_to_lv2_grants_lv1_set():
+	var allocation := {&"STR": 0, &"INT": 4, &"PIE": 4, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
+	ch.gain_experience(ch.job.exp_to_reach_level(2))
+	assert_gte(ch.level, 2)
+	for sid in [&"fire", &"frost", &"heal", &"holy"]:
+		assert_true(ch.known_spells.has(sid), "Bishop lv2 should learn %s" % sid)
+
+
+func test_level_up_does_not_duplicate_already_known_spells():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	# Pre-populate with a duplicate to simulate a save-game replay edge case.
+	ch.known_spells.append(&"fire")
+	ch._grant_spells_for_level(1)
+	# Despite adding a duplicate before granting, &"fire" should appear only once
+	# from the grant call (the manually-appended duplicate is what we tolerate;
+	# we mainly assert grant-side dedup).
+	var fire_count := 0
+	for sid in ch.known_spells:
+		if sid == &"fire":
+			fire_count += 1
+	# Allow at most the one we manually appended + the original from create() = 2,
+	# but grant should NOT add a third.
+	assert_lte(fire_count, 2, "level grant must not add a duplicate of an existing spell")
 
 
 # --- tighten-types-and-contracts: to_dict uses RaceData.id / JobData.id ---

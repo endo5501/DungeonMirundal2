@@ -106,6 +106,20 @@ func _make_guild_with_party() -> Guild:
 	return g
 
 
+func _make_guild_solo(job_name: String, char_name: String = "Caster") -> Guild:
+	var g := Guild.new()
+	var c := _make_character(char_name, job_name)
+	g.register(c)
+	g.assign_to_party(c, 0, 0)
+	return g
+
+
+func _set_initial_mp(g: Guild, current_mp: int, max_mp: int = -1) -> void:
+	for ch in g.get_all_characters():
+		ch.max_mp = max_mp if max_mp > 0 else current_mp
+		ch.current_mp = current_mp
+
+
 # --- structural ---
 
 func test_combat_overlay_is_encounter_overlay():
@@ -274,6 +288,88 @@ func test_command_menu_has_four_options():
 	assert_true("ぼうぎょ" in options)
 	assert_true("アイテム" in options)
 	assert_true("にげる" in options)
+
+
+# --- add-magic-system: command menu omits/inserts magic entries by job ---
+
+func test_command_menu_for_fighter_omits_magic_entries():
+	# Default _guild has Fighter at index 0, so this also covers the no-magic case.
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var options := overlay.get_command_menu_options()
+	assert_false("魔術" in options, "fighter menu should not include 魔術")
+	assert_false("祈り" in options, "fighter menu should not include 祈り")
+
+
+func test_command_menu_for_mage_includes_only_magic():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_make_guild_solo("Mage"), _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var options := overlay.get_command_menu_options()
+	assert_true("魔術" in options, "mage menu should include 魔術: %s" % str(options))
+	assert_false("祈り" in options, "mage menu should not include 祈り")
+	assert_eq(options.size(), 5)
+
+
+func test_command_menu_for_priest_includes_only_priest():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_make_guild_solo("Priest"), _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var options := overlay.get_command_menu_options()
+	assert_false("魔術" in options, "priest menu should not include 魔術")
+	assert_true("祈り" in options, "priest menu should include 祈り")
+	assert_eq(options.size(), 5)
+
+
+func test_command_menu_for_bishop_includes_both_schools():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_make_guild_solo("Bishop"), _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var options := overlay.get_command_menu_options()
+	assert_true("魔術" in options, "bishop menu should include 魔術")
+	assert_true("祈り" in options, "bishop menu should include 祈り")
+	# Order: 攻撃, 防御, 魔術, 祈り, アイテム, 逃げる
+	assert_eq(options[0], "こうげき")
+	assert_eq(options[1], "ぼうぎょ")
+	assert_eq(options[2], "魔術")
+	assert_eq(options[3], "祈り")
+	assert_eq(options[4], "アイテム")
+	assert_eq(options[5], "にげる")
+
+
+# --- add-magic-system: spell-cast smoke ---
+
+func test_mage_cast_fire_damages_slime():
+	var g := _make_guild_solo("Mage")
+	# Pre-populate the lone Mage's known_spells and MP so the cast can resolve.
+	for ch in g.get_all_characters():
+		ch.known_spells = [&"fire"] as Array[StringName]
+		ch.max_mp = 10
+		ch.current_mp = 10
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(g, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	var slime: CombatActor = overlay.get_turn_engine().monsters[0]
+	var slime_hp_before := slime.current_hp
+
+	# Drive: 魔術 → ファイア → スライム
+	overlay.command_menu_select(CombatCommandMenu.OPT_CAST_MAGE)
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_SELECT)
+	overlay.get_spell_selector().confirm_current()
+	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_TARGET)
+	overlay.target_select(0)
+
+	# After resolution the mage's MP is consumed and the slime took damage.
+	# (Slime may have died, but it must have lost HP regardless.)
+	assert_lt(slime.current_hp, slime_hp_before, "slime should have taken cast damage")
+	for ch in g.get_all_characters():
+		assert_lt(ch.current_mp, 10, "mage MP should be consumed by the cast")
 
 
 func test_attack_selection_advances_to_target_select_phase():

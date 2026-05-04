@@ -16,7 +16,8 @@ func test_guild_party_data_is_compatible_with_party_display():
 	var fighter := JobData.new()
 	fighter.job_name = "Fighter"
 	fighter.base_hp = 10
-	fighter.has_magic = false
+	fighter.mage_school = false
+	fighter.priest_school = false
 	fighter.base_mp = 0
 	fighter.required_str = 0
 	fighter.required_int = 0

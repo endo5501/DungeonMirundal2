@@ -94,3 +94,27 @@ func test_is_alive_becomes_false_when_hp_depleted():
 	var mc := MonsterCombatant.new(m)
 	mc.take_damage(100)
 	assert_false(mc.is_alive())
+
+
+# --- add-magic-system: MP is always zero in v1 ---
+
+func test_monster_combatant_has_zero_mp_fields():
+	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_eq(mc.current_mp, 0)
+	assert_eq(mc.max_mp, 0)
+
+
+func test_monster_spend_mp_rejects_positive_amount():
+	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_false(mc.spend_mp(1))
+
+
+func test_monster_spend_mp_zero_returns_true():
+	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_true(mc.spend_mp(0))

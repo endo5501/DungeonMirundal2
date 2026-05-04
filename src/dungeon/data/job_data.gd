@@ -4,17 +4,24 @@ extends Resource
 @export var id: StringName
 @export var job_name: String
 @export var base_hp: int
-@export var has_magic: bool
+@export var mage_school: bool
+@export var priest_school: bool
 @export var base_mp: int
 @export var hp_per_level: int
 @export var mp_per_level: int
 @export var exp_table: PackedInt64Array
+# spell_progression: { level (int) : Array[StringName] of spell ids }
+# Empty for jobs without magic capability.
+@export var spell_progression: Dictionary
 @export var required_str: int
 @export var required_int: int
 @export var required_pie: int
 @export var required_vit: int
 @export var required_agi: int
 @export var required_luc: int
+
+func is_magic_capable() -> bool:
+	return mage_school or priest_school
 
 func can_qualify(stats: Dictionary) -> bool:
 	return (

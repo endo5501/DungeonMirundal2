@@ -99,14 +99,14 @@ func test_quit_dialog_cancel_returns_to_main():
 
 # --- 7. Party menu ---
 
-func test_party_menu_has_three_items():
+func test_party_menu_has_four_items():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
-	assert_eq(menu.get_party_menu().size(), 3)
+	assert_eq(menu.get_party_menu().size(), 4)
 
-func test_party_menu_all_enabled():
+func test_party_menu_status_items_equipment_enabled():
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
@@ -115,6 +115,92 @@ func test_party_menu_all_enabled():
 	assert_false(party.is_disabled(0), "ステータス should be enabled")
 	assert_false(party.is_disabled(1), "アイテム should be enabled")
 	assert_false(party.is_disabled(2), "装備 should be enabled")
+
+func test_party_menu_spell_disabled_when_no_magic_class_in_party():
+	# Empty guild → no magic-capable character → じゅもん disabled.
+	GameState.new_game()
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	var party := menu.get_party_menu()
+	assert_true(party.is_disabled(3), "じゅもん should be disabled with no magic char")
+
+func test_party_menu_spell_enabled_when_mage_in_party():
+	GameState.new_game()
+	# Register a Mage so the magic-class check passes.
+	var human := load("res://data/races/human.tres") as RaceData
+	var mage_job := load("res://data/jobs/mage.tres") as JobData
+	var ch := Character.new()
+	ch.character_name = "Mage"
+	ch.race = human
+	ch.job = mage_job
+	ch.level = 1
+	ch.base_stats = {&"STR": 8, &"INT": 11, &"PIE": 8, &"VIT": 8, &"AGI": 8, &"LUC": 8}
+	ch.max_hp = 6
+	ch.current_hp = 6
+	ch.max_mp = 5
+	ch.current_mp = 5
+	GameState.guild.register(ch)
+	GameState.guild.assign_to_party(ch, 0, 0)
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	var party := menu.get_party_menu()
+	assert_false(party.is_disabled(3), "じゅもん should be enabled with mage in party")
+
+func test_select_spell_switches_to_spell_flow_view():
+	GameState.new_game()
+	var human := load("res://data/races/human.tres") as RaceData
+	var mage_job := load("res://data/jobs/mage.tres") as JobData
+	var ch := Character.new()
+	ch.character_name = "Mage"
+	ch.race = human
+	ch.job = mage_job
+	ch.level = 1
+	ch.base_stats = {&"STR": 8, &"INT": 11, &"PIE": 8, &"VIT": 8, &"AGI": 8, &"LUC": 8}
+	ch.max_hp = 6
+	ch.current_hp = 6
+	ch.max_mp = 5
+	ch.current_mp = 5
+	ch.known_spells = [&"heal"] as Array[StringName]
+	GameState.guild.register(ch)
+	GameState.guild.assign_to_party(ch, 0, 0)
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_SPELL
+	menu.select_current_item()
+	assert_eq(menu.get_current_view(), EscMenu.View.SPELL_FLOW)
+
+
+func test_spell_use_flow_completed_returns_to_party_menu():
+	GameState.new_game()
+	var human := load("res://data/races/human.tres") as RaceData
+	var mage_job := load("res://data/jobs/mage.tres") as JobData
+	var ch := Character.new()
+	ch.character_name = "Mage"
+	ch.race = human
+	ch.job = mage_job
+	ch.level = 1
+	ch.base_stats = {&"STR": 8, &"INT": 11, &"PIE": 8, &"VIT": 8, &"AGI": 8, &"LUC": 8}
+	ch.max_hp = 6
+	ch.current_hp = 6
+	ch.max_mp = 5
+	ch.current_mp = 5
+	GameState.guild.register(ch)
+	GameState.guild.assign_to_party(ch, 0, 0)
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	menu.get_party_menu().selected_index = EscMenu.PARTY_IDX_SPELL
+	menu.select_current_item()  # → SPELL_FLOW
+	menu._spell_use_flow.flow_completed.emit("")
+	assert_eq(menu.get_current_view(), EscMenu.View.PARTY_MENU)
+	assert_false(menu._spell_use_flow.visible)
 
 # --- 8. Navigation: ESC to go back ---
 

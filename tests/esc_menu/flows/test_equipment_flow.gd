@@ -29,7 +29,8 @@ func _fighter() -> JobData:
 	var j := JobData.new()
 	j.job_name = "Fighter"
 	j.base_hp = 10
-	j.has_magic = false
+	j.mage_school = false
+	j.priest_school = false
 	j.base_mp = 0
 	j.required_str = 0
 	j.required_int = 0

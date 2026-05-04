@@ -20,7 +20,7 @@ func build(content: VBoxContainer, context) -> void:
 	_qualified = context.get_qualified_jobs()
 	for i in range(jobs.size()):
 		var job := jobs[i]
-		var suffix := "  HP:%d  MP:%d" % [job.base_hp, job.base_mp] if job.has_magic else "  HP:%d" % job.base_hp
+		var suffix := "  HP:%d  MP:%d" % [job.base_hp, job.base_mp] if job.is_magic_capable() else "  HP:%d" % job.base_hp
 		var text := job.job_name + suffix
 		if not _qualified.get(i, false):
 			text += "  (条件未達)"

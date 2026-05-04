@@ -19,7 +19,8 @@ func before_each():
 	_fighter_job = JobData.new()
 	_fighter_job.job_name = "Fighter"
 	_fighter_job.base_hp = 10
-	_fighter_job.has_magic = false
+	_fighter_job.mage_school = false
+	_fighter_job.priest_school = false
 	_fighter_job.base_mp = 0
 	_fighter_job.required_str = 0
 	_fighter_job.required_int = 0
@@ -31,7 +32,8 @@ func before_each():
 	_mage_job = JobData.new()
 	_mage_job.job_name = "Mage"
 	_mage_job.base_hp = 6
-	_mage_job.has_magic = true
+	_mage_job.mage_school = true
+	_mage_job.priest_school = false
 	_mage_job.base_mp = 5
 	_mage_job.required_str = 0
 	_mage_job.required_int = 10
