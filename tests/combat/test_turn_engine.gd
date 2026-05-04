@@ -520,3 +520,102 @@ func test_escape_failure_forfeits_party_attacks_but_monsters_act():
 	assert_lt(party[0].current_hp, p_hp_before)
 	# State back to COMMAND_INPUT (not FINISHED)
 	assert_eq(engine.state, TurnEngine.State.COMMAND_INPUT)
+
+
+# --- add-stat-modifier-and-hit-evasion: hit/miss path ---
+
+func test_attack_miss_records_miss_action_and_leaves_target_unharmed():
+	# Force a miss using a calibrated RNG; target HP should not change and the
+	# report should contain a single "miss" entry for the attacker. Two extra
+	# consumes account for TurnOrder's randi_range tiebreak per actor.
+	var engine := TurnEngine.new()
+	var attacker := _StubPartyActor.new("P1", 10, 0, 10, 30)
+	var target := _StubMonsterActor.new("M1", 0, 0, 1, 12)
+	engine.start_battle([attacker], [target])
+	engine.submit_command(0, AttackCommand.new(target))
+	var report := engine.resolve_turn(CombatTestRng.make_certain_miss_rng(2))
+	assert_eq(target.current_hp, 12)
+	var miss_count := 0
+	var attack_count := 0
+	for a in report.actions:
+		if a.get("type", "") == "miss" and a.get("attacker_name", "") == "P1":
+			miss_count += 1
+		if a.get("type", "") == "attack" and a.get("attacker_name", "") == "P1":
+			attack_count += 1
+	assert_eq(miss_count, 1)
+	assert_eq(attack_count, 0)
+
+
+func test_attack_hit_records_attack_action():
+	# Force a hit. The attack entry should be present with a positive damage.
+	var engine := TurnEngine.new()
+	var attacker := _StubPartyActor.new("P1", 10, 0, 10, 30)
+	var target := _StubMonsterActor.new("M1", 0, 4, 1, 50)
+	engine.start_battle([attacker], [target])
+	engine.submit_command(0, AttackCommand.new(target))
+	var report := engine.resolve_turn(CombatTestRng.make_certain_hit_rng(2))
+	assert_lt(target.current_hp, 50)
+	var attack_count := 0
+	for a in report.actions:
+		if a.get("type", "") == "attack" and a.get("attacker_name", "") == "P1":
+			attack_count += 1
+			assert_gt(int(a.get("damage", 0)), 0)
+	assert_eq(attack_count, 1)
+
+
+func test_attack_damage_logged_matches_actual_hp_loss_when_defending():
+	# Defending halves incoming damage; the attack action's damage field must
+	# reflect the actual HP loss (halved), not the raw damage roll, so the
+	# combat log doesn't lie to the player.
+	var engine := TurnEngine.new()
+	var defender := _StubPartyActor.new("P1", 0, 0, 1, 100)
+	var monster := _StubMonsterActor.new("M1", 10, 0, 10, 20)
+	engine.start_battle([defender], [monster])
+	engine.submit_command(0, DefendCommand.new())
+	var hp_before := defender.current_hp
+	var report := engine.resolve_turn(CombatTestRng.make_certain_hit_rng(2))
+	var hp_loss := hp_before - defender.current_hp
+	assert_gt(hp_loss, 0)
+	var attack_logged := -1
+	for a in report.actions:
+		if a.get("type", "") == "attack" and a.get("attacker_name", "") == "M1":
+			attack_logged = int(a.get("damage", 0))
+			assert_true(bool(a.get("defended", false)), "attack should be marked defended")
+			break
+	assert_eq(attack_logged, hp_loss, "logged damage %d should match actual HP loss %d" % [attack_logged, hp_loss])
+
+
+# --- add-stat-modifier-and-hit-evasion: end-of-turn modifier tick ---
+
+func test_modifier_stack_ticks_at_end_of_turn():
+	# A modifier with duration 2 should still hold after one resolved turn and
+	# disappear after two.
+	var engine := TurnEngine.new()
+	var attacker := _StubPartyActor.new("P1", 10, 0, 10, 30)
+	var target := _StubMonsterActor.new("M1", 0, 0, 1, 999)
+	engine.start_battle([attacker], [target])
+	attacker.modifier_stack.add(&"attack", 2, 2)
+	engine.submit_command(0, DefendCommand.new())
+	engine.resolve_turn(CombatTestRng.make_certain_hit_rng(2))
+	assert_eq(int(attacker.modifier_stack.sum(&"attack")), 2)
+	engine.submit_command(0, DefendCommand.new())
+	engine.resolve_turn(CombatTestRng.make_certain_hit_rng(2))
+	assert_eq(int(attacker.modifier_stack.sum(&"attack")), 0)
+
+
+func test_modifier_tick_runs_for_dead_party_and_monsters_too():
+	# Even dead actors should have tick_battle_turn called so their entries decay.
+	# 3 actors → 3 randi_range tiebreaks before the first hit roll, but only
+	# 2 of them are alive so TurnOrder skips dead actors entirely. Use 2.
+	var engine := TurnEngine.new()
+	var p_alive := _StubPartyActor.new("P1", 5, 0, 5, 30)
+	var p_dead := _StubPartyActor.new("P2", 5, 0, 5, 1)
+	p_dead.take_damage(10)
+	var monster := _StubMonsterActor.new("M1", 0, 0, 1, 999)
+	engine.start_battle([p_alive, p_dead], [monster])
+	p_dead.modifier_stack.add(&"defense", 3, 1)
+	monster.modifier_stack.add(&"agility", 1, 1)
+	engine.submit_command(0, DefendCommand.new())
+	engine.resolve_turn(CombatTestRng.make_certain_hit_rng(2))
+	assert_eq(int(p_dead.modifier_stack.sum(&"defense")), 0)
+	assert_eq(int(monster.modifier_stack.sum(&"agility")), 0)

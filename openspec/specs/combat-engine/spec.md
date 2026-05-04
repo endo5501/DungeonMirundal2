@@ -44,19 +44,23 @@ The system SHALL order all living combatants (party and monsters) by `get_agilit
 - **THEN** both runs SHALL produce the same ordering
 
 ### Requirement: Attack command resolves damage via DamageCalculator
-The system SHALL provide an `Attack` command that targets exactly one opposing `CombatActor`, and SHALL compute damage through a `DamageCalculator` that uses attacker and target stats plus an RNG for spread.
+The system SHALL provide an `Attack` command that targets exactly one opposing `CombatActor`, and SHALL compute damage through a `DamageCalculator` that uses attacker and target stats plus an RNG for both a hit roll and a damage spread. When the hit roll fails, no damage SHALL be applied and a miss action entry SHALL be appended to the TurnReport.
 
-#### Scenario: Basic damage formula
-- **WHEN** damage is calculated for attacker with `get_attack() = 10`, target with `get_defense() = 4`, and RNG producing a spread of `+1`
-- **THEN** the damage SHALL equal `max(1, 10 - 4 / 2 + 1) == 9`
+#### Scenario: Basic damage formula on a hit
+- **WHEN** damage is calculated for attacker with `get_attack() = 10`, target with `get_defense() = 4`, RNG yielding a successful hit roll, and the spread roll producing `+1`
+- **THEN** the returned `DamageResult` SHALL satisfy `hit == true` and `amount == max(1, 10 - 4 / 2 + 1) == 9`, and the target SHALL take that damage via `take_damage`
 
-#### Scenario: Minimum damage floor
-- **WHEN** the computed damage would be `0` or negative (e.g., attack well below defense)
+#### Scenario: Minimum damage floor on a hit
+- **WHEN** the computed damage on a hit would be `0` or negative (e.g., attack well below defense)
 - **THEN** the applied damage SHALL be exactly `1`
+
+#### Scenario: Miss does not apply damage and records a miss action
+- **WHEN** the hit roll fails
+- **THEN** `take_damage` SHALL NOT be called on the target and the TurnReport SHALL contain a single action entry with `type == "miss"`, attacker name, and target name
 
 #### Scenario: Attack on a dead target is skipped
 - **WHEN** the selected target has `is_alive() == false` at the time the attacker acts
-- **THEN** the attack SHALL either be retargeted to another living enemy of the same side, or SHALL be skipped if no living target remains; in neither case SHALL damage be dealt to a dead target
+- **THEN** the attack SHALL either be retargeted to another living enemy of the same side, or SHALL be skipped if no living target remains; in neither case SHALL damage be dealt to a dead target and the hit roll SHALL only happen on a valid (living) target
 
 ### Requirement: Defend command halves incoming damage for that turn
 The system SHALL provide a `Defend` command that, when submitted by a PartyCombatant, causes the combatant to be in the defending posture throughout the entire resolution of the current turn.
@@ -168,4 +172,30 @@ The system SHALL append cast actions to the TurnReport using a structure contain
 #### Scenario: Cast skip is rendered with explanation
 - **WHEN** `cast_skipped_no_mp` is recorded for caster "Alice" attempting "ファイア"
 - **THEN** the TurnReport entry SHALL have `type == "cast_skipped_no_mp"`, `caster_name == "Alice"`, `spell_display_name == "ファイア"`
+
+### Requirement: TurnReport records miss action entries
+
+The system SHALL provide `TurnReport.add_miss(attacker, target)` and SHALL append an action entry of the form `{ type: "miss", attacker_name: String, target_name: String }`. Existing `add_attack` entries SHALL keep their current shape and SHALL only be created when an attack hits.
+
+#### Scenario: add_miss produces the documented entry
+- **WHEN** `report.add_miss(attacker, target)` is called with `attacker.actor_name = "Alice"` and `target.actor_name = "Slime A"`
+- **THEN** the appended action SHALL have `type == "miss"`, `attacker_name == "Alice"`, and `target_name == "Slime A"`
+
+#### Scenario: add_attack is unchanged for hits
+- **WHEN** an attack lands and the engine calls `report.add_attack(attacker, target, damage, defended, retargeted_from)`
+- **THEN** the appended action SHALL keep its existing shape (`type == "attack"`, plus damage/defended/retargeted_from fields)
+
+### Requirement: TurnEngine ticks modifier stacks at end-of-turn cleanup
+
+The system SHALL invoke `modifier_stack.tick_battle_turn()` for every party member and every monster as part of `_end_turn_cleanup()`, so that battle-only stat modifiers decay one turn per resolved turn. The system SHALL NOT clear battle-only modifiers at the end of an individual turn — only `clear_battle_only()` (called at battle end by a later change) does that.
+
+#### Scenario: A 2-turn modifier survives one turn end and expires after the second
+- **WHEN** an actor has `modifier_stack.add(&"attack", +2, 2)` set before turn N, and turn N completes
+- **THEN** at the start of turn N+1 the actor's `modifier_stack.sum(&"attack")` SHALL still be `+2`
+- **WHEN** turn N+1 also completes
+- **THEN** at the start of turn N+2 the actor's `modifier_stack.sum(&"attack")` SHALL be `0`
+
+#### Scenario: Tick is invoked for every actor including dead ones
+- **WHEN** `_end_turn_cleanup()` runs at the end of a turn where one party member died
+- **THEN** every party member (alive or dead) and every monster SHALL have `tick_battle_turn()` called once
 

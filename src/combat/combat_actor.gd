@@ -1,7 +1,11 @@
 class_name CombatActor
 extends RefCounted
 
+const MOD_CAP: float = 0.40
+
 var actor_name: String = ""
+
+var modifier_stack: StatModifierStack = StatModifierStack.new()
 
 var _defending: bool = false
 
@@ -50,16 +54,44 @@ func _read_max_mp() -> int:
 	return 0
 
 
-func get_attack() -> int:
+# Base stat virtuals: subclasses override these to expose the un-modified value
+# (e.g. EquipmentProvider for party, MonsterData for monsters). Public
+# get_attack/defense/agility add the modifier_stack on top.
+func _get_base_attack() -> int:
 	return 0
+
+
+func _get_base_defense() -> int:
+	return 0
+
+
+func _get_base_agility() -> int:
+	return 0
+
+
+func get_attack() -> int:
+	return _get_base_attack() + int(modifier_stack.sum(&"attack"))
 
 
 func get_defense() -> int:
-	return 0
+	return _get_base_defense() + int(modifier_stack.sum(&"defense"))
 
 
 func get_agility() -> int:
-	return 0
+	return _get_base_agility() + int(modifier_stack.sum(&"agility"))
+
+
+func get_hit_modifier_total() -> float:
+	return clampf(float(modifier_stack.sum(&"hit")), -MOD_CAP, MOD_CAP)
+
+
+func get_evasion_modifier_total() -> float:
+	return clampf(float(modifier_stack.sum(&"evasion")), -MOD_CAP, MOD_CAP)
+
+
+# Overridden by status-effect mixins; default false.
+func has_blind_flag() -> bool:
+	return false
 
 
 func is_alive() -> bool:
@@ -73,14 +105,16 @@ func get_species_id() -> StringName:
 	return &""
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int) -> int:
 	var actual := amount
 	if actual < 0:
 		actual = 0
 	if _defending and actual > 0:
 		actual = maxi(actual / 2, 1)
-	var new_hp := maxi(current_hp - actual, 0)
+	var hp_before := current_hp
+	var new_hp := maxi(hp_before - actual, 0)
 	_write_current_hp(new_hp)
+	return hp_before - new_hp
 
 
 # Deduct `amount` MP from this actor. Returns true if the deduction succeeded

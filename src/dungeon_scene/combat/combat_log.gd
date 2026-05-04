@@ -76,6 +76,8 @@ func _format_action(action: Dictionary) -> String:
 			if defended:
 				return "%s の攻撃！ %s は身を守り %d ダメージ" % [attacker, target, damage]
 			return "%s の攻撃！ %s に %d ダメージ" % [attacker, target, damage]
+		"miss":
+			return "%s の攻撃！ しかし %s は身をかわした" % [attacker, target]
 		"defend":
 			return "%s は身を守っている" % attacker
 		"escape":

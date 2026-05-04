@@ -83,13 +83,17 @@ final = clamp(hit_chance, 0.05, 0.99)
 class_name StatModifierStack
 extends RefCounted
 
-# entries: [{stat: StringName, delta: Variant, duration: int, scope: int (BATTLE_ONLY=0)}]
+# entries: [{stat: StringName, delta: Variant, duration: int}]
+# Every modifier added in this change is battle-only. A scope tag is
+# intentionally omitted until a second scope (e.g. expedition-wide) is
+# actually introduced by a later change; reintroducing it is a one-line
+# addition and `clear_battle_only` keeps its name as the future hook.
 var _entries: Array = []
 
 func add(stat: StringName, delta, duration: int) -> void:
     var existing := _find(stat)
     if existing == null:
-        _entries.append({stat=stat, delta=delta, duration=duration, scope=0})
+        _entries.append({stat=stat, delta=delta, duration=duration})
         return
     if abs_value(delta) > abs_value(existing.delta):
         existing.delta = delta
@@ -124,14 +128,16 @@ func sum(stat: StringName) -> Variant:
 **tick**:
 ```gdscript
 func tick_battle_turn() -> void:
-    for e in _entries.duplicate():
-        if e.scope == 0:  # BATTLE_ONLY
-            e.duration -= 1
-            if e.duration <= 0:
-                _entries.erase(e)
+    var keep: Array = []
+    for e in _entries:
+        e.duration -= 1
+        if e.duration <= 0:
+            continue
+        keep.append(e)
+    _entries = keep
 ```
 
-**clear_battle_only**: 戦闘終了時に scope==BATTLE_ONLY を全削除。
+**clear_battle_only**: 戦闘終了時に全エントリを削除（本 change では全エントリが battle-only スコープのため `_entries.clear()` と等価）。後続 change が non-battle スコープを足したときにここで scope フィルタを再導入する。
 
 `_end_turn_cleanup` での扱い: ターン進行 (`tick_battle_turn`) はターン終端で 1 だけ進める。`clear_battle_only` は **本 change では呼ばれない**（戦闘終了 hook が後続 change の話のため）。
 
