@@ -23,9 +23,10 @@ const OPTION_LABELS: Dictionary = {
 
 signal command_selected(option_id: int)
 
+const SILENCED_SUFFIX := " (沈黙中)"
+
 var _rows: Array[CursorMenuRow] = []
 var _option_ids: Array[int] = []
-var _disabled_indices: Array[int] = []
 var _title_label: Label
 var _options_vbox: VBoxContainer
 var _selected_index: int = 0
@@ -54,7 +55,6 @@ func _build_ui() -> void:
 func show_for(actor: CombatActor) -> void:
 	_current_actor = actor
 	_option_ids = _build_option_ids_for(actor)
-	_disabled_indices = _build_disabled_indices_for(actor, _option_ids)
 	_selected_index = 0
 	visible = true
 	_ensure_ready()
@@ -93,12 +93,18 @@ func confirm_current() -> void:
 	if _option_ids.is_empty():
 		return
 	if is_row_disabled(_selected_index):
-		return  # silenced Cast row etc. — swallow Enter
+		return
 	command_selected.emit(_option_ids[_selected_index])
 
 
 func is_row_disabled(index: int) -> bool:
-	return index in _disabled_indices
+	if index < 0 or index >= _option_ids.size() or _current_actor == null:
+		return false
+	return _is_cast_option(_option_ids[index]) and _current_actor.has_silence_flag()
+
+
+static func _is_cast_option(option_id: int) -> bool:
+	return option_id == OPT_CAST_MAGE or option_id == OPT_CAST_PRIEST
 
 
 func get_options() -> Array[String]:
@@ -106,8 +112,8 @@ func get_options() -> Array[String]:
 	for i in range(_option_ids.size()):
 		var id := _option_ids[i]
 		var base := String(OPTION_LABELS.get(id, ""))
-		if i in _disabled_indices and (id == OPT_CAST_MAGE or id == OPT_CAST_PRIEST):
-			labels.append("%s (沈黙中)" % base)
+		if is_row_disabled(i) and _is_cast_option(id):
+			labels.append(base + SILENCED_SUFFIX)
 		else:
 			labels.append(base)
 	return labels
@@ -141,19 +147,6 @@ func _build_option_ids_for(actor: CombatActor) -> Array[int]:
 	ids.append(OPT_ITEM)
 	ids.append(OPT_ESCAPE)
 	return ids
-
-
-func _build_disabled_indices_for(actor: CombatActor, ids: Array[int]) -> Array[int]:
-	var disabled: Array[int] = []
-	if actor == null:
-		return disabled
-	# Silence currently disables both Cast rows. action-locking statuses are
-	# handled at engine resolution time, not here.
-	if actor.has_silence_flag():
-		for i in range(ids.size()):
-			if ids[i] == OPT_CAST_MAGE or ids[i] == OPT_CAST_PRIEST:
-				disabled.append(i)
-	return disabled
 
 
 func _ensure_ready() -> void:

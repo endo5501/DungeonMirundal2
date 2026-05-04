@@ -5,27 +5,19 @@ const MAX_LINES: int = 4
 
 var _lines: Array[String] = []
 var _label: Label
-# Lazy: CombatLog is created in dungeon scene tests too, where we don't want to
-# touch disk until the first status-bearing entry actually arrives. _status_repo
-# stays null until _resolve_status_display() needs it. Tests can pre-set it via
-# set_status_repo_for_testing() to avoid disk access entirely.
-var _status_repo: StatusRepository = null
-var _status_repo_loaded: bool = false
+var _status_repo_override: StatusRepository = null
 
 
 func set_status_repo_for_testing(repo: StatusRepository) -> void:
-	_status_repo = repo
-	_status_repo_loaded = true
+	_status_repo_override = repo
 
 
 func _resolve_status_display(status_id) -> String:
 	if status_id == null:
 		return ""
-	if not _status_repo_loaded:
-		_status_repo = DataLoader.new().load_status_repository()
-		_status_repo_loaded = true
-	if _status_repo != null:
-		var data: StatusData = _status_repo.find(status_id)
+	var repo := StatusRepoLocator.resolve(_status_repo_override)
+	if repo != null:
+		var data: StatusData = repo.find(status_id)
 		if data != null and data.display_name != "":
 			return data.display_name
 	return String(status_id)
@@ -137,17 +129,11 @@ func _format_action(action: Dictionary) -> String:
 			var actor_w: String = action.get("actor_name", "")
 			return "%s は目を覚ました" % actor_w
 		"inflict":
-			var target_i: String = action.get("target_name", "")
-			var sd_i := _resolve_status_display(action.get("status_id"))
-			return "%s は %s になった" % [target_i, sd_i]
+			return _format_status_line(action, "target_name", "%s は %s になった")
 		"cure":
-			var actor_c: String = action.get("actor_name", "")
-			var sd_c := _resolve_status_display(action.get("status_id"))
-			return "%s の %s が治った" % [actor_c, sd_c]
+			return _format_status_line(action, "actor_name", "%s の %s が治った")
 		"resist":
-			var target_r: String = action.get("target_name", "")
-			var sd_r := _resolve_status_display(action.get("status_id"))
-			return "%s は %s に抵抗した" % [target_r, sd_r]
+			return _format_status_line(action, "target_name", "%s は %s に抵抗した")
 		"action_locked":
 			var actor_l: String = action.get("actor_name", "")
 			return "%s は行動できない" % actor_l
@@ -162,6 +148,12 @@ func _format_action(action: Dictionary) -> String:
 			return "%s の %s が %s%d 変化した" % [target_m, String(stat_m), sign_m, abs(int(delta_m))]
 		_:
 			return ""
+
+
+func _format_status_line(action: Dictionary, name_key: String, template: String) -> String:
+	var name: String = action.get(name_key, "")
+	var sd := _resolve_status_display(action.get("status_id"))
+	return template % [name, sd]
 
 
 func _format_cast_action(action: Dictionary) -> String:
