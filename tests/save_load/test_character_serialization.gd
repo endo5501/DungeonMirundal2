@@ -175,3 +175,56 @@ func test_from_dict_drops_unknown_spell_ids():
 	assert_true(restored.known_spells.has(&"fire"))
 	assert_false(restored.known_spells.has(&"obsolete_xyz_spell"))
 	assert_push_warning("unknown spell")
+
+
+# --- add-status-effect-infrastructure: persistent_statuses round-trip ---
+
+func test_to_dict_includes_persistent_statuses_as_string_array():
+	var ch := _make_character()
+	ch.persistent_statuses = [&"poison"]
+	var d := ch.to_dict()
+	assert_true(d.has("persistent_statuses"))
+	var s: Array = d["persistent_statuses"]
+	assert_eq(s.size(), 1)
+	assert_eq(s[0], "poison")
+	assert_typeof(s[0], TYPE_STRING)
+
+
+func test_to_dict_includes_empty_persistent_statuses_when_none():
+	var ch := _make_character()
+	var d := ch.to_dict()
+	assert_true(d.has("persistent_statuses"))
+	assert_eq((d["persistent_statuses"] as Array).size(), 0)
+
+
+func test_from_dict_restores_persistent_statuses_as_string_names():
+	var ch := _make_character()
+	ch.persistent_statuses = [&"poison", &"petrify"]
+	var d := ch.to_dict()
+	var restored := Character.from_dict(d)
+	assert_not_null(restored)
+	assert_eq(restored.persistent_statuses.size(), 2)
+	assert_true(restored.persistent_statuses.has(&"poison"))
+	assert_true(restored.persistent_statuses.has(&"petrify"))
+	for sid in restored.persistent_statuses:
+		assert_typeof(sid, TYPE_STRING_NAME)
+
+
+func test_from_dict_missing_persistent_statuses_yields_empty_array():
+	# Legacy save (pre add-status-effect-infrastructure) lacks the field.
+	var d := {
+		"character_name": "Legacy",
+		"race_id": "human",
+		"job_id": "fighter",
+		"level": 1,
+		"base_stats": {"STR": 8, "INT": 8, "PIE": 8, "VIT": 8, "AGI": 8, "LUC": 8},
+		"current_hp": 12,
+		"max_hp": 12,
+		"current_mp": 0,
+		"max_mp": 0,
+		"accumulated_exp": 0,
+		"known_spells": [],
+	}
+	var restored := Character.from_dict(d)
+	assert_not_null(restored)
+	assert_eq(restored.persistent_statuses.size(), 0)

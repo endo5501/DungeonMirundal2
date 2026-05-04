@@ -7,6 +7,13 @@ const MONSTERS_DIR := "res://data/monsters/"
 const ENCOUNTER_TABLES_DIR := "res://data/encounter_tables/"
 const ITEMS_DIR := "res://data/items/"
 const SPELLS_DIR := "res://data/spells/"
+const STATUSES_DIR := "res://data/statuses/"
+
+# Static so the cache survives across `DataLoader.new()` call sites — each
+# `has_*_flag` query, every dungeon step, and every spell-effect resolution
+# would otherwise re-scan disk because a fresh DataLoader carries its own
+# empty per-instance cache.
+static var _status_repo_cache: StatusRepository = null
 
 func load_all_races() -> Array[RaceData]:
 	var results: Array[RaceData] = []
@@ -51,6 +58,21 @@ func load_spell_repository() -> SpellRepository:
 	var repo := SpellRepository.new()
 	for spell in load_all_spells():
 		repo.register(spell)
+	return repo
+
+
+# Lazily build a StatusRepository from data/statuses/*.tres. Subsequent calls
+# on the same DataLoader instance return the cached repo (mirrors the contract
+# tested in test_data_loader.test_load_status_repository_caches_instance_across_calls).
+func load_status_repository() -> StatusRepository:
+	if _status_repo_cache != null:
+		return _status_repo_cache
+	var repo := StatusRepository.new()
+	# Missing directory is not an error — this change ships no .tres files yet.
+	if DirAccess.dir_exists_absolute(STATUSES_DIR):
+		for res in _load_resources(STATUSES_DIR):
+			repo.register(res as StatusData)
+	_status_repo_cache = repo
 	return repo
 
 func _load_resources(dir_path: String) -> Array:

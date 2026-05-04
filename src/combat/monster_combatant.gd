@@ -69,3 +69,10 @@ func _get_base_agility() -> int:
 	if monster == null or monster.data == null:
 		return 0
 	return monster.data.agility
+
+
+# Monster resistance comes straight from MonsterData.resists, clamped to [0, 1].
+func get_resist(resist_key: StringName) -> float:
+	if resist_key == &"" or monster == null or monster.data == null:
+		return 0.0
+	return clamp(float(monster.data.resists.get(resist_key, 0.0)), 0.0, 1.0)

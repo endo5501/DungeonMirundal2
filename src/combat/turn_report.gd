@@ -9,7 +9,8 @@ func add_attack(
 	target: CombatActor,
 	damage: int,
 	defended: bool = false,
-	retargeted_from: String = ""
+	retargeted_from: String = "",
+	confusion_swap: bool = false
 ) -> void:
 	actions.append({
 		"type": "attack",
@@ -18,14 +19,16 @@ func add_attack(
 		"damage": damage,
 		"defended": defended,
 		"retargeted_from": retargeted_from,
+		"confusion_swap": confusion_swap,
 	})
 
 
-func add_miss(attacker: CombatActor, target: CombatActor) -> void:
+func add_miss(attacker: CombatActor, target: CombatActor, confusion_swap: bool = false) -> void:
 	actions.append({
 		"type": "miss",
 		"attacker_name": attacker.actor_name if attacker != null else "",
 		"target_name": target.actor_name if target != null else "",
+		"confusion_swap": confusion_swap,
 	})
 
 
@@ -121,4 +124,74 @@ func add_cast_skipped_no_target(caster: CombatActor, spell: SpellData) -> void:
 		"caster_name": caster.actor_name if caster != null else "",
 		"spell_id": spell.id if spell != null else &"",
 		"spell_display_name": spell.display_name if spell != null else "",
+	})
+
+
+# --- add-status-effect-infrastructure: status-related entries ---
+
+func add_tick_damage(actor: CombatActor, status_id: StringName, amount: int, killed_by_tick: bool) -> void:
+	actions.append({
+		"type": "tick_damage",
+		"actor_name": actor.actor_name if actor != null else "",
+		"status_id": status_id,
+		"amount": amount,
+		"killed_by_tick": killed_by_tick,
+	})
+
+
+func add_wake(actor: CombatActor, status_id: StringName) -> void:
+	actions.append({
+		"type": "wake",
+		"actor_name": actor.actor_name if actor != null else "",
+		"status_id": status_id,
+	})
+
+
+func add_inflict(target: CombatActor, status_id: StringName, success: bool) -> void:
+	actions.append({
+		"type": "inflict",
+		"target_name": target.actor_name if target != null else "",
+		"status_id": status_id,
+		"success": success,
+	})
+
+
+func add_cure(actor: CombatActor, status_id: StringName) -> void:
+	actions.append({
+		"type": "cure",
+		"actor_name": actor.actor_name if actor != null else "",
+		"status_id": status_id,
+	})
+
+
+func add_resist(target: CombatActor, status_id: StringName) -> void:
+	actions.append({
+		"type": "resist",
+		"target_name": target.actor_name if target != null else "",
+		"status_id": status_id,
+	})
+
+
+func add_stat_mod(target: CombatActor, stat: StringName, delta, turns: int) -> void:
+	actions.append({
+		"type": "stat_mod",
+		"target_name": target.actor_name if target != null else "",
+		"stat": stat,
+		"delta": delta,
+		"turns": turns,
+	})
+
+
+func add_action_locked(actor: CombatActor) -> void:
+	actions.append({
+		"type": "action_locked",
+		"actor_name": actor.actor_name if actor != null else "",
+	})
+
+
+func add_cast_silenced(caster: CombatActor, spell_id: StringName) -> void:
+	actions.append({
+		"type": "cast_silenced",
+		"caster_name": caster.actor_name if caster != null else "",
+		"spell_id": spell_id,
 	})

@@ -364,7 +364,12 @@ resolve_turn(rng):
       report.add_tick_damage(actor, t.status_id, t.hp_loss, t.killed_by_tick)
 
   # ▼ NEW: ターン頭 tick で全滅したら早期終了
-  if _all_party_dead() or _all_monsters_dead():
+  # ガード: 「tick が実際に kill を起こしたか」を `tick_battle_turn` の戻り値で
+  # 判定し、true のときだけ早期終了する。pre-existing dead state（戦闘開始前
+  # から HP=0 のスタブ等。テスト経路で発生）まで早期終了させると、行動ループに
+  # 到達しない結果として cast の `cast_skipped_no_target` 等の分岐が壊れる
+  # (`tests/combat/test_turn_engine.test_cast_with_no_living_target_skips_without_consuming_mp` 参照)。
+  if tick_caused_kill and (_all_party_dead() or _all_monsters_dead()):
     _finish_with_battle_end_cleanup(report)
     return report
 

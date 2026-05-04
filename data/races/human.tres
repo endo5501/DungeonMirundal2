@@ -12,3 +12,4 @@ base_pie = 8
 base_vit = 8
 base_agi = 8
 base_luc = 8
+resists = {}

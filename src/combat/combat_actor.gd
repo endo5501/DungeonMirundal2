@@ -6,8 +6,11 @@ const MOD_CAP: float = 0.40
 var actor_name: String = ""
 
 var modifier_stack: StatModifierStack = StatModifierStack.new()
+var statuses: StatusTrack = StatusTrack.new()
 
 var _defending: bool = false
+# Tests inject a StatusRepository here; production path goes through DataLoader.
+var _status_repo_override: StatusRepository = null
 
 var current_hp: int:
 	get:
@@ -89,9 +92,35 @@ func get_evasion_modifier_total() -> float:
 	return clampf(float(modifier_stack.sum(&"evasion")), -MOD_CAP, MOD_CAP)
 
 
-# Overridden by status-effect mixins; default false.
 func has_blind_flag() -> bool:
-	return false
+	return statuses.has(&"blind")
+
+
+func has_silence_flag() -> bool:
+	return statuses.any_with_flag(_resolve_status_repo(), StatusData.FLAG_BLOCKS_CAST)
+
+
+func has_confusion_flag() -> bool:
+	return statuses.any_with_flag(_resolve_status_repo(), StatusData.FLAG_RANDOMIZES_TARGET)
+
+
+func has_action_lock() -> bool:
+	return statuses.any_with_flag(_resolve_status_repo(), StatusData.FLAG_PREVENTS_ACTION)
+
+
+# Tests can inject a StatusRepository to avoid DataLoader-driven lookups.
+func set_status_repo_for_testing(repo: StatusRepository) -> void:
+	_status_repo_override = repo
+
+
+func _resolve_status_repo() -> StatusRepository:
+	return StatusRepoLocator.resolve(_status_repo_override)
+
+
+# Default 0.0 resistance — overridden by PartyCombatant (race+job) and
+# MonsterCombatant (MonsterData.resists).
+func get_resist(_resist_key: StringName) -> float:
+	return 0.0
 
 
 func is_alive() -> bool:

@@ -266,3 +266,30 @@ func test_spell_progression_ids_resolve_in_spell_repository():
 			for sid in job.spell_progression[lv]:
 				assert_true(repo.has_id(sid),
 					"job %s lv %d spell id %s should exist in SpellRepository" % [job.job_name, lv, sid])
+
+
+# --- add-status-effect-infrastructure: resists dictionary ---
+
+func test_job_data_has_resists_field():
+	var job := JobData.new()
+	assert_typeof(job.resists, TYPE_DICTIONARY)
+
+
+func test_job_data_resists_default_is_empty():
+	var job := JobData.new()
+	assert_eq(job.resists.size(), 0)
+
+
+func test_job_data_resists_is_writable():
+	var job := JobData.new()
+	job.resists = {&"sleep": 0.1}
+	assert_eq(job.resists.get(&"sleep"), 0.1)
+
+
+func test_loaded_job_tres_files_have_resists_dictionary():
+	var loader := DataLoader.new()
+	var jobs := loader.load_all_jobs()
+	assert_gt(jobs.size(), 0)
+	for job in jobs:
+		assert_typeof(job.resists, TYPE_DICTIONARY,
+			"job %s.resists should be Dictionary" % job.resource_path)
