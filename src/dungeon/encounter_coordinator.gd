@@ -2,6 +2,7 @@ class_name EncounterCoordinator
 extends Node
 
 signal encounter_finished(outcome: EncounterOutcome)
+signal dungeon_status_tick(character_name: String, status_id: StringName, amount: int)
 
 var _repository: MonsterRepository
 var _manager: EncounterManager
@@ -78,6 +79,8 @@ func attach_screen(screen: DungeonScreen) -> void:
 	_current_screen = screen
 	_current_screen.step_taken.connect(_on_step_taken)
 	_current_screen.floor_changed.connect(_on_floor_changed)
+	if not dungeon_status_tick.is_connected(_current_screen.show_status_tick):
+		dungeon_status_tick.connect(_current_screen.show_status_tick)
 
 
 func detach_screen() -> void:
@@ -87,6 +90,8 @@ func detach_screen() -> void:
 		_current_screen.step_taken.disconnect(_on_step_taken)
 	if _current_screen.floor_changed.is_connected(_on_floor_changed):
 		_current_screen.floor_changed.disconnect(_on_floor_changed)
+	if dungeon_status_tick.is_connected(_current_screen.show_status_tick):
+		dungeon_status_tick.disconnect(_current_screen.show_status_tick)
 	_current_screen = null
 
 
@@ -134,7 +139,17 @@ func _tick_party_step() -> void:
 	for ch in _guild.get_all_characters():
 		if ch == null or ch.is_dead():
 			continue
-		StatusTickService.tick_character_step(ch, repo)
+		var result := StatusTickService.tick_character_step(ch, repo)
+		var ticks: Array = result.get("ticks", [])
+		for tick in ticks:
+			var amount: int = int((tick as Dictionary).get("amount", 0))
+			if amount <= 0:
+				continue
+			dungeon_status_tick.emit(
+				String(ch.character_name),
+				StringName((tick as Dictionary).get("status_id", &"")),
+				amount,
+			)
 
 
 func _on_floor_changed(new_floor: int) -> void:

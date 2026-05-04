@@ -33,3 +33,10 @@ func all() -> Array:
 
 func ids() -> Array:
 	return _by_id.keys()
+
+
+func get_display_name(id: StringName) -> String:
+	var data := find(id)
+	if data != null and data.display_name != "":
+		return data.display_name
+	return String(id)

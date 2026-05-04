@@ -125,6 +125,17 @@ func test_status_data_tick_in_dungeon_is_writable():
 	assert_eq(s.tick_in_dungeon, 1)
 
 
+func test_status_data_default_tick_in_dungeon_ratio_is_zero():
+	var s := StatusData.new()
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+
+
+func test_status_data_tick_in_dungeon_ratio_is_writable():
+	var s := StatusData.new()
+	s.tick_in_dungeon_ratio = 16
+	assert_eq(s.tick_in_dungeon_ratio, 16)
+
+
 func test_status_data_default_cures_on_damage_is_false():
 	var s := StatusData.new()
 	assert_false(s.cures_on_damage)

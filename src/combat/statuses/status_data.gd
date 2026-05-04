@@ -32,6 +32,7 @@ const FLAG_BLOCKS_CAST := Flag.BLOCKS_CAST
 @export var default_duration: int = 0
 @export var tick_in_battle: int = 0
 @export var tick_in_dungeon: int = 0
+@export var tick_in_dungeon_ratio: int = 0
 
 # Cure conditions
 @export var cures_on_damage: bool = false

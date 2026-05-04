@@ -16,7 +16,7 @@ exp_table = PackedInt64Array(1100, 1896, 3268, 5634, 9713, 16746, 28872, 49779, 
 spell_progression = {
 1: Array[StringName]([&"fire", &"frost"]),
 2: Array[StringName]([&"katino", &"manifo"]),
-3: Array[StringName]([&"flame", &"blizzard"]),
+3: Array[StringName]([&"flame", &"blizzard", &"poison_dart"]),
 }
 required_str = 0
 required_int = 11

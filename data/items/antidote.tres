@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="Item" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1"]
+[ext_resource type="Script" path="res://src/items/effects/cure_status_item_effect.gd" id="2"]
+[ext_resource type="Script" path="res://src/items/conditions/alive_only.gd" id="3"]
+
+[sub_resource type="Resource" id="CureStatus_antidote"]
+script = ExtResource("2")
+status_id = &"poison"
+
+[sub_resource type="Resource" id="AliveOnly_antidote"]
+script = ExtResource("3")
+
+[resource]
+script = ExtResource("1")
+item_id = &"antidote"
+item_name = "解毒草"
+unidentified_name = "緑の薬草"
+category = 7
+equip_slot = 0
+allowed_jobs = Array[StringName]([])
+attack_bonus = 0
+defense_bonus = 0
+agility_bonus = 0
+price = 100
+effect = SubResource("CureStatus_antidote")
+context_conditions = Array[Resource]([])
+target_conditions = Array[Resource]([SubResource("AliveOnly_antidote")])

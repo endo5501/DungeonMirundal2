@@ -21,13 +21,15 @@ func before_each():
 func _make_status(
 	id: StringName,
 	scope: int,
-	tick_in_dungeon: int = 0
+	tick_in_dungeon: int = 0,
+	tick_in_dungeon_ratio: int = 0
 ) -> StatusData:
 	var s := StatusData.new()
 	s.id = id
 	s.display_name = String(id)
 	s.scope = scope
 	s.tick_in_dungeon = tick_in_dungeon
+	s.tick_in_dungeon_ratio = tick_in_dungeon_ratio
 	return s
 
 
@@ -138,3 +140,80 @@ func test_tick_ignores_unknown_status_ids():
 	var result := StatusTickService.tick_character_step(ch, _seed_repo())
 	assert_eq(result.get("total_loss"), 0)
 	assert_eq(ch.current_hp, 10)
+
+
+# --- ratio-based dungeon tick (poison-style) ---
+
+func _ratio_repo(ratio: int, flat: int = 0) -> StatusRepository:
+	var repo := StatusRepository.new()
+	repo.register(_make_status(&"poison", StatusData.Scope.PERSISTENT, flat, ratio))
+	return repo
+
+
+func test_ratio_yields_max_hp_divided():
+	var ch := _make_character(32)
+	ch.max_hp = 32
+	ch.current_hp = 32
+	ch.persistent_statuses = [&"poison"]
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(16))
+	# 32 / 16 = 2
+	assert_eq(result.get("total_loss"), 2)
+	assert_eq(ch.current_hp, 30)
+	var ticks: Array = result.get("ticks")
+	assert_eq(ticks.size(), 1)
+	assert_eq((ticks[0] as Dictionary).get("amount"), 2)
+
+
+func test_ratio_floors_at_one_when_max_hp_below_ratio():
+	var ch := _make_character(10)
+	ch.max_hp = 10
+	ch.current_hp = 10
+	ch.persistent_statuses = [&"poison"]
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(16))
+	# 10 / 16 = 0 -> max(1, 0) = 1
+	assert_eq(result.get("total_loss"), 1)
+	assert_eq(ch.current_hp, 9)
+
+
+func test_ratio_takes_precedence_over_flat_amount():
+	var ch := _make_character(32)
+	ch.max_hp = 32
+	ch.current_hp = 32
+	ch.persistent_statuses = [&"poison"]
+	# ratio=16 / flat=5 → ratio wins (32/16 = 2, not flat 5).
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(16, 5))
+	assert_eq(result.get("total_loss"), 2)
+	assert_eq(ch.current_hp, 30)
+
+
+func test_flat_used_when_ratio_zero_and_flat_positive():
+	var ch := _make_character(32)
+	ch.max_hp = 32
+	ch.current_hp = 32
+	ch.persistent_statuses = [&"poison"]
+	# ratio=0, flat=5 → flat used.
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(0, 5))
+	assert_eq(result.get("total_loss"), 5)
+	assert_eq(ch.current_hp, 27)
+
+
+func test_both_zero_is_noop():
+	var ch := _make_character(32)
+	ch.max_hp = 32
+	ch.current_hp = 32
+	ch.persistent_statuses = [&"poison"]
+	# ratio=0, flat=0 → no tick.
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(0, 0))
+	assert_eq(result.get("total_loss"), 0)
+	assert_eq(ch.current_hp, 32)
+
+
+func test_ratio_floors_at_hp_one_when_low_hp():
+	var ch := _make_character(2)
+	ch.max_hp = 32
+	ch.current_hp = 2
+	ch.persistent_statuses = [&"poison"]
+	# requested = 2, but cap at HP=1 floor → loss = 1.
+	var result := StatusTickService.tick_character_step(ch, _ratio_repo(16))
+	assert_eq(result.get("total_loss"), 1)
+	assert_eq(ch.current_hp, 1)

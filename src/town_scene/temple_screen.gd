@@ -118,6 +118,12 @@ func _rebuild() -> void:
 		msg.add_theme_color_override("font_color", Color(0.9, 0.7, 0.4))
 		_root.add_child(msg)
 
+	var auto_cure_hint := Label.new()
+	auto_cure_hint.text = "(街に戻ると状態異常は自動的に治ります)"
+	auto_cure_hint.add_theme_font_size_override("font_size", 14)
+	auto_cure_hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	_root.add_child(auto_cure_hint)
+
 	var hint := Label.new()
 	hint.text = "[↑↓] 選択  [Enter] 蘇生  [Esc] 戻る"
 	hint.add_theme_font_size_override("font_size", 14)

@@ -265,6 +265,42 @@ func test_priest_level_up_to_lv2_grants_dios():
 	assert_true(ch.known_spells.has(&"dios"), "Priest lv2 should learn dios")
 
 
+# --- add-status-poison-and-petrify: poison_dart / madi / dialma progression ---
+
+func test_mage_level_up_to_lv3_grants_poison_dart():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(3))
+	assert_gte(ch.level, 3)
+	assert_true(ch.known_spells.has(&"poison_dart"), "Mage lv3 should learn poison_dart")
+
+
+func test_priest_level_up_to_lv3_grants_madi():
+	var allocation := {&"STR": 0, &"INT": 0, &"PIE": 3, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("P", _human_loaded(), _job_loaded("priest"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(3))
+	assert_gte(ch.level, 3)
+	assert_true(ch.known_spells.has(&"madi"), "Priest lv3 should learn madi")
+
+
+func test_priest_level_up_to_lv5_grants_dialma():
+	var allocation := {&"STR": 0, &"INT": 0, &"PIE": 3, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("P", _human_loaded(), _job_loaded("priest"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(5))
+	assert_gte(ch.level, 5)
+	assert_true(ch.known_spells.has(&"dialma"), "Priest lv5 should learn dialma")
+
+
+func test_bishop_level_up_to_lv5_grants_six_spells():
+	var allocation := {&"STR": 0, &"INT": 4, &"PIE": 4, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
+	ch.gain_experience(ch.job.exp_to_reach_level(5))
+	assert_gte(ch.level, 5)
+	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi"]:
+		assert_true(ch.known_spells.has(sid), "Bishop lv5 should learn %s" % sid)
+	assert_false(ch.known_spells.has(&"dialma"), "Bishop must NOT learn dialma (Priest only)")
+
+
 func test_level_up_does_not_duplicate_already_known_spells():
 	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
 	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
