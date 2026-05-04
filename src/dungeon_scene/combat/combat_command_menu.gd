@@ -23,6 +23,8 @@ const OPTION_LABELS: Dictionary = {
 
 signal command_selected(option_id: int)
 
+const SILENCED_SUFFIX := " (沈黙中)"
+
 var _rows: Array[CursorMenuRow] = []
 var _option_ids: Array[int] = []
 var _title_label: Label
@@ -90,13 +92,30 @@ func select_at(option_id: int) -> void:
 func confirm_current() -> void:
 	if _option_ids.is_empty():
 		return
+	if is_row_disabled(_selected_index):
+		return
 	command_selected.emit(_option_ids[_selected_index])
+
+
+func is_row_disabled(index: int) -> bool:
+	if index < 0 or index >= _option_ids.size() or _current_actor == null:
+		return false
+	return _is_cast_option(_option_ids[index]) and _current_actor.has_silence_flag()
+
+
+static func _is_cast_option(option_id: int) -> bool:
+	return option_id == OPT_CAST_MAGE or option_id == OPT_CAST_PRIEST
 
 
 func get_options() -> Array[String]:
 	var labels: Array[String] = []
-	for id in _option_ids:
-		labels.append(String(OPTION_LABELS.get(id, "")))
+	for i in range(_option_ids.size()):
+		var id := _option_ids[i]
+		var base := String(OPTION_LABELS.get(id, ""))
+		if is_row_disabled(i) and _is_cast_option(id):
+			labels.append(base + SILENCED_SUFFIX)
+		else:
+			labels.append(base)
 	return labels
 
 
@@ -142,8 +161,9 @@ func _rebuild_rows() -> void:
 	for child in _options_vbox.get_children():
 		_options_vbox.remove_child(child)
 		child.queue_free()
-	for id in _option_ids:
-		_rows.append(CursorMenuRow.create(_options_vbox, String(OPTION_LABELS.get(id, "")), 16))
+	var labels := get_options()
+	for i in range(_option_ids.size()):
+		_rows.append(CursorMenuRow.create(_options_vbox, labels[i], 16))
 
 
 func _refresh_rows() -> void:
@@ -151,3 +171,4 @@ func _refresh_rows() -> void:
 		return
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)
+		_rows[i].set_disabled(is_row_disabled(i))

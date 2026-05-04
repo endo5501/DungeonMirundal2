@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/cure_status_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="CureStatus_dios"]
+script = ExtResource("2")
+status_id = &"sleep"
+
+[resource]
+script = ExtResource("1")
+id = &"dios"
+display_name = "ディオス"
+school = &"priest"
+level = 1
+mp_cost = 2
+target_type = 2
+scope = 1
+effect = SubResource("CureStatus_dios")

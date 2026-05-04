@@ -241,8 +241,28 @@ func test_bishop_level_up_to_lv2_grants_lv1_set():
 	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
 	ch.gain_experience(ch.job.exp_to_reach_level(2))
 	assert_gte(ch.level, 2)
-	for sid in [&"fire", &"frost", &"heal", &"holy"]:
+	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios"]:
 		assert_true(ch.known_spells.has(sid), "Bishop lv2 should learn %s" % sid)
+	assert_eq(ch.known_spells.size(), 7, "Bishop lv2 should learn exactly 7 spells")
+
+
+# --- add-status-sleep-and-silence: Lv2 status spells ---
+
+func test_mage_level_up_to_lv2_grants_katino_and_manifo():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(2))
+	assert_gte(ch.level, 2)
+	assert_true(ch.known_spells.has(&"katino"), "Mage lv2 should learn katino")
+	assert_true(ch.known_spells.has(&"manifo"), "Mage lv2 should learn manifo")
+
+
+func test_priest_level_up_to_lv2_grants_dios():
+	var allocation := {&"STR": 0, &"INT": 0, &"PIE": 3, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("P", _human_loaded(), _job_loaded("priest"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(2))
+	assert_gte(ch.level, 2)
+	assert_true(ch.known_spells.has(&"dios"), "Priest lv2 should learn dios")
 
 
 func test_level_up_does_not_duplicate_already_known_spells():

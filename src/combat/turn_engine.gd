@@ -313,12 +313,20 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 		return
 	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
 	report.add_cast(caster, spell, spell_resolution, retargeted_from)
-	# After cast: any target that took damage from the spell may have a
-	# cures_on_damage status to wake from.
 	if spell_resolution != null:
 		for e in spell_resolution.entries:
+			var actor: CombatActor = e.get("actor")
+			for evt in e.get("events", []):
+				match evt.get("type"):
+					"inflict":
+						if bool(evt.get("success", false)):
+							report.add_inflict(actor, evt.get("status_id", &""), true)
+					"resist":
+						report.add_resist(actor, evt.get("status_id", &""))
+					"cure":
+						report.add_cure(actor, evt.get("status_id", &""))
 			if int(e.get("hp_delta", 0)) < 0:
-				_apply_damage_taken_cure(e.get("actor"), report)
+				_apply_damage_taken_cure(actor, report)
 	for t in targets:
 		if t != null and not t.is_alive():
 			report.add_defeated(t)

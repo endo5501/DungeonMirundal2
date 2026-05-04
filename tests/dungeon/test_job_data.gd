@@ -209,6 +209,25 @@ func test_loaded_mage_has_only_mage_school_and_progression_at_levels_1_and_3():
 	assert_true(lv3.has(&"blizzard"))
 
 
+func test_loaded_mage_has_katino_and_manifo_at_level_2():
+	var m := _find_loaded("Mage")
+	assert_not_null(m)
+	assert_true(m.spell_progression.has(2), "Mage should have spell_progression[2]")
+	var lv2: Array = m.spell_progression[2]
+	assert_eq(lv2.size(), 2)
+	assert_true(lv2.has(&"katino"))
+	assert_true(lv2.has(&"manifo"))
+
+
+func test_loaded_priest_has_dios_at_level_2():
+	var p := _find_loaded("Priest")
+	assert_not_null(p)
+	assert_true(p.spell_progression.has(2), "Priest should have spell_progression[2]")
+	var lv2: Array = p.spell_progression[2]
+	assert_eq(lv2.size(), 1)
+	assert_true(lv2.has(&"dios"))
+
+
 func test_loaded_priest_has_only_priest_school_and_progression():
 	var p := _find_loaded("Priest")
 	assert_not_null(p)
@@ -227,11 +246,13 @@ func test_loaded_bishop_has_both_schools_and_progression_at_levels_2_and_5():
 	assert_true(b.spell_progression.has(2))
 	assert_true(b.spell_progression.has(5))
 	var lv2: Array = b.spell_progression[2]
-	for sid in [&"fire", &"frost", &"heal", &"holy"]:
+	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios"]:
 		assert_true(lv2.has(sid), "bishop lv2 missing %s" % sid)
+	assert_eq(lv2.size(), 7, "bishop lv2 should hold exactly 7 spells (4 + 3 status)")
 	var lv5: Array = b.spell_progression[5]
 	for sid in [&"flame", &"blizzard", &"heala", &"allheal"]:
 		assert_true(lv5.has(sid), "bishop lv5 missing %s" % sid)
+	assert_eq(lv5.size(), 4, "bishop lv5 should hold exactly 4 spells")
 
 
 func test_loaded_samurai_has_mage_school_and_starts_at_level_4():
