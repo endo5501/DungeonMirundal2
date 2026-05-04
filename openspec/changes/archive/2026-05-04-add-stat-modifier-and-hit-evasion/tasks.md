@@ -94,5 +94,5 @@
 
 ## 10. アーカイブ準備
 
-- [ ] 10.1 実装完了後 `/opsx:verify add-stat-modifier-and-hit-evasion` を実行して齟齬がないかをレビュー
-- [ ] 10.2 `/opsx:archive add-stat-modifier-and-hit-evasion` で specs に統合
+- [x] 10.1 実装完了後 `/opsx:verify add-stat-modifier-and-hit-evasion` を実行して齟齬がないかをレビュー
+- [x] 10.2 `/opsx:archive add-stat-modifier-and-hit-evasion` で specs に統合

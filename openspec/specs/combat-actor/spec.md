@@ -59,11 +59,11 @@ The system SHALL provide a `PartyCombatant` (extends CombatActor) that holds a r
 - **WHEN** a PartyCombatant wraps a Character with `max_mp = 8`
 - **THEN** the PartyCombatant's `max_mp` SHALL equal `8`
 
-#### Scenario: Derived stats come from EquipmentProvider
-- **WHEN** `get_attack()` is called on a PartyCombatant
-- **THEN** the returned value SHALL equal `equipment_provider.get_attack(character)`
+#### Scenario: Derived stats include EquipmentProvider base plus modifier stack
+- **WHEN** `get_attack()` is called on a PartyCombatant whose `equipment_provider.get_attack(character)` returns `7` and whose `modifier_stack.sum(&"attack")` returns `+2`
+- **THEN** the returned value SHALL be `9`
 - **WHEN** `get_defense()` / `get_agility()` are called
-- **THEN** the returned values SHALL equal the corresponding `equipment_provider` lookups
+- **THEN** each SHALL return `equipment_provider.get_<stat>(character) + modifier_stack.sum(&"<stat>")` (integer arithmetic)
 
 #### Scenario: actor_name comes from Character
 - **WHEN** a PartyCombatant wraps a Character with `character_name = "Fighter"`
@@ -77,9 +77,9 @@ The system SHALL provide a `MonsterCombatant` (extends CombatActor) that holds a
 - **WHEN** `take_damage(3)` is called on a MonsterCombatant whose Monster has `current_hp = 10`
 - **THEN** the wrapped Monster's `current_hp` SHALL become `7`
 
-#### Scenario: Derived stats come from MonsterData
-- **WHEN** `get_attack()`, `get_defense()`, and `get_agility()` are called on a MonsterCombatant whose `MonsterData` declares `attack = 4`, `defense = 2`, `agility = 6`
-- **THEN** the returned values SHALL be `4`, `2`, and `6` respectively
+#### Scenario: Derived stats include MonsterData base plus modifier stack
+- **WHEN** `get_attack()`, `get_defense()`, and `get_agility()` are called on a MonsterCombatant whose `MonsterData` declares `attack = 4`, `defense = 2`, `agility = 6` and whose `modifier_stack.sum(&"attack") = -1`
+- **THEN** the returned values SHALL be `3`, `2`, and `6` respectively (each stat sums base and modifier)
 
 #### Scenario: actor_name comes from MonsterData
 - **WHEN** a MonsterCombatant wraps a Monster whose `MonsterData.monster_name` is `"スライム"`
@@ -92,4 +92,27 @@ The system SHALL provide a `MonsterCombatant` (extends CombatActor) that holds a
 #### Scenario: MonsterCombatant.spend_mp rejects positive amounts
 - **WHEN** `spend_mp(1)` is called on a MonsterCombatant
 - **THEN** the call SHALL return `false`
+
+### Requirement: CombatActor exposes hit/evasion modifier totals and a blind hook
+
+The system SHALL provide on every `CombatActor`:
+- `get_hit_modifier_total() -> float`: returns `clamp(modifier_stack.sum(&"hit"), -MOD_CAP, +MOD_CAP)` where `MOD_CAP = 0.40`.
+- `get_evasion_modifier_total() -> float`: returns `clamp(modifier_stack.sum(&"evasion"), -MOD_CAP, +MOD_CAP)`.
+- `has_blind_flag() -> bool`: returns whether the actor is currently blinded. In this change, the default implementation SHALL return `false` for all subclasses (no caller sets the flag yet).
+
+#### Scenario: hit modifier total clamps at +0.4
+- **WHEN** an actor's `modifier_stack.sum(&"hit")` returns `+0.6`
+- **THEN** `get_hit_modifier_total()` SHALL return `+0.4`
+
+#### Scenario: hit modifier total clamps at -0.4
+- **WHEN** an actor's `modifier_stack.sum(&"hit")` returns `-0.7`
+- **THEN** `get_hit_modifier_total()` SHALL return `-0.4`
+
+#### Scenario: evasion modifier total clamps at +0.4
+- **WHEN** an actor's `modifier_stack.sum(&"evasion")` returns `+0.5`
+- **THEN** `get_evasion_modifier_total()` SHALL return `+0.4`
+
+#### Scenario: has_blind_flag default is false
+- **WHEN** `has_blind_flag()` is called on any newly constructed CombatActor
+- **THEN** the result SHALL be `false`
 
