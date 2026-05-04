@@ -1,8 +1,6 @@
 ## Purpose
 モンスター（MonsterData）リソースの定義と各種バランス数値を規定する。HP・攻撃力・防御力・経験値・ドロップテーブル・出現階層などの項目を対象とする。
-
 ## Requirements
-
 ### Requirement: MonsterData defines a monster template
 The system SHALL provide a `MonsterData` Custom Resource that defines a monster template with identifier, display name, stat ranges, and reward values.
 
@@ -70,3 +68,16 @@ The system SHALL ensure every `.tres` file under `data/monsters/` sets `gold_min
 #### Scenario: Existing slime/goblin/bat files have gold ranges
 - **WHEN** `DataLoader.load_all_monsters()` is invoked on the shipped data directory
 - **THEN** every returned MonsterData SHALL have `gold_min >= 0` and `gold_max >= gold_min`
+
+### Requirement: MonsterData carries a resists dictionary
+
+The system SHALL extend `MonsterData` with `@export var resists: Dictionary = {}` mapping `StringName` resist keys to `float` values in the range `[0.0, 1.0]`. Missing keys SHALL be treated as `0.0` resistance. All existing `.tres` monster files SHALL be updated to include `resists = {}` in this change.
+
+#### Scenario: MonsterData exposes resists
+- **WHEN** a MonsterData resource is instantiated
+- **THEN** the `resists` field SHALL be a Dictionary that is at least readable
+
+#### Scenario: All monster tres files have a resists field
+- **WHEN** any monster `.tres` file is loaded
+- **THEN** `resists` SHALL be a Dictionary (empty in this change)
+

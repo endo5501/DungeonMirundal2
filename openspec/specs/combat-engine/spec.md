@@ -199,3 +199,30 @@ The system SHALL invoke `modifier_stack.tick_battle_turn()` for every party memb
 - **WHEN** `_end_turn_cleanup()` runs at the end of a turn where one party member died
 - **THEN** every party member (alive or dead) and every monster SHALL have `tick_battle_turn()` called once
 
+### Requirement: TurnReport records new status-related action entries
+
+The system SHALL extend `TurnReport` with the following action shapes (all new types, no modifications to existing types):
+
+- `tick_damage`: `{ type, actor_name, status_id, amount, killed_by_tick }`
+- `wake`: `{ type, actor_name, status_id }`
+- `inflict`: `{ type, target_name, status_id, success }`
+- `cure`: `{ type, actor_name, status_id }`
+- `resist`: `{ type, target_name, status_id }`
+- `stat_mod`: `{ type, target_name, stat, delta, turns }`
+- `action_locked`: `{ type, actor_name }`
+- `cast_silenced`: `{ type, caster_name, spell_id }`
+
+Each shape SHALL have a corresponding `add_*` method on `TurnReport`.
+
+#### Scenario: add_tick_damage produces the documented entry
+- **WHEN** `report.add_tick_damage(actor, &"poison", 2, false)` is called with `actor.actor_name == "Alice"`
+- **THEN** the appended entry SHALL equal `{ type: "tick_damage", actor_name: "Alice", status_id: &"poison", amount: 2, killed_by_tick: false }`
+
+#### Scenario: add_action_locked produces the documented entry
+- **WHEN** `report.add_action_locked(actor)` is called
+- **THEN** the appended entry SHALL have `type == "action_locked"` and `actor_name == actor.actor_name`
+
+#### Scenario: Existing action types are unchanged
+- **WHEN** any of `add_attack`, `add_defend`, `add_escape`, `add_cast`, `add_item_use`, `add_defeated`, `add_miss` is called
+- **THEN** the appended entry SHALL keep its existing structure (no new mandatory fields)
+

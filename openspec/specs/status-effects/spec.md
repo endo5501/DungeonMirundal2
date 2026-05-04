@@ -1,5 +1,8 @@
-## ADDED Requirements
+# status-effects Specification
 
+## Purpose
+TBD - created by archiving change add-status-effect-infrastructure. Update Purpose after archive.
+## Requirements
 ### Requirement: StatusData defines a status effect template
 
 The system SHALL provide a `StatusData` Custom Resource that defines a status effect template. `StatusData` SHALL expose the following fields:
@@ -15,7 +18,7 @@ The system SHALL provide a `StatusData` Custom Resource that defines a status ef
 - `tick_in_battle: int` — at the head of every battle turn, an actor holding this status SHALL take this many HP of damage. `0` means no battle tick.
 - `tick_in_dungeon: int` — at every dungeon step, a character holding this status SHALL lose this many HP, floored at HP=1. `0` means no dungeon tick. Only meaningful for `PERSISTENT`.
 - `cures_on_damage: bool` — when true, this status is removed from any actor that takes damage (e.g. sleep wakes on hit).
-- `cures_on_battle_end: bool` — when true, this status is removed when battle ends. Independent of scope (BATTLE_ONLY usually has this true).
+- `cures_on_battle_end: bool` — descriptive metadata on the status template indicating that the status is conceptually a battle-only effect that vanishes at battle end. The actual cure-at-battle-end decision is made by `StatusTrack.cure_all_battle_only(repo)`, which removes every entry whose `scope == BATTLE_ONLY` regardless of this flag's value. Authors of `data/statuses/*.tres` SHOULD set this `true` for `BATTLE_ONLY` statuses and `false` for `PERSISTENT` statuses to keep the data self-documenting; future changes MAY refactor the cure logic to consult this flag directly if a `BATTLE_ONLY`-but-survives or `PERSISTENT`-but-auto-cures case ever appears.
 - `resist_key: StringName` — the resistance dictionary key looked up on `RaceData.resists`, `JobData.resists`, and `MonsterData.resists`. Empty string disables resistance.
 
 #### Scenario: StatusData carries required fields
@@ -178,3 +181,4 @@ The system SHALL compute the effective inflict chance for a status spell as `eff
 #### Scenario: Full resistance produces guaranteed failure
 - **WHEN** a spell with `chance = 0.8` targets an actor with `get_resist == 1.0`
 - **THEN** the effective chance SHALL be `0.0` and the inflict roll SHALL never succeed
+

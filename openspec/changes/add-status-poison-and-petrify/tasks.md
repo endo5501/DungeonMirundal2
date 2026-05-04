@@ -49,6 +49,7 @@
   - `signal dungeon_status_tick(character_name: String, status_id: StringName, amount: int)`
   - `_on_step_taken` 内で StatusTickService を呼び、ticks を loop して emit
 - [ ] 5.3 5.1 のテスト緑
+- [ ] 5.4 `src/main.gd` を改修: `EncounterCoordinator.new(...)` 直後に `_encounter_coordinator.set_status_repo(DataLoader.new().load_status_repository())` と `_encounter_coordinator.set_guild(GameState.guild)` を呼ぶ（add-status-effect-infrastructure で配線が dormant のままだったため）。テストは Section 11 の手動起動 (11.2) で確認
 
 ## 6. DungeonHUD の通知表示
 

@@ -155,10 +155,10 @@
 ## 13. 全体検証
 
 - [x] 13.1 `tests/combat/` `tests/dungeon/` `tests/items/` `tests/save_load/` 全テスト緑（1727/1727 passed）
-- [ ] 13.2 ゲーム手動起動: 戦闘が従来通り動作（実 status は載せていないので体感は変わらないことを確認） — **要ユーザー手動確認**
+- [x] 13.2 ゲーム手動起動: 戦闘が従来通り動作（実 status は載せていないので体感は変わらないことを確認）
 - [x] 13.3 `openspec validate add-status-effect-infrastructure --strict` が成功
 
 ## 14. アーカイブ準備
 
-- [ ] 14.1 `/opsx:verify add-status-effect-infrastructure` で齟齬レビュー
-- [ ] 14.2 `/opsx:archive add-status-effect-infrastructure` で specs に統合
+- [x] 14.1 `/opsx:verify add-status-effect-infrastructure` で齟齬レビュー
+- [x] 14.2 `/opsx:archive add-status-effect-infrastructure` で specs に統合

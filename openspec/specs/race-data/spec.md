@@ -1,8 +1,6 @@
 ## Purpose
 種族（RaceData）リソースの定義と能力値補正を規定する。人間・エルフ・ドワーフ・ホビット・ノームなど種族ごとの基本補正値・寿命・特性を対象とする。
-
 ## Requirements
-
 ### Requirement: RaceData holds base stats for a race
 RaceData SHALL store the race name and base values for all six stats (STR, INT, PIE, VIT, AGI, LUC) as integer values.
 
@@ -70,3 +68,16 @@ SHALL: `RaceData` SHALL declare an `@export var id: StringName` field that uniqu
 #### Scenario: Migration tolerates empty id (transitional)
 - **WHEN** a legacy `.tres` is loaded with `id == &""` (not yet migrated)
 - **THEN** `Character.to_dict` SHALL fall back to deriving the id from `resource_path` and emit `push_warning("RaceData.id is empty for <path>")`
+
+### Requirement: RaceData carries a resists dictionary
+
+The system SHALL extend `RaceData` with `@export var resists: Dictionary = {}` mapping `StringName` resist keys to `float` values in the range `[0.0, 1.0]`. Missing keys SHALL be treated as `0.0` resistance. All five existing `.tres` race files (human, elf, dwarf, gnome, hobbit) SHALL be updated to include `resists = {}` (no resistances configured by default in this change).
+
+#### Scenario: RaceData exposes resists
+- **WHEN** a RaceData resource is instantiated
+- **THEN** the `resists` field SHALL be a Dictionary that is at least readable
+
+#### Scenario: All race tres files have a resists field
+- **WHEN** any of the five race `.tres` files is loaded
+- **THEN** `resists` SHALL be a Dictionary (empty in this change)
+
