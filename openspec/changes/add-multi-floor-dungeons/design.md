@@ -177,7 +177,10 @@ func get_exploration_rate() -> float:
 開発中のためデータマイグレーションは不要。本 change のマージで:
 1. 既存セーブ（単一階形式）はロード不能になる（許容）。
 2. `DungeonRegistry` を新規生成すれば多階層が即座に有効化される。
-3. ロードに失敗した場合は `push_warning` で「セーブ形式が古いため新規開始してください」と通知することを推奨（実装タスクで扱う）。
+3. 古い v1 セーブを誤ってロードした場合の振る舞いについて:
+   - `DungeonData.from_dict` は `floors` キー欠落時に空配列を返し、その後の `floors[0]` 参照で実行時エラーとなる。
+   - 開発中のため、旧セーブを意識的に削除する運用とし、`SaveManager` 側での明示的な version 拒否は実装しない。
+   - 古いセーブが残っている場合は `%APPDATA%\Godot\app_userdata\DungeonMirundal2\saves\` を削除する。
 
 ## Open Questions
 
