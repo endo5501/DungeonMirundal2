@@ -40,7 +40,7 @@ var _spell_rows: Array[CursorMenuRow] = []
 var _target_rows: Array[CursorMenuRow] = []
 
 var _spell_repo: SpellRepository = null
-var _rng: RandomNumberGenerator = null
+var _spell_rng: SpellRng = null
 
 
 func _refresh_row_selection(rows: Array[CursorMenuRow]) -> void:
@@ -301,7 +301,7 @@ func _apply_cast_and_show_result() -> void:
 			_switch_sub_view(SubView.RESULT)
 			return
 		targets.append(PartyCombatant.new(_target, provider))
-	var resolution: SpellResolution = _spell.effect.apply(caster_pc, targets, _get_rng()) if _spell.effect != null else SpellResolution.new()
+	var resolution: SpellResolution = _spell.effect.apply(caster_pc, targets, _get_spell_rng()) if _spell.effect != null else SpellResolution.new()
 	_result_message = _build_result_message(resolution)
 	_switch_sub_view(SubView.RESULT)
 
@@ -394,11 +394,10 @@ func _get_spell_repo() -> SpellRepository:
 	return _spell_repo
 
 
-func _get_rng() -> RandomNumberGenerator:
-	if _rng == null:
-		_rng = RandomNumberGenerator.new()
-		_rng.randomize()
-	return _rng
+func _get_spell_rng() -> SpellRng:
+	if _spell_rng == null:
+		_spell_rng = SpellRng.new(null)
+	return _spell_rng
 
 
 # --- refresh views (called once per view entry; cursor moves use _refresh_row_selection) ---
@@ -473,9 +472,9 @@ func _refresh_result_view() -> void:
 	_result_container.add_child(label)
 
 
-# Test seam: pre-set the RNG to make damage/heal deterministic.
-func set_rng(rng: RandomNumberGenerator) -> void:
-	_rng = rng
+# Test seam: pre-set the SpellRng to make damage/heal deterministic.
+func set_rng(spell_rng: SpellRng) -> void:
+	_spell_rng = spell_rng
 
 
 # Test seam: query state.

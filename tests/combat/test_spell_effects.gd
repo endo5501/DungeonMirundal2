@@ -20,25 +20,28 @@ class _FakeActor extends CombatActor:
 		return _max
 
 
-class _FixedRng extends RandomNumberGenerator:
-	# A minimal RNG stub: returns the next value from a queue for randi_range.
+class _FixedRng extends SpellRng:
+	# A minimal SpellRng stub: returns the next value from a queue for roll().
 	# Falls back to 0 when queue empty.
 	var _queue: Array[int] = []
+
+	func _init() -> void:
+		super._init(null)
 
 	func enqueue(values: Array) -> void:
 		for v in values:
 			_queue.append(int(v))
 
-	func randi_range(_from: int, _to: int) -> int:
+	func roll(_low: int, _high: int) -> int:
 		if _queue.is_empty():
 			return 0
 		return _queue.pop_front()
 
 
-func _make_rng() -> RandomNumberGenerator:
+func _make_spell_rng() -> SpellRng:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 12345
-	return rng
+	return SpellRng.new(rng)
 
 
 # --- DamageSpellEffect ---
@@ -48,7 +51,7 @@ func test_damage_zero_spread_uses_base_exactly():
 	effect.base_damage = 6
 	effect.spread = 0
 	var target := _FakeActor.new(20, "T")
-	var resolution := effect.apply(null, [target], _make_rng())
+	var resolution := effect.apply(null, [target], _make_spell_rng())
 	assert_eq(target.current_hp, 14)
 	assert_eq(resolution.size(), 1)
 	assert_eq(resolution.entries[0]["hp_delta"], -6)
@@ -106,7 +109,7 @@ func test_heal_zero_spread_restores_up_to_max():
 	effect.spread = 0
 	var target := _FakeActor.new(12, "T")
 	target.take_damage(7)  # current_hp = 5
-	var resolution := effect.apply(null, [target], _make_rng())
+	var resolution := effect.apply(null, [target], _make_spell_rng())
 	# 5 + 8 = 13, clamped to max 12
 	assert_eq(target.current_hp, 12)
 	assert_eq(resolution.entries[0]["hp_delta"], 7)
@@ -117,7 +120,7 @@ func test_heal_at_full_hp_is_no_op():
 	effect.base_heal = 8
 	effect.spread = 0
 	var target := _FakeActor.new(10, "T")
-	var resolution := effect.apply(null, [target], _make_rng())
+	var resolution := effect.apply(null, [target], _make_spell_rng())
 	assert_eq(target.current_hp, 10)
 	assert_eq(resolution.size(), 1)
 	assert_eq(resolution.entries[0]["hp_delta"], 0)
@@ -133,7 +136,7 @@ func test_heal_skips_dead_targets():
 	dead.take_damage(15)  # current_hp = 0
 	var alive_b := _FakeActor.new(20, "B")
 	alive_b.take_damage(5)
-	var resolution := effect.apply(null, [alive_a, dead, alive_b], _make_rng())
+	var resolution := effect.apply(null, [alive_a, dead, alive_b], _make_spell_rng())
 	# Only living entries; dead actor's current_hp must remain 0
 	assert_eq(resolution.size(), 2)
 	assert_eq(dead.current_hp, 0)
@@ -161,5 +164,5 @@ func test_heal_minimum_floor_is_one():
 func test_base_spell_effect_returns_empty_resolution():
 	var effect := SpellEffect.new()
 	var target := _FakeActor.new(10)
-	var resolution := effect.apply(null, [target], _make_rng())
+	var resolution := effect.apply(null, [target], _make_spell_rng())
 	assert_eq(resolution.size(), 0)

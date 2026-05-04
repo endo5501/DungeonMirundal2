@@ -218,7 +218,7 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 	if not caster.spend_mp(spell.mp_cost):
 		report.add_cast_skipped_no_mp(caster, spell)
 		return
-	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, rng) if spell.effect != null else SpellResolution.new()
+	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
 	report.add_cast(caster, spell, spell_resolution, retargeted_from)
 	for t in targets:
 		if t != null and not t.is_alive():

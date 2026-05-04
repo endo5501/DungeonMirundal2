@@ -1,11 +1,12 @@
 extends GutTest
 
 
-class _FixedRng extends RandomNumberGenerator:
+class _FixedRng extends SpellRng:
 	var _next: int = 0
 	func _init(p_next: int = 0) -> void:
+		super._init(null)
 		_next = p_next
-	func randi_range(_from: int, _to: int) -> int:
+	func roll(_low: int, _high: int) -> int:
 		return _next
 
 
