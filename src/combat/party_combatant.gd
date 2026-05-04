@@ -46,19 +46,19 @@ func _read_max_mp() -> int:
 	return character.max_mp
 
 
-func get_attack() -> int:
+func _get_base_attack() -> int:
 	if equipment_provider == null:
 		return 0
 	return equipment_provider.get_attack(character)
 
 
-func get_defense() -> int:
+func _get_base_defense() -> int:
 	if equipment_provider == null:
 		return 0
 	return equipment_provider.get_defense(character)
 
 
-func get_agility() -> int:
+func _get_base_agility() -> int:
 	if equipment_provider == null:
 		return 0
 	return equipment_provider.get_agility(character)

@@ -1,6 +1,20 @@
 extends GutTest
 
 
+func test_miss_action_renders_dodge_message():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	log.append_from_report_action({
+		"type": "miss",
+		"attacker_name": "P1",
+		"target_name": "Slime",
+	})
+	var text := log.get_display_text()
+	assert_true(text.length() > 0, "miss action should render a non-empty line")
+	assert_true(text.contains("P1"), "log should name the attacker: %s" % text)
+	assert_true(text.contains("Slime"), "log should name the target: %s" % text)
+
+
 func test_retargeted_attack_log_mentions_original_and_new_target():
 	var log := CombatLog.new()
 	add_child_autofree(log)

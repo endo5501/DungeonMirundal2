@@ -21,6 +21,14 @@ func add_attack(
 	})
 
 
+func add_miss(attacker: CombatActor, target: CombatActor) -> void:
+	actions.append({
+		"type": "miss",
+		"attacker_name": attacker.actor_name if attacker != null else "",
+		"target_name": target.actor_name if target != null else "",
+	})
+
+
 func add_defend(actor: CombatActor) -> void:
 	actions.append({
 		"type": "defend",

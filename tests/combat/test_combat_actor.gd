@@ -79,6 +79,38 @@ func test_take_damage_reduces_current_hp():
 	assert_eq(a.current_hp, 25)
 
 
+func test_take_damage_returns_actual_applied_amount():
+	var a := _FakeActor.new(30)
+	var applied := a.take_damage(5)
+	assert_eq(applied, 5)
+
+
+func test_take_damage_returns_halved_amount_when_defending():
+	var a := _FakeActor.new(30)
+	a.apply_defend()
+	var applied := a.take_damage(8)
+	# defended halves to max(8/2, 1) = 4; HP loss is 4; return matches.
+	assert_eq(applied, 4)
+	assert_eq(a.current_hp, 26)
+
+
+func test_take_damage_returns_one_when_defending_against_one():
+	var a := _FakeActor.new(30)
+	a.apply_defend()
+	var applied := a.take_damage(1)
+	# defended halves to max(1/2, 1) = 1; HP loss is 1.
+	assert_eq(applied, 1)
+	assert_eq(a.current_hp, 29)
+
+
+func test_take_damage_returns_clamped_amount_when_overkill():
+	var a := _FakeActor.new(10)
+	var applied := a.take_damage(100)
+	# Only 10 HP available; only 10 actually applied.
+	assert_eq(applied, 10)
+	assert_eq(a.current_hp, 0)
+
+
 func test_take_damage_clamps_to_zero():
 	var a := _FakeActor.new(10)
 	a.take_damage(100)

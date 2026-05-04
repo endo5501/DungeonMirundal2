@@ -53,19 +53,19 @@ func get_species_id() -> StringName:
 	return monster.data.monster_id
 
 
-func get_attack() -> int:
+func _get_base_attack() -> int:
 	if monster == null or monster.data == null:
 		return 0
 	return monster.data.attack
 
 
-func get_defense() -> int:
+func _get_base_defense() -> int:
 	if monster == null or monster.data == null:
 		return 0
 	return monster.data.defense
 
 
-func get_agility() -> int:
+func _get_base_agility() -> int:
 	if monster == null or monster.data == null:
 		return 0
 	return monster.data.agility

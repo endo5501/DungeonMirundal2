@@ -6,16 +6,43 @@ const TEST_SEED: int = 12345
 class _StubActor extends CombatActor:
 	var _attack: int
 	var _defense: int
+	var _agility: int
+	var _hit_mod: float
+	var _eva_mod: float
+	var _blind: bool
 
-	func _init(p_attack: int, p_defense: int) -> void:
+	func _init(
+		p_attack: int = 0,
+		p_defense: int = 0,
+		p_agility: int = 0,
+		p_hit: float = 0.0,
+		p_eva: float = 0.0,
+		p_blind: bool = false,
+	) -> void:
 		_attack = p_attack
 		_defense = p_defense
+		_agility = p_agility
+		_hit_mod = p_hit
+		_eva_mod = p_eva
+		_blind = p_blind
 
-	func get_attack() -> int:
+	func _get_base_attack() -> int:
 		return _attack
 
-	func get_defense() -> int:
+	func _get_base_defense() -> int:
 		return _defense
+
+	func _get_base_agility() -> int:
+		return _agility
+
+	func get_hit_modifier_total() -> float:
+		return _hit_mod
+
+	func get_evasion_modifier_total() -> float:
+		return _eva_mod
+
+	func has_blind_flag() -> bool:
+		return _blind
 
 
 func _make_rng() -> RandomNumberGenerator:
@@ -24,7 +51,7 @@ func _make_rng() -> RandomNumberGenerator:
 	return rng
 
 
-# --- formula ---
+# --- formula (unchanged) ---
 
 func test_apply_formula_basic_case():
 	# max(1, 10 - 4/2 + 1) = max(1, 9) = 9
@@ -72,12 +99,155 @@ func test_calculate_by_stats_is_deterministic_with_seeded_rng():
 		)
 
 
-# --- calculate(actor, actor, rng) ---
+# --- roll_damage (pure) ---
 
-func test_calculate_uses_actor_stats():
-	var attacker := _StubActor.new(10, 0)
-	var target := _StubActor.new(0, 4)
+func test_roll_damage_uses_actor_stats_and_spread():
+	var attacker := _StubActor.new(10, 0, 5)
+	var target := _StubActor.new(0, 4, 5)
+	# 10 - 4/2 + 1 = 9
+	assert_eq(DamageCalculator.roll_damage(attacker, target, 1), 9)
+
+
+func test_roll_damage_floors_at_one():
+	var attacker := _StubActor.new(2, 0, 5)
+	var target := _StubActor.new(0, 4, 5)
+	# 2 - 4/2 + 0 = 0 → floor 1
+	assert_eq(DamageCalculator.roll_damage(attacker, target, 0), 1)
+
+
+# --- roll_hit (pure: strict less-than) ---
+
+func test_roll_hit_strictly_less_than_returns_true():
+	assert_true(DamageCalculator.roll_hit(0.85, 0.84))
+
+
+func test_roll_hit_equal_returns_false():
+	assert_false(DamageCalculator.roll_hit(0.85, 0.85))
+
+
+func test_roll_hit_above_returns_false():
+	assert_false(DamageCalculator.roll_hit(0.85, 0.90))
+
+
+# --- hit_chance (pure) ---
+
+func test_hit_chance_equal_stats_no_modifiers_returns_base():
+	var attacker := _StubActor.new(0, 0, 5)
+	var target := _StubActor.new(0, 0, 5)
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.85, 0.0001)
+
+
+func test_hit_chance_agi_advantage_plus_five_yields_plus_010():
+	var attacker := _StubActor.new(0, 0, 10)
+	var target := _StubActor.new(0, 0, 5)
+	# AGI diff +5 → +0.10 (cap 0.30 not hit)
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.95, 0.0001)
+
+
+func test_hit_chance_agi_advantage_caps_at_plus_030():
+	var attacker := _StubActor.new(0, 0, 25)
+	var target := _StubActor.new(0, 0, 5)
+	# AGI diff +20 × 0.02 = +0.40 → capped at +0.30 → raw 1.15 → final clamp 0.99
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.99, 0.0001)
+
+
+func test_hit_chance_agi_disadvantage_caps_at_minus_030():
+	var attacker := _StubActor.new(0, 0, 5)
+	var target := _StubActor.new(0, 0, 30)
+	# AGI diff -25 × 0.02 = -0.50 → capped at -0.30 → 0.85 - 0.30 = 0.55
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.55, 0.0001)
+
+
+func test_hit_chance_hit_modifier_caps_at_plus_04():
+	var attacker := _StubActor.new(0, 0, 5, 0.7, 0.0, false)
+	var target := _StubActor.new(0, 0, 5)
+	# attacker.hit clamped to +0.4 → 0.85 + 0.4 = 1.25 → clamp to 0.99
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.99, 0.0001)
+
+
+func test_hit_chance_evasion_modifier_caps_at_plus_04():
+	var attacker := _StubActor.new(0, 0, 5)
+	var target := _StubActor.new(0, 0, 5, 0.0, 0.6, false)
+	# target.evasion clamped to +0.4 → 0.85 - 0.4 = 0.45
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.45, 0.0001)
+
+
+func test_hit_chance_hit_and_evasion_each_at_cap_cancels():
+	# attacker hit_mod 0.7, target eva 0.6 → both clamp to 0.4 → +0.4 - 0.4 = 0
+	var attacker := _StubActor.new(0, 0, 5, 0.7, 0.0, false)
+	var target := _StubActor.new(0, 0, 5, 0.0, 0.6, false)
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.85, 0.0001)
+
+
+func test_hit_chance_clamps_at_upper_bound_099():
+	# Massive attacker hit + AGI advantage + low target evasion → raw > 1.20
+	var attacker := _StubActor.new(0, 0, 30, 0.4, 0.0, false)
+	var target := _StubActor.new(0, 0, 5, 0.0, -0.4, false)
+	# raw = 0.85 + 0.4 - (-0.4) + 0.30 = 1.95 → clamp 0.99
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.99, 0.0001)
+
+
+func test_hit_chance_clamps_at_lower_bound_005():
+	# Penalty stack to push raw below 0.05.
+	var attacker := _StubActor.new(0, 0, 5, -0.4, 0.0, false)
+	var target := _StubActor.new(0, 0, 30, 0.0, 0.4, false)
+	# raw = 0.85 + (-0.4) - 0.4 + (-0.30) = -0.25 → clamp 0.05
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.05, 0.0001)
+
+
+# Per design Decision 2: BLIND_PENALTY is 0.0 in this change. The blind flag
+# infrastructure exists but doesn't affect numbers yet — the next change wires
+# it up via StatusData.
+func test_hit_chance_blind_flag_currently_no_effect():
+	var attacker := _StubActor.new(0, 0, 5, 0.0, 0.0, true)
+	var target := _StubActor.new(0, 0, 5)
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.85, 0.0001)
+
+
+# --- calculate(actor, actor, rng) → DamageResult (orchestrator integration) ---
+
+func test_calculate_returns_damage_result_instance():
+	var attacker := _StubActor.new(10, 0, 5)
+	var target := _StubActor.new(0, 4, 5)
 	var rng := _make_rng()
-	var damage := DamageCalculator.calculate(attacker, target, rng)
-	# Equivalent to calculate_by_stats(10, 4, rng_first_roll)
-	assert_true(damage >= 8 and damage <= 10)
+	var result := DamageCalculator.calculate(attacker, target, rng)
+	assert_is(result, DamageResult)
+
+
+func test_calculate_with_overwhelming_advantage_hits_consistently():
+	# AGI gap pushes hit_chance to clamp 0.99; over 20 trials we expect mostly hits.
+	var attacker := _StubActor.new(10, 0, 30, 0.4, 0.0, false)
+	var target := _StubActor.new(0, 4, 1, 0.0, -0.4, false)
+	var rng := _make_rng()
+	var hits := 0
+	for i in range(20):
+		var r := DamageCalculator.calculate(attacker, target, rng)
+		if r.hit:
+			hits += 1
+			assert_true(r.amount >= 1)
+		else:
+			assert_eq(r.amount, 0)
+	# At chance 0.99 the expected misses over 20 trials are 0.2; allow up to 2.
+	assert_gte(hits, 18)
+
+
+func test_calculate_with_overwhelming_disadvantage_misses_mostly():
+	# Pin hit_chance at the floor 0.05.
+	var attacker := _StubActor.new(10, 0, 1, -0.4, 0.0, false)
+	var target := _StubActor.new(0, 4, 30, 0.0, 0.4, false)
+	var rng := _make_rng()
+	var hits := 0
+	for i in range(50):
+		var r := DamageCalculator.calculate(attacker, target, rng)
+		if r.hit:
+			hits += 1
+	# At chance 0.05 the expected hits over 50 trials are 2.5; allow up to 7.
+	assert_lt(hits, 8)
+
+
+func test_calculate_returns_zero_when_attacker_is_null():
+	var target := _StubActor.new(0, 4, 5)
+	var rng := _make_rng()
+	var r := DamageCalculator.calculate(null, target, rng)
+	assert_false(r.hit)
+	assert_eq(r.amount, 0)

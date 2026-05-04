@@ -191,10 +191,13 @@ func _resolve_attack(attacker: CombatActor, target: CombatActor, rng: RandomNumb
 		effective_target = _pick_living_same_side_as(target, attacker)
 	if effective_target == null:
 		return
-	var damage := DamageCalculator.calculate(attacker, effective_target, rng)
+	var result := DamageCalculator.calculate(attacker, effective_target, rng)
+	if not result.hit:
+		report.add_miss(attacker, effective_target)
+		return
 	var defended := effective_target.is_defending()
-	effective_target.take_damage(damage)
-	report.add_attack(attacker, effective_target, damage, defended, retargeted_from)
+	var applied := effective_target.take_damage(result.amount)
+	report.add_attack(attacker, effective_target, applied, defended, retargeted_from)
 	if not effective_target.is_alive():
 		report.add_defeated(effective_target)
 
@@ -348,9 +351,11 @@ func _end_turn_cleanup() -> void:
 	for a in party:
 		if a != null:
 			a.clear_turn_flags()
+			a.modifier_stack.tick_battle_turn()
 	for m in monsters:
 		if m != null:
 			m.clear_turn_flags()
+			m.modifier_stack.tick_battle_turn()
 	_pending_commands.clear()
 
 
