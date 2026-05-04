@@ -3,19 +3,62 @@ extends RefCounted
 
 const STAT_KEYS: Array[StringName] = [&"STR", &"INT", &"PIE", &"VIT", &"AGI", &"LUC"]
 
+# Emitted when current_hp or max_hp changes to a different value.
+signal hp_changed(current_hp: int, max_hp: int)
+# Emitted when current_mp or max_mp changes to a different value.
+signal mp_changed(current_mp: int, max_mp: int)
+# Emitted when persistent_statuses is reassigned to an array whose contents
+# differ (element-wise) from the previous array.
+signal statuses_changed(persistent_statuses: Array[StringName])
+
+# When true, all signal emissions from setters are skipped. Used by
+# Character.from_dict (and Character.create) so loading/construction does not
+# spam UI listeners. Public field; tests may toggle it directly.
+var _suspend_signals: bool = false
+
 var character_name: String
 var race: RaceData
 var job: JobData
 var level: int
 var base_stats: Dictionary  # {&"STR": int, ...}
-var current_hp: int
-var max_hp: int
-var current_mp: int
-var max_mp: int
+var current_hp: int = 0:
+	set(value):
+		if current_hp == value:
+			return
+		current_hp = value
+		if not _suspend_signals:
+			hp_changed.emit(current_hp, max_hp)
+var max_hp: int = 0:
+	set(value):
+		if max_hp == value:
+			return
+		max_hp = value
+		if not _suspend_signals:
+			hp_changed.emit(current_hp, max_hp)
+var current_mp: int = 0:
+	set(value):
+		if current_mp == value:
+			return
+		current_mp = value
+		if not _suspend_signals:
+			mp_changed.emit(current_mp, max_mp)
+var max_mp: int = 0:
+	set(value):
+		if max_mp == value:
+			return
+		max_mp = value
+		if not _suspend_signals:
+			mp_changed.emit(current_mp, max_mp)
 var accumulated_exp: int = 0
 var equipment: Equipment = Equipment.new()
 var known_spells: Array[StringName] = []
-var persistent_statuses: Array[StringName] = []
+var persistent_statuses: Array[StringName] = []:
+	set(value):
+		if persistent_statuses == value:
+			return
+		persistent_statuses = value
+		if not _suspend_signals:
+			statuses_changed.emit(persistent_statuses)
 
 static func create(
 	p_name: String,
