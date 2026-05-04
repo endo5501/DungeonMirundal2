@@ -1,0 +1,70 @@
+## 1. Character シグナル基盤(TDD)
+
+- [x] 1.1 `tests/dungeon/test_character_signals.gd` を作成: hp_changed/mp_changed/statuses_changed が「異なる値の代入で 1 回だけ発火」「同値代入で発火しない」を検証する失敗テストを書く
+- [x] 1.2 `tests/dungeon/test_character_signals.gd` に `_suspend_signals` フラグの直接操作で発火が抑制されること、解除後は通常通り発火することを検証するテストを追加
+- [x] 1.3 テストを実行して期待通り失敗することを確認(GUT で 4–6 個 FAIL)
+- [x] 1.4 `src/dungeon/character.gd` に `signal hp_changed(current_hp: int, max_hp: int)`、`signal mp_changed(current_mp: int, max_mp: int)`、`signal statuses_changed(persistent_statuses: Array[StringName])` を定義
+- [x] 1.5 `current_hp` / `max_hp` / `current_mp` / `max_mp` をプロパティセッター付きに書き換え、値変化時のみ対応するシグナルを `_suspend_signals == false` の場合に発火
+- [x] 1.6 `persistent_statuses` をプロパティセッター付きに書き換え、配列の値比較で変化時のみ `statuses_changed` を発火
+- [x] 1.7 1.1–1.2 のテストがすべて PASS することを確認
+- [ ] 1.8 ここでコミット(英語、TDD 単位): `Add Character state change signals (hp/mp/statuses)`
+
+## 2. ロード時のシグナル抑制
+
+- [ ] 2.1 `tests/dungeon/test_character_signals.gd` に「`Character.from_dict(valid_data)` 中はどのシグナルも発火しない」を検証する失敗テストを追加
+- [ ] 2.2 「`from_dict` から戻った後にプロパティを書き換えると通常通りシグナルが発火する」テストを追加
+- [ ] 2.3 「race リソース欠落で `from_dict` が null を返す経路でも、別の Character の発火挙動には影響しない」テストを追加
+- [ ] 2.4 テストが期待通り失敗することを確認
+- [ ] 2.5 `src/dungeon/character.gd` の `Character.from_dict` 内で、新しい Character の `_suspend_signals` を冒頭で `true` にし、return する全分岐の直前で `false` に戻す。早期 return(race/job 解決失敗)の経路も漏らさず処理
+- [ ] 2.6 2.1–2.3 のテストが PASS することを確認
+- [ ] 2.7 ここでコミット: `Suspend Character signals during from_dict`
+
+## 3. PartyCombatant の発火経路統合
+
+- [ ] 3.1 `tests/combat/test_party_combatant_signals.gd` を作成: `take_damage(5)` で wrap した Character の `hp_changed` がちょうど 1 回 `(15, max_hp)` で発火することを検証する失敗テスト
+- [ ] 3.2 `spend_mp(2)` で `mp_changed` が `(3, max_mp)` で発火することを検証するテストを追加
+- [ ] 3.3 `commit_persistent_to_character` で配列内容が変わったときだけ `statuses_changed` が発火することを検証するテストを 2 ケース(変化あり/なし)追加
+- [ ] 3.4 テストが期待通り失敗することを確認(セッター経由になっていないので発火が無いか、発火しすぎる)
+- [ ] 3.5 `src/combat/party_combatant.gd` の `_write_current_hp` / `_write_current_mp` を確認(プロパティ代入経由なので 1.5 のセッター対応で自動的に通る想定)。テストが PASS することを確認
+- [ ] 3.6 `commit_persistent_to_character` の最後の `character.persistent_statuses = persistent` がプロパティセッター経由で値比較した上で発火することを確認(1.6 で対応済み想定)
+- [ ] 3.7 既存の `tests/combat/test_party_combatant.gd`(あれば) と既存戦闘系テストが回帰していないことを確認
+- [ ] 3.8 ここでコミット: `Route PartyCombatant writes through Character setters`
+
+## 4. PartyMemberPanel のシグナル購読
+
+- [ ] 4.1 `tests/dungeon_scene/test_party_member_panel_signals.gd` を作成: Panel に Character をバインドし、その Character の `current_hp` を変えると Panel の表示用フィールド(または `queue_redraw` 呼出回数)が更新されることを検証する失敗テスト
+- [ ] 4.2 「Character A → B に切替後、A の HP 変化では Panel が反応しない」テストを追加
+- [ ] 4.3 「Panel を null で unbind した後の HP 変化に Panel が反応しない」テストを追加
+- [ ] 4.4 テストが期待通り失敗することを確認
+- [ ] 4.5 `src/dungeon_scene/party_member_panel.gd` に Character 参照を保持するフィールドと、バインド/アンバインド時にシグナル接続を切り替えるメソッド(例: `bind_character(c: Character)`)を追加
+- [ ] 4.6 接続したシグナルのコールバックは内部状態を更新して `queue_redraw()` を呼ぶ。MP/状態異常も同様
+- [ ] 4.7 既存の `set_member(data: PartyMemberData)` 経路は保持する(後方互換)。Character バインドと PartyMemberData 受け取りは独立に動く
+- [ ] 4.8 4.1–4.3 のテストが PASS することを確認
+- [ ] 4.9 ここでコミット: `Make PartyMemberPanel auto-refresh from Character signals`
+
+## 5. PartyDisplay と DungeonScreen の配線
+
+- [ ] 5.1 `tests/dungeon_scene/test_party_display_character_binding.gd` を作成: PartyDisplay に Character 配列を渡し、特定 Character の HP 変化で対応する Panel だけが再描画されることを検証
+- [ ] 5.2 「null スロットを含む Character 配列でも安全に動作する」ことを検証するテストを追加
+- [ ] 5.3 テストが期待通り失敗することを確認
+- [ ] 5.4 `src/dungeon_scene/party_display.gd` に「Character 配列を受け取って各 Panel に bind_character する」メソッド(例: `bind_party_characters(front: Array, back: Array)`)を追加
+- [ ] 5.5 5.1–5.2 のテストが PASS することを確認
+- [ ] 5.6 `src/dungeon_scene/dungeon_screen.gd` の初期化または `refresh_party_display` 周辺を、`GameState.guild` のパーティから Character 配列を取り出して `bind_party_characters` を呼ぶ実装に切替。既存の `refresh_party_display(party_data)` は呼ばれてもエラーにならない範囲で温存(後方互換)
+- [ ] 5.7 既存の `tests/dungeon_scene/` 配下のテストが回帰していないことを確認
+- [ ] 5.8 ここでコミット: `Bind PartyDisplay to live Characters in DungeonScreen`
+
+## 6. 統合テストでバグ再現と修正の確認
+
+- [ ] 6.1 `tests/integration/test_esc_menu_heal_refreshes_status_bar.gd`(または相当する統合テスト場所)を作成: ダンジョン中で Character の HP を低くし、ESC メニュー経由で `SpellUseFlow` を走らせてヒールを適用し、PartyMemberPanel の HP 表示が更新されていることを検証
+- [ ] 6.2 戦闘経由(`CombatOverlay._refresh_panels` 発火)でも引き続き HP 表示が更新されることを既存テストでカバーされていなければ追加
+- [ ] 6.3 統合テストが PASS することを確認
+- [ ] 6.4 既存テスト全体を実行して回帰が無いことを確認(GUT runner)
+- [ ] 6.5 Godot エディタで実機確認: ダンジョン入場 → エンカウント → ダメージ受ける → 戦闘終了 → ESC メニュー → ヒール → ステータスバーが追従することを目視確認
+- [ ] 6.6 ここでコミット: `Verify ESC menu heal refreshes dungeon status bar`
+
+## 7. 仕上げ
+
+- [ ] 7.1 全テストを実行し、PASS 件数と失敗件数を記録
+- [ ] 7.2 `openspec verify add-character-state-change-signals` を実行し、spec と実装の整合を確認
+- [ ] 7.3 design.md / proposal.md の Open Questions / Migration Plan に対し、実装中に判明した事項があれば追記
+- [ ] 7.4 PR を作成(変更概要、テスト方法、関連 in-progress changes との関係を記述)
