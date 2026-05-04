@@ -6,6 +6,7 @@ const JOBS_DIR := "res://data/jobs/"
 const MONSTERS_DIR := "res://data/monsters/"
 const ENCOUNTER_TABLES_DIR := "res://data/encounter_tables/"
 const ITEMS_DIR := "res://data/items/"
+const SPELLS_DIR := "res://data/spells/"
 
 func load_all_races() -> Array[RaceData]:
 	var results: Array[RaceData] = []
@@ -36,6 +37,20 @@ func load_all_items() -> ItemRepository:
 	var repo := ItemRepository.new()
 	for res in _load_resources(ITEMS_DIR):
 		repo.register(res as Item)
+	return repo
+
+
+func load_all_spells() -> Array[SpellData]:
+	var results: Array[SpellData] = []
+	for res in _load_resources(SPELLS_DIR):
+		results.append(res as SpellData)
+	return results
+
+
+func load_spell_repository() -> SpellRepository:
+	var repo := SpellRepository.new()
+	for spell in load_all_spells():
+		repo.register(spell)
 	return repo
 
 func _load_resources(dir_path: String) -> Array:

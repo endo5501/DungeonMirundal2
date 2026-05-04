@@ -19,6 +19,7 @@ var monsters: Array = []  # Array[MonsterCombatant or CombatActor-compatible]
 var turn_number: int = 0
 var escape_threshold: float = 0.5
 var inventory: Inventory = null  # Optional; set to remove consumed ItemCommand instances
+var spell_repo: SpellRepository = null  # Optional override; lazy-loaded via DataLoader if null.
 
 var _pending_commands: Dictionary = {}  # int index -> Command
 var _outcome: EncounterOutcome
@@ -111,6 +112,8 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 				continue
 			if cmd is AttackCommand:
 				_resolve_attack(actor, cmd.target, rng, report)
+			elif cmd is CastCommand:
+				_resolve_cast(actor, cmd as CastCommand, rng, report)
 		else:
 			if not actor.is_alive():
 				continue
@@ -194,6 +197,112 @@ func _resolve_attack(attacker: CombatActor, target: CombatActor, rng: RandomNumb
 	report.add_attack(attacker, effective_target, damage, defended, retargeted_from)
 	if not effective_target.is_alive():
 		report.add_defeated(effective_target)
+
+
+func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGenerator, report: TurnReport) -> void:
+	var repo := get_spell_repo()
+	if repo == null:
+		push_warning("TurnEngine: no SpellRepository available; cast aborted")
+		return
+	var spell: SpellData = repo.find(cmd.spell_id)
+	if spell == null:
+		push_warning("TurnEngine: unknown spell id %s; cast aborted" % cmd.spell_id)
+		return
+	var resolution := _resolve_cast_targets(caster, cmd, spell)
+	var targets: Array = resolution["targets"]
+	var retargeted_from: String = resolution["retargeted_from"]
+	# Pre-check: refuse cast (without consuming MP) if there is no valid target.
+	if targets.is_empty():
+		report.add_cast_skipped_no_target(caster, spell)
+		return
+	if not caster.spend_mp(spell.mp_cost):
+		report.add_cast_skipped_no_mp(caster, spell)
+		return
+	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, rng) if spell.effect != null else SpellResolution.new()
+	report.add_cast(caster, spell, spell_resolution, retargeted_from)
+	for t in targets:
+		if t != null and not t.is_alive():
+			report.add_defeated(t)
+
+
+func _resolve_cast_targets(caster: CombatActor, cmd: CastCommand, spell: SpellData) -> Dictionary:
+	var result: Dictionary = {"targets": [], "retargeted_from": ""}
+	match spell.target_type:
+		SpellData.TargetType.ENEMY_ONE:
+			var enemy: CombatActor = cmd.target as CombatActor
+			if enemy != null and enemy.is_alive():
+				result["targets"] = [enemy]
+			else:
+				var original_name := enemy.actor_name if enemy != null else ""
+				var fallback := _pick_alive_replacement(enemy, monsters)
+				if fallback != null:
+					result["targets"] = [fallback]
+					result["retargeted_from"] = original_name
+		SpellData.TargetType.ENEMY_GROUP:
+			var species_id := _species_id_of(cmd.target)
+			var collected: Array = []
+			for m in monsters:
+				if m == null or not m.is_alive():
+					continue
+				if species_id == &"" or _species_id_of(m) == species_id:
+					collected.append(m)
+			result["targets"] = collected
+		SpellData.TargetType.ALLY_ONE:
+			var ally: CombatActor = cmd.target as CombatActor
+			if ally != null and ally.is_alive():
+				result["targets"] = [ally]
+			else:
+				var original_name := ally.actor_name if ally != null else ""
+				var fallback := _pick_alive_replacement(ally, party)
+				if fallback != null:
+					result["targets"] = [fallback]
+					result["retargeted_from"] = original_name
+		SpellData.TargetType.ALLY_ALL:
+			var party_targets: Array = []
+			for p in party:
+				if p != null and p.is_alive():
+					party_targets.append(p)
+			result["targets"] = party_targets
+	return result
+
+
+# Pick a living member of `pool`, preferring same species (when applicable) over
+# the original `original` actor.
+func _pick_alive_replacement(original: CombatActor, pool: Array) -> CombatActor:
+	var original_species := _species_id_of(original)
+	if original_species != &"":
+		for c in pool:
+			if c == null or not c.is_alive():
+				continue
+			if c == original:
+				continue
+			if _species_id_of(c) == original_species:
+				return c
+	for c in pool:
+		if c == null or not c.is_alive():
+			continue
+		if c == original:
+			continue
+		return c
+	return null
+
+
+# Returns the species id for a CombatActor (e.g. MonsterData.monster_id for monsters).
+# Party members and species-less actors return &"". MonsterData branch supports
+# CastCommand targets that pass a species key directly instead of a combatant.
+func _species_id_of(actor) -> StringName:
+	if actor is CombatActor:
+		return (actor as CombatActor).get_species_id()
+	if actor is MonsterData:
+		return (actor as MonsterData).monster_id
+	return &""
+
+
+func get_spell_repo() -> SpellRepository:
+	if spell_repo == null:
+		var loader := DataLoader.new()
+		spell_repo = loader.load_spell_repository()
+	return spell_repo
 
 
 func _pick_living_party(rng: RandomNumberGenerator) -> CombatActor:

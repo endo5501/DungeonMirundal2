@@ -14,6 +14,7 @@ var current_mp: int
 var max_mp: int
 var accumulated_exp: int = 0
 var equipment: Equipment = Equipment.new()
+var known_spells: Array[StringName] = []
 
 static func create(
 	p_name: String,
@@ -46,12 +47,13 @@ static func create(
 	ch.base_stats = stats
 	ch.max_hp = p_job.base_hp + stats[&"VIT"] / 3
 	ch.current_hp = ch.max_hp
-	if p_job.has_magic:
+	if p_job.is_magic_capable():
 		ch.max_mp = p_job.base_mp
 		ch.current_mp = ch.max_mp
 	else:
 		ch.max_mp = 0
 		ch.current_mp = 0
+	ch.known_spells = ch._spells_for_level(1)
 	return ch
 
 func is_dead() -> bool:
@@ -82,15 +84,19 @@ func level_up() -> void:
 	var hp_growth := maxi(job.hp_per_level + vit / 3, 1)
 	max_hp += hp_growth
 	current_hp += hp_growth
-	if job.has_magic:
+	if job.is_magic_capable():
 		max_mp += job.mp_per_level
 		current_mp += job.mp_per_level
+	_grant_spells_for_level(level)
 
 
 func to_dict(inventory: Inventory = null) -> Dictionary:
 	var stats_str := {}
 	for key in STAT_KEYS:
 		stats_str[String(key)] = base_stats.get(key, 0)
+	var spell_strings: Array[String] = []
+	for sid in known_spells:
+		spell_strings.append(String(sid))
 	var d := {
 		"character_name": character_name,
 		"race_id": _resolve_race_id(),
@@ -102,10 +108,47 @@ func to_dict(inventory: Inventory = null) -> Dictionary:
 		"current_mp": current_mp,
 		"max_mp": max_mp,
 		"accumulated_exp": accumulated_exp,
+		"known_spells": spell_strings,
 	}
 	if inventory != null:
 		d["equipment"] = equipment.to_dict(inventory)
 	return d
+
+
+# Returns the spell ids that are first granted at exactly `target_level`
+# (i.e. the value of job.spell_progression[target_level], normalized to StringName).
+# Returns an empty array if the job has no progression entry for that level.
+func _spells_for_level(target_level: int) -> Array[StringName]:
+	var result: Array[StringName] = []
+	if job == null or job.spell_progression == null:
+		return result
+	if not job.spell_progression.has(target_level):
+		return result
+	var raw: Array = job.spell_progression[target_level]
+	for sid in raw:
+		var name := StringName(sid)
+		if not result.has(name):
+			result.append(name)
+	return result
+
+
+func _grant_spells_for_level(target_level: int) -> void:
+	for sid in _spells_for_level(target_level):
+		if not known_spells.has(sid):
+			known_spells.append(sid)
+
+
+# Replay every progression key whose level <= target_level so that legacy saves
+# without `known_spells` can be migrated to the current spell list.
+func _rebuild_known_spells_through_level(target_level: int) -> void:
+	known_spells = []
+	if job == null or job.spell_progression == null:
+		return
+	var keys: Array = job.spell_progression.keys()
+	keys.sort()
+	for lv in keys:
+		if int(lv) <= target_level:
+			_grant_spells_for_level(int(lv))
 
 
 func _resolve_race_id() -> String:
@@ -124,7 +167,7 @@ func _resolve_resource_id(res: Resource, kind: String) -> String:
 	push_warning("Character.to_dict: %s.id is empty for %s, falling back to resource_path" % [kind, res.resource_path])
 	return res.resource_path.get_file().get_basename()
 
-static func from_dict(data: Dictionary, inventory: Inventory = null) -> Character:
+static func from_dict(data: Dictionary, inventory: Inventory = null, repo: SpellRepository = null) -> Character:
 	# ResourceLoader.exists() is load-bearing: calling load() on a missing path
 	# emits engine-level "Condition 'found' is true" errors, which we want to
 	# avoid for routine save-with-missing-resource cases.
@@ -162,6 +205,35 @@ static func from_dict(data: Dictionary, inventory: Inventory = null) -> Characte
 		ch.equipment = Equipment.from_dict(data.get("equipment", {}), inventory)
 	else:
 		ch.equipment = Equipment.new()
+	if data.has("known_spells"):
+		var raw: Array = data.get("known_spells", [])
+		# Lazy-load the repo only if a known_spells field exists; otherwise we
+		# never need it. Skipping validation when the load fails is fine — bogus
+		# ids will simply be carried forward and resolved (or warned) later.
+		var validation_repo: SpellRepository = repo
+		if validation_repo == null:
+			validation_repo = DataLoader.new().load_spell_repository()
+		ch.known_spells = []
+		var dropped: Array[String] = []
+		for sid in raw:
+			var name := StringName(sid)
+			if validation_repo == null or validation_repo.has_id(name):
+				if not ch.known_spells.has(name):
+					ch.known_spells.append(name)
+			else:
+				dropped.append(String(sid))
+		if not dropped.is_empty():
+			push_warning(
+				"Character.from_dict: dropping unknown spell ids %s for %s"
+				% [dropped, data.get("character_name", "")]
+			)
+	else:
+		# Legacy save (pre add-magic-system): rebuild known_spells from JobData.spell_progression.
+		ch._rebuild_known_spells_through_level(ch.level)
+		push_warning(
+			"Character.from_dict: known_spells missing; reconstructed from JobData.spell_progression for %s"
+			% data.get("character_name", "")
+		)
 	return ch
 
 func to_party_member_data() -> PartyMemberData:

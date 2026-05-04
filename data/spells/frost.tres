@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/damage_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="DamageSE_frost"]
+script = ExtResource("2")
+base_damage = 6
+spread = 2
+
+[resource]
+script = ExtResource("1")
+id = &"frost"
+display_name = "フロスト"
+school = &"mage"
+level = 1
+mp_cost = 2
+target_type = 0
+scope = 0
+effect = SubResource("DamageSE_frost")

@@ -34,7 +34,8 @@ func _make_job(name_: String, with_magic: bool = false) -> JobData:
 	var j := JobData.new()
 	j.job_name = name_
 	j.base_hp = 10
-	j.has_magic = with_magic
+	j.mage_school = with_magic
+	j.priest_school = false
 	j.base_mp = 5 if with_magic else 0
 	return j
 

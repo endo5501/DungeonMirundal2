@@ -29,6 +29,23 @@ func _read_max_hp() -> int:
 	return character.max_hp
 
 
+func _read_current_mp() -> int:
+	if character == null:
+		return 0
+	return character.current_mp
+
+
+func _write_current_mp(value: int) -> void:
+	if character != null:
+		character.current_mp = value
+
+
+func _read_max_mp() -> int:
+	if character == null:
+		return 0
+	return character.max_mp
+
+
 func get_attack() -> int:
 	if equipment_provider == null:
 		return 0

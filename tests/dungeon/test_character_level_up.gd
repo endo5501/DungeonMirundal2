@@ -76,7 +76,8 @@ func test_level_up_minimum_hp_growth_is_one():
 	var job := JobData.new()
 	job.job_name = "Weak"
 	job.base_hp = 4
-	job.has_magic = false
+	job.mage_school = false
+	job.priest_school = false
 	job.base_mp = 0
 	job.hp_per_level = 0
 	job.mp_per_level = 0
@@ -148,7 +149,8 @@ func _make_custom_job(table: PackedInt64Array) -> JobData:
 	var job := JobData.new()
 	job.job_name = "Custom"
 	job.base_hp = 10
-	job.has_magic = false
+	job.mage_school = false
+	job.priest_school = false
 	job.base_mp = 0
 	job.hp_per_level = 1
 	job.mp_per_level = 0

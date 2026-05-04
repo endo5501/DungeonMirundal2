@@ -1,18 +1,24 @@
 ## Purpose
 職業（JobData）リソースの定義と各種バランス数値を規定する。HP/MP 初期値・成長率・装備可能カテゴリ・使用可能魔法系統などの項目を対象とする。
-
 ## Requirements
-
 ### Requirement: JobData holds job configuration
-JobData SHALL store the job name, base HP, magic capability (has_magic), base MP, and stat requirements for all six stats.
+JobData SHALL store the job name, base HP, magic school flags (`mage_school`, `priest_school`), base MP, and stat requirements for all six stats. The legacy `has_magic` boolean SHALL no longer exist on `JobData`; magic capability SHALL be expressed exclusively through `mage_school` and `priest_school`. A job is "magic-capable" if and only if at least one of `mage_school` or `priest_school` is `true`.
 
-#### Scenario: Create Fighter job with no requirements
-- **WHEN** a JobData is created with job_name="Fighter", base_hp=10, has_magic=false, and all required stats set to 0
-- **THEN** job_name SHALL be "Fighter", base_hp SHALL be 10, has_magic SHALL be false, and all required stat thresholds SHALL be 0
+#### Scenario: Create Fighter job with no magic and no requirements
+- **WHEN** a JobData is created with job_name="Fighter", base_hp=10, mage_school=false, priest_school=false, base_mp=0, and all required stats set to 0
+- **THEN** job_name SHALL be "Fighter", base_hp SHALL be 10, both `mage_school` and `priest_school` SHALL be false, and all required stat thresholds SHALL be 0
 
-#### Scenario: Create Mage job with INT requirement
-- **WHEN** a JobData is created with job_name="Mage", has_magic=true, base_mp=5, required_int=11
-- **THEN** has_magic SHALL be true, base_mp SHALL be 5, required_int SHALL be 11
+#### Scenario: Create Mage job with mage school
+- **WHEN** a JobData is created with job_name="Mage", mage_school=true, priest_school=false, base_mp=5, required_int=11
+- **THEN** `mage_school` SHALL be true, `priest_school` SHALL be false, base_mp SHALL be 5, required_int SHALL be 11
+
+#### Scenario: Create Bishop job with both schools
+- **WHEN** a JobData is created with job_name="Bishop", mage_school=true, priest_school=true, base_mp=4, required_int=12, required_pie=12
+- **THEN** both `mage_school` and `priest_school` SHALL be true
+
+#### Scenario: has_magic field no longer exists
+- **WHEN** a `JobData` instance is inspected
+- **THEN** there SHALL NOT be a public `has_magic` property; calls to `obj.has_magic` SHALL be a parse-time error or return the default `Variant` for missing properties
 
 ### Requirement: JobData can check stat qualification
 JobData SHALL provide a method `can_qualify(stats: Dictionary) -> bool` that returns true only when all stat values meet or exceed the corresponding required thresholds.
@@ -38,7 +44,7 @@ JobData SHALL provide a method `can_qualify(stats: Dictionary) -> bool` that ret
 - **THEN** the result SHALL be false
 
 ### Requirement: Eight jobs are defined as .tres resources
-The system SHALL provide .tres resource files for exactly eight jobs: Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord, Ninja.
+The system SHALL provide .tres resource files for exactly eight jobs: Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord, Ninja. Each `.tres` SHALL declare values for `mage_school` and `priest_school` consistent with the job's role.
 
 #### Scenario: All job files exist
 - **WHEN** the data/jobs/ directory is scanned
@@ -76,9 +82,9 @@ The system SHALL provide .tres resource files for exactly eight jobs: Fighter, M
 - **WHEN** ninja.tres is loaded
 - **THEN** all required stats SHALL be 15
 
-#### Scenario: Magic jobs
+#### Scenario: Magic schools per job
 - **WHEN** job data files are loaded
-- **THEN** Mage, Priest, Bishop, Samurai, Lord, Ninja SHALL have has_magic=true and Fighter, Thief SHALL have has_magic=false
+- **THEN** `mage_school` SHALL be true for Mage, Bishop, Samurai (others false), and `priest_school` SHALL be true for Priest, Bishop, Lord (others false). Fighter, Thief, and Ninja SHALL have both flags false.
 
 ### Requirement: DataLoader loads all jobs
 DataLoader SHALL provide a method to load all job resources from the data/jobs/ directory.
@@ -92,18 +98,19 @@ DataLoader SHALL provide a method to load all job resources from the data/jobs/ 
 - **THEN** the returned array SHALL contain jobs named Fighter, Mage, Priest, Thief, Bishop, Samurai, Lord, Ninja
 
 ### Requirement: JobData declares per-level HP and MP growth
-`JobData` SHALL declare per-level growth fields `hp_per_level: int` and `mp_per_level: int`, so that level-up can apply job-specific HP (and, for magic jobs, MP) gains. `mp_per_level` SHALL only take effect for jobs with `has_magic == true`.
 
-#### Scenario: Fighter has non-zero HP growth
+`JobData` SHALL declare per-level growth fields `hp_per_level: int` and `mp_per_level: int`, so that level-up can apply job-specific HP (and, for magic-capable jobs, MP) gains. `mp_per_level` SHALL only take effect for jobs whose `mage_school` or `priest_school` is `true`. For jobs with both flags false, `mp_per_level` SHALL be `0`.
+
+#### Scenario: Fighter has nonzero hp_per_level and zero mp_per_level
 - **WHEN** `fighter.tres` is loaded
-- **THEN** `hp_per_level` SHALL be greater than `0`
+- **THEN** `hp_per_level` SHALL be greater than `0` and `mp_per_level` SHALL be `0`
 
-#### Scenario: Mage has both HP and MP growth
+#### Scenario: Mage has nonzero hp_per_level and mp_per_level
 - **WHEN** `mage.tres` is loaded
 - **THEN** `hp_per_level` SHALL be greater than `0` and `mp_per_level` SHALL be greater than `0`
 
-#### Scenario: Non-magic job has zero MP growth
-- **WHEN** `fighter.tres` or `thief.tres` is loaded
+#### Scenario: Thief has zero mp_per_level
+- **WHEN** `thief.tres` is loaded
 - **THEN** `mp_per_level` SHALL be `0`
 
 ### Requirement: JobData declares an experience table for level-ups
@@ -154,3 +161,47 @@ SHALL: `JobData` SHALL declare an `@export var id: StringName` field that unique
 #### Scenario: Migration tolerates empty id (transitional)
 - **WHEN** a legacy `.tres` is loaded with `id == &""`
 - **THEN** `Character.to_dict` SHALL fall back to deriving the id from `resource_path` and emit `push_warning`
+
+### Requirement: JobData declares spell_progression for magic-capable jobs
+
+`JobData` SHALL declare a `spell_progression: Dictionary` field whose keys are job-level integers (`int`, indicating "the level at which these spells are first granted"), and whose values are `Array[StringName]` of spell ids learned at that level. For jobs with neither magic school flag set, `spell_progression` SHALL be empty (`{}`).
+
+The progression for v1 SHALL be:
+
+| Job | spell_progression |
+|---|---|
+| fighter | {} |
+| thief | {} |
+| ninja | {} |
+| mage | {1: [&"fire", &"frost"], 3: [&"flame", &"blizzard"]} |
+| priest | {1: [&"heal", &"holy"], 3: [&"heala", &"allheal"]} |
+| bishop | {2: [&"fire", &"frost", &"heal", &"holy"], 5: [&"flame", &"blizzard", &"heala", &"allheal"]} |
+| samurai | {4: [&"fire", &"frost"], 8: [&"flame", &"blizzard"]} |
+| lord | {4: [&"heal", &"holy"], 8: [&"heala", &"allheal"]} |
+
+Spell ids in `spell_progression` SHALL match a real `SpellData.id` from `data/spells/`.
+
+#### Scenario: Non-magic jobs have empty spell_progression
+- **WHEN** `fighter.tres`, `thief.tres`, or `ninja.tres` is loaded
+- **THEN** `spell_progression` SHALL be `{}`
+
+#### Scenario: Mage learns level-1 spells at level 1
+- **WHEN** `mage.tres` is loaded
+- **THEN** `spell_progression[1]` SHALL contain `&"fire"` and `&"frost"`
+
+#### Scenario: Bishop learns at levels 2 and 5
+- **WHEN** `bishop.tres` is loaded
+- **THEN** `spell_progression` SHALL have keys exactly `{2, 5}`, with `2` containing all four spell-level-1 ids and `5` containing all four spell-level-2 ids
+
+#### Scenario: Samurai learns mage spells starting at level 4
+- **WHEN** `samurai.tres` is loaded
+- **THEN** `spell_progression` SHALL have a key `4` containing `&"fire"` and `&"frost"`, and a key `8` containing `&"flame"` and `&"blizzard"`
+
+#### Scenario: Lord learns priest spells starting at level 4
+- **WHEN** `lord.tres` is loaded
+- **THEN** `spell_progression` SHALL have a key `4` containing `&"heal"` and `&"holy"`, and a key `8` containing `&"heala"` and `&"allheal"`
+
+#### Scenario: spell_progression ids reference real SpellData
+- **WHEN** any job .tres with non-empty `spell_progression` is loaded
+- **THEN** every spell id appearing in the progression's value arrays SHALL also appear in the SpellRepository at startup
+

@@ -53,7 +53,9 @@ func test_loaded_mage_has_correct_requirements():
 			break
 	assert_not_null(mage)
 	assert_eq(mage.required_int, 11)
-	assert_eq(mage.has_magic, true)
+	assert_eq(mage.mage_school, true)
+	assert_eq(mage.priest_school, false)
+	assert_eq(mage.is_magic_capable(), true)
 	assert_eq(mage.base_mp, 5)
 
 func test_loaded_fighter_has_no_requirements():
@@ -224,6 +226,28 @@ func test_load_all_items_has_every_equip_slot_covered():
 				covered = true
 				break
 		assert_true(covered, "no item for slot %d" % slot)
+
+
+# --- spell loading (add-magic-system) ---
+
+func test_load_all_spells_returns_eight():
+	var spells := _loader.load_all_spells()
+	assert_eq(spells.size(), 8)
+
+
+func test_load_all_spells_contains_expected_ids():
+	var spells := _loader.load_all_spells()
+	var ids: Array[StringName] = []
+	for s in spells:
+		ids.append(s.id)
+	for expected in [&"fire", &"frost", &"flame", &"blizzard", &"heal", &"holy", &"heala", &"allheal"]:
+		assert_true(ids.has(expected), "missing spell id: %s" % expected)
+
+
+func test_load_spell_repository_returns_populated_repo():
+	var repo := _loader.load_spell_repository()
+	assert_not_null(repo)
+	assert_eq(repo.size(), 8)
 
 
 # --- missing-directory diagnostics ---

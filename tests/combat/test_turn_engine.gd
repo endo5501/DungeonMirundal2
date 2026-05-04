@@ -10,8 +10,10 @@ class _StubPartyActor extends CombatActor:
 	var _agility: int
 	var _hp: int
 	var _max: int
+	var _mp: int = 0
+	var _mp_max: int = 0
 
-	func _init(p_name: String, p_attack: int, p_defense: int, p_agility: int, p_hp: int) -> void:
+	func _init(p_name: String, p_attack: int, p_defense: int, p_agility: int, p_hp: int, p_mp: int = 0) -> void:
 		_name = p_name
 		actor_name = p_name
 		_attack = p_attack
@@ -19,6 +21,8 @@ class _StubPartyActor extends CombatActor:
 		_agility = p_agility
 		_hp = p_hp
 		_max = p_hp
+		_mp = p_mp
+		_mp_max = p_mp
 
 	func _read_current_hp() -> int:
 		return _hp
@@ -28,6 +32,15 @@ class _StubPartyActor extends CombatActor:
 
 	func _read_max_hp() -> int:
 		return _max
+
+	func _read_current_mp() -> int:
+		return _mp
+
+	func _write_current_mp(value: int) -> void:
+		_mp = value
+
+	func _read_max_mp() -> int:
+		return _mp_max
 
 	func get_attack() -> int:
 		return _attack
@@ -260,6 +273,236 @@ func test_escape_success_ends_battle_with_escaped_outcome():
 
 
 # --- escape failure ---
+
+# --- add-magic-system: Cast command resolution ---
+
+class _StubMonsterWithSpecies extends CombatActor:
+	var _name: String
+	var _attack: int
+	var _defense: int
+	var _agility: int
+	var _hp: int
+	var _max: int
+	var _species: StringName
+
+	func _init(
+		p_name: String, p_species: StringName, p_attack: int, p_defense: int, p_agility: int, p_hp: int
+	) -> void:
+		_name = p_name
+		actor_name = p_name
+		_species = p_species
+		_attack = p_attack
+		_defense = p_defense
+		_agility = p_agility
+		_hp = p_hp
+		_max = p_hp
+
+	func _read_current_hp() -> int:
+		return _hp
+
+	func _write_current_hp(value: int) -> void:
+		_hp = value
+
+	func _read_max_hp() -> int:
+		return _max
+
+	func get_attack() -> int:
+		return _attack
+
+	func get_defense() -> int:
+		return _defense
+
+	func get_agility() -> int:
+		return _agility
+
+	func get_species_id() -> StringName:
+		return _species
+
+
+# Lightweight repository factory built from inline SpellData/Effect resources.
+func _make_repo_with_fire(base_damage: int = 6, mp_cost: int = 2) -> SpellRepository:
+	var repo := SpellRepository.new()
+	var fire := SpellData.new()
+	fire.id = &"fire"
+	fire.display_name = "ファイア"
+	fire.school = SpellData.SCHOOL_MAGE
+	fire.level = 1
+	fire.mp_cost = mp_cost
+	fire.target_type = SpellData.TargetType.ENEMY_ONE
+	fire.scope = SpellData.Scope.BATTLE_ONLY
+	var eff := DamageSpellEffect.new()
+	eff.base_damage = base_damage
+	eff.spread = 0
+	fire.effect = eff
+	repo.register(fire)
+	return repo
+
+
+func _make_repo_with_flame(base_damage: int = 5) -> SpellRepository:
+	var repo := SpellRepository.new()
+	var flame := SpellData.new()
+	flame.id = &"flame"
+	flame.display_name = "フレイム"
+	flame.school = SpellData.SCHOOL_MAGE
+	flame.level = 2
+	flame.mp_cost = 4
+	flame.target_type = SpellData.TargetType.ENEMY_GROUP
+	flame.scope = SpellData.Scope.BATTLE_ONLY
+	var eff := DamageSpellEffect.new()
+	eff.base_damage = base_damage
+	eff.spread = 0
+	flame.effect = eff
+	repo.register(flame)
+	return repo
+
+
+func _make_repo_with_allheal(base_heal: int = 6) -> SpellRepository:
+	var repo := SpellRepository.new()
+	var s := SpellData.new()
+	s.id = &"allheal"
+	s.display_name = "オールヒール"
+	s.school = SpellData.SCHOOL_PRIEST
+	s.level = 2
+	s.mp_cost = 5
+	s.target_type = SpellData.TargetType.ALLY_ALL
+	s.scope = SpellData.Scope.OUTSIDE_OK
+	var eff := HealSpellEffect.new()
+	eff.base_heal = base_heal
+	eff.spread = 0
+	s.effect = eff
+	repo.register(s)
+	return repo
+
+
+func test_cast_deducts_mp_and_applies_damage():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire(6, 2)
+	var caster := _StubPartyActor.new("Mage", 1, 0, 5, 10, 5)  # mp=5
+	var slime := _StubPartyActor.new("Slime", 0, 0, 1, 12)
+	engine.start_battle([caster], [slime])
+	var cmd := CastCommand.new(&"fire", 0, slime)
+	engine.submit_command(0, cmd)
+	var report := engine.resolve_turn(_make_rng())
+	assert_eq(caster.current_mp, 3)
+	assert_eq(slime.current_hp, 6)
+	# Find cast entry in the report
+	var cast_action: Dictionary = {}
+	for a in report.actions:
+		if a.get("type", "") == "cast":
+			cast_action = a
+			break
+	assert_eq(cast_action.get("caster_name", ""), "Mage")
+	assert_eq(cast_action.get("spell_id", &""), &"fire")
+	assert_eq(cast_action.get("spell_display_name", ""), "ファイア")
+	var entries: Array = cast_action.get("entries", [])
+	assert_eq(entries.size(), 1)
+	assert_eq(entries[0].get("hp_delta", 0), -6)
+
+
+func test_cast_with_insufficient_mp_emits_skip_no_mp():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire(6, 5)
+	var caster := _StubPartyActor.new("Mage", 1, 0, 5, 10, 1)
+	var slime := _StubPartyActor.new("Slime", 0, 0, 1, 12)
+	engine.start_battle([caster], [slime])
+	engine.submit_command(0, CastCommand.new(&"fire", 0, slime))
+	var report := engine.resolve_turn(_make_rng())
+	assert_eq(caster.current_mp, 1)
+	assert_eq(slime.current_hp, 12)
+	var skip := false
+	for a in report.actions:
+		if a.get("type", "") == "cast_skipped_no_mp":
+			skip = true
+			break
+	assert_true(skip, "expected cast_skipped_no_mp entry")
+
+
+func test_cast_with_no_living_target_skips_without_consuming_mp():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire(6, 2)
+	var caster := _StubPartyActor.new("Mage", 1, 0, 5, 10, 5)
+	var slime := _StubPartyActor.new("Slime", 0, 0, 1, 1)
+	slime.take_damage(100)  # already dead before resolution
+	engine.start_battle([caster], [slime])
+	engine.submit_command(0, CastCommand.new(&"fire", 0, slime))
+	var report := engine.resolve_turn(_make_rng())
+	assert_eq(caster.current_mp, 5)  # MP NOT consumed
+	var skip := false
+	for a in report.actions:
+		if a.get("type", "") == "cast_skipped_no_target":
+			skip = true
+			break
+	assert_true(skip)
+
+
+func test_cast_enemy_group_hits_all_living_of_species():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_flame(5)
+	var caster := _StubPartyActor.new("Mage", 1, 0, 5, 10, 10)
+	var slime_a := _StubMonsterWithSpecies.new("SlimeA", &"slime", 0, 0, 1, 12)
+	var slime_b := _StubMonsterWithSpecies.new("SlimeB", &"slime", 0, 0, 1, 12)
+	var goblin := _StubMonsterWithSpecies.new("Goblin", &"goblin", 0, 0, 1, 12)
+	engine.start_battle([caster], [slime_a, slime_b, goblin])
+	engine.submit_command(0, CastCommand.new(&"flame", 0, slime_a))
+	engine.resolve_turn(_make_rng())
+	# Both slimes should take 5 damage; goblin untouched.
+	assert_eq(slime_a.current_hp, 7)
+	assert_eq(slime_b.current_hp, 7)
+	assert_eq(goblin.current_hp, 12)
+
+
+func test_cast_ally_all_targets_living_party_only():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_allheal(6)
+	var caster := _StubPartyActor.new("Priest", 1, 0, 5, 10, 5)
+	var ally_a := _StubPartyActor.new("AllyA", 0, 0, 1, 20)
+	var ally_b := _StubPartyActor.new("AllyB", 0, 0, 1, 20)
+	var ally_c := _StubPartyActor.new("AllyC", 0, 0, 1, 20)
+	ally_a.take_damage(10)  # 10 hp
+	ally_b.take_damage(20)  # dead
+	ally_c.take_damage(8)   # 12 hp
+	# Pre-killed slime so the test isolates the cast (no monster counter-attack).
+	var slime := _StubMonsterWithSpecies.new("Slime", &"slime", 0, 0, 1, 1)
+	slime.take_damage(100)
+	engine.start_battle([caster, ally_a, ally_b, ally_c], [slime])
+	engine.submit_command(0, CastCommand.new(&"allheal", 0, null))
+	# Defaults for the rest so commands_complete check passes.
+	engine.submit_command(1, DefendCommand.new())
+	# index 2 (ally_b) is dead → no command needed
+	engine.submit_command(3, DefendCommand.new())
+	engine.resolve_turn(_make_rng())
+	assert_eq(ally_a.current_hp, 16)  # 10 + 6
+	assert_eq(ally_b.current_hp, 0)   # still dead
+	assert_eq(ally_c.current_hp, 18)  # 12 + 6
+	# Caster also gets healed (alive party member). Caster was full → no change.
+	assert_eq(caster.current_hp, 10)
+	assert_eq(caster.current_mp, 0)   # 5 - 5
+
+
+func test_cast_retargets_enemy_one_when_original_dies_before_resolve():
+	# Caster B gets in second; Slime A dies first turn from caster A; we use a
+	# simpler structure: P1 attacks slime_a (kills it), then P2 casts fire on
+	# slime_a — should retarget to slime_b (same species).
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire(6, 2)
+	var p1 := _StubPartyActor.new("P1", 999, 0, 10, 10)  # overkill
+	var p2 := _StubPartyActor.new("P2", 1, 0, 1, 10, 5)  # caster
+	var slime_a := _StubMonsterWithSpecies.new("SlimeA", &"slime", 0, 0, 5, 5)
+	var slime_b := _StubMonsterWithSpecies.new("SlimeB", &"slime", 0, 0, 4, 12)
+	engine.start_battle([p1, p2], [slime_a, slime_b])
+	engine.submit_command(0, AttackCommand.new(slime_a))
+	engine.submit_command(1, CastCommand.new(&"fire", 1, slime_a))
+	var report := engine.resolve_turn(_make_rng())
+	assert_false(slime_a.is_alive())
+	assert_eq(slime_b.current_hp, 6)  # took the retargeted hit
+	# Verify retargeted_from is captured in the cast action.
+	var cast_action: Dictionary = {}
+	for a in report.actions:
+		if a.get("type", "") == "cast":
+			cast_action = a
+			break
+	assert_eq(cast_action.get("retargeted_from", ""), "SlimeA")
+
 
 func test_escape_failure_forfeits_party_attacks_but_monsters_act():
 	var engine := TurnEngine.new()

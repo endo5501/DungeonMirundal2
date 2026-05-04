@@ -7,11 +7,16 @@ script = ExtResource("1")
 id = &"mage"
 job_name = "Mage"
 base_hp = 4
-has_magic = true
+mage_school = true
+priest_school = false
 base_mp = 5
 hp_per_level = 2
 mp_per_level = 2
 exp_table = PackedInt64Array(1100, 1896, 3268, 5634, 9713, 16746, 28872, 49779, 85825, 147974, 255127, 439874)
+spell_progression = {
+1: Array[StringName]([&"fire", &"frost"]),
+3: Array[StringName]([&"flame", &"blizzard"]),
+}
 required_str = 0
 required_int = 11
 required_pie = 0

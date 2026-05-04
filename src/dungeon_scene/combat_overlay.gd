@@ -7,6 +7,8 @@ enum Phase {
 	TARGET_SELECT,
 	ITEM_SELECT,
 	ITEM_TARGET,
+	SPELL_SELECT,
+	SPELL_TARGET,
 	RESOLVING,
 	RESULT,
 }
@@ -15,6 +17,8 @@ const _OPT_ATTACK: int = CombatCommandMenu.OPT_ATTACK
 const _OPT_DEFEND: int = CombatCommandMenu.OPT_DEFEND
 const _OPT_ITEM: int = CombatCommandMenu.OPT_ITEM
 const _OPT_ESCAPE: int = CombatCommandMenu.OPT_ESCAPE
+const _OPT_CAST_MAGE: int = CombatCommandMenu.OPT_CAST_MAGE
+const _OPT_CAST_PRIEST: int = CombatCommandMenu.OPT_CAST_PRIEST
 
 signal party_state_changed
 
@@ -30,6 +34,8 @@ var _current_actor_index: int = 0
 var _monster_panel: CombatMonsterPanel
 var _command_menu: CombatCommandMenu
 var _target_selector: CombatTargetSelector
+var _spell_selector: CombatSpellSelector
+var _pending_cast_spell: SpellData = null
 var _item_use_panel: PanelContainer
 var _item_use_flow: ItemUseFlow
 var _combat_log: CombatLog
@@ -73,6 +79,8 @@ func start_encounter(monster_party: MonsterParty) -> void:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
 		_item_use_panel.visible = false
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
 	cancel_log_playback()
 	_refresh_panels()
 	_begin_command_phase()
@@ -115,7 +123,11 @@ func command_menu_select(option_index: int) -> void:
 
 
 func target_select(target_index: int) -> void:
-	if _current_phase != Phase.TARGET_SELECT and _current_phase != Phase.ITEM_TARGET:
+	if (
+		_current_phase != Phase.TARGET_SELECT
+		and _current_phase != Phase.ITEM_TARGET
+		and _current_phase != Phase.SPELL_TARGET
+	):
 		return
 	var targets: Array = _target_selector.get_targets()
 	if target_index < 0 or target_index >= targets.size():
@@ -174,6 +186,73 @@ func _handle_command_choice(option_index: int) -> void:
 		_OPT_ESCAPE:
 			_turn_engine.submit_command(_current_actor_index, EscapeCommand.new())
 			_advance_to_next_actor()
+		_OPT_CAST_MAGE:
+			_show_spell_selector(SpellData.SCHOOL_MAGE)
+		_OPT_CAST_PRIEST:
+			_show_spell_selector(SpellData.SCHOOL_PRIEST)
+
+
+func _show_spell_selector(school: StringName) -> void:
+	if _spell_selector == null:
+		return
+	var actor: CombatActor = _turn_engine.party[_current_actor_index]
+	if not (actor is PartyCombatant):
+		return
+	var ch: Character = (actor as PartyCombatant).character
+	if ch == null:
+		return
+	_command_menu.hide_menu()
+	_current_phase = Phase.SPELL_SELECT
+	_spell_selector.show_with(ch, school, _turn_engine.get_spell_repo(), false)
+
+
+func _on_spell_selected(spell: SpellData) -> void:
+	if spell == null:
+		return
+	_pending_cast_spell = spell
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
+	if spell.target_type == SpellData.TargetType.ALLY_ALL:
+		# No prompt; submit immediately with null target.
+		_submit_cast_with_target(null)
+		return
+	_current_phase = Phase.SPELL_TARGET
+	_target_selector.show_for_spell(spell, _turn_engine.party, _turn_engine.monsters)
+
+
+func _on_spell_selector_cancelled() -> void:
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
+	_pending_cast_spell = null
+	_current_phase = Phase.COMMAND_MENU
+	_command_menu.show_for(_turn_engine.party[_current_actor_index])
+
+
+func _on_target_selector_cancelled() -> void:
+	# Only the spell flow expects to cancel out of target selection. The attack
+	# flow's TARGET_SELECT phase doesn't route ui_cancel, so this signal won't
+	# fire there.
+	if _current_phase != Phase.SPELL_TARGET:
+		return
+	_target_selector.hide_selector()
+	if _pending_cast_spell == null:
+		# Defensive: revert to CommandMenu if we somehow lost the spell.
+		_current_phase = Phase.COMMAND_MENU
+		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		return
+	var school: StringName = _pending_cast_spell.school
+	_pending_cast_spell = null
+	_show_spell_selector(school)
+
+
+func _submit_cast_with_target(target: CombatActor) -> void:
+	if _pending_cast_spell == null:
+		return
+	var cmd := CastCommand.new(_pending_cast_spell.id, _current_actor_index, target)
+	_turn_engine.submit_command(_current_actor_index, cmd)
+	_pending_cast_spell = null
+	_target_selector.hide_selector()
+	_advance_to_next_actor()
 
 
 func _show_item_use_flow() -> void:
@@ -235,6 +314,9 @@ func _find_party_combatant_for_character(target: Character) -> CombatActor:
 
 
 func _handle_target_choice(target: CombatActor) -> void:
+	if _current_phase == Phase.SPELL_TARGET:
+		_submit_cast_with_target(target)
+		return
 	_turn_engine.submit_command(_current_actor_index, AttackCommand.new(target))
 	_target_selector.hide_selector()
 	_advance_to_next_actor()
@@ -251,6 +333,8 @@ func _resolve_turn_now() -> void:
 	_command_menu.hide_menu()
 	if _target_selector != null:
 		_target_selector.hide_selector()
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
 	if _item_use_flow != null:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
@@ -328,6 +412,8 @@ func show_result(outcome: EncounterOutcome, summary: BattleSummary) -> void:
 		_command_menu.hide_menu()
 	if _target_selector != null:
 		_target_selector.hide_selector()
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
 	if _item_use_flow != null:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
@@ -384,8 +470,13 @@ func _panels_dict() -> Dictionary:
 		"command_menu": _command_menu,
 		"target_selector": _target_selector,
 		"item_selector": null,
+		"spell_selector": _spell_selector,
 		"result_panel": _result_panel,
 	}
+
+
+func get_spell_selector() -> CombatSpellSelector:
+	return _spell_selector
 
 
 # --- helpers ---
@@ -440,7 +531,15 @@ func _build_combat_ui() -> void:
 	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
 	_target_selector.visible = false
 	_target_selector.target_selected.connect(_handle_target_choice)
+	_target_selector.cancelled.connect(_on_target_selector_cancelled)
 	add_child(_target_selector)
+
+	_spell_selector = CombatSpellSelector.new()
+	_place(_spell_selector, 0.15, 0.32, 0.55, 0.62)
+	_spell_selector.visible = false
+	_spell_selector.spell_selected.connect(_on_spell_selected)
+	_spell_selector.cancelled.connect(_on_spell_selector_cancelled)
+	add_child(_spell_selector)
 
 	_item_use_panel = PanelContainer.new()
 	_place(_item_use_panel, 0.15, 0.32, 0.55, 0.62)

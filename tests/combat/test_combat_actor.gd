@@ -4,10 +4,14 @@ extends GutTest
 class _FakeActor extends CombatActor:
 	var _current: int
 	var _max: int
+	var _mp_current: int = 0
+	var _mp_max: int = 0
 
-	func _init(p_max: int) -> void:
+	func _init(p_max: int, p_mp_max: int = 0) -> void:
 		_max = p_max
 		_current = p_max
+		_mp_max = p_mp_max
+		_mp_current = p_mp_max
 		actor_name = "Fake"
 
 	func _read_current_hp() -> int:
@@ -18,6 +22,15 @@ class _FakeActor extends CombatActor:
 
 	func _read_max_hp() -> int:
 		return _max
+
+	func _read_current_mp() -> int:
+		return _mp_current
+
+	func _write_current_mp(value: int) -> void:
+		_mp_current = value
+
+	func _read_max_mp() -> int:
+		return _mp_max
 
 
 # --- interface shape ---
@@ -115,3 +128,40 @@ func test_current_hp_and_max_hp_are_readable_as_properties():
 	var a := _FakeActor.new(15)
 	assert_eq(a.current_hp, 15)
 	assert_eq(a.max_hp, 15)
+
+
+# --- add-magic-system: MP interface ---
+
+func test_combat_actor_exposes_mp_methods():
+	var a := _FakeActor.new(10)
+	assert_true(a.has_method("spend_mp"))
+
+
+func test_default_mp_fields_are_zero():
+	var a := _FakeActor.new(10)
+	assert_eq(a.current_mp, 0)
+	assert_eq(a.max_mp, 0)
+
+
+func test_spend_mp_succeeds_when_sufficient():
+	var a := _FakeActor.new(10, 5)
+	assert_true(a.spend_mp(2))
+	assert_eq(a.current_mp, 3)
+
+
+func test_spend_mp_fails_when_insufficient():
+	var a := _FakeActor.new(10, 2)
+	assert_false(a.spend_mp(3))
+	assert_eq(a.current_mp, 2)
+
+
+func test_spend_mp_zero_is_no_op_returning_true():
+	var a := _FakeActor.new(10, 5)
+	assert_true(a.spend_mp(0))
+	assert_eq(a.current_mp, 5)
+
+
+func test_spend_mp_negative_is_treated_as_zero():
+	var a := _FakeActor.new(10, 5)
+	assert_true(a.spend_mp(-3))
+	assert_eq(a.current_mp, 5)
