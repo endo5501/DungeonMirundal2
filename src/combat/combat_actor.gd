@@ -89,8 +89,7 @@ func get_evasion_modifier_total() -> float:
 	return clampf(float(modifier_stack.sum(&"evasion")), -MOD_CAP, MOD_CAP)
 
 
-# Subclasses override when a status (e.g. Blind in a later change) sets the
-# flag; default is always false in this change.
+# Overridden by status-effect mixins; default false.
 func has_blind_flag() -> bool:
 	return false
 

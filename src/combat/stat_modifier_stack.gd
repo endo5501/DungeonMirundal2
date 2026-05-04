@@ -3,21 +3,17 @@ extends RefCounted
 
 # Stack of active stat modifiers attached to a CombatActor.
 #
-# Recognized stat keys (Decision 4 of add-stat-modifier-and-hit-evasion):
-#   &"attack" / &"defense" / &"agility"  → int delta
-#   &"hit" / &"evasion"                  → float delta
-#
 # β rule for `add(stat, delta, duration)` when an entry for the same stat
 # already exists:
 #   - stronger (abs(new) > abs(existing)) → replace delta and duration
 #   - equal magnitude                      → keep existing delta, take max(duration)
 #   - weaker                               → no-op
-#
-# scope is BATTLE_ONLY for every modifier this change adds; the field is kept
-# so a later change can introduce non-battle-only scopes without reshaping the
-# storage.
 
-const SCOPE_BATTLE_ONLY: int = 0
+const STAT_ATTACK: StringName = &"attack"
+const STAT_DEFENSE: StringName = &"defense"
+const STAT_AGILITY: StringName = &"agility"
+const STAT_HIT: StringName = &"hit"
+const STAT_EVASION: StringName = &"evasion"
 
 var _entries: Array = []
 
@@ -33,19 +29,16 @@ func add(stat: StringName, delta, duration: int) -> void:
 			"stat": stat,
 			"delta": delta,
 			"duration": duration,
-			"scope": SCOPE_BATTLE_ONLY,
 		})
 		return
-	var new_abs: float = abs(float(delta))
-	var existing_abs: float = abs(float(existing["delta"]))
+	var new_abs: float = absf(float(delta))
+	var existing_abs: float = absf(float(existing["delta"]))
 	if new_abs > existing_abs:
 		existing["delta"] = delta
 		existing["duration"] = duration
 		return
 	if new_abs == existing_abs:
 		existing["duration"] = max(int(existing["duration"]), duration)
-		return
-	# weaker incoming: keep existing as-is
 
 
 func sum(stat: StringName):
@@ -66,20 +59,15 @@ func sum(stat: StringName):
 func tick_battle_turn() -> void:
 	var keep: Array = []
 	for e in _entries:
-		if int(e["scope"]) == SCOPE_BATTLE_ONLY:
-			e["duration"] = int(e["duration"]) - 1
-			if int(e["duration"]) <= 0:
-				continue
+		e["duration"] = int(e["duration"]) - 1
+		if int(e["duration"]) <= 0:
+			continue
 		keep.append(e)
 	_entries = keep
 
 
 func clear_battle_only() -> void:
-	var keep: Array = []
-	for e in _entries:
-		if int(e["scope"]) != SCOPE_BATTLE_ONLY:
-			keep.append(e)
-	_entries = keep
+	_entries.clear()
 
 
 func _find(stat: StringName) -> Dictionary:

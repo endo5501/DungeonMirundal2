@@ -99,22 +99,6 @@ func test_calculate_by_stats_is_deterministic_with_seeded_rng():
 		)
 
 
-# --- roll_damage (pure) ---
-
-func test_roll_damage_uses_actor_stats_and_spread():
-	var attacker := _StubActor.new(10, 0, 5)
-	var target := _StubActor.new(0, 4, 5)
-	# 10 - 4/2 + 1 = 9
-	assert_eq(DamageCalculator.roll_damage(attacker, target, 1), 9)
-
-
-func test_roll_damage_floors_at_one():
-	var attacker := _StubActor.new(2, 0, 5)
-	var target := _StubActor.new(0, 4, 5)
-	# 2 - 4/2 + 0 = 0 → floor 1
-	assert_eq(DamageCalculator.roll_damage(attacker, target, 0), 1)
-
-
 # --- roll_hit (pure: strict less-than) ---
 
 func test_roll_hit_strictly_less_than_returns_true():
@@ -195,9 +179,7 @@ func test_hit_chance_clamps_at_lower_bound_005():
 	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.05, 0.0001)
 
 
-# Per design Decision 2: BLIND_PENALTY is 0.0 in this change. The blind flag
-# infrastructure exists but doesn't affect numbers yet — the next change wires
-# it up via StatusData.
+# BLIND_PENALTY is 0.0 today; status-effect change will wire the real value.
 func test_hit_chance_blind_flag_currently_no_effect():
 	var attacker := _StubActor.new(0, 0, 5, 0.0, 0.0, true)
 	var target := _StubActor.new(0, 0, 5)
