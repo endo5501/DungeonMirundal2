@@ -56,7 +56,7 @@
 ## 7. 全体検証
 
 - [x] 7.1 `tests/combat/`, `tests/dungeon/`, `tests/items/` 全件緑
-- [ ] 7.2 ゲーム手動起動: Mage Lv2 で katino を撃ってスライムが寝るか確認、CombatLog に文言が出るか確認
+- [x] 7.2 ゲーム手動起動: Mage Lv2 で katino を撃ってスライムが寝るか確認、CombatLog に文言が出るか確認
 - [x] 7.3 `openspec validate add-status-sleep-and-silence --strict` 成功
 
 ## 8. アーカイブ準備

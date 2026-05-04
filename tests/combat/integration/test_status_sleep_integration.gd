@@ -73,6 +73,41 @@ class _StubFighter extends CombatActor:
 		return _attack
 
 
+class _StubPriest extends CombatActor:
+	var _hp: int
+	var _max: int
+	var _mp: int
+	var _mp_max: int
+
+	func _init(p_name: String, p_hp: int, p_mp: int) -> void:
+		actor_name = p_name
+		_hp = p_hp
+		_max = p_hp
+		_mp = p_mp
+		_mp_max = p_mp
+
+	func _read_current_hp() -> int:
+		return _hp
+
+	func _write_current_hp(value: int) -> void:
+		_hp = value
+
+	func _read_max_hp() -> int:
+		return _max
+
+	func _read_current_mp() -> int:
+		return _mp
+
+	func _write_current_mp(value: int) -> void:
+		_mp = value
+
+	func _read_max_mp() -> int:
+		return _mp_max
+
+	func get_attack() -> int:
+		return 0
+
+
 func _load_repo() -> StatusRepository:
 	# Reset the static cache so a previous test that injected a stub repo
 	# does not leak into here.
@@ -214,3 +249,46 @@ func test_sleep_naturally_clears_after_three_turns():
 		engine.resolve_turn(_make_rng())
 	assert_false(slime.statuses.has(&"sleep"),
 		"sleep should expire after duration ticks reach zero")
+
+
+# --- TurnEngine: dios cures sleep on an ally + MP accounting ---
+
+func test_dios_on_sleeping_ally_emits_cure_and_consumes_mp():
+	var engine := TurnEngine.new()
+	var priest := _StubPriest.new("Priest", 20, 5)
+	var ally := _StubFighter.new("Ally", 20, 0)
+	# Stub monster only exists so the battle has an enemy side.
+	var slime := _StubMonster.new("Slime", 30, 0)
+	engine.start_battle([priest, ally], [slime])
+	_inject_repo(engine, _load_repo())
+	ally.statuses.apply(&"sleep", 3)
+	# Both party members defend except for the priest, who casts dios on ally.
+	engine.submit_command(0, CastCommand.new(&"dios", 0, ally))
+	engine.submit_command(1, DefendCommand.new())
+	var report := engine.resolve_turn(_make_rng())
+	assert_eq(priest.current_mp, 3, "dios must consume mp_cost (2) from caster")
+	assert_false(ally.statuses.has(&"sleep"), "dios should clear sleep on the ally")
+	var cures := []
+	for a in report.actions:
+		if a.get("type") == "cure":
+			cures.append(a)
+	assert_eq(cures.size(), 1, "report should contain exactly one cure action")
+	assert_eq(cures[0]["actor_name"], "Ally")
+	assert_eq(cures[0]["status_id"], &"sleep")
+
+
+func test_dios_on_clean_ally_consumes_mp_without_cure_event():
+	var engine := TurnEngine.new()
+	var priest := _StubPriest.new("Priest", 20, 5)
+	var ally := _StubFighter.new("Ally", 20, 0)
+	var slime := _StubMonster.new("Slime", 30, 0)
+	engine.start_battle([priest, ally], [slime])
+	_inject_repo(engine, _load_repo())
+	# No sleep applied to the ally — dios is a no-op cure but still costs MP.
+	engine.submit_command(0, CastCommand.new(&"dios", 0, ally))
+	engine.submit_command(1, DefendCommand.new())
+	var report := engine.resolve_turn(_make_rng())
+	assert_eq(priest.current_mp, 3, "MP is consumed regardless of cure outcome")
+	for a in report.actions:
+		assert_ne(a.get("type"), "cure",
+			"dios on a clean target must not emit a cure action")
