@@ -55,25 +55,38 @@ godot --editor
 
 ## テストの実行
 
-### コマンドライン (ヘッドレス)
+### コマンドライン (推奨ラッパ経由)
+
+```powershell
+# Windows (PowerShell)
+.\scripts\run_tests.ps1
+```
+
+```bash
+# Linux / macOS / WSL / Git Bash
+./scripts/run_tests.sh
+```
+
+`scripts/run_tests.ps1` (および `.sh`) は GUT を 2 段階の安全網付きで実行します:
+
+1. **Pre-flight**: `src/` と `tests/` 配下の全 `.gd` を `scripts/check_scripts.gd` で parse 検証する。1つでも parse error があれば GUT を起動せずに即座に halt する。
+2. **Post-scan**: GUT 出力から `SCRIPT ERROR:` / `Failed to load script` / `Ignoring script ... because it does not extend GutTest` を検出したら、たとえ GUT が `All tests passed!` と返しても exit 1 で fail する。
+
+これにより、parse error で silently skip されたテストファイルが「緑」のまま見過ごされる事故を防げます。
+
+追加の引数はそのまま `gut_cmdln.gd` に転送されます:
+
+```powershell
+.\scripts\run_tests.ps1 -gtest=res://tests/dungeon/test_wiz_map.gd
+```
+
+### 直接実行 (素の GUT、安全網なし)
 
 ```bash
 godot --headless -s addons/gut/gut_cmdln.gd
 ```
 
-`.gutconfig.json` の設定に従い、`tests/dungeon/` 配下のテストが実行されます。
-
-### 特定のテストファイルのみ実行
-
-```bash
-godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://tests/dungeon/test_wiz_map.gd
-```
-
-### テストディレクトリを追加指定
-
-```bash
-godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests/dungeon/,res://tests/other/
-```
+`.gutconfig.json` の設定に従い、`tests/dungeon/` 等の配下のテストが実行されます。**parse error が発生しても緑のまま終わる可能性があるため、CI や日常運用ではラッパ経由を推奨します**。
 
 ### エディタから実行
 

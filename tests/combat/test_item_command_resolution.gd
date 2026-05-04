@@ -137,16 +137,18 @@ func test_emergency_scroll_in_combat_gives_no_exp_or_gold():
 
 # --- command menu includes item option ---
 
-func test_command_menu_options_include_item():
-	var menu := CombatCommandMenu.new()
-	var opts := menu.get_options()
-	assert_eq(opts.size(), 4)
-	assert_true("アイテム" in opts)
+func test_command_menu_base_option_ids_include_item():
+	# base_option_ids() exposes the static contract: which options are always
+	# present for any party actor regardless of job. We verify ITEM is in there
+	# and the list has exactly the 4 base options (no magic-class additions).
+	var ids := CombatCommandMenu.base_option_ids()
+	assert_eq(ids.size(), 4)
+	assert_true(CombatCommandMenu.OPT_ITEM in ids, "OPT_ITEM must be in base options")
 
 
 func test_command_menu_item_is_at_opt_item_index():
 	assert_eq(CombatCommandMenu.OPT_ITEM, 2)
-	assert_eq(CombatCommandMenu.OPTIONS[CombatCommandMenu.OPT_ITEM], "アイテム")
+	assert_eq(CombatCommandMenu.OPTION_LABELS[CombatCommandMenu.OPT_ITEM], "アイテム")
 	assert_eq(CombatCommandMenu.OPT_ESCAPE, 3)
 
 
