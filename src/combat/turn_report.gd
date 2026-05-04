@@ -95,9 +95,17 @@ func add_cast(
 	var entries: Array = []
 	if resolution != null:
 		for e in resolution.entries:
+			# Skip status-only entries (hp_delta == 0 with non-empty events such
+			# as inflict/resist/cure). Those events are rendered as separate
+			# top-level TurnReport actions; emitting them inside the cast block
+			# as "効果はなかった" lines would double-up the message.
+			var hp_delta: int = int(e.get("hp_delta", 0))
+			var events: Array = e.get("events", [])
+			if hp_delta == 0 and not events.is_empty():
+				continue
 			entries.append({
 				"actor_name": e.get("actor_name", ""),
-				"hp_delta": int(e.get("hp_delta", 0)),
+				"hp_delta": hp_delta,
 			})
 	actions.append({
 		"type": "cast",

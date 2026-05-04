@@ -25,6 +25,7 @@ signal command_selected(option_id: int)
 
 var _rows: Array[CursorMenuRow] = []
 var _option_ids: Array[int] = []
+var _disabled_indices: Array[int] = []
 var _title_label: Label
 var _options_vbox: VBoxContainer
 var _selected_index: int = 0
@@ -53,6 +54,7 @@ func _build_ui() -> void:
 func show_for(actor: CombatActor) -> void:
 	_current_actor = actor
 	_option_ids = _build_option_ids_for(actor)
+	_disabled_indices = _build_disabled_indices_for(actor, _option_ids)
 	_selected_index = 0
 	visible = true
 	_ensure_ready()
@@ -90,13 +92,24 @@ func select_at(option_id: int) -> void:
 func confirm_current() -> void:
 	if _option_ids.is_empty():
 		return
+	if is_row_disabled(_selected_index):
+		return  # silenced Cast row etc. — swallow Enter
 	command_selected.emit(_option_ids[_selected_index])
+
+
+func is_row_disabled(index: int) -> bool:
+	return index in _disabled_indices
 
 
 func get_options() -> Array[String]:
 	var labels: Array[String] = []
-	for id in _option_ids:
-		labels.append(String(OPTION_LABELS.get(id, "")))
+	for i in range(_option_ids.size()):
+		var id := _option_ids[i]
+		var base := String(OPTION_LABELS.get(id, ""))
+		if i in _disabled_indices and (id == OPT_CAST_MAGE or id == OPT_CAST_PRIEST):
+			labels.append("%s (沈黙中)" % base)
+		else:
+			labels.append(base)
 	return labels
 
 
@@ -130,6 +143,19 @@ func _build_option_ids_for(actor: CombatActor) -> Array[int]:
 	return ids
 
 
+func _build_disabled_indices_for(actor: CombatActor, ids: Array[int]) -> Array[int]:
+	var disabled: Array[int] = []
+	if actor == null:
+		return disabled
+	# Silence currently disables both Cast rows. action-locking statuses are
+	# handled at engine resolution time, not here.
+	if actor.has_silence_flag():
+		for i in range(ids.size()):
+			if ids[i] == OPT_CAST_MAGE or ids[i] == OPT_CAST_PRIEST:
+				disabled.append(i)
+	return disabled
+
+
 func _ensure_ready() -> void:
 	if _options_vbox == null:
 		_build_ui()
@@ -142,8 +168,9 @@ func _rebuild_rows() -> void:
 	for child in _options_vbox.get_children():
 		_options_vbox.remove_child(child)
 		child.queue_free()
-	for id in _option_ids:
-		_rows.append(CursorMenuRow.create(_options_vbox, String(OPTION_LABELS.get(id, "")), 16))
+	var labels := get_options()
+	for i in range(_option_ids.size()):
+		_rows.append(CursorMenuRow.create(_options_vbox, labels[i], 16))
 
 
 func _refresh_rows() -> void:
@@ -151,3 +178,4 @@ func _refresh_rows() -> void:
 		return
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)
+		_rows[i].set_disabled(is_row_disabled(i))

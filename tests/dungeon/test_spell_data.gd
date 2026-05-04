@@ -4,6 +4,7 @@ extends GutTest
 const _SPELL_IDS: Array[StringName] = [
 	&"fire", &"frost", &"flame", &"blizzard",
 	&"heal", &"holy", &"heala", &"allheal",
+	&"katino", &"manifo", &"dios",
 ]
 
 
@@ -97,14 +98,16 @@ func test_each_v1_spell_mp_cost_is_positive():
 		assert_gte(spell.mp_cost, 1, "%s mp_cost should be >= 1" % sid)
 
 
-func test_outside_ok_set_only_on_healing_lineup():
+func test_outside_ok_set_includes_healing_lineup_and_dios():
 	var outside_ok_ids: Array[StringName] = []
 	for sid in _SPELL_IDS:
 		var spell := load("res://data/spells/%s.tres" % sid) as SpellData
 		if spell.scope == SpellData.Scope.OUTSIDE_OK:
 			outside_ok_ids.append(spell.id)
 	outside_ok_ids.sort()
-	var expected: Array[StringName] = [&"allheal", &"heal", &"heala"]
+	# allheal / heal / heala come from add-magic-system; dios joins them in
+	# add-status-sleep-and-silence as the first OUTSIDE_OK status-cure spell.
+	var expected: Array[StringName] = [&"allheal", &"dios", &"heal", &"heala"]
 	expected.sort()
 	assert_eq(outside_ok_ids, expected)
 
@@ -125,3 +128,51 @@ func test_group_spells_use_enemy_group_target_type():
 	for sid in [&"flame", &"blizzard"]:
 		var spell := load("res://data/spells/%s.tres" % sid) as SpellData
 		assert_eq(spell.target_type, SpellData.TargetType.ENEMY_GROUP)
+
+
+# --- add-status-sleep-and-silence: status spells ---
+
+func test_katino_fields():
+	var spell := load("res://data/spells/katino.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"katino")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 1)
+	assert_eq(spell.mp_cost, 2)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_GROUP)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatusInflictSpellEffect, "katino effect should be StatusInflictSpellEffect")
+	var eff := spell.effect as StatusInflictSpellEffect
+	assert_eq(eff.status_id, &"sleep")
+	assert_almost_eq(eff.chance, 0.6, 0.001)
+	assert_eq(eff.duration, 3)
+
+
+func test_manifo_fields():
+	var spell := load("res://data/spells/manifo.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"manifo")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 1)
+	assert_eq(spell.mp_cost, 2)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatusInflictSpellEffect, "manifo effect should be StatusInflictSpellEffect")
+	var eff := spell.effect as StatusInflictSpellEffect
+	assert_eq(eff.status_id, &"silence")
+	assert_almost_eq(eff.chance, 0.55, 0.001)
+	assert_eq(eff.duration, 4)
+
+
+func test_dios_fields():
+	var spell := load("res://data/spells/dios.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"dios")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 1)
+	assert_eq(spell.mp_cost, 2)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.OUTSIDE_OK)
+	assert_is(spell.effect, CureStatusSpellEffect, "dios effect should be CureStatusSpellEffect")
+	var eff := spell.effect as CureStatusSpellEffect
+	assert_eq(eff.status_id, &"sleep")

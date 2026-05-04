@@ -230,9 +230,10 @@ func test_load_all_items_has_every_equip_slot_covered():
 
 # --- spell loading (add-magic-system) ---
 
-func test_load_all_spells_returns_eight():
+func test_load_all_spells_returns_v1_plus_status_spells():
 	var spells := _loader.load_all_spells()
-	assert_eq(spells.size(), 8)
+	# 8 from add-magic-system + 3 from add-status-sleep-and-silence
+	assert_eq(spells.size(), 11)
 
 
 func test_load_all_spells_contains_expected_ids():
@@ -240,14 +241,15 @@ func test_load_all_spells_contains_expected_ids():
 	var ids: Array[StringName] = []
 	for s in spells:
 		ids.append(s.id)
-	for expected in [&"fire", &"frost", &"flame", &"blizzard", &"heal", &"holy", &"heala", &"allheal"]:
+	for expected in [&"fire", &"frost", &"flame", &"blizzard", &"heal", &"holy", &"heala", &"allheal",
+					 &"katino", &"manifo", &"dios"]:
 		assert_true(ids.has(expected), "missing spell id: %s" % expected)
 
 
 func test_load_spell_repository_returns_populated_repo():
 	var repo := _loader.load_spell_repository()
 	assert_not_null(repo)
-	assert_eq(repo.size(), 8)
+	assert_eq(repo.size(), 11)
 
 
 # --- status repository (add-status-effect-infrastructure) ---

@@ -5,6 +5,30 @@ const MAX_LINES: int = 4
 
 var _lines: Array[String] = []
 var _label: Label
+# Lazy: CombatLog is created in dungeon scene tests too, where we don't want to
+# touch disk until the first status-bearing entry actually arrives. _status_repo
+# stays null until _resolve_status_display() needs it. Tests can pre-set it via
+# set_status_repo_for_testing() to avoid disk access entirely.
+var _status_repo: StatusRepository = null
+var _status_repo_loaded: bool = false
+
+
+func set_status_repo_for_testing(repo: StatusRepository) -> void:
+	_status_repo = repo
+	_status_repo_loaded = true
+
+
+func _resolve_status_display(status_id) -> String:
+	if status_id == null:
+		return ""
+	if not _status_repo_loaded:
+		_status_repo = DataLoader.new().load_status_repository()
+		_status_repo_loaded = true
+	if _status_repo != null:
+		var data: StatusData = _status_repo.find(status_id)
+		if data != null and data.display_name != "":
+			return data.display_name
+	return String(status_id)
 
 
 func _ready() -> void:
@@ -104,6 +128,38 @@ func _format_action(action: Dictionary) -> String:
 			var caster_no_t: String = action.get("caster_name", "")
 			var spell_no_t: String = action.get("spell_display_name", "")
 			return "%s の %s は対象がいなくなり不発に終わった" % [caster_no_t, spell_no_t]
+		"tick_damage":
+			var actor_t: String = action.get("actor_name", "")
+			var sd_t := _resolve_status_display(action.get("status_id"))
+			var amount: int = int(action.get("amount", 0))
+			return "%s は %s で %d ダメージを受けた" % [actor_t, sd_t, amount]
+		"wake":
+			var actor_w: String = action.get("actor_name", "")
+			return "%s は目を覚ました" % actor_w
+		"inflict":
+			var target_i: String = action.get("target_name", "")
+			var sd_i := _resolve_status_display(action.get("status_id"))
+			return "%s は %s になった" % [target_i, sd_i]
+		"cure":
+			var actor_c: String = action.get("actor_name", "")
+			var sd_c := _resolve_status_display(action.get("status_id"))
+			return "%s の %s が治った" % [actor_c, sd_c]
+		"resist":
+			var target_r: String = action.get("target_name", "")
+			var sd_r := _resolve_status_display(action.get("status_id"))
+			return "%s は %s に抵抗した" % [target_r, sd_r]
+		"action_locked":
+			var actor_l: String = action.get("actor_name", "")
+			return "%s は行動できない" % actor_l
+		"cast_silenced":
+			var caster_s: String = action.get("caster_name", "")
+			return "%s は呪文を唱えようとしたが声が出ない" % caster_s
+		"stat_mod":
+			var target_m: String = action.get("target_name", "")
+			var stat_m = action.get("stat", &"")
+			var delta_m = action.get("delta", 0)
+			var sign_m := "+" if int(delta_m) >= 0 else "-"
+			return "%s の %s が %s%d 変化した" % [target_m, String(stat_m), sign_m, abs(int(delta_m))]
 		_:
 			return ""
 

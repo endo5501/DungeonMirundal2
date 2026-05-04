@@ -15,6 +15,7 @@ mp_per_level = 2
 exp_table = PackedInt64Array(1050, 1810, 3121, 5381, 9278, 15996, 27579, 47550, 81983, 141350, 243706, 420182)
 spell_progression = {
 1: Array[StringName]([&"heal", &"holy"]),
+2: Array[StringName]([&"dios"]),
 3: Array[StringName]([&"heala", &"allheal"]),
 }
 required_str = 0

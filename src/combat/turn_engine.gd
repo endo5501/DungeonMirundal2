@@ -313,6 +313,21 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 		return
 	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
 	report.add_cast(caster, spell, spell_resolution, retargeted_from)
+	# Translate per-target SpellResolution events (inflict/cure/resist) into
+	# top-level TurnReport actions so CombatLog can render them as their own
+	# lines instead of falling through to "効果はなかった".
+	if spell_resolution != null:
+		for e in spell_resolution.entries:
+			var actor: CombatActor = e.get("actor")
+			for evt in e.get("events", []):
+				match evt.get("type"):
+					"inflict":
+						if bool(evt.get("success", false)):
+							report.add_inflict(actor, evt.get("status_id", &""), true)
+					"resist":
+						report.add_resist(actor, evt.get("status_id", &""))
+					"cure":
+						report.add_cure(actor, evt.get("status_id", &""))
 	# After cast: any target that took damage from the spell may have a
 	# cures_on_damage status to wake from.
 	if spell_resolution != null:
