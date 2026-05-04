@@ -11,18 +11,31 @@ const SIZE_RANGES := {
 	SIZE_LARGE: [21, 30],
 }
 
+const FLOOR_COUNT_RANGES := {
+	SIZE_SMALL: [2, 4],
+	SIZE_MEDIUM: [4, 7],
+	SIZE_LARGE: [8, 12],
+}
+
 var _dungeons: Array[DungeonData] = []
 var _rng: RandomNumberGenerator
 
-func _init() -> void:
+func _init(rng_seed: int = 0) -> void:
 	_rng = RandomNumberGenerator.new()
-	_rng.randomize()
+	if rng_seed == 0:
+		_rng.randomize()
+	else:
+		_rng.seed = rng_seed
 
 func create(dungeon_name: String, size_category: int) -> DungeonData:
-	var range_arr: Array = SIZE_RANGES[size_category]
-	var map_size := _rng.randi_range(range_arr[0], range_arr[1])
-	var seed_val := _rng.randi()
-	var dd := DungeonData.create(dungeon_name, seed_val, map_size)
+	var size_range: Array = SIZE_RANGES[size_category]
+	var floor_range: Array = FLOOR_COUNT_RANGES[size_category]
+	var floor_count := _rng.randi_range(floor_range[0], floor_range[1])
+	var floor_sizes: Array = []
+	for _i in range(floor_count):
+		floor_sizes.append(_rng.randi_range(size_range[0], size_range[1]))
+	var base_seed := _rng.randi()
+	var dd := DungeonData.create_with_floor_sizes(dungeon_name, base_seed, floor_sizes)
 	_dungeons.append(dd)
 	return dd
 

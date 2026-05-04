@@ -174,30 +174,50 @@ func is_fully_connected() -> bool:
 	return bfs(Vector2i(0, 0)).size() == map_size * map_size
 
 func place_start_and_goal(rng: RandomNumberGenerator) -> void:
+	place_for_role(rng, FloorRole.SINGLE)
+
+func place_for_role(rng: RandomNumberGenerator, role: int) -> void:
 	for y in range(map_size):
 		for x in range(map_size):
 			cell(x, y).tile = TileType.FLOOR
-	var sx: int
-	var sy: int
+	var anchor := _pick_anchor_in_room(rng)
+	var far := _bfs_furthest_from(anchor)
+	var anchor_tile: int
+	var far_tile: int
+	match role:
+		FloorRole.FIRST:
+			anchor_tile = TileType.START
+			far_tile = TileType.STAIRS_DOWN
+		FloorRole.MIDDLE:
+			anchor_tile = TileType.STAIRS_UP
+			far_tile = TileType.STAIRS_DOWN
+		FloorRole.LAST:
+			anchor_tile = TileType.STAIRS_UP
+			far_tile = TileType.GOAL
+		_:
+			anchor_tile = TileType.START
+			far_tile = TileType.GOAL
+	cell(anchor.x, anchor.y).tile = anchor_tile
+	cell(far.x, far.y).tile = far_tile
+
+func _pick_anchor_in_room(rng: RandomNumberGenerator) -> Vector2i:
 	if rooms.size() > 0:
 		var room: MapRect = rooms[rng.randi_range(0, rooms.size() - 1)]
 		var c := room.center()
-		sx = c.x
-		sy = c.y
-	else:
-		sx = 0
-		sy = 0
-	var dist := bfs(Vector2i(sx, sy))
+		return Vector2i(c.x, c.y)
+	return Vector2i(0, 0)
+
+func _bfs_furthest_from(origin: Vector2i) -> Vector2i:
+	var dist := bfs(origin)
 	var max_dist := -1
-	var gx := 0
-	var gy := 0
+	var fx := origin.x
+	var fy := origin.y
 	for pos in dist:
 		if dist[pos] > max_dist:
 			max_dist = dist[pos]
-			gx = pos.x
-			gy = pos.y
-	cell(sx, sy).tile = TileType.START
-	cell(gx, gy).tile = TileType.GOAL
+			fx = pos.x
+			fy = pos.y
+	return Vector2i(fx, fy)
 
 func generate(
 	seed_val: int = 0,
@@ -206,6 +226,7 @@ func generate(
 	max_room_size: int = -1,
 	extra_links: int = -1,
 	door_chance: float = 0.25,
+	role: int = FloorRole.SINGLE,
 ) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_val
@@ -224,4 +245,4 @@ func generate(
 	carve_rooms()
 	add_extra_links(rng, extra_links)
 	add_doors_between_room_and_nonroom(rng, door_chance)
-	place_start_and_goal(rng)
+	place_for_role(rng, role)

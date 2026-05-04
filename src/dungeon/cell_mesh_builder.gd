@@ -70,7 +70,7 @@ func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 		Vector3(x1, y1, z1), Vector3(x0, y1, z1)]
 	faces.append(Face.new("ceiling", ceil_verts, Vector3(0, -1, 0), CEILING_COLOR))
 
-	if cell.tile == TileType.START:
+	if cell.tile == TileType.START or cell.tile == TileType.STAIRS_DOWN or cell.tile == TileType.STAIRS_UP:
 		_add_stairs_up(faces, x0, z0)
 
 	return faces

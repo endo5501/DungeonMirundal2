@@ -327,6 +327,168 @@ func test_generate_seed_reproducibility():
 					identical = false
 	assert_true(identical, "same seed produces identical map")
 
+# --- place_for_role / role-based tile placement ---
+
+func _count_role_tiles(map: WizMap, tile: int) -> int:
+	var count := 0
+	for y in range(map.map_size):
+		for x in range(map.map_size):
+			if map.cell(x, y).tile == tile:
+				count += 1
+	return count
+
+func _build_carved_map(size: int, seed_val: int) -> WizMap:
+	var map := WizMap.new(size)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_val
+	map.carve_perfect_maze(rng)
+	map.generate_rooms(rng, 50, 2, 5)
+	map.carve_rooms()
+	return map
+
+func test_place_for_role_first_has_start_and_stairs_down():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.FIRST)
+	assert_eq(_count_role_tiles(map, TileType.START), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 0)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 0)
+
+func test_place_for_role_middle_has_stairs_up_and_stairs_down():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.MIDDLE)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 1)
+	assert_eq(_count_role_tiles(map, TileType.START), 0)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 0)
+
+func test_place_for_role_last_has_stairs_up_and_goal():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.LAST)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 1)
+	assert_eq(_count_role_tiles(map, TileType.START), 0)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 0)
+
+func test_place_for_role_single_has_start_and_goal():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.SINGLE)
+	assert_eq(_count_role_tiles(map, TileType.START), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 0)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 0)
+
+func _find_tile(map: WizMap, tile: int) -> Vector2i:
+	for y in range(map.map_size):
+		for x in range(map.map_size):
+			if map.cell(x, y).tile == tile:
+				return Vector2i(x, y)
+	return Vector2i(-1, -1)
+
+func test_place_for_role_first_stairs_down_is_bfs_furthest_from_start():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.FIRST)
+	var start_pos := _find_tile(map, TileType.START)
+	var stairs_pos := _find_tile(map, TileType.STAIRS_DOWN)
+	var dist := map.bfs(start_pos)
+	var max_dist := 0
+	for d in dist.values():
+		if d > max_dist:
+			max_dist = d
+	assert_eq(dist[stairs_pos], max_dist, "STAIRS_DOWN must be at BFS-furthest from START")
+
+func test_place_for_role_middle_stairs_down_is_furthest_from_stairs_up():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.MIDDLE)
+	var up_pos := _find_tile(map, TileType.STAIRS_UP)
+	var down_pos := _find_tile(map, TileType.STAIRS_DOWN)
+	var dist := map.bfs(up_pos)
+	var max_dist := 0
+	for d in dist.values():
+		if d > max_dist:
+			max_dist = d
+	assert_eq(dist[down_pos], max_dist, "STAIRS_DOWN must be BFS-furthest from STAIRS_UP")
+
+func test_place_for_role_first_start_is_in_room():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.FIRST)
+	var start_pos := _find_tile(map, TileType.START)
+	assert_true(map.in_any_room(start_pos.x, start_pos.y), "START must be inside a room")
+
+func test_place_for_role_middle_stairs_up_is_in_room():
+	var map := _build_carved_map(20, 42)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 100
+	map.place_for_role(rng, FloorRole.MIDDLE)
+	var up_pos := _find_tile(map, TileType.STAIRS_UP)
+	assert_true(map.in_any_room(up_pos.x, up_pos.y), "STAIRS_UP must be inside a room")
+
+# --- Stair tile walkability ---
+
+func test_stairs_down_walkability_governed_by_edges_only():
+	var map := WizMap.new(10)
+	map.set_edge(5, 5, Direction.NORTH, EdgeType.OPEN)
+	map.cell(5, 4).tile = TileType.STAIRS_DOWN
+	assert_true(map.can_move(5, 5, Direction.NORTH),
+		"STAIRS_DOWN with OPEN edge must be enterable")
+
+func test_stairs_up_walkability_governed_by_edges_only():
+	var map := WizMap.new(10)
+	map.set_edge(5, 5, Direction.EAST, EdgeType.WALL)
+	map.cell(6, 5).tile = TileType.STAIRS_UP
+	assert_false(map.can_move(5, 5, Direction.EAST),
+		"STAIRS_UP behind a WALL must not be enterable")
+
+func test_stairs_through_door():
+	var map := WizMap.new(10)
+	map.set_edge(5, 5, Direction.SOUTH, EdgeType.DOOR)
+	map.cell(5, 6).tile = TileType.STAIRS_DOWN
+	assert_true(map.can_move(5, 5, Direction.SOUTH),
+		"STAIRS_DOWN behind a DOOR must be enterable")
+
+# --- generate(role=...) integration ---
+
+func test_generate_with_role_first():
+	var map := WizMap.new(20)
+	map.generate(42, -1, 4, -1, -1, 0.25, FloorRole.FIRST)
+	assert_eq(_count_role_tiles(map, TileType.START), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 0)
+
+func test_generate_with_role_middle():
+	var map := WizMap.new(20)
+	map.generate(42, -1, 4, -1, -1, 0.25, FloorRole.MIDDLE)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 1)
+
+func test_generate_with_role_last():
+	var map := WizMap.new(20)
+	map.generate(42, -1, 4, -1, -1, 0.25, FloorRole.LAST)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 1)
+
+func test_generate_default_role_is_single():
+	var map := WizMap.new(20)
+	map.generate(42)
+	assert_eq(_count_role_tiles(map, TileType.START), 1)
+	assert_eq(_count_role_tiles(map, TileType.GOAL), 1)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_UP), 0)
+	assert_eq(_count_role_tiles(map, TileType.STAIRS_DOWN), 0)
+
 func test_generate_different_seeds_differ():
 	var map1 = WizMap.new(10)
 	map1.generate(42)

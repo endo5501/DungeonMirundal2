@@ -3,6 +3,7 @@ extends RefCounted
 
 var position: Vector2i
 var facing: int
+var current_floor: int = 0
 
 func _init(pos: Vector2i, dir: int) -> void:
 	position = pos
@@ -36,10 +37,13 @@ func to_dict() -> Dictionary:
 	return {
 		"position": [position.x, position.y],
 		"facing": facing,
+		"current_floor": current_floor,
 	}
 
 static func from_dict(data: Dictionary) -> PlayerState:
 	var pos_arr: Array = data.get("position", [0, 0])
 	var pos := Vector2i(int(pos_arr[0]), int(pos_arr[1]))
 	var dir: int = data.get("facing", Direction.NORTH)
-	return PlayerState.new(pos, dir)
+	var ps := PlayerState.new(pos, dir)
+	ps.current_floor = int(data.get("current_floor", 0))
+	return ps

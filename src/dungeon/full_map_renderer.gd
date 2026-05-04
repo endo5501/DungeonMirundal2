@@ -10,6 +10,8 @@ static var COLOR_DOOR := Color8(153, 102, 51)
 static var COLOR_PLAYER := Color8(51, 204, 51)
 static var COLOR_START := Color8(230, 204, 51)
 static var COLOR_GOAL := Color8(220, 70, 70)
+static var COLOR_STAIRS_DOWN := Color8(120, 180, 220)
+static var COLOR_STAIRS_UP := Color8(180, 120, 220)
 static var COLOR_BG := Color8(0, 0, 0)
 
 
@@ -51,6 +53,10 @@ func _draw_cell(img: Image, wiz_map: WizMap, explored_map: ExploredMap,
 		_draw_marker(img, cx, cy, cell_px, floor_px, COLOR_START)
 	elif tile == TileType.GOAL:
 		_draw_marker(img, cx, cy, cell_px, floor_px, COLOR_GOAL)
+	elif tile == TileType.STAIRS_DOWN:
+		_draw_marker(img, cx, cy, cell_px, floor_px, COLOR_STAIRS_DOWN)
+	elif tile == TileType.STAIRS_UP:
+		_draw_marker(img, cx, cy, cell_px, floor_px, COLOR_STAIRS_UP)
 
 
 func _edge_color(edge: int, cx: int, cy: int, dir: int, explored_map: ExploredMap) -> Color:
