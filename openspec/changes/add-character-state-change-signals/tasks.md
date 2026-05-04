@@ -32,14 +32,14 @@
 
 ## 4. PartyMemberPanel のシグナル購読
 
-- [ ] 4.1 `tests/dungeon_scene/test_party_member_panel_signals.gd` を作成: Panel に Character をバインドし、その Character の `current_hp` を変えると Panel の表示用フィールド(または `queue_redraw` 呼出回数)が更新されることを検証する失敗テスト
-- [ ] 4.2 「Character A → B に切替後、A の HP 変化では Panel が反応しない」テストを追加
-- [ ] 4.3 「Panel を null で unbind した後の HP 変化に Panel が反応しない」テストを追加
-- [ ] 4.4 テストが期待通り失敗することを確認
-- [ ] 4.5 `src/dungeon_scene/party_member_panel.gd` に Character 参照を保持するフィールドと、バインド/アンバインド時にシグナル接続を切り替えるメソッド(例: `bind_character(c: Character)`)を追加
-- [ ] 4.6 接続したシグナルのコールバックは内部状態を更新して `queue_redraw()` を呼ぶ。MP/状態異常も同様
-- [ ] 4.7 既存の `set_member(data: PartyMemberData)` 経路は保持する(後方互換)。Character バインドと PartyMemberData 受け取りは独立に動く
-- [ ] 4.8 4.1–4.3 のテストが PASS することを確認
+- [x] 4.1 `tests/dungeon_scene/test_party_member_panel_signals.gd` を作成: Panel に Character をバインドし、その Character の `current_hp` を変えると Panel の表示用フィールド(または `queue_redraw` 呼出回数)が更新されることを検証する失敗テスト
+- [x] 4.2 「Character A → B に切替後、A の HP 変化では Panel が反応しない」テストを追加
+- [x] 4.3 「Panel を null で unbind した後の HP 変化に Panel が反応しない」テストを追加
+- [x] 4.4 テストが期待通り失敗することを確認(bind_character 未実装で 6 件 FAIL)
+- [x] 4.5 `src/dungeon_scene/party_member_panel.gd` に Character 参照を保持するフィールドと、バインド/アンバインド時にシグナル接続を切り替えるメソッド `bind_character(c: Character)` を追加
+- [x] 4.6 接続したシグナルのコールバックは `_data` を `to_party_member_data()` で再生成して `queue_redraw()` を呼ぶ(HP/MP/statuses)
+- [x] 4.7 既存の `set_member(data: PartyMemberData)` 経路は保持する(後方互換)。`set_member` は古い Character 接続を切ってからスナップショット保持
+- [x] 4.8 7/7 のテストが PASS することを確認
 - [ ] 4.9 ここでコミット: `Make PartyMemberPanel auto-refresh from Character signals`
 
 ## 5. PartyDisplay と DungeonScreen の配線
