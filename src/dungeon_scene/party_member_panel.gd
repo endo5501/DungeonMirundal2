@@ -43,6 +43,10 @@ var _data: PartyMemberData
 # (hp_changed / mp_changed / statuses_changed). When null, the panel is
 # operating in legacy snapshot mode via set_member(PartyMemberData).
 var _character: Character
+# Combat-only binding: PartyHud.attach_to_turn_engine wires this to the
+# matching PartyCombatant so the panel can read stat_modifier_stack and
+# react to stat_modifiers_changed. Cleared on detach (bind_combat_actor(null)).
+var _combat_actor: CombatActor
 
 func _init() -> void:
 	custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
@@ -67,6 +71,19 @@ func bind_character(ch: Character) -> void:
 	queue_redraw()
 
 
+# Bind a CombatActor for combat-only state (stat_modifier_stack icon row).
+# Pass null to clear. Switching actors disconnects the previous one before
+# connecting the new one.
+func bind_combat_actor(actor: CombatActor) -> void:
+	if _combat_actor == actor:
+		return
+	_disconnect_from_combat_actor()
+	_combat_actor = actor
+	if _combat_actor != null:
+		_combat_actor.stat_modifiers_changed.connect(_on_stat_modifiers_changed)
+	queue_redraw()
+
+
 # Snapshot path: set the panel to render a static PartyMemberData. This
 # disconnects from any previously bound Character so out-of-band changes
 # do not overwrite the snapshot.
@@ -86,6 +103,18 @@ func _disconnect_from_character() -> void:
 	if _character.statuses_changed.is_connected(_on_character_statuses_changed):
 		_character.statuses_changed.disconnect(_on_character_statuses_changed)
 	_character = null
+
+
+func _disconnect_from_combat_actor() -> void:
+	if _combat_actor == null:
+		return
+	if _combat_actor.stat_modifiers_changed.is_connected(_on_stat_modifiers_changed):
+		_combat_actor.stat_modifiers_changed.disconnect(_on_stat_modifiers_changed)
+	_combat_actor = null
+
+
+func _on_stat_modifiers_changed() -> void:
+	queue_redraw()
 
 
 func _on_character_hp_changed(_current_hp: int, _max_hp: int) -> void:
@@ -113,6 +142,7 @@ func _exit_tree() -> void:
 	# Detach from Character so the signal Callable doesn't dangle if the
 	# Character outlives the panel (e.g., on scene change).
 	_disconnect_from_character()
+	_disconnect_from_combat_actor()
 
 
 # Mirrors _draw()'s early-return condition so tests can verify "panel

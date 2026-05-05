@@ -37,17 +37,17 @@
 
 ## 3. PartyMemberPanel に CombatActor バインディング (TDD: red→green)
 
-- [ ] 3.1 新規テスト `tests/dungeon_scene/test_party_member_panel_combat_actor.gd`:
+- [x] 3.1 新規テスト `tests/dungeon_scene/test_party_member_panel_combat_actor.gd`:
   - `bind_combat_actor(actor)` で `_combat_actor` がセットされる
   - `bind_combat_actor(null)` で解放される
   - 切替時に旧 actor の `stat_modifiers_changed` 接続が解除され、新 actor の接続が追加される
-- [ ] 3.2 GUT 実行 → red
-- [ ] 3.3 `PartyMemberPanel` に `var _combat_actor: CombatActor` フィールドを追加
-- [ ] 3.4 `bind_combat_actor(actor: CombatActor)` メソッドを追加(切断/接続を bind_character と同じパターンで)
-- [ ] 3.5 `_on_stat_modifiers_changed()` ハンドラで `queue_redraw`
-- [ ] 3.6 `_exit_tree()` で disconnect
-- [ ] 3.7 GUT 実行 → green
-- [ ] 3.8 コミット
+- [x] 3.2 GUT 実行 → red
+- [x] 3.3 `PartyMemberPanel` に `var _combat_actor: CombatActor` フィールドを追加
+- [x] 3.4 `bind_combat_actor(actor: CombatActor)` メソッドを追加(切断/接続を bind_character と同じパターンで)
+- [x] 3.5 `_on_stat_modifiers_changed()` ハンドラで `queue_redraw`
+- [x] 3.6 `_exit_tree()` で disconnect
+- [x] 3.7 GUT 実行 → green
+- [x] 3.8 コミット
 
 ## 4. PartyMemberPanel の stat modifier アイコン描画 (TDD: red→green)
 
