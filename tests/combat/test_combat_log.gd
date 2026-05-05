@@ -15,6 +15,60 @@ func test_miss_action_renders_dodge_message():
 	assert_true(text.contains("Slime"), "log should name the target: %s" % text)
 
 
+# --- add-status-confusion-blind-paralysis: confusion_swap rendering ---
+
+func test_confused_attack_includes_confusion_annotation():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	log.append_from_report_action({
+		"type": "attack",
+		"attacker_name": "Alice",
+		"target_name": "Bob",
+		"damage": 4,
+		"defended": false,
+		"retargeted_from": "",
+		"confusion_swap": true,
+	})
+	var text := log.get_display_text()
+	assert_true(text.contains("Alice"), "log should name attacker: %s" % text)
+	assert_true(text.contains("Bob"), "log should name target: %s" % text)
+	assert_true(text.contains("4"), "log should show damage: %s" % text)
+	assert_true(text.contains("混乱"), "log should annotate confusion: %s" % text)
+
+
+func test_confused_miss_includes_confusion_annotation():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	log.append_from_report_action({
+		"type": "miss",
+		"attacker_name": "Alice",
+		"target_name": "Bob",
+		"confusion_swap": true,
+	})
+	var text := log.get_display_text()
+	assert_true(text.contains("Alice"), "log should name attacker: %s" % text)
+	assert_true(text.contains("Bob"), "log should name target: %s" % text)
+	assert_true(text.contains("外れた") or text.contains("身をかわした"),
+		"log should describe a missed attack: %s" % text)
+	assert_true(text.contains("混乱"), "log should annotate confusion: %s" % text)
+
+
+func test_non_confused_attack_renders_without_confusion_annotation():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	log.append_from_report_action({
+		"type": "attack",
+		"attacker_name": "Alice",
+		"target_name": "Slime",
+		"damage": 3,
+		"defended": false,
+		"retargeted_from": "",
+		"confusion_swap": false,
+	})
+	var text := log.get_display_text()
+	assert_false(text.contains("混乱"), "non-confused attack should not annotate confusion: %s" % text)
+
+
 func test_retargeted_attack_log_mentions_original_and_new_target():
 	var log := CombatLog.new()
 	add_child_autofree(log)
