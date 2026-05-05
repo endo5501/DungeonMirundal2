@@ -1,19 +1,19 @@
 ## 1. CombatActor.stat_modifiers_changed シグナル (TDD: red→green)
 
-- [ ] 1.1 新規テスト `tests/combat/test_combat_actor_stat_modifiers_signal.gd`:
+- [x] 1.1 新規テスト `tests/combat/test_combat_actor_stat_modifiers_signal.gd`:
   - `add()` で新規エントリ → 1 回発火
   - `add()` で既存より強い置換 → 1 回発火
   - `add()` で既存より弱い(no-op) → 発火しない
   - tick で duration 0 になり削除 → 1 回発火
   - tick で duration が減るが残る → 発火しない
-- [ ] 1.2 GUT 実行 → red 確認
-- [ ] 1.3 `src/combat/combat_actor.gd` に `signal stat_modifiers_changed()` を宣言
-- [ ] 1.4 `src/combat/stat_modifier_stack.gd` に変更通知 callback フィールドを追加(`_on_change: Callable`)
-- [ ] 1.5 `StatModifierStack.add()` の各 return 直前で「実際に状態が変わった経路」だけ `_on_change.call()` を呼ぶ
-- [ ] 1.6 tick / prune を担うコード(`StatusTickService` 周辺の調査)で、変更があった場合のみ `_on_change.call()` を呼ぶ
-- [ ] 1.7 `CombatActor._init()` で `stat_modifier_stack._on_change = func(): stat_modifiers_changed.emit()` を設定
-- [ ] 1.8 GUT 実行 → green 確認
-- [ ] 1.9 コミット
+- [x] 1.2 GUT 実行 → red 確認
+- [x] 1.3 `src/combat/combat_actor.gd` に `signal stat_modifiers_changed()` を宣言
+- [x] 1.4 `src/combat/stat_modifier_stack.gd` に変更通知 callback フィールドを追加(`_on_change: Callable`)
+- [x] 1.5 `StatModifierStack.add()` の各 return 直前で「実際に状態が変わった経路」だけ `_on_change.call()` を呼ぶ
+- [x] 1.6 tick / prune を担うコード(`StatusTickService` 周辺の調査)で、変更があった場合のみ `_on_change.call()` を呼ぶ
+- [x] 1.7 `CombatActor._init()` で `stat_modifier_stack._on_change = func(): stat_modifiers_changed.emit()` を設定
+- [x] 1.8 GUT 実行 → green 確認
+- [x] 1.9 コミット
 
 ## 2. TurnEngine の UI シグナル追加 (TDD: red→green)
 

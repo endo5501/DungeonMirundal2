@@ -16,6 +16,13 @@ const STAT_HIT: StringName = &"hit"
 const STAT_EVASION: StringName = &"evasion"
 
 var _entries: Array = []
+# Owner (CombatActor) wires this in _init() so the actor's
+# stat_modifiers_changed signal fires for "real" mutations only:
+# new entry, stronger replacement, or tick-driven removal. Pure
+# duration-only changes (equal magnitude, decrement-and-keep) are
+# intentionally silent so HUD subscribers don't redraw every turn
+# for stable modifiers.
+var _on_change: Callable = Callable()
 
 
 func is_empty() -> bool:
@@ -30,12 +37,14 @@ func add(stat: StringName, delta, duration: int) -> void:
 			"delta": delta,
 			"duration": duration,
 		})
+		_notify_change()
 		return
 	var new_abs: float = absf(float(delta))
 	var existing_abs: float = absf(float(existing["delta"]))
 	if new_abs > existing_abs:
 		existing["delta"] = delta
 		existing["duration"] = duration
+		_notify_change()
 		return
 	if new_abs == existing_abs:
 		existing["duration"] = max(int(existing["duration"]), duration)
@@ -58,12 +67,16 @@ func sum(stat: StringName):
 
 func tick_battle_turn() -> void:
 	var keep: Array = []
+	var removed := false
 	for e in _entries:
 		e["duration"] = int(e["duration"]) - 1
 		if int(e["duration"]) <= 0:
+			removed = true
 			continue
 		keep.append(e)
 	_entries = keep
+	if removed:
+		_notify_change()
 
 
 func clear_battle_only() -> void:
@@ -75,3 +88,8 @@ func _find(stat: StringName) -> Dictionary:
 		if e["stat"] == stat:
 			return e
 	return {}
+
+
+func _notify_change() -> void:
+	if _on_change.is_valid():
+		_on_change.call()

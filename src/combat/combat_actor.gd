@@ -3,10 +3,18 @@ extends RefCounted
 
 const MOD_CAP: float = 0.40
 
+# Fires when modifier_stack mutates in a visually meaningful way (entry added,
+# stronger replacement, or tick removal). Duration-only updates are silent.
+signal stat_modifiers_changed()
+
 var actor_name: String = ""
 
 var modifier_stack: StatModifierStack = StatModifierStack.new()
 var statuses: StatusTrack = StatusTrack.new()
+
+
+func _init() -> void:
+	modifier_stack._on_change = func() -> void: stat_modifiers_changed.emit()
 
 var _defending: bool = false
 # Tests inject a StatusRepository here; production path goes through DataLoader.
