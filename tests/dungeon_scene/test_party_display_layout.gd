@@ -11,8 +11,7 @@ const TEST_WIDTH := 1280.0
 func _make_display(width: float = TEST_WIDTH) -> PartyDisplay:
 	var d := PartyDisplay.new()
 	add_child_autofree(d)
-	d.size = Vector2(width, d.size.y)
-	d._layout_panels()
+	d._layout_panels(width)
 	return d
 
 
@@ -59,9 +58,9 @@ func test_rightmost_back_panel_right_edge_within_margin_of_display_right_edge():
 	var d := _make_display()
 	var rightmost: PartyMemberPanel = d._back_panels[2]
 	var rightmost_right: float = rightmost.position.x + float(PartyMemberPanel.PANEL_WIDTH)
-	var distance_from_right: float = d.size.x - rightmost_right
+	var distance_from_right: float = TEST_WIDTH - rightmost_right
 	assert_true(distance_from_right >= 0.0,
-		"rightmost back panel right edge (%f) should not exceed display width (%f)" % [rightmost_right, d.size.x])
+		"rightmost back panel right edge (%f) should not exceed display width (%f)" % [rightmost_right, TEST_WIDTH])
 	assert_true(distance_from_right <= float(PartyDisplay.MARGIN),
 		"rightmost back panel right edge should be within MARGIN of right edge; got distance=%f" % distance_from_right)
 

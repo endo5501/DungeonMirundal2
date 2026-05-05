@@ -11,8 +11,7 @@ const TEST_WIDTH := 1280.0
 func _make_display() -> PartyDisplay:
 	var d := PartyDisplay.new()
 	add_child_autofree(d)
-	d.size = Vector2(TEST_WIDTH, d.size.y)
-	d._layout_panels()
+	d._layout_panels(TEST_WIDTH)
 	return d
 
 

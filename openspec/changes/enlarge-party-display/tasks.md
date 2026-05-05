@@ -16,32 +16,32 @@
 
 ## 2. PartyMemberPanel の更新 (TDD: green for panel-side)
 
-- [ ] 2.1 `src/dungeon_scene/party_member_panel.gd` の `FONT_SIZE` を 20 に更新
-- [ ] 2.2 `PANEL_HEIGHT` を 110 に更新(必要なら 100/105 と調整可)
-- [ ] 2.3 `_draw()` の行間 `line_h` をフォントサイズに合わせて再計算(目安: `FONT_SIZE + 4`)
-- [ ] 2.4 `_draw()` 冒頭で `_data == null` のとき early return(背景矩形 `draw_rect` も呼ばない)に変更
-- [ ] 2.5 名前/LV/HP/MP の 4 行が PANEL_HEIGHT 内に収まる Y 座標を再調整(MP 行の bottom が `PANEL_HEIGHT - 4` 以下)
-- [ ] 2.6 GUT 実行 → `test_party_member_panel_size.gd` / `test_party_member_panel_empty.gd` が green になることを確認
+- [x] 2.1 `src/dungeon_scene/party_member_panel.gd` の `FONT_SIZE` を 20 に更新
+- [x] 2.2 `PANEL_HEIGHT` を 110 に更新(必要なら 100/105 と調整可)
+- [x] 2.3 `_draw()` の行間 `line_h` をフォントサイズに合わせて再計算(目安: `FONT_SIZE + 4`)
+- [x] 2.4 `_draw()` 冒頭で `_data == null` のとき early return(背景矩形 `draw_rect` も呼ばない)に変更
+- [x] 2.5 名前/LV/HP/MP の 4 行が PANEL_HEIGHT 内に収まる Y 座標を再調整(MP 行の bottom が `PANEL_HEIGHT - 4` 以下)
+- [x] 2.6 GUT 実行 → `test_party_member_panel_size.gd` / `test_party_member_panel_empty.gd` が green になることを確認
 
 ## 3. PartyDisplay の更新 (TDD: green for display-side)
 
-- [ ] 3.1 `src/dungeon_scene/party_display.gd` の `_ready()` でアンカーを full-bottom に変更(`anchor_left=0, anchor_right=1, anchor_top=1, anchor_bottom=1`、対応 offset を 0 に)
-- [ ] 3.2 `_bg_panel: ColorRect` の生成と `add_child` を削除、フィールド宣言も削除
-- [ ] 3.3 `_create_row(row_index)` を廃止し、前列を画面左端から margin 詰めで配置するロジックを書く(3 パネル分の `position.x = MARGIN + i * (PANEL_WIDTH + MARGIN)`)
-- [ ] 3.4 後列を画面右端から margin 詰めで配置するロジックを書く(右端 `width - MARGIN` から逆算: `position.x = width - MARGIN - (3 - i) * PANEL_WIDTH - (2 - i) * MARGIN` 等)
-- [ ] 3.5 前列・後列の `position.y` を同一値に揃える(ラベル領域の下、HUD 全体高さ ~140px の下半分)
-- [ ] 3.6 後列のレイアウトは `PartyDisplay.size.x` に依存するため、`_ready()` の実行タイミングと `resized` シグナルの両方で再計算する関数 `_layout_panels()` を用意
-- [ ] 3.7 `PartyDisplay._draw()` をオーバーライドし、"FRONT" を前列パネル群の真上に左揃えで `draw_string`、"BACK" を後列パネル群の真上に右揃えで `draw_string` する
-- [ ] 3.8 ラベルのフォントサイズは `PartyMemberPanel.FONT_SIZE` 以上(20pt 以上)とする
-- [ ] 3.9 `bind_party_characters` 関数のシグネチャ・挙動はそのまま維持(空スロットで `bind_character(null)` を呼ぶ動作も維持)
-- [ ] 3.10 `setup(party_data)` のスナップショット経路もそのまま維持
-- [ ] 3.11 GUT 実行 → `test_party_display_layout.gd` / `test_party_display_labels.gd` が green になることを確認
+- [x] 3.1 `src/dungeon_scene/party_display.gd` の `_ready()` でアンカーを full-bottom に変更(`anchor_left=0, anchor_right=1, anchor_top=1, anchor_bottom=1`、対応 offset を 0 に)
+- [x] 3.2 `_bg_panel: ColorRect` の生成と `add_child` を削除、フィールド宣言も削除
+- [x] 3.3 `_create_row(row_index)` を廃止し、前列を画面左端から margin 詰めで配置するロジックを書く(3 パネル分の `position.x = MARGIN + i * (PANEL_WIDTH + MARGIN)`)
+- [x] 3.4 後列を画面右端から margin 詰めで配置するロジックを書く(右端 `width - MARGIN` から逆算: `position.x = width - MARGIN - (3 - i) * PANEL_WIDTH - (2 - i) * MARGIN` 等)
+- [x] 3.5 前列・後列の `position.y` を同一値に揃える(ラベル領域の下、HUD 全体高さ ~140px の下半分)
+- [x] 3.6 後列のレイアウトは `PartyDisplay.size.x` に依存するため、`_ready()` の実行タイミングと `resized` シグナルの両方で再計算する関数 `_layout_panels()` を用意
+- [x] 3.7 `PartyDisplay._draw()` をオーバーライドし、"FRONT" を前列パネル群の真上に左揃えで `draw_string`、"BACK" を後列パネル群の真上に右揃えで `draw_string` する
+- [x] 3.8 ラベルのフォントサイズは `PartyMemberPanel.FONT_SIZE` 以上(20pt 以上)とする
+- [x] 3.9 `bind_party_characters` 関数のシグネチャ・挙動はそのまま維持(空スロットで `bind_character(null)` を呼ぶ動作も維持)
+- [x] 3.10 `setup(party_data)` のスナップショット経路もそのまま維持
+- [x] 3.11 GUT 実行 → `test_party_display_layout.gd` / `test_party_display_labels.gd` が green になることを確認
 
 ## 4. 既存テストの修正
 
-- [ ] 4.1 `tests/dungeon_scene/test_party_display_character_binding.gd` でレイアウト座標に依存する箇所があれば、座標値ではなく相対関係(前列が左、後列が右、同じ y)で検証するよう更新
-- [ ] 4.2 `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` 等の関連テストでレイアウト関連の期待があれば同様に更新
-- [ ] 4.3 GUT 全テスト実行 → green を確認
+- [x] 4.1 `tests/dungeon_scene/test_party_display_character_binding.gd` でレイアウト座標に依存する箇所があれば、座標値ではなく相対関係(前列が左、後列が右、同じ y)で検証するよう更新 (確認済: 元から座標非依存、修正不要)
+- [x] 4.2 `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` 等の関連テストでレイアウト関連の期待があれば同様に更新 (確認済: レイアウト依存なし、修正不要)
+- [x] 4.3 GUT 全テスト実行 → green を確認 (1958/1958 passed)
 
 ## 5. 手動確認
 
@@ -54,6 +54,6 @@
 
 ## 6. クリーンアップ・コミット
 
-- [ ] 6.1 不要になったコメント・デッドコード(`MARGIN` 以外の不要定数、`_bg_panel` 関連の残骸)を削除
-- [ ] 6.2 `openspec validate enlarge-party-display --strict` を実行して valid を確認
-- [ ] 6.3 green 状態でコミット
+- [x] 6.1 不要になったコメント・デッドコード(`MARGIN` 以外の不要定数、`_bg_panel` 関連の残骸)を削除
+- [x] 6.2 `openspec validate enlarge-party-display --strict` を実行して valid を確認
+- [x] 6.3 green 状態でコミット
