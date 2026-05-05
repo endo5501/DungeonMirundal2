@@ -101,7 +101,7 @@
 ## 11. 全体検証
 
 - [x] 11.1 `tests/combat/`, `tests/dungeon/`, `tests/items/`, `tests/town_scene/`, `tests/esc_menu/` 全件緑
-- [ ] 11.2 ゲーム手動起動: poison_dart で敵を毒、Mage を入れ替えて街→ダンジョンで毒キャラを歩かせて HP 削れを確認、街に戻って治る
+- [x] 11.2 ゲーム手動起動: poison_dart で敵を毒、Mage を入れ替えて街→ダンジョンで毒キャラを歩かせて HP 削れを確認、街に戻って治る
 - [x] 11.3 `openspec validate add-status-poison-and-petrify --strict` 成功
 
 ## 12. アーカイブ準備

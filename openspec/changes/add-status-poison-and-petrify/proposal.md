@@ -18,10 +18,12 @@ Wizardry の poison は dungeon step ごとに `max_hp/16` 程度の HP 削り�
 - 新規 `data/statuses/poison.tres`（永続異常 / battle・dungeon 双方で tick / cures_on_battle_end=false）
   - `id = &"poison"`, `display_name = "毒"`, `scope = PERSISTENT`
   - `tick_in_battle = 1`（戦闘中のターン頭で固定 1 ダメージ）
-  - `tick_in_dungeon = 0`, `tick_in_dungeon_ratio = 16`（探索フェーズで合意した max_hp/16）
+  - `tick_in_dungeon = 1`, `tick_in_dungeon_ratio = 0`（プレイ感調整: max_hp 比率ではなくフラット 1 ダメージ）
   - `cures_on_damage = false`, `cures_on_battle_end = false`
   - `default_duration` は無視（PERSISTENT は cure 専用）
   - `resist_key = &"poison"`
+- 探索 tick の頻度を緩めるため、`EncounterCoordinator` は `STATUS_TICK_STEP_INTERVAL` 歩ごと（5）に 1 回だけ `_tick_party_step` を呼ぶ
+  - 1 歩ごとの HP 削れ + HUD 通知が騒がしすぎたため、プレイテスト後に決定
 - 新規 `data/statuses/petrify.tres`（永続異常 / 行動完全停止 / 戦闘でも持続）
   - `id = &"petrify"`, `display_name = "石化"`, `scope = PERSISTENT`
   - `prevents_action = true`, `cures_on_battle_end = false`

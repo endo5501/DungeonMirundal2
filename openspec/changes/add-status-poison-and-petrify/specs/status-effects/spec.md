@@ -13,7 +13,7 @@ The system SHALL provide a `StatusData` Custom Resource that defines a status ef
 - `hit_penalty: float`
 - `default_duration: int` — turns granted at inflict for `BATTLE_ONLY`.
 - `tick_in_battle: int` — flat HP damage at the head of each battle turn. `0` means no battle tick.
-- `tick_in_dungeon: int` — flat HP damage at every dungeon step (used when `tick_in_dungeon_ratio == 0`). Only meaningful for `PERSISTENT`.
+- `tick_in_dungeon: int` — flat HP damage applied each time `StatusTickService.tick_character_step` is invoked (used when `tick_in_dungeon_ratio == 0`). Only meaningful for `PERSISTENT`. Note: the dungeon coordinator gates how often `tick_character_step` is called per step (see `dungeon-movement` spec).
 - `tick_in_dungeon_ratio: int` — when `> 0`, dungeon step damage SHALL equal `maxi(1, character.max_hp / tick_in_dungeon_ratio)` (integer division, minimum 1). When `> 0`, this value takes precedence over `tick_in_dungeon`.
 - `cures_on_damage: bool`
 - `cures_on_battle_end: bool`

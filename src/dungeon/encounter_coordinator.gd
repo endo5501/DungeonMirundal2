@@ -15,6 +15,11 @@ var _active_table: EncounterTableData
 var _status_repo: StatusRepository = null
 var _guild: Guild = null
 
+# Status ticks fire once every Nth dungeon step so poison etc. drains slowly
+# enough to feel like exploration pressure, not chip-damage spam.
+const STATUS_TICK_STEP_INTERVAL := 5
+var _steps_since_status_tick: int = 0
+
 
 func _init(repository: MonsterRepository, rng: RandomNumberGenerator, cooldown_steps: int = 3) -> void:
 	_repository = repository
@@ -114,9 +119,10 @@ func set_guild(guild: Guild) -> void:
 func _on_step_taken(_position: Vector2i) -> void:
 	if _current_screen == null:
 		return
-	# Apply persistent-status dungeon ticks (poison etc.) to every party member
-	# before any encounter check. Floored at HP=1; never kills.
-	_tick_party_step()
+	_steps_since_status_tick += 1
+	if _steps_since_status_tick >= STATUS_TICK_STEP_INTERVAL:
+		_steps_since_status_tick = 0
+		_tick_party_step()
 	if _active_table == null:
 		return
 	if not _manager.should_trigger(_rng):

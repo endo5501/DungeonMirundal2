@@ -7,7 +7,7 @@ The system SHALL ship `data/statuses/poison.tres` (`StatusData`) with:
 - `prevents_action = false`, `randomizes_target = false`, `blocks_cast = false`, `hit_penalty = 0.0`
 - `default_duration = 0` (ignored for PERSISTENT)
 - `tick_in_battle = 1`
-- `tick_in_dungeon = 0`, `tick_in_dungeon_ratio = 16`
+- `tick_in_dungeon = 1`, `tick_in_dungeon_ratio = 0` (flat 1 HP per tick; the dungeon coordinator gates tick frequency to once per `STATUS_TICK_STEP_INTERVAL` steps)
 - `cures_on_damage = false`, `cures_on_battle_end = false`
 - `resist_key = &"poison"`
 

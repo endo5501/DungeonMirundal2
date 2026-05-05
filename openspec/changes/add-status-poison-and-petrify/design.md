@@ -88,12 +88,12 @@ static func tick_character_step(character: Character, repo: StatusRepository) ->
 | パラメータ | 値 | 根拠 |
 |-----------|---|------|
 | `tick_in_battle` | 1 | 戦闘中は短いので軽め。max_hp/16 を battle にも使うと8ターン戦闘で max_hp/2 食らうので過酷 |
-| `tick_in_dungeon` | 0 | ratio 側を使う |
-| `tick_in_dungeon_ratio` | 16 | Wizardry 古典の比率 |
+| `tick_in_dungeon` | 1 | プレイテスト後にフラット 1 ダメージへ修正（max_hp/16 だと max_hp が大きい後期で削れすぎ、序盤キャラと終盤キャラの体感も非対称になる） |
+| `tick_in_dungeon_ratio` | 0 | 当初 16 で投入したが上記の理由で flat に切替。フィールドは将来用に StatusData に残す |
 | `cures_on_battle_end` | false | 永続なので戦闘終了で消えない |
 | `cures_on_damage` | false | sleep と違い、被弾では治らない |
 
-例: max_hp=32 のキャラだと step ごとに 2 ダメージ。8 歩で 16 削られるので、地下深くでの遠征がリスクになる。
+加えて `EncounterCoordinator.STATUS_TICK_STEP_INTERVAL = 5` で「5 歩に 1 回だけ tick」とする。1 歩ごとの HP 削れだと HUD 通知が冗長で、ダンジョン探索の流れが阻害されたため。これにより「max_hp 32 のキャラが 40 歩進むと 8 ダメージ」程度の緩やかなプレッシャーになる。
 
 ### Decision 4: petrify のチューニング
 

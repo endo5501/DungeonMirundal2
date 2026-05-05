@@ -32,34 +32,29 @@ func _load_repo() -> StatusRepository:
 	return DataLoader.new().load_status_repository()
 
 
-func test_poisoned_character_loses_two_hp_per_step_at_max_hp_32():
+func test_poisoned_character_loses_one_hp_per_tick_regardless_of_max_hp():
 	var ch := _make_character("Toxic", 32, [&"poison"])
 	var repo := _load_repo()
-	# Walk 8 steps; each step ticks max_hp/16 = 2.
+	# Each StatusTickService call deals a flat 1 HP (poison.tick_in_dungeon = 1).
 	for i in range(8):
 		StatusTickService.tick_character_step(ch, repo)
-	# Expected: 32 - 2*8 = 16
-	assert_eq(ch.current_hp, 16)
+	assert_eq(ch.current_hp, 32 - 8)
 
 
-func test_poison_floors_hp_at_one_after_many_steps():
+func test_poison_floors_hp_at_one_after_many_ticks():
 	var ch := _make_character("Doomed", 32, [&"poison"])
 	var repo := _load_repo()
-	# Walk far more than enough steps to wipe HP if the floor weren't enforced.
 	for i in range(50):
 		StatusTickService.tick_character_step(ch, repo)
 	assert_eq(ch.current_hp, 1, "dungeon ticks must never reduce HP below 1")
 	assert_false(ch.is_dead(), "character must still be alive after dungeon ticks")
 
 
-func test_low_max_hp_character_loses_at_least_one_hp_per_step():
-	# max_hp=10 and ratio=16 → integer division yields 0 but maxi(1, 0) = 1.
+func test_low_max_hp_character_loses_one_hp_per_tick():
 	var ch := _make_character("Frail", 10, [&"poison"])
 	var repo := _load_repo()
 	for i in range(3):
 		StatusTickService.tick_character_step(ch, repo)
-	# Expected: 10 - 1*3 = 7 (or HP=1 if the floor kicked in earlier — only
-	# happens once HP-1 drops below the requested loss, so here we observe 7).
 	assert_eq(ch.current_hp, 7)
 
 
@@ -68,9 +63,8 @@ func test_town_arrival_cures_poison_after_dungeon_walk():
 	var repo := _load_repo()
 	for i in range(4):
 		StatusTickService.tick_character_step(ch, repo)
-	assert_eq(ch.current_hp, 32 - 2 * 4)
+	assert_eq(ch.current_hp, 32 - 4)
 	assert_true(ch.persistent_statuses.has(&"poison"))
-	# Bring the party back to town.
 	var guild := Guild.new()
 	guild.register(ch)
 	guild.assign_to_party(ch, 0, 0)
