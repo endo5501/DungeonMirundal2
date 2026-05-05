@@ -68,6 +68,9 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	_turn_engine = TurnEngine.new()
 	_turn_engine.inventory = GameState.inventory if GameState != null else null
 	_turn_engine.start_battle(party_combatants, monster_combatants)
+	# Subscribe the persistent HUD so panels react (lift / die / stat-mod
+	# icons) to engine signals for the duration of this encounter.
+	PartyHud.attach_to_turn_engine(_turn_engine)
 	_is_active = true
 	visible = true
 	_last_outcome = null
@@ -432,6 +435,9 @@ func _on_result_confirmed() -> void:
 	if _last_outcome == null:
 		_last_outcome = EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
 	cancel_log_playback()
+	# Release the engine reference and clear panel combat-actor bindings so
+	# stat-modifier icons disappear once the battle ends.
+	PartyHud.detach_from_turn_engine()
 	_is_active = false
 	visible = false
 	if _result_panel != null:

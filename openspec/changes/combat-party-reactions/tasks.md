@@ -114,12 +114,12 @@
 
 ## 8. encounter overlay / combat-input-router 配線 (TDD: red→green)
 
-- [ ] 8.1 新規テスト or 既存テスト拡張: 戦闘開始ロジックの中で `PartyHud.attach_to_turn_engine(engine)` が呼ばれることを検証
-- [ ] 8.2 戦闘終了ロジックの中で `PartyHud.detach_from_turn_engine()` が呼ばれることを検証
-- [ ] 8.3 既存の戦闘開始/終了処理(encounter overlay または combat-input-router 周辺)を調査して呼び出し位置を決定
-- [ ] 8.4 attach/detach を埋め込む
-- [ ] 8.5 GUT 実行 → green
-- [ ] 8.6 コミット
+- [x] 8.1 新規テスト or 既存テスト拡張: 戦闘開始ロジックの中で `PartyHud.attach_to_turn_engine(engine)` が呼ばれることを検証
+- [x] 8.2 戦闘終了ロジックの中で `PartyHud.detach_from_turn_engine()` が呼ばれることを検証
+- [x] 8.3 既存の戦闘開始/終了処理(encounter overlay または combat-input-router 周辺)を調査して呼び出し位置を決定
+- [x] 8.4 attach/detach を埋め込む
+- [x] 8.5 GUT 実行 → green
+- [x] 8.6 コミット
 
 ## 9. 手動確認
 
