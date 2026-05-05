@@ -139,3 +139,22 @@
 - [x] 10.2 `openspec validate combat-party-reactions --strict` で valid 確認
 - [x] 10.3 全 GUT テスト green を確認(2069/2069 passing)
 - [x] 10.4 最終コミット
+
+## 11. ログ表示と HUD アニメーションの同期 (TDD: red→green)
+
+design.md §D10 に従い、resolve_turn 中に発火するシグナルを `PartyHud` がバッファに溜め、`CombatOverlay` のログ進行に合わせて段階的に flush する仕組みを追加する。
+
+- [x] 11.1 新規テスト `tests/autoload/test_party_hud_buffering.gd`:
+  - `begin_buffering()` 後に発火したシグナルは即時に panel アニメを起動しない
+  - `flush_up_to_step(N)` で step ≤ N のイベントだけ起動する
+  - `end_buffering()` で残ったイベントが全部 flush される
+  - 非バッファリング時は従来通り即時起動する
+- [x] 11.2 `TurnEngine` に `_resolve_report` フィールドと `get_pending_action_index()` を追加。`resolve_turn` の入口で代入、return 直前で `null`
+- [x] 11.3 関連シグナルを `report.add_*` の直前に emit するよう `_resolve_attack` / `_resolve_cast` / `_tick_statuses_for_all` をリファクタ
+- [x] 11.4 `PartyHud` に `_event_queue` / `_is_buffering` を追加し `begin_buffering` / `flush_up_to_step` / `end_buffering` を実装
+- [x] 11.5 `_on_actor_dealt_damage` / `_on_actor_healed` ハンドラから `panel.play_shake_animation()` / `panel.play_heal_flash_animation()` を呼ぶ
+- [x] 11.6 `PartyMemberPanel._on_character_hp_changed` で `_combat_actor != null` の場合 shake/flash/蘇生復帰を抑制
+- [x] 11.7 `PartyMemberPanel` に公開メソッド `play_shake_animation()` / `play_heal_flash_animation()` を追加(蘇生時の modulate 復帰も flash 側で行う)
+- [x] 11.8 `CombatOverlay._resolve_turn_now` で `begin_buffering` を呼び、`_show_next_log_line` で `flush_up_to_step(_log_displayed_count)` を呼ぶ。`_on_log_playback_finished` / `cancel_log_playback` で `end_buffering`
+- [x] 11.9 GUT 全件 green 確認(2079/2079 passing)
+- [x] 11.10 コミット

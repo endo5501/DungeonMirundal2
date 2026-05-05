@@ -164,18 +164,37 @@ func _on_character_hp_changed(p_current_hp: int, _max_hp: int) -> void:
 		return
 	_data = _character.to_party_member_data()
 	var delta: int = p_current_hp - _prev_hp
-	if delta < 0:
-		_play_shake()
-	elif delta > 0:
-		_play_heal_flash()
-		# Revival from 0 → positive: clear the die fade.
-		if _prev_hp == 0:
-			if _active_die_tween != null and _active_die_tween.is_valid():
-				_active_die_tween.kill()
-			_active_die_tween = null
-			modulate.a = 1.0
+	# In combat, animations are driven by PartyHud via TurnEngine signals so
+	# they sync with log playback. Out of combat (no CombatActor bound), hp
+	# changes drive shake / heal flash / revival immediately as before.
+	if _combat_actor == null:
+		if delta < 0:
+			_play_shake()
+		elif delta > 0:
+			_play_heal_flash()
+			if _prev_hp == 0:
+				if _active_die_tween != null and _active_die_tween.is_valid():
+					_active_die_tween.kill()
+				_active_die_tween = null
+				modulate.a = 1.0
 	_prev_hp = p_current_hp
 	queue_redraw()
+
+
+# Public wrappers PartyHud invokes after dequeuing buffered combat events.
+# Out of combat, _on_character_hp_changed handles these directly.
+func play_shake_animation() -> void:
+	_play_shake()
+
+
+func play_heal_flash_animation() -> void:
+	_play_heal_flash()
+	# A heal restores any lingering die fade. Cheap no-op when modulate is
+	# already 1.0; avoids needing PartyHud to track prior dead state.
+	if _active_die_tween != null and _active_die_tween.is_valid():
+		_active_die_tween.kill()
+	_active_die_tween = null
+	modulate.a = 1.0
 
 
 func _on_character_mp_changed(_current_mp: int, _max_mp: int) -> void:

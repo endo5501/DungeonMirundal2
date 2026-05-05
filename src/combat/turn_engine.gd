@@ -39,6 +39,19 @@ var _all_actors: Array = []
 # killing blow flows through.
 var _alive_at_resolve_start: Dictionary = {}
 var _died_emitted: Dictionary = {}
+# Active TurnReport during resolve_turn so signal subscribers (PartyHud) can
+# read report.actions.size() at emission time and tag queued events with the
+# index of the related log entry. null outside of resolve_turn.
+var _resolve_report: TurnReport = null
+
+
+# Returns the index in `_resolve_report.actions` where the next log entry
+# would be appended. Used by PartyHud to align deferred animations with the
+# log line they belong to. Returns -1 outside of resolve_turn.
+func get_pending_action_index() -> int:
+	if _resolve_report == null:
+		return -1
+	return _resolve_report.actions.size()
 
 
 func start_battle(p_party: Array, p_monsters: Array) -> void:
@@ -74,10 +87,19 @@ func outcome() -> EncounterOutcome:
 
 
 func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
+	# Wrapper exists so _resolve_report is cleared on every return path
+	# without sprinkling manual cleanup through the body.
+	var report := _resolve_turn_inner(rng)
+	_resolve_report = null
+	return report
+
+
+func _resolve_turn_inner(rng: RandomNumberGenerator) -> TurnReport:
 	var report := TurnReport.new()
 	if state != State.COMMAND_INPUT:
 		return report
 	state = State.RESOLVING
+	_resolve_report = report
 
 	# Snapshot which actors enter this turn alive so actor_died only fires for
 	# alive→dead transitions caused by THIS turn's events.
@@ -224,17 +246,21 @@ func _tick_statuses_for_all(report: TurnReport) -> bool:
 		for t in ticks:
 			var killed := bool(t.get("killed_by_tick", false))
 			var hp_loss := int(t.get("hp_loss", 0))
+			# Emit BEFORE add_tick_damage so the signal's pending-action-index
+			# matches the index where this tick line will land. PartyHud uses
+			# that index to align deferred animations with log playback.
+			if hp_loss > 0:
+				actor_dealt_damage.emit(actor, hp_loss, null)
+			if killed:
+				_check_and_emit_death(actor)
 			report.add_tick_damage(
 				actor,
 				t.get("status_id"),
 				hp_loss,
 				killed,
 			)
-			if hp_loss > 0:
-				actor_dealt_damage.emit(actor, hp_loss, null)
 			if killed:
 				any_kill = true
-		_check_and_emit_death(actor)
 		# Damage from a tick still triggers cures_on_damage (e.g. poison
 		# tick on a sleeper would wake the sleeper).
 		if not ticks.is_empty():
@@ -333,13 +359,17 @@ func _resolve_attack(
 		return
 	var defended := effective_target.is_defending()
 	var applied := effective_target.take_damage(result.amount)
+	# Emit BEFORE add_attack so the signal's pending-action-index lines up
+	# with the attack log entry.
 	if applied > 0:
 		actor_dealt_damage.emit(effective_target, applied, attacker)
 	report.add_attack(attacker, effective_target, applied, defended, retargeted_from, confusion_swap)
 	if applied > 0:
 		_apply_damage_taken_cure(effective_target, report)
-	_check_and_emit_death(effective_target)
 	if not effective_target.is_alive():
+		# Emit died right before add_defeated so its pending-action-index
+		# matches the defeated log entry (not the attack one).
+		_check_and_emit_death(effective_target)
 		report.add_defeated(effective_target)
 
 
@@ -363,22 +393,32 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 		report.add_cast_skipped_no_mp(caster, spell)
 		return
 	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
+	# Pre-emit damage/heal/status_inflicted BEFORE add_cast so their
+	# pending-action-index lines up with the cast log entry. The cast log
+	# entry itself carries per-target hp_delta, so panels react together
+	# when the cast line is shown.
+	if spell_resolution != null:
+		for e in spell_resolution.entries:
+			var pre_actor: CombatActor = e.get("actor")
+			var pre_hp_delta: int = int(e.get("hp_delta", 0))
+			if pre_hp_delta < 0:
+				actor_dealt_damage.emit(pre_actor, -pre_hp_delta, caster)
+			elif pre_hp_delta > 0:
+				actor_healed.emit(pre_actor, pre_hp_delta, caster)
+			for evt in e.get("events", []):
+				if evt.get("type") == "inflict" and bool(evt.get("success", false)):
+					if bool(evt.get("was_new", true)):
+						actor_status_inflicted.emit(pre_actor, evt.get("status_id", &""))
 	report.add_cast(caster, spell, spell_resolution, retargeted_from)
 	if spell_resolution != null:
 		for e in spell_resolution.entries:
 			var actor: CombatActor = e.get("actor")
 			var hp_delta: int = int(e.get("hp_delta", 0))
-			if hp_delta < 0:
-				actor_dealt_damage.emit(actor, -hp_delta, caster)
-			elif hp_delta > 0:
-				actor_healed.emit(actor, hp_delta, caster)
 			for evt in e.get("events", []):
 				match evt.get("type"):
 					"inflict":
 						if bool(evt.get("success", false)):
 							report.add_inflict(actor, evt.get("status_id", &""), true)
-							if bool(evt.get("was_new", true)):
-								actor_status_inflicted.emit(actor, evt.get("status_id", &""))
 					"resist":
 						report.add_resist(actor, evt.get("status_id", &""))
 					"cure":
@@ -392,9 +432,11 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 						)
 			if hp_delta < 0:
 				_apply_damage_taken_cure(actor, report)
-			_check_and_emit_death(actor)
 	for t in targets:
 		if t != null and not t.is_alive():
+			# Emit died right before add_defeated so the deferred animation
+			# fires with the defeated log line (not the cast line).
+			_check_and_emit_death(t)
 			report.add_defeated(t)
 
 

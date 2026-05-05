@@ -13,6 +13,13 @@ var _party_display: PartyDisplay
 var _bound_guild: Guild
 var _attached_engine: TurnEngine = null
 
+# Buffering machinery (combat-party-reactions §D10): while begin_buffering()
+# is active, signal handlers queue events tagged with the engine's pending
+# action index so CombatOverlay can release them in lockstep with log line
+# playback. Outside the begin/end window, handlers fire immediately.
+var _is_buffering: bool = false
+var _event_queue: Array = []  # [{ "type": String, "actor": CombatActor, "step": int }, ...]
+
 
 func _ready() -> void:
 	_party_display = PartyDisplay.new()
@@ -83,6 +90,9 @@ func attach_to_turn_engine(engine: TurnEngine) -> void:
 func detach_from_turn_engine() -> void:
 	if _attached_engine == null:
 		return
+	# Drain any pending buffered events before tearing down so we don't strand
+	# animations the player would otherwise have seen.
+	end_buffering()
 	var e := _attached_engine
 	if e.actor_action_started.is_connected(_on_actor_action_started):
 		e.actor_action_started.disconnect(_on_actor_action_started)
@@ -119,35 +129,122 @@ func _find_panel_for_combat_actor(actor) -> PartyMemberPanel:
 	return null
 
 
-# --- signal handlers ---
+# --- buffering API ---
 
-func _on_actor_action_started(actor: CombatActor, _kind: StringName) -> void:
+# CombatOverlay calls begin_buffering before resolve_turn so signal-driven
+# animations are deferred and replayed in sync with log line playback.
+func begin_buffering() -> void:
+	_is_buffering = true
+	_event_queue.clear()
+
+
+# Release every queued event whose step ≤ `step`. CombatOverlay calls this
+# with the index of the log line about to be (or just) displayed.
+func flush_up_to_step(step: int) -> void:
+	while not _event_queue.is_empty():
+		var ev: Dictionary = _event_queue[0]
+		if int(ev.get("step", -1)) > step:
+			break
+		_event_queue.pop_front()
+		_play_event(ev)
+
+
+# Drain whatever is left and exit buffering mode. Idempotent.
+func end_buffering() -> void:
+	while not _event_queue.is_empty():
+		var ev: Dictionary = _event_queue.pop_front()
+		_play_event(ev)
+	_is_buffering = false
+
+
+func _emit_step() -> int:
+	if _attached_engine != null and _attached_engine.has_method("get_pending_action_index"):
+		var idx: int = _attached_engine.get_pending_action_index()
+		if idx >= 0:
+			return idx
+	return 0
+
+
+func _play_event(ev: Dictionary) -> void:
+	var actor = ev.get("actor")
+	match String(ev.get("type", "")):
+		"lift":
+			_do_lift(actor)
+		"shake":
+			_do_shake(actor)
+		"flash":
+			_do_flash(actor)
+		"die":
+			_do_die(actor)
+		"redraw":
+			_do_redraw(actor)
+
+
+func _do_lift(actor) -> void:
 	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
 	if panel != null:
 		panel.play_lift_animation()
 
 
-func _on_actor_died(actor: CombatActor) -> void:
+func _do_shake(actor) -> void:
+	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
+	if panel != null:
+		panel.play_shake_animation()
+
+
+func _do_flash(actor) -> void:
+	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
+	if panel != null:
+		panel.play_heal_flash_animation()
+
+
+func _do_die(actor) -> void:
 	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
 	if panel != null:
 		panel.play_die_animation()
 
 
-# Damage and heal are visualised via Character.hp_changed (shake / heal flash
-# in PartyMemberPanel). The signal connection exists for future hook points
-# (e.g., a battle log) and to satisfy the spec's "all five signals connected".
-func _on_actor_dealt_damage(_target: CombatActor, _amount: int, _source: CombatActor) -> void:
-	pass
+func _do_redraw(actor) -> void:
+	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
+	if panel != null:
+		panel.queue_redraw()
 
 
-func _on_actor_healed(_target: CombatActor, _amount: int, _source: CombatActor) -> void:
-	pass
+# --- signal handlers ---
+
+func _on_actor_action_started(actor: CombatActor, _kind: StringName) -> void:
+	if _is_buffering:
+		_event_queue.append({"type": "lift", "actor": actor, "step": _emit_step()})
+	else:
+		_do_lift(actor)
+
+
+func _on_actor_died(actor: CombatActor) -> void:
+	if _is_buffering:
+		_event_queue.append({"type": "die", "actor": actor, "step": _emit_step()})
+	else:
+		_do_die(actor)
+
+
+func _on_actor_dealt_damage(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+	if _is_buffering:
+		_event_queue.append({"type": "shake", "actor": target, "step": _emit_step()})
+	else:
+		_do_shake(target)
+
+
+func _on_actor_healed(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+	if _is_buffering:
+		_event_queue.append({"type": "flash", "actor": target, "step": _emit_step()})
+	else:
+		_do_flash(target)
 
 
 # Persistent statuses are committed at battle end so the panel's icon row
 # reflects only post-battle state. We still queue a redraw on inflict so any
 # future per-status combat icon work has a hook.
 func _on_actor_status_inflicted(actor: CombatActor, _status_id: StringName) -> void:
-	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.queue_redraw()
+	if _is_buffering:
+		_event_queue.append({"type": "redraw", "actor": actor, "step": _emit_step()})
+	else:
+		_do_redraw(actor)

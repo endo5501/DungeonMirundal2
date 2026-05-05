@@ -112,6 +112,32 @@
 
 shake / lift は `_draw()` ではなく `position` への Tween。fade は `modulate` への Tween。
 
+### D10. HUD アニメーションとログ表示の同期
+
+初版では `TurnEngine.resolve_turn(rng)` の中でシグナルが同期発火し、`PartyHud` がそれを即時にアニメへ変換していた。一方で戦闘ログは `_log_line_delay` ごとに 1 行ずつ表示されるため、「ターン頭にすべてのアニメが集中して走り、ログだけが後追いで流れる」状態になっていた。
+
+これを解消するために以下の変更を行う:
+
+- `TurnEngine` に `_resolve_report: TurnReport` フィールドと `get_pending_action_index() -> int` を追加。`resolve_turn` 進行中、`report.actions.size()` をシグナル受け手に開示する(他の状態では `-1`)。
+- 関連する `report.add_*` の**直前**にシグナルを emit するように `_resolve_attack` / `_resolve_cast` / `_tick_statuses_for_all` をリファクタ。emit 時の `report.actions.size()` がそのアクションの index と一致する。
+- `PartyHud` にバッファリングモードを追加:
+  - `begin_buffering()` / `end_buffering()` / `flush_up_to_step(step: int)` を公開
+  - バッファリング中はシグナルを `(type, actor, step)` として queue に積む
+  - 非バッファリング中は従来どおり即時アニメ
+- `PartyMemberPanel._on_character_hp_changed`: `_combat_actor != null`(戦闘中)のときは shake / heal flash / 蘇生 modulate 復帰を panel 内で起こさず、`PartyHud` 経由のアニメ駆動に委ねる。戦闘外(ESC 回復、毒の dungeon tick 等)は従来どおり panel が即時にアニメ起動。
+- `PartyHud` の `_on_actor_dealt_damage` / `_on_actor_healed` ハンドラが `panel.play_shake_animation()` / `panel.play_heal_flash_animation()` を呼ぶ(従来は no-op だった)。`play_heal_flash_animation` は念のため modulate.a = 1.0 へ復帰させ、戦闘中の蘇生にも対応する。
+- `CombatOverlay`:
+  - `_resolve_turn_now()` で `PartyHud.begin_buffering()` → `resolve_turn` → `_play_log_sequentially` の順で呼ぶ
+  - `_show_next_log_line` で表示前に `PartyHud.flush_up_to_step(_log_displayed_count)` を呼ぶ。表示が終わったら `_log_displayed_count += 1`
+  - `_on_log_playback_finished` / `cancel_log_playback` で `PartyHud.end_buffering()`(残ったイベントは flush)
+
+これにより、シグナルは依然として `resolve_turn` 中に発火するが、HUD アニメは「対応するログ行が表示された瞬間」まで遅延される。テスト容易性は維持(`_is_buffering = false` のままなら既存テストは無修正で通る)。
+
+#### 注意点
+
+- アイテム使用は `TurnEngine.actor_dealt_damage` / `actor_healed` を発火しないため、戦闘中の回復アイテムでは flash がトリガーされない(panel の hp_changed 由来 flash も `_combat_actor != null` で抑制される)。これは既知のトレードオフで、必要なら `_resolve_item` 内で before/after の HP を比較して emit を追加できる(本変更ではスコープ外)。
+- バッファリングは `CombatOverlay` が明示的に `begin_buffering()` を呼んだ場合のみ有効になる。直接 `PartyHud.attach_to_turn_engine` を呼んで signal を emit するテストは従来どおり即時に発火する。
+
 ### D9. テスト戦略
 
 - TurnEngine のシグナル発火: 単体テストで通常の attack / cast / defend / item / escape の各シナリオで適切なシグナルが適切な順で出ることを `signal_recorder` パターンで検証。
