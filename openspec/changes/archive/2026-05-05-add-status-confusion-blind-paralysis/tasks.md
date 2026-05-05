@@ -68,4 +68,4 @@
 ## 8. アーカイブ準備
 
 - [x] 8.1 `/opsx:verify add-status-confusion-blind-paralysis`
-- [ ] 8.2 `/opsx:archive add-status-confusion-blind-paralysis`
+- [x] 8.2 `/opsx:archive add-status-confusion-blind-paralysis`
