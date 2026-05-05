@@ -2,9 +2,9 @@ class_name PartyMemberPanel
 extends Control
 
 const PANEL_WIDTH := 180
-const PANEL_HEIGHT := 80
+const PANEL_HEIGHT := 110
 const ICON_SIZE := 48
-const FONT_SIZE := 14
+const FONT_SIZE := 20
 const BG_COLOR := Color(0.15, 0.15, 0.2, 0.7)
 const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const HP_COLOR := Color(0.2, 0.8, 0.2)
@@ -87,11 +87,17 @@ func _exit_tree() -> void:
 	_disconnect_from_character()
 
 
-func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), BG_COLOR)
+# Mirrors _draw()'s early-return condition so tests can verify "panel
+# renders nothing" without invoking the live draw context.
+func has_visible_content() -> bool:
+	return _data != null
 
+
+func _draw() -> void:
 	if _data == null:
 		return
+
+	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), BG_COLOR)
 
 	var data := _data
 
@@ -102,7 +108,7 @@ func _draw() -> void:
 	# Text area starts after icon
 	var tx := ICON_SIZE + 10
 	var font := ThemeDB.fallback_font
-	var line_h := FONT_SIZE + 2
+	var line_h := FONT_SIZE + 4
 
 	# Name
 	draw_string(font, Vector2(tx, line_h), data.member_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE)

@@ -65,6 +65,18 @@
 - `PartyDisplay.setup(party_data)` / `bind_party_characters(front_row, back_row)`、および `PartyMemberPanel.bind_character` / `set_member` のシグネチャと挙動は変更しない。
 - `DungeonScreen` 側のマウント・bind コードも変更しない(レイアウトは PartyDisplay が自分で決める)。
 
+### D9. `_layout_panels(width: float)` のシグネチャ
+- 採用: `_layout_panels` は `width: float` を必須引数に取る。プロダクションでは `_ready()` と `resized` シグナルのラムダから `size.x` を明示的に渡す。
+- 採用理由: 当初は no-arg で `self.size.x` を読む設計だったが、テストで `d.size = Vector2(W, H)` を直接設定すると Godot の "size will be overridden after _ready()" 警告が発生し、GUT が unexpected error として fail させる(親が Control でないテスト環境ではアンカーが解決されないため)。`width` を引数で渡せばテストはシグナルやアンカーに依存せず deterministic に layout を駆動できる。
+- 副次効果: 同じ width で連続呼び出された場合は `is_equal_approx(prev_right_edge, width)` で early return し、spurious な resized 発火時の冗長な panel position 書き換え + `queue_redraw()` をスキップ。
+- 代替案 (no-arg + テストで親 Control + `await get_tree().process_frame`): 機能するが、テストが async になり setup が冗長化。シグネチャを 1 引数増やす方が小さい。
+
+### D10. ラベルの outline 描画
+- 採用: FRONT / BACK ラベルは `draw_string_outline`(3px 黒)+ `draw_string`(白) のペアで描画。
+- 採用理由: 単色 (`Color(0.95, 0.95, 0.95)`) のみだと明るいダンジョン壁(beige の通路など)に対して文字がほぼ見えなくなる。HUD は背景を選べないため、コントラスト確保用のスキャフォルドが必要。
+- 代替案 (チップ風の半透明矩形を背後に敷く): 視覚ノイズが増える。outline の方がクリーン。
+- ペア描画の実装重複は `_draw_label(font, text, pos, alignment, box_width)` ヘルパーに集約。
+
 ## Risks / Trade-offs
 
 - **フォント 20pt がパネル幅 180 に収まらない名前がある可能性** → 名前は左寄せで draw_string、必要なら次変更で width パラメータを渡してクリップ。今回は実装後に手動確認で問題があれば値を微調整。
@@ -76,9 +88,7 @@
 - 単一コミットでレイアウトを切り替える。後方互換のレイアウト切替フラグは持たない。
 - 既存テスト(`tests/dungeon_scene/test_party_display_character_binding.gd` 他)はレイアウト依存のアサーションがあれば新レイアウトに合わせて更新する。シグナル経路の検証はそのまま通るはず。
 
-## Open Questions
+## Open Questions (Resolved)
 
-- PANEL_HEIGHT の最終値(100 / 105 / 110)→ 実装フェーズで確定。
-- FRONT/BACK ラベルの色味(純白 vs 薄い灰)→ 実装フェーズで手動確認して確定。
-
-これらは実装中に決めても影響範囲が小さいので、design では選択肢を残す。
+- PANEL_HEIGHT の最終値 → **110** に確定(`line_h = FONT_SIZE + 4 = 24` で 4 行が `y = 24, 48, 72, 96` に並び、bottom が PANEL_HEIGHT - 4 = 106 以下に収まる)。
+- FRONT/BACK ラベルの色味 → **`Color(0.95, 0.95, 0.95)` + 3px 黒 outline** に確定(D10 参照)。手動確認(`tmp/dungeon3.png`)で純白のみだと明るい壁に埋もれることが判明したため。
