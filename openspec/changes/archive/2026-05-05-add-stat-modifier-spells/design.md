@@ -115,6 +115,24 @@ priest はマポーフィックを唱えた
 
 (描画スタイルは Phase 2 で定義した stat_mod テンプレートに従う)
 
+### Decision 7: 既存 engine→report 配線ギャップの埋め戻し（本 change スコープ内で発覚）
+
+当初は「描画は Phase 2 で済んでいるのでデータだけ追加すれば動く」前提だったが、実装後の手動スモーク (Lv3 Priest が maporfic を撃つ) で「呪文宣言の 1 行しか出ない」問題が見つかった。原因は 2 つに分解される。
+
+1. **エンジン側の転送漏れ**: `TurnEngine._resolve_cast` の `match evt.get("type")` 文に `"inflict" / "resist" / "cure"` ケースしかなく、`"stat_mod"` イベントが `TurnReport` に転送されないまま捨てられていた。Phase 0/1/2 のときは `StatModSpellEffect` を実際に発火させる .tres が無かったので、この経路は誰もテストしていなかった。
+2. **ログ側のフォーマット劣化**: `CombatLog._format_action` の `stat_mod` ケースが `int(delta)` 経由で表示していたため、HIT/EVA バフ・デバフの delta=±0.2 (float) が `+0` に潰れていた。さらに stat キー (`&"defense"` 等) を直接表示していたので画面に英語が出ていた。
+
+修正方針:
+
+- `TurnEngine._resolve_cast` に `"stat_mod"` ケースを追加。`report.add_stat_mod(actor, stat, delta, turns)` を呼ぶだけの転送ロジックで、既存パターン (`inflict / resist / cure`) と完全対称。
+- `CombatLog._format_action` の `stat_mod` ケースを書き直し:
+  - `typeof(delta) == TYPE_FLOAT` なら `%+.1f`、それ以外は `%+d` で符号付き整形
+  - 符号で「上昇した / 低下した」を出し分け
+  - `_stat_display_label(stat)` を新設し、`&"attack"→攻撃 / &"defense"→防御 / &"agility"→素早さ / &"hit"→命中 / &"evasion"→回避` にマッピング、未知キーは `String(stat)` フォールバック
+- 回帰テストとして `tests/combat/integration/test_stat_buff_maporfic.gd::test_engine_cast_emits_stat_mod_actions_for_each_living_party_member` を追加。`TurnEngine.resolve_turn()` の `report.actions` に `type == "stat_mod"` のエントリが living target 数だけ吐かれることを assert する。
+
+このギャップは「呪文の機能が完成したように見えるのにユーザーには伝わらない」典型的な無音バグなので、Phase 4 (本 change) で気づいた以上ここで直しておくのが妥当。後続の AGI バフ呪文 (Phase 5+) でも同じ経路を使うため、再発防止としても重要。
+
 ## Risks / Trade-offs
 
 - **[bamatu (ATK+2) と morlis (DEF-2) を併用すると ダメージが過大になる] → 観察事項**: 数値設定は意図的にやや強め。バランス調整は実装後のプレイテストで対応。

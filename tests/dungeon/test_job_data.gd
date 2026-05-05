@@ -216,9 +216,10 @@ func test_loaded_mage_has_katino_and_manifo_at_level_2():
 	assert_not_null(m)
 	assert_true(m.spell_progression.has(2), "Mage should have spell_progression[2]")
 	var lv2: Array = m.spell_progression[2]
-	assert_eq(lv2.size(), 2)
-	assert_true(lv2.has(&"katino"))
-	assert_true(lv2.has(&"manifo"))
+	# After add-stat-modifier-spells: katino, manifo + morlis, dilto, sopic
+	assert_eq(lv2.size(), 5, "Mage lv2 should hold exactly 5 spells")
+	for sid in [&"katino", &"manifo", &"morlis", &"dilto", &"sopic"]:
+		assert_true(lv2.has(sid), "Mage lv2 missing %s" % sid)
 
 
 func test_loaded_priest_has_dios_at_level_2():
@@ -226,8 +227,10 @@ func test_loaded_priest_has_dios_at_level_2():
 	assert_not_null(p)
 	assert_true(p.spell_progression.has(2), "Priest should have spell_progression[2]")
 	var lv2: Array = p.spell_progression[2]
-	assert_eq(lv2.size(), 1)
-	assert_true(lv2.has(&"dios"))
+	# After add-stat-modifier-spells: dios + porfic, bamatu, varyu
+	assert_eq(lv2.size(), 4, "Priest lv2 should hold exactly 4 spells")
+	for sid in [&"dios", &"porfic", &"bamatu", &"varyu"]:
+		assert_true(lv2.has(sid), "Priest lv2 missing %s" % sid)
 
 
 func test_loaded_priest_has_only_priest_school_and_progression():
@@ -245,10 +248,10 @@ func test_loaded_priest_lv3_includes_madi():
 	assert_not_null(p)
 	assert_true(p.spell_progression.has(3))
 	var lv3: Array = p.spell_progression[3]
-	assert_true(lv3.has(&"heala"))
-	assert_true(lv3.has(&"allheal"))
-	assert_true(lv3.has(&"madi"))
-	assert_eq(lv3.size(), 3, "Priest lv3 should have exactly heala / allheal / madi")
+	# After add-stat-modifier-spells: heala, allheal, madi + maporfic
+	for sid in [&"heala", &"allheal", &"madi", &"maporfic"]:
+		assert_true(lv3.has(sid), "Priest lv3 missing %s" % sid)
+	assert_eq(lv3.size(), 4, "Priest lv3 should have exactly heala / allheal / madi / maporfic")
 
 
 func test_loaded_priest_lv5_grants_dialma():
@@ -268,13 +271,16 @@ func test_loaded_bishop_has_both_schools_and_progression_at_levels_2_and_5():
 	assert_true(b.spell_progression.has(2))
 	assert_true(b.spell_progression.has(5))
 	var lv2: Array = b.spell_progression[2]
-	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios"]:
+	# After add-stat-modifier-spells: 7 prior + morlis, dilto, sopic, porfic, bamatu, varyu = 13
+	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios",
+				&"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu"]:
 		assert_true(lv2.has(sid), "bishop lv2 missing %s" % sid)
-	assert_eq(lv2.size(), 7, "bishop lv2 should hold exactly 7 spells (4 + 3 status)")
+	assert_eq(lv2.size(), 13, "bishop lv2 should hold exactly 13 spells")
 	var lv5: Array = b.spell_progression[5]
-	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi"]:
+	# After add-stat-modifier-spells: 6 prior + maporfic = 7
+	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic"]:
 		assert_true(lv5.has(sid), "bishop lv5 missing %s" % sid)
-	assert_eq(lv5.size(), 6, "bishop lv5 should hold exactly 6 spells")
+	assert_eq(lv5.size(), 7, "bishop lv5 should hold exactly 7 spells")
 	assert_false(lv5.has(&"dialma"), "bishop must NOT learn dialma (Priest only)")
 
 

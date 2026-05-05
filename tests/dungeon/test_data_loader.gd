@@ -233,7 +233,8 @@ func test_load_all_items_has_every_equip_slot_covered():
 func test_load_all_spells_returns_v1_plus_status_spells():
 	var spells := _loader.load_all_spells()
 	# 8 (add-magic-system) + 3 (add-status-sleep-and-silence) + 3 (poison_dart / madi / dialma)
-	assert_eq(spells.size(), 14)
+	# + 7 (add-stat-modifier-spells: morlis, dilto, sopic, porfic, bamatu, varyu, maporfic)
+	assert_eq(spells.size(), 21)
 
 
 func test_load_all_spells_contains_expected_ids():
@@ -243,14 +244,16 @@ func test_load_all_spells_contains_expected_ids():
 		ids.append(s.id)
 	for expected in [&"fire", &"frost", &"flame", &"blizzard", &"heal", &"holy", &"heala", &"allheal",
 					 &"katino", &"manifo", &"dios",
-					 &"poison_dart", &"madi", &"dialma"]:
+					 &"poison_dart", &"madi", &"dialma",
+					 &"morlis", &"dilto", &"sopic",
+					 &"porfic", &"bamatu", &"varyu", &"maporfic"]:
 		assert_true(ids.has(expected), "missing spell id: %s" % expected)
 
 
 func test_load_spell_repository_returns_populated_repo():
 	var repo := _loader.load_spell_repository()
 	assert_not_null(repo)
-	assert_eq(repo.size(), 14)
+	assert_eq(repo.size(), 21)
 
 
 # --- status repository (add-status-effect-infrastructure) ---
