@@ -16,12 +16,12 @@
 
 ## 3. bind_active_party の実装 (TDD: red→green)
 
-- [ ] 3.1 新規テスト `tests/autoload/test_party_hud_bind.gd`: `GameState.guild` のアクティブパーティ(Character の前列3 + 後列3)があるとき、`PartyHud.bind_active_party()` を呼ぶと PartyDisplay が bind される
-- [ ] 3.2 同テスト: 部分パーティ(前列2 + 後列1)の場合、空スロットは null として bind される
-- [ ] 3.3 GUT 実行 → red 確認
-- [ ] 3.4 `PartyHud.bind_active_party()` を実装。GameState からアクティブパーティを取得し、`PartyDisplay.bind_party_characters(front, back)` を呼ぶ
-- [ ] 3.5 GUT 実行 → green 確認
-- [ ] 3.6 コミット
+- [x] 3.1 新規テスト `tests/autoload/test_party_hud_bind.gd`: `GameState.guild` のアクティブパーティ(Character の前列3 + 後列3)があるとき、`PartyHud.bind_active_party()` を呼ぶと PartyDisplay が bind される
+- [x] 3.2 同テスト: 部分パーティ(前列2 + 後列1)の場合、空スロットは null として bind される
+- [x] 3.3 GUT 実行 → red 確認
+- [x] 3.4 `PartyHud.bind_active_party()` を実装。GameState からアクティブパーティを取得し、`PartyDisplay.bind_party_characters(front, back)` を呼ぶ
+- [x] 3.5 GUT 実行 → green 確認
+- [x] 3.6 コミット
 
 ## 4. パーティ変更通知の整備 (TDD: red→green)
 

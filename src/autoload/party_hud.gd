@@ -22,3 +22,18 @@ func hide_hud() -> void:
 
 func get_party_display() -> PartyDisplay:
 	return _party_display
+
+
+# Read the current active party from GameState.guild and forward it to the
+# internal PartyDisplay. Empty slots are passed through as nulls so the
+# corresponding PartyMemberPanel renders nothing. Safe to call when
+# GameState.guild is null (no-op).
+func bind_active_party() -> void:
+	if _party_display == null:
+		return
+	var guild: Guild = GameState.guild
+	if guild == null:
+		_party_display.bind_party_characters([null, null, null], [null, null, null])
+		return
+	var rows := guild.get_party_characters()
+	_party_display.bind_party_characters(rows[0], rows[1])
