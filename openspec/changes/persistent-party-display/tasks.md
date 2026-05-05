@@ -68,18 +68,18 @@
 
 ## 8. 状態異常アイコン描画 (TDD: red→green)
 
-- [ ] 8.1 新規テスト `tests/dungeon_scene/test_party_member_panel_status_icons.gd` を作成
+- [x] 8.1 新規テスト `tests/dungeon_scene/test_party_member_panel_status_icons.gd` を作成
   - 単一ステータス([&"poison"])で 1 個のアイコンが描画される
   - 複数ステータス([&"poison", &"blind", &"sleep"])で 3 個のアイコンが描画される
   - 空 [] でアイコンが描画されない
   - statuses_changed シグナルでアイコンが追加・削除される
   - PartyMemberData snapshot 経路ではアイコンが描画されない
-- [ ] 8.2 GUT 実行 → red 確認
-- [ ] 8.3 `src/dungeon_scene/party_member_panel.gd` に状態色テーブル(StringName → Color)と状態ラベルテーブル(StringName → String)の定数を追加
-- [ ] 8.4 `_draw()` の最後に、`_character != null` のとき `_character.persistent_statuses` を走査してアイコン(色矩形 + 1〜2 文字)を描画する処理を追加
-- [ ] 8.5 アイコンエリアの位置を決定(MP 行の下 or 右側)。スペース不足なら `PANEL_HEIGHT` を 130〜140 に拡張
-- [ ] 8.6 GUT 実行 → green 確認
-- [ ] 8.7 コミット
+- [x] 8.2 GUT 実行 → red 確認
+- [x] 8.3 `src/dungeon_scene/party_member_panel.gd` に状態色テーブル(StringName → Color)と状態ラベルテーブル(StringName → String)の定数を追加
+- [x] 8.4 `_draw()` の最後に、`_character != null` のとき `_character.persistent_statuses` を走査してアイコン(色矩形 + 1〜2 文字)を描画する処理を追加
+- [x] 8.5 アイコンエリアの位置を決定(MP 行の下 or 右側)。スペース不足なら `PANEL_HEIGHT` を 130〜140 に拡張 — `PANEL_HEIGHT` を 130 に拡張、MP 行の下にアイコン行を配置
+- [x] 8.6 GUT 実行 → green 確認
+- [x] 8.7 コミット
 
 ## 9. 行動不能の暗転オーバーレイ (TDD: red→green)
 
