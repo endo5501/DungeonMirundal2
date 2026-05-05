@@ -62,7 +62,7 @@
 ## 7. 全体検証
 
 - [x] 7.1 `tests/combat/`, `tests/dungeon/`, `tests/items/` 全件緑
-- [ ] 7.2 ゲーム手動起動: madalto / dazil / badi / calfo / holy_water 全部試す
+- [x] 7.2 ゲーム手動起動: madalto / dazil / badi / calfo / holy_water 全部試す
 - [x] 7.3 `openspec validate add-status-confusion-blind-paralysis --strict` 成功
 
 ## 8. アーカイブ準備
