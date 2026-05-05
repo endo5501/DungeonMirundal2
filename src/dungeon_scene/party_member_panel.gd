@@ -34,6 +34,18 @@ const STATUS_ICON_GAP := 2
 const STATUS_ICON_FONT_SIZE := 12
 const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
 const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
+
+# Stat modifier icon styling. Buff (delta > 0) leans green, debuff (delta < 0)
+# leans red so the player can read intent at a glance.
+const STAT_BUFF_COLOR := Color(0.25, 0.75, 0.25)
+const STAT_DEBUFF_COLOR := Color(0.85, 0.25, 0.25)
+const STAT_SHORT_LABELS: Dictionary = {
+	&"attack":  "A",
+	&"defense": "D",
+	&"agility": "Ag",
+	&"hit":     "H",
+	&"evasion": "E",
+}
 const INCAPACITATING_STATUSES: Array[StringName] = [
 	&"sleep", &"paralysis", &"petrify",
 ]
@@ -177,6 +189,27 @@ func get_status_icons() -> Array:
 	return result
 
 
+# Returns one entry per StatModifierStack entry while a CombatActor is bound:
+# {stat, delta, color, label}. Empty when no actor is bound or the stack
+# itself is empty. Buffs lean green, debuffs lean red.
+func get_stat_modifier_icons() -> Array:
+	var result: Array = []
+	if _combat_actor == null:
+		return result
+	for e in _combat_actor.modifier_stack._entries:
+		var stat: StringName = e["stat"]
+		var delta = e["delta"]
+		var sign_label: String = "+" if float(delta) >= 0.0 else "-"
+		var stat_label: String = STAT_SHORT_LABELS.get(stat, "?")
+		result.append({
+			"stat": stat,
+			"delta": delta,
+			"color": STAT_BUFF_COLOR if float(delta) >= 0.0 else STAT_DEBUFF_COLOR,
+			"label": stat_label + sign_label,
+		})
+	return result
+
+
 func _draw() -> void:
 	if _data == null:
 		return
@@ -203,23 +236,55 @@ func _draw() -> void:
 	# MP
 	draw_string(font, Vector2(tx, line_h * 4), "MP:%d/%d" % [data.current_mp, data.max_mp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, MP_COLOR)
 
-	_draw_status_icons(font)
+	var status_count: int = _draw_status_icons(font)
+	_draw_stat_modifier_icons(font, status_count)
 
 	if is_incapacitated():
 		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
 
 
-func _draw_status_icons(font: Font) -> void:
-	var icons := get_status_icons()
+# Returns the number of icons drawn so adjacent rows can offset their x.
+func _draw_status_icons(font: Font) -> int:
+	var icons: Array = get_status_icons()
 	if icons.is_empty():
-		return
+		return 0
 	var origin_x := ICON_SIZE + 10
 	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	var drawn := 0
 	for i in range(icons.size()):
 		var x := origin_x + i * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
 		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
 			break
 		var rect := Rect2(x, origin_y, STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+		draw_rect(rect, icons[i]["color"])
+		draw_string(
+			font,
+			Vector2(x + 2, origin_y + STATUS_ICON_FONT_SIZE),
+			icons[i]["label"],
+			HORIZONTAL_ALIGNMENT_LEFT, -1,
+			STATUS_ICON_FONT_SIZE,
+			STATUS_ICON_LABEL_COLOR,
+		)
+		drawn += 1
+	return drawn
+
+
+# Stat modifier icons sit on the same row as persistent_status icons, offset
+# to the right of them. The label is 2-3 chars wide so we widen the box.
+func _draw_stat_modifier_icons(font: Font, leading_count: int) -> void:
+	var icons: Array = get_stat_modifier_icons()
+	if icons.is_empty():
+		return
+	var icon_w := STATUS_ICON_SIZE + 6  # extra width for 2-char labels
+	var base_x := ICON_SIZE + 10 + leading_count * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
+	if leading_count > 0:
+		base_x += STATUS_ICON_GAP * 2  # visible gap between status row and stat row
+	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	for i in range(icons.size()):
+		var x := base_x + i * (icon_w + STATUS_ICON_GAP)
+		if x + icon_w > PANEL_WIDTH - 4:
+			break
+		var rect := Rect2(x, origin_y, icon_w, STATUS_ICON_SIZE)
 		draw_rect(rect, icons[i]["color"])
 		draw_string(
 			font,

@@ -51,18 +51,18 @@
 
 ## 4. PartyMemberPanel の stat modifier アイコン描画 (TDD: red→green)
 
-- [ ] 4.1 新規テスト `tests/dungeon_scene/test_party_member_panel_stat_modifiers.gd`:
+- [x] 4.1 新規テスト `tests/dungeon_scene/test_party_member_panel_stat_modifiers.gd`:
   - 単一 buff `(stat=&"attack", delta=+2)` で 1 個のアイコン描画
   - 単一 debuff `(stat=&"defense", delta=-1)` で 1 個のアイコン描画
   - 空 stack でアイコン描画なし
   - CombatActor 未 bind では persistent_statuses があってもアイコン描画なし
   - `stat_modifiers_changed` で `queue_redraw` が呼ばれる
-- [ ] 4.2 GUT 実行 → red
-- [ ] 4.3 `PartyMemberPanel` の `_draw()` の persistent_status 描画の後、`_combat_actor != null` のとき stat_modifier_stack を走査してアイコン描画
-- [ ] 4.4 buff(delta > 0)は緑系、debuff(delta < 0)は赤系の色矩形 + ラベル(`A+`, `A-`, `D+`, `D-`, `Ag+/-`, `H+/-`, `E+/-`)
-- [ ] 4.5 持続行を持たないため、persistent_status のアイコン行と同じ y で右側に配置(衝突する場合は MP 行の右へ移動するなど)
-- [ ] 4.6 GUT 実行 → green
-- [ ] 4.7 コミット
+- [x] 4.2 GUT 実行 → red
+- [x] 4.3 `PartyMemberPanel` の `_draw()` の persistent_status 描画の後、`_combat_actor != null` のとき stat_modifier_stack を走査してアイコン描画
+- [x] 4.4 buff(delta > 0)は緑系、debuff(delta < 0)は赤系の色矩形 + ラベル(`A+`, `A-`, `D+`, `D-`, `Ag+/-`, `H+/-`, `E+/-`)
+- [x] 4.5 持続行を持たないため、persistent_status のアイコン行と同じ y で右側に配置(衝突する場合は MP 行の右へ移動するなど)
+- [x] 4.6 GUT 実行 → green
+- [x] 4.7 コミット
 
 ## 5. PartyMemberPanel のアニメーション機構 (TDD: red→green)
 
