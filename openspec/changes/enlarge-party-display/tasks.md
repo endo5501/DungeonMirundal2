@@ -1,18 +1,18 @@
 ## 1. テスト準備 (TDD: red)
 
-- [ ] 1.1 既存の `tests/dungeon_scene/test_party_display_character_binding.gd` 他、レイアウトに依存するアサーションがあれば洗い出して記録
-- [ ] 1.2 新規テスト `tests/dungeon_scene/test_party_display_layout.gd` を作成: PartyDisplay の anchors が full-bottom (`anchor_left=0, anchor_right=1, anchor_top=1, anchor_bottom=1`) になる
-- [ ] 1.3 同テストファイル内: 前列3パネルが画面左端から左詰めで並ぶ(`position.x` が左→右に増加、最左パネルの x が `MARGIN` 以下)
-- [ ] 1.4 同テストファイル内: 後列3パネルが画面右端から右詰めで並ぶ(最右パネルの右端が画面右端から `MARGIN` 以下)
-- [ ] 1.5 同テストファイル内: 前列・後列の全パネルが同じ `position.y` を持つ
-- [ ] 1.6 同テストファイル内: 前列右端パネルと後列左端パネルの間に水平方向の隙間がある(中央が空く)
-- [ ] 1.7 同テストファイル内: PartyDisplay に `ColorRect` の background 子(`_bg_panel`)が存在しない
-- [ ] 1.8 新規テスト `tests/dungeon_scene/test_party_display_labels.gd` を作成: PartyDisplay が "FRONT" / "BACK" を draw_string で出力する(描画フックで検証 or テスト用ヘルパで draw 呼び出しを記録)
-- [ ] 1.9 新規テスト `tests/dungeon_scene/test_party_member_panel_size.gd` を作成: `PartyMemberPanel.PANEL_WIDTH == 180`、`PANEL_HEIGHT >= 100`、`FONT_SIZE >= 20`
-- [ ] 1.10 新規テスト `tests/dungeon_scene/test_party_member_panel_empty.gd` を作成: `_data == null` かつ `_character == null` のとき `_draw()` が `draw_rect`/`draw_string` を呼び出さない(描画フックで検証)
-- [ ] 1.11 同テスト内: `bind_party_characters([A, null, B], [...])` で 2 番目の前列パネルが空、3 番目はそのまま B として描画され、F3 が左に詰めて移動しないこと
-- [ ] 1.12 GUT 実行 → red を確認(新規テストが失敗、既存テストはレイアウト依存箇所のみ失敗)
-- [ ] 1.13 red 状態でコミット
+- [x] 1.1 既存の `tests/dungeon_scene/test_party_display_character_binding.gd` 他、レイアウトに依存するアサーションがあれば洗い出して記録
+- [x] 1.2 新規テスト `tests/dungeon_scene/test_party_display_layout.gd` を作成: PartyDisplay の anchors が full-bottom (`anchor_left=0, anchor_right=1, anchor_top=1, anchor_bottom=1`) になる
+- [x] 1.3 同テストファイル内: 前列3パネルが画面左端から左詰めで並ぶ(`position.x` が左→右に増加、最左パネルの x が `MARGIN` 以下)
+- [x] 1.4 同テストファイル内: 後列3パネルが画面右端から右詰めで並ぶ(最右パネルの右端が画面右端から `MARGIN` 以下)
+- [x] 1.5 同テストファイル内: 前列・後列の全パネルが同じ `position.y` を持つ
+- [x] 1.6 同テストファイル内: 前列右端パネルと後列左端パネルの間に水平方向の隙間がある(中央が空く)
+- [x] 1.7 同テストファイル内: PartyDisplay に `ColorRect` の background 子(`_bg_panel`)が存在しない
+- [x] 1.8 新規テスト `tests/dungeon_scene/test_party_display_labels.gd` を作成: PartyDisplay が "FRONT" / "BACK" を draw_string で出力する(描画フックで検証 or テスト用ヘルパで draw 呼び出しを記録)
+- [x] 1.9 新規テスト `tests/dungeon_scene/test_party_member_panel_size.gd` を作成: `PartyMemberPanel.PANEL_WIDTH == 180`、`PANEL_HEIGHT >= 100`、`FONT_SIZE >= 20`
+- [x] 1.10 新規テスト `tests/dungeon_scene/test_party_member_panel_empty.gd` を作成: `_data == null` かつ `_character == null` のとき `_draw()` が `draw_rect`/`draw_string` を呼び出さない(描画フックで検証)
+- [x] 1.11 同テスト内: `bind_party_characters([A, null, B], [...])` で 2 番目の前列パネルが空、3 番目はそのまま B として描画され、F3 が左に詰めて移動しないこと
+- [x] 1.12 GUT 実行 → red を確認(新規テストが失敗、既存テストはレイアウト依存箇所のみ失敗)
+- [x] 1.13 red 状態でコミット
 
 ## 2. PartyMemberPanel の更新 (TDD: green for panel-side)
 

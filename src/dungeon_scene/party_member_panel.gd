@@ -87,6 +87,14 @@ func _exit_tree() -> void:
 	_disconnect_from_character()
 
 
+# Test hook: reports whether _draw() would render anything in the panel's
+# current state. When false, _draw() takes the early-return path and emits
+# no draw_rect / draw_string calls. Stub returns false; replaced in green
+# phase.
+func has_visible_content() -> bool:
+	return false
+
+
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), BG_COLOR)
 

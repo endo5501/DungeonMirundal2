@@ -5,9 +5,32 @@ const MARGIN := 8
 const ROW_GAP := 4
 const BG_COLOR := Color(0, 0, 0, 0.4)
 
+# Test-stub values; replaced in the green phase.
+const FRONT_LABEL := ""
+const BACK_LABEL := ""
+const LABEL_FONT_SIZE := 0
+
 var _bg_panel: ColorRect
 var _front_panels: Array  # Array[PartyMemberPanel]
 var _back_panels: Array   # Array[PartyMemberPanel]
+
+
+# Test-stub: returns the position where the FRONT label would be drawn.
+# Replaced in the green phase.
+func get_front_label_position() -> Vector2:
+	return Vector2(9999, 9999)
+
+
+# Test-stub: returns the position where the BACK label would be drawn (right-
+# aligned, so x is the label's right edge). Replaced in the green phase.
+func get_back_label_position() -> Vector2:
+	return Vector2(9999, 9999)
+
+
+# Test-stub: re-runs panel layout based on current self.size.
+# Replaced in the green phase.
+func _layout_panels() -> void:
+	pass
 
 func _ready() -> void:
 	# Center horizontally, anchor to bottom
