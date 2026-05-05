@@ -24,7 +24,9 @@ Wizardry/JRPG 共通の戦術: 「物理アタッカーに ATK/HIT バフをか�
   - Priest Lv2 に `porfic, bamatu, varyu` を追加（既存 dios の隣り）
   - Priest Lv3 に `maporfic` を追加（既存 heala, allheal, madi の隣り）
   - Bishop Lv2 / Lv5 に追加分を反映 (Mage debuff 3 本 + Priest buff 4 本)
-- `CombatLog` の `stat_mod` 描画はすでに Phase 2 仕様で 1 行表現が定義されているので、本 change で追加描画は不要
+- `CombatLog` の `stat_mod` 1 行描画は Phase 2 仕様で定義済だが、本 change の手動スモークで「`maporfic` を撃っても per-target の効果行が出ない」現象が見つかったため、以下の 2 点を本 change のスコープで合わせて修正する:
+  - `TurnEngine._resolve_cast` の event 振り分け match 文に `"stat_mod"` ケースが抜けていたため、`spell_resolution` の stat_mod イベントが `TurnReport.add_stat_mod` に到達していなかった。同 match に転送ケースを追加する
+  - `CombatLog` の `stat_mod` フォーマッタが `int(delta)` を使っていたため hit / evasion (float ±0.2) が `+0` に潰れていた。float / int 両対応の符号付きフォーマット (`%+d` / `%+.1f`) と日本語 stat ラベル（攻撃 / 防御 / 素早さ / 命中 / 回避）に置き換える
 - Phase 0 で予約していた modifier_stack の `clear_battle_only()` 呼び出しが Phase 1 で `_finish_with_battle_end_cleanup` 経由で発火していることを再確認するスモークテストを追加
 - 互換性: 開発段階のためセーブ移行は不要
 
@@ -38,8 +40,8 @@ Wizardry/JRPG 共通の戦術: 「物理アタッカーに ATK/HIT バフをか�
 
 - `spell-data`: 8 本の `.tres` 追加と SpellRepository への組み込み。
 - `job-data`: Mage Lv2 / Priest Lv2 / Priest Lv3 / Bishop Lv2 / Bishop Lv5 の spell_progression 更新。
-- `spell-casting`: ALLY_ALL バフの SpellResolution に複数 stat_mod イベントが入る挙動の明示。
-- `combat-overlay`: stat_mod 行のレンダリング描画を Phase 2 仕様で十分かをスモーク確認 (新規要件は出さない)。
+- `spell-casting`: ALLY_ALL バフの SpellResolution に複数 stat_mod イベントが入る挙動の明示。`TurnEngine._resolve_cast` で stat_mod イベントを `TurnReport.add_stat_mod` へ転送する経路を追加 (既存の inflict / resist / cure と同じパターン)。
+- `combat-overlay`: `CombatLog` の stat_mod フォーマッタを float delta 対応 + 日本語 stat ラベル化に修正。これにより `+0.2 / -0.2` の HIT/EVA バフ・デバフが正しく `+0.2 上昇した / 0.2 低下した` として描画される。
 
 ## Impact
 
@@ -47,5 +49,7 @@ Wizardry/JRPG 共通の戦術: 「物理アタッカーに ATK/HIT バフをか�
   - 新規 `.tres`: `data/spells/morlis.tres`, `data/spells/dilto.tres`, `data/spells/sopic.tres`, `data/spells/porfic.tres`, `data/spells/maporfic.tres`, `data/spells/bamatu.tres`, `data/spells/varyu.tres` (計 7 本; 8 本目を整理: `dilto` を入れるなら計 7 = 7 + 1=mage 攻撃ダウン)。
   - **再整理**: Mage 3 本 (morlis, dilto, sopic) + Priest 4 本 (porfic, maporfic, bamatu, varyu) = 7 本。命名がどうしても 8 になりそうなら追加 Mage `katirn = ATK -2 ENEMY_ONE` を入れるが、本 change では 7 本で固定する。
   - 改修: `data/jobs/mage.tres`, `data/jobs/priest.tres`, `data/jobs/bishop.tres`
-- **テスト**: 7 本の SpellData テスト / spell_progression / Bishop の追加分 / 統合: ATK バフ後の damage 増加 / DEF バフ後の被ダメージ減 / EVA デバフ後の命中向上 / 4 ターン後にバフが切れる
+  - エンジン配線追加: `src/combat/turn_engine.gd::_resolve_cast` の event 転送 match に `"stat_mod"` ケースを追加。
+  - ログ表示修正: `src/dungeon_scene/combat/combat_log.gd::_format_action` の `stat_mod` ケースを float 対応 + 日本語ラベル化。`_stat_display_label` を新設。
+- **テスト**: 7 本の SpellData テスト / spell_progression / Bishop の追加分 / 統合: ATK バフ後の damage 増加 / DEF バフ後の被ダメージ減 / EVA デバフ後の命中向上 / 4 ターン後にバフが切れる / `TurnEngine` が stat_mod イベントを per-target action として吐く回帰テスト (`test_engine_cast_emits_stat_mod_actions_for_each_living_party_member`)
 - **互換性**: 開発段階のためセーブ移行不要
