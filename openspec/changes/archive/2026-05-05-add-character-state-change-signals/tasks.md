@@ -40,7 +40,7 @@
 - [x] 4.6 接続したシグナルのコールバックは `_data` を `to_party_member_data()` で再生成して `queue_redraw()` を呼ぶ(HP/MP/statuses)
 - [x] 4.7 既存の `set_member(data: PartyMemberData)` 経路は保持する(後方互換)。`set_member` は古い Character 接続を切ってからスナップショット保持
 - [x] 4.8 7/7 のテストが PASS することを確認
-- [ ] 4.9 ここでコミット: `Make PartyMemberPanel auto-refresh from Character signals`
+- [x] 4.9 ここでコミット: `Make PartyMemberPanel auto-refresh from Character signals`
 
 ## 5. PartyDisplay と DungeonScreen の配線
 
