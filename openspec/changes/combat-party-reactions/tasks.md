@@ -96,7 +96,7 @@
 
 ## 7. PartyHud に attach_to_turn_engine / detach_from_turn_engine (TDD: red→green)
 
-- [ ] 7.1 新規テスト `tests/autoload/test_party_hud_attach.gd`:
+- [x] 7.1 新規テスト `tests/autoload/test_party_hud_attach.gd`:
   - `attach_to_turn_engine(engine)` で 5 つのシグナルが接続される
   - 同じ engine への二重 attach、別 engine への再 attach の挙動(前のは detach される)
   - `actor_action_started` で対応する panel の `play_lift_animation` が呼ばれる(モック panel 経由)
@@ -106,11 +106,11 @@
   - `engine.party` の各 PartyCombatant が対応 panel に `bind_combat_actor` される
   - `detach_from_turn_engine()` で全シグナル切断、各 panel の combat_actor が null に
   - `detach_from_turn_engine()` を未 attach 時に呼んでもエラーにならない
-- [ ] 7.2 GUT 実行 → red
-- [ ] 7.3 `src/autoload/party_hud.gd` に `attach_to_turn_engine(engine)` / `detach_from_turn_engine()` を実装
-- [ ] 7.4 シグナルハンドラ内で actor が PartyCombatant かを判定し、`actor.character` で panel を引く(panel リストを `PartyDisplay` から取得するヘルパを用意)
-- [ ] 7.5 GUT 実行 → green
-- [ ] 7.6 コミット
+- [x] 7.2 GUT 実行 → red
+- [x] 7.3 `src/autoload/party_hud.gd` に `attach_to_turn_engine(engine)` / `detach_from_turn_engine()` を実装
+- [x] 7.4 シグナルハンドラ内で actor が PartyCombatant かを判定し、`actor.character` で panel を引く(panel リストを `PartyDisplay` から取得するヘルパを用意)
+- [x] 7.5 GUT 実行 → green
+- [x] 7.6 コミット
 
 ## 8. encounter overlay / combat-input-router 配線 (TDD: red→green)
 
