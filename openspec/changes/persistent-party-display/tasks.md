@@ -83,7 +83,7 @@
 
 ## 9. 行動不能の暗転オーバーレイ (TDD: red→green)
 
-- [ ] 9.1 新規テスト `tests/dungeon_scene/test_party_member_panel_dim.gd` を作成
+- [x] 9.1 新規テスト `tests/dungeon_scene/test_party_member_panel_dim.gd` を作成
   - HP=0 で暗転矩形が描画される
   - sleep 付与で暗転される
   - paralysis 付与で暗転される
@@ -91,12 +91,12 @@
   - poison のみでは暗転されない
   - confusion のみでは暗転されない
   - HP 回復で暗転が消える
-- [ ] 9.2 GUT 実行 → red 確認
-- [ ] 9.3 `PartyMemberPanel` に `_is_incapacitated()` private ヘルパを追加
-- [ ] 9.4 `_draw()` の最後(状態アイコン描画の後)に、`_is_incapacitated()` が真ならパネル全領域に半透明黒(`Color(0, 0, 0, 0.55)`)を `draw_rect` で上塗り
-- [ ] 9.5 `hp_changed` / `statuses_changed` のいずれでも `queue_redraw` がかかることを再確認(既存挙動)
-- [ ] 9.6 GUT 実行 → green 確認
-- [ ] 9.7 コミット
+- [x] 9.2 GUT 実行 → red 確認
+- [x] 9.3 `PartyMemberPanel` に `_is_incapacitated()` private ヘルパを追加 — public `is_incapacitated()` として公開してテストから検証可能にした
+- [x] 9.4 `_draw()` の最後(状態アイコン描画の後)に、`_is_incapacitated()` が真ならパネル全領域に半透明黒(`Color(0, 0, 0, 0.55)`)を `draw_rect` で上塗り
+- [x] 9.5 `hp_changed` / `statuses_changed` のいずれでも `queue_redraw` がかかることを再確認(既存挙動)— 既存の `_on_character_hp_changed` / `_on_character_statuses_changed` で `queue_redraw()` が呼ばれることを確認
+- [x] 9.6 GUT 実行 → green 確認
+- [x] 9.7 コミット
 
 ## 10. レイアウト最終調整・手動確認
 

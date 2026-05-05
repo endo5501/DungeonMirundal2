@@ -34,6 +34,10 @@ const STATUS_ICON_SIZE := 16
 const STATUS_ICON_GAP := 2
 const STATUS_ICON_FONT_SIZE := 12
 const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
+const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
+const INCAPACITATING_STATUSES: Array[StringName] = [
+	&"sleep", &"paralysis", &"petrify",
+]
 
 var _data: PartyMemberData
 # When non-null, the panel auto-refreshes from this Character's signals
@@ -118,6 +122,22 @@ func has_visible_content() -> bool:
 	return _data != null
 
 
+# A bound Character is incapacitated when current_hp <= 0 OR persistent
+# statuses include any of sleep / paralysis / petrify. confusion, silence,
+# blind, and poison alone do NOT incapacitate (the character can still act).
+# In snapshot mode (no Character bound) we conservatively return false —
+# we don't have access to a live status array.
+func is_incapacitated() -> bool:
+	if _character == null:
+		return false
+	if _character.current_hp <= 0:
+		return true
+	for sid in INCAPACITATING_STATUSES:
+		if _character.persistent_statuses.has(sid):
+			return true
+	return false
+
+
 # Build the icon descriptor list for the bound Character's persistent
 # statuses. Empty when the panel has no Character bound (snapshot mode)
 # or the Character has no persistent statuses. Each entry is a Dictionary
@@ -160,6 +180,9 @@ func _draw() -> void:
 	draw_string(font, Vector2(tx, line_h * 4), "MP:%d/%d" % [data.current_mp, data.max_mp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, MP_COLOR)
 
 	_draw_status_icons(font)
+
+	if is_incapacitated():
+		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
 
 
 func _draw_status_icons(font: Font) -> void:
