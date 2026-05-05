@@ -7,6 +7,8 @@ const BACK_LABEL := "BACK"
 const LABEL_FONT_SIZE := 20
 const LABEL_AREA_HEIGHT := 26
 const LABEL_COLOR := Color(0.95, 0.95, 0.95, 1.0)
+const LABEL_OUTLINE_SIZE := 3
+const LABEL_OUTLINE_COLOR := Color(0, 0, 0, 0.85)
 
 const HUD_HEIGHT := LABEL_AREA_HEIGHT + PartyMemberPanel.PANEL_HEIGHT + 4
 
@@ -82,6 +84,10 @@ func _draw() -> void:
 
 	var font := ThemeDB.fallback_font
 	var pos_front: Vector2 = get_front_label_position()
+	# Outline first (drawn behind), then the foreground glyph. Without the
+	# outline, the white labels disappear against light dungeon walls.
+	draw_string_outline(font, pos_front, FRONT_LABEL,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
 	draw_string(font, pos_front, FRONT_LABEL,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, LABEL_COLOR)
 
@@ -89,6 +95,8 @@ func _draw() -> void:
 	# Right-align by drawing within a fixed-width box ending at pos_back.x.
 	var label_box_width: float = 200.0
 	var back_draw_x: float = pos_back.x - label_box_width
+	draw_string_outline(font, Vector2(back_draw_x, pos_back.y), BACK_LABEL,
+		HORIZONTAL_ALIGNMENT_RIGHT, label_box_width, LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
 	draw_string(font, Vector2(back_draw_x, pos_back.y), BACK_LABEL,
 		HORIZONTAL_ALIGNMENT_RIGHT, label_box_width, LABEL_FONT_SIZE, LABEL_COLOR)
 
