@@ -16,13 +16,17 @@ const STAT_HIT: StringName = &"hit"
 const STAT_EVASION: StringName = &"evasion"
 
 var _entries: Array = []
-# Owner (CombatActor) wires this in _init() so the actor's
-# stat_modifiers_changed signal fires for "real" mutations only:
-# new entry, stronger replacement, or tick-driven removal. Pure
-# duration-only changes (equal magnitude, decrement-and-keep) are
-# intentionally silent so HUD subscribers don't redraw every turn
-# for stable modifiers.
-var _on_change: Callable = Callable()
+# Owner (CombatActor) is held via WeakRef so the stack doesn't keep its
+# owner alive. A strong reference here would form a cycle
+# (actor → stack → callable → actor) that RefCounted can't break,
+# leaking actors at game exit.
+#
+# When the stack mutates in a "visually meaningful" way (new entry,
+# stronger replacement, or tick-driven removal), _notify_change resolves
+# the weak ref and emits the owner's stat_modifiers_changed signal.
+# Duration-only updates stay silent so HUD subscribers don't redraw
+# every turn for stable modifiers.
+var _owner_weak: WeakRef = null
 
 
 func is_empty() -> bool:
@@ -91,5 +95,8 @@ func _find(stat: StringName) -> Dictionary:
 
 
 func _notify_change() -> void:
-	if _on_change.is_valid():
-		_on_change.call()
+	if _owner_weak == null:
+		return
+	var owner = _owner_weak.get_ref()
+	if owner != null and owner.has_signal(&"stat_modifiers_changed"):
+		owner.stat_modifiers_changed.emit()

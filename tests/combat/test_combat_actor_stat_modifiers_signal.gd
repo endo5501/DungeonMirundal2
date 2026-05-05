@@ -87,3 +87,16 @@ func test_tick_keeping_entry_does_not_emit():
 	a.stat_modifiers_changed.connect(c.bump)
 	a.modifier_stack.tick_battle_turn()
 	assert_eq(c.count, 0)
+
+
+# --- regression: stack callback must not keep actor alive (cycle leak) ---
+
+func test_actor_is_freeable_when_modifier_stack_holds_callback():
+	# A CombatActor with its modifier_stack callback wired in _init must be
+	# fully released when the local reference drops. Earlier versions used a
+	# Callable that captured `self`, forming a cycle that RefCounted can't
+	# break — actors leaked at game exit.
+	var a := CombatActor.new()
+	var weak: WeakRef = weakref(a)
+	a = null  # drop our strong ref
+	assert_null(weak.get_ref(), "CombatActor must be freed when external refs drop")

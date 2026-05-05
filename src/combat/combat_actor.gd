@@ -14,7 +14,9 @@ var statuses: StatusTrack = StatusTrack.new()
 
 
 func _init() -> void:
-	modifier_stack._on_change = func() -> void: stat_modifiers_changed.emit()
+	# WeakRef avoids a strong cycle (actor → stack → callable → actor) that
+	# RefCounted can't break; without this, actors leak at game exit.
+	modifier_stack._owner_weak = weakref(self)
 
 var _defending: bool = false
 # Tests inject a StatusRepository here; production path goes through DataLoader.
