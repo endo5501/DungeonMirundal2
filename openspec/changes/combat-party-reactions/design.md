@@ -135,7 +135,7 @@ shake / lift は `_draw()` ではなく `position` への Tween。fade は `modu
 
 #### 注意点
 
-- アイテム使用は `TurnEngine.actor_dealt_damage` / `actor_healed` を発火しないため、戦闘中の回復アイテムでは flash がトリガーされない(panel の hp_changed 由来 flash も `_combat_actor != null` で抑制される)。これは既知のトレードオフで、必要なら `_resolve_item` 内で before/after の HP を比較して emit を追加できる(本変更ではスコープ外)。
+- アイテム使用も対応済み: `_resolve_item` で対象 `CombatActor` の HP を before/after で比較し、正の delta なら `actor_healed`、負なら `actor_dealt_damage` を `add_item_use` の直前で emit する。これにより戦闘中の回復ポーションでも flash が走る。
 - バッファリングは `CombatOverlay` が明示的に `begin_buffering()` を呼んだ場合のみ有効になる。直接 `PartyHud.attach_to_turn_engine` を呼んで signal を emit するテストは従来どおり即時に発火する。
 
 ### D9. テスト戦略

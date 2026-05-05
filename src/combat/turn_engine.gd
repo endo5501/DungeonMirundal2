@@ -318,6 +318,12 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 	# Atomic validate-and-consume via Inventory; guards against duplicate ItemCommands
 	# pointing at the same instance and against target state changing mid-turn
 	# (e.g. AliveOnly now failing because the target was KO'd earlier in the order).
+	# Snapshot the target's HP so we can emit actor_healed / actor_dealt_damage
+	# after the effect resolves. Items mutate Character.current_hp directly,
+	# so without this the panel would never see a heal flash for in-combat
+	# potions (Character.hp_changed is suppressed while a CombatActor is bound).
+	var hp_target: CombatActor = cmd.target if cmd.target is CombatActor else null
+	var hp_before: int = hp_target.current_hp if hp_target != null else -1
 	var result: ItemEffectResult
 	if inventory != null:
 		result = inventory.use_item(cmd.item_instance, targets, ctx)
@@ -327,6 +333,16 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 		cmd.cancelled = true
 		report.add_item_cancelled(actor, item_name)
 		return ItemResolution.NORMAL
+	# Emit BEFORE add_item_use so PartyHud's pending-action-index lines up
+	# with the item log line during buffered playback (design.md §D10).
+	if hp_target != null and hp_before >= 0:
+		var delta: int = hp_target.current_hp - hp_before
+		if delta > 0:
+			actor_healed.emit(hp_target, delta, actor)
+		elif delta < 0:
+			actor_dealt_damage.emit(hp_target, -delta, actor)
+		if not hp_target.is_alive():
+			_check_and_emit_death(hp_target)
 	report.add_item_use(actor, item_name, cmd.target, result.message)
 	if result.request_town_return:
 		return ItemResolution.TOWN_ESCAPE

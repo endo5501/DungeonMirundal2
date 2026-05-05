@@ -393,6 +393,54 @@ func test_heal_at_max_hp_does_not_emit():
 	assert_eq(ally_heals, 0, "no heal signal expected when target is at max HP")
 
 
+func test_item_heal_emits_actor_healed_with_actual_amount():
+	# Heal items mutate Character.current_hp directly via item.effect.apply,
+	# bypassing the spell path. _resolve_item still has to emit actor_healed
+	# so HUD buffering can drive the heal flash on the matching panel.
+	var engine := TurnEngine.new()
+	var pc := _StubPartyActor.new("P1", 5, 0, 0, 99)
+	pc._max = 30  # raise max so the heal isn't capped at current_hp
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	var inst := ItemInstance.new(_make_potion(20), true)
+	var inv := Inventory.new()
+	inv.add(inst)
+	engine.inventory = inv
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, ItemCommand.new(pc, inst, pc))  # use potion on self
+	engine.resolve_turn(_make_rng())
+	var to_pc := []
+	for h in rec.heals:
+		if h[0] == pc:
+			to_pc.append(h)
+	assert_eq(to_pc.size(), 1, "item heal must emit actor_healed once")
+	assert_gt(int(to_pc[0][1]), 0, "amount must reflect the actual hp gained")
+	assert_eq(to_pc[0][2], pc, "source should be the item user")
+
+
+func test_item_heal_does_not_emit_when_target_at_max_hp():
+	# A potion guarded by NotFullHp should be cancelled (no hp change), so no
+	# actor_healed signal should fire either.
+	var engine := TurnEngine.new()
+	var pc := _StubPartyActor.new("P1", 30, 0, 0, 99)  # already at max
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	var inst := ItemInstance.new(_make_potion(20), true)
+	var inv := Inventory.new()
+	inv.add(inst)
+	engine.inventory = inv
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, ItemCommand.new(pc, inst, pc))
+	engine.resolve_turn(_make_rng())
+	var pc_heals := 0
+	for h in rec.heals:
+		if h[0] == pc:
+			pc_heals += 1
+	assert_eq(pc_heals, 0, "no heal signal expected when item heal is cancelled at max HP")
+
+
 # --- actor_died ---
 
 func test_killing_blow_emits_died_after_dealt_damage():
