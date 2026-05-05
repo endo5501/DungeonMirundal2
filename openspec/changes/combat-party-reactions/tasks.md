@@ -89,10 +89,10 @@
 
 ## 6. PartyDisplay が PartyMemberPanel に layout_position を渡す
 
-- [ ] 6.1 既存テスト or 新規テストで、`PartyDisplay` がパネル配置時に `panel._layout_position = panel.position` を設定することを検証
-- [ ] 6.2 `src/dungeon_scene/party_display.gd` の配置ロジックで、`panel.position = ...` の直後に `panel._layout_position = panel.position` を代入(setter があるならそれを使う)
-- [ ] 6.3 GUT 実行 → green
-- [ ] 6.4 コミット
+- [x] 6.1 既存テスト or 新規テストで、`PartyDisplay` がパネル配置時に `panel._layout_position = panel.position` を設定することを検証
+- [x] 6.2 `src/dungeon_scene/party_display.gd` の配置ロジックで、`panel.position = ...` の直後に `panel._layout_position = panel.position` を代入(setter があるならそれを使う)
+- [x] 6.3 GUT 実行 → green
+- [x] 6.4 コミット
 
 ## 7. PartyHud に attach_to_turn_engine / detach_from_turn_engine (TDD: red→green)
 

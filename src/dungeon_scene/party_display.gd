@@ -64,7 +64,9 @@ func _layout_panels(width: float) -> void:
 
 	for i in range(3):
 		_front_panels[i].position = Vector2(m + float(i) * step, panel_y)
+		_front_panels[i]._layout_position = _front_panels[i].position
 		_back_panels[i].position = Vector2(width - m - float(3 - i) * pw - float(2 - i) * m, panel_y)
+		_back_panels[i]._layout_position = _back_panels[i].position
 
 	queue_redraw()
 
