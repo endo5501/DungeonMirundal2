@@ -15,7 +15,7 @@ mp_per_level = 2
 exp_table = PackedInt64Array(1100, 1896, 3268, 5634, 9713, 16746, 28872, 49779, 85825, 147974, 255127, 439874)
 spell_progression = {
 1: Array[StringName]([&"fire", &"frost"]),
-2: Array[StringName]([&"katino", &"manifo"]),
+2: Array[StringName]([&"katino", &"manifo", &"morlis", &"dilto", &"sopic"]),
 3: Array[StringName]([&"flame", &"blizzard", &"poison_dart"]),
 }
 required_str = 0

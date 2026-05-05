@@ -6,6 +6,8 @@ const _SPELL_IDS: Array[StringName] = [
 	&"heal", &"holy", &"heala", &"allheal",
 	&"katino", &"manifo", &"dios",
 	&"poison_dart", &"madi", &"dialma",
+	&"morlis", &"dilto", &"sopic",
+	&"porfic", &"bamatu", &"varyu", &"maporfic",
 ]
 
 
@@ -108,7 +110,11 @@ func test_outside_ok_set_includes_healing_lineup_and_status_cures():
 	outside_ok_ids.sort()
 	# heal / heala / allheal: add-magic-system. dios: add-status-sleep-and-silence.
 	# madi / dialma: add-status-poison-and-petrify.
-	var expected: Array[StringName] = [&"allheal", &"dialma", &"dios", &"heal", &"heala", &"madi"]
+	# porfic / bamatu / varyu: add-stat-modifier-spells (single-target buffs).
+	var expected: Array[StringName] = [
+		&"allheal", &"bamatu", &"dialma", &"dios", &"heal", &"heala",
+		&"madi", &"porfic", &"varyu",
+	]
 	expected.sort()
 	assert_eq(outside_ok_ids, expected)
 
@@ -228,3 +234,126 @@ func test_dialma_fields():
 	assert_is(spell.effect, CureStatusSpellEffect, "dialma effect should be CureStatusSpellEffect")
 	var eff := spell.effect as CureStatusSpellEffect
 	assert_eq(eff.status_id, &"petrify")
+
+
+# --- add-stat-modifier-spells: Mage debuffs (morlis / dilto / sopic) ---
+
+func test_morlis_fields():
+	var spell := load("res://data/spells/morlis.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"morlis")
+	assert_eq(spell.display_name, "モーリス")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatModSpellEffect, "morlis effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"defense")
+	assert_eq(eff.delta, -2)
+	assert_eq(eff.turns, 4)
+
+
+func test_dilto_fields():
+	var spell := load("res://data/spells/dilto.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"dilto")
+	assert_eq(spell.display_name, "ディルト")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatModSpellEffect, "dilto effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"evasion")
+	assert_almost_eq(float(eff.delta), -0.2, 0.001)
+	assert_eq(eff.turns, 4)
+
+
+func test_sopic_fields():
+	var spell := load("res://data/spells/sopic.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"sopic")
+	assert_eq(spell.display_name, "ソピック")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_GROUP)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatModSpellEffect, "sopic effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"hit")
+	assert_almost_eq(float(eff.delta), -0.2, 0.001)
+	assert_eq(eff.turns, 4)
+
+
+# --- add-stat-modifier-spells: Priest buffs (porfic / bamatu / varyu / maporfic) ---
+
+func test_porfic_fields():
+	var spell := load("res://data/spells/porfic.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"porfic")
+	assert_eq(spell.display_name, "ポーフィック")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.OUTSIDE_OK)
+	assert_is(spell.effect, StatModSpellEffect, "porfic effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"defense")
+	assert_eq(eff.delta, 2)
+	assert_eq(eff.turns, 4)
+
+
+func test_bamatu_fields():
+	var spell := load("res://data/spells/bamatu.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"bamatu")
+	assert_eq(spell.display_name, "バマツ")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.OUTSIDE_OK)
+	assert_is(spell.effect, StatModSpellEffect, "bamatu effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"attack")
+	assert_eq(eff.delta, 2)
+	assert_eq(eff.turns, 4)
+
+
+func test_varyu_fields():
+	var spell := load("res://data/spells/varyu.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"varyu")
+	assert_eq(spell.display_name, "バルユ")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.OUTSIDE_OK)
+	assert_is(spell.effect, StatModSpellEffect, "varyu effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"hit")
+	assert_almost_eq(float(eff.delta), 0.2, 0.001)
+	assert_eq(eff.turns, 4)
+
+
+func test_maporfic_fields():
+	var spell := load("res://data/spells/maporfic.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"maporfic")
+	assert_eq(spell.display_name, "マポーフィック")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 3)
+	assert_eq(spell.mp_cost, 5)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ALL)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatModSpellEffect, "maporfic effect should be StatModSpellEffect")
+	var eff := spell.effect as StatModSpellEffect
+	assert_eq(eff.stat, &"defense")
+	assert_eq(eff.delta, 2)
+	assert_eq(eff.turns, 4)

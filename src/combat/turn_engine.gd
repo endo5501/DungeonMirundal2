@@ -325,6 +325,13 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 						report.add_resist(actor, evt.get("status_id", &""))
 					"cure":
 						report.add_cure(actor, evt.get("status_id", &""))
+					"stat_mod":
+						report.add_stat_mod(
+							actor,
+							evt.get("stat", &""),
+							evt.get("delta", 0),
+							int(evt.get("turns", 0)),
+						)
 			if int(e.get("hp_delta", 0)) < 0:
 				_apply_damage_taken_cure(actor, report)
 	for t in targets:

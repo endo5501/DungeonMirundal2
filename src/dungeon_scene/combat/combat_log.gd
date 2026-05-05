@@ -142,10 +142,22 @@ func _format_action(action: Dictionary) -> String:
 			return "%s は呪文を唱えようとしたが声が出ない" % caster_s
 		"stat_mod":
 			var target_m: String = action.get("target_name", "")
-			var stat_m = action.get("stat", &"")
+			var stat_label := _stat_display_label(action.get("stat", &""))
 			var delta_m = action.get("delta", 0)
-			var sign_m := "+" if int(delta_m) >= 0 else "-"
-			return "%s の %s が %s%d 変化した" % [target_m, String(stat_m), sign_m, abs(int(delta_m))]
+			var delta_text: String
+			var direction: String
+			# attack/defense/agility ship int delta; hit/evasion ship float delta.
+			# Render each with the appropriate precision so float deltas don't
+			# truncate to "+0" via int conversion.
+			if typeof(delta_m) == TYPE_FLOAT:
+				var f := float(delta_m)
+				delta_text = "%+.1f" % f
+				direction = "上昇した" if f >= 0.0 else "低下した"
+			else:
+				var i := int(delta_m)
+				delta_text = "%+d" % i
+				direction = "上昇した" if i >= 0 else "低下した"
+			return "%s の%s が %s %s" % [target_m, stat_label, delta_text, direction]
 		_:
 			return ""
 
@@ -154,6 +166,22 @@ func _format_status_line(action: Dictionary, name_key: String, template: String)
 	var name: String = action.get(name_key, "")
 	var sd := _resolve_status_display(action.get("status_id"))
 	return template % [name, sd]
+
+
+func _stat_display_label(stat) -> String:
+	match stat:
+		&"attack":
+			return "攻撃"
+		&"defense":
+			return "防御"
+		&"agility":
+			return "素早さ"
+		&"hit":
+			return "命中"
+		&"evasion":
+			return "回避"
+		_:
+			return String(stat)
 
 
 func _format_cast_action(action: Dictionary) -> String:

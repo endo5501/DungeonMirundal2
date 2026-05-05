@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/stat_mod_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="StatMod_maporfic"]
+script = ExtResource("2")
+stat = &"defense"
+delta = 2
+turns = 4
+
+[resource]
+script = ExtResource("1")
+id = &"maporfic"
+display_name = "マポーフィック"
+school = &"priest"
+level = 3
+mp_cost = 5
+target_type = 3
+scope = 0
+effect = SubResource("StatMod_maporfic")
