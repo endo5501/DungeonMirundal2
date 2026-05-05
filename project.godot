@@ -25,6 +25,7 @@ project/assembly_name="DungeonMirundal2"
 [autoload]
 
 GameState="*res://src/game_state.gd"
+PartyHud="*res://src/autoload/party_hud.gd"
 
 [editor_plugins]
 

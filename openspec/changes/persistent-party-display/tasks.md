@@ -8,11 +8,11 @@
 
 ## 2. PartyHud autoload 実装 (TDD: green for autoload-side)
 
-- [ ] 2.1 `src/autoload/party_hud.gd` 作成。`extends CanvasLayer`、`_ready()` で `PartyDisplay.new()` を子に追加
-- [ ] 2.2 `show_hud()` / `hide_hud()` を実装(`visible` を直接設定、冪等)
-- [ ] 2.3 `project.godot` の `[autoload]` セクションに `PartyHud="*res://src/autoload/party_hud.gd"` を追加
-- [ ] 2.4 GUT 実行 → 1.1〜1.3 が green になることを確認
-- [ ] 2.5 ここでコミット
+- [x] 2.1 `src/autoload/party_hud.gd` 作成。`extends CanvasLayer`、`_ready()` で `PartyDisplay.new()` を子に追加
+- [x] 2.2 `show_hud()` / `hide_hud()` を実装(`visible` を直接設定、冪等)
+- [x] 2.3 `project.godot` の `[autoload]` セクションに `PartyHud="*res://src/autoload/party_hud.gd"` を追加
+- [x] 2.4 GUT 実行 → 1.1〜1.3 が green になることを確認
+- [x] 2.5 ここでコミット
 
 ## 3. bind_active_party の実装 (TDD: red→green)
 
