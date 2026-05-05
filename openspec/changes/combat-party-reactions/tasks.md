@@ -135,7 +135,7 @@
 
 ## 10. クリーンアップ・最終コミット
 
-- [ ] 10.1 不要になったコメント・デッドコードを削除
-- [ ] 10.2 `openspec validate combat-party-reactions --strict` で valid 確認
-- [ ] 10.3 全 GUT テスト green を確認
-- [ ] 10.4 最終コミット
+- [x] 10.1 不要になったコメント・デッドコードを削除
+- [x] 10.2 `openspec validate combat-party-reactions --strict` で valid 確認
+- [x] 10.3 全 GUT テスト green を確認(2069/2069 passing)
+- [x] 10.4 最終コミット
