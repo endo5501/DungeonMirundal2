@@ -25,13 +25,13 @@
 
 ## 4. パーティ変更通知の整備 (TDD: red→green)
 
-- [ ] 4.1 既存コードを調査: `Guild` または `GameState` に "active party changed" 相当のシグナルがあるか確認
-- [ ] 4.2 無ければ `Guild`(または `GameState`)に `active_party_changed(front_row: Array, back_row: Array)` シグナルを追加(spec として `party-hud-autoload` の Requirement と一致するよう)
-- [ ] 4.3 既存の編成変更コード(パーティ追加/削除/並び替え)から、編成完了時に新シグナルを emit するよう変更
-- [ ] 4.4 新規テスト: 編成変更で `PartyHud` が再 bind されること(モックで検証 or signal 経由)
-- [ ] 4.5 `PartyHud._ready()` 内で当該シグナルに `bind_active_party()` を接続
-- [ ] 4.6 GUT 実行 → green 確認
-- [ ] 4.7 コミット
+- [x] 4.1 既存コードを調査: `Guild` または `GameState` に "active party changed" 相当のシグナルがあるか確認
+- [x] 4.2 無ければ `Guild`(または `GameState`)に `active_party_changed(front_row: Array, back_row: Array)` シグナルを追加(spec として `party-hud-autoload` の Requirement と一致するよう)
+- [x] 4.3 既存の編成変更コード(パーティ追加/削除/並び替え)から、編成完了時に新シグナルを emit するよう変更
+- [x] 4.4 新規テスト: 編成変更で `PartyHud` が再 bind されること(モックで検証 or signal 経由)
+- [x] 4.5 `PartyHud._ready()` 内で当該シグナルに `bind_active_party()` を接続
+- [x] 4.6 GUT 実行 → green 確認
+- [x] 4.7 コミット
 
 ## 5. main.gd / 各 screen の表示制御 (TDD: red→green)
 
