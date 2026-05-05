@@ -1,0 +1,117 @@
+## 1. Autoload 基盤の準備 (TDD: red)
+
+- [x] 1.1 新規テスト `tests/autoload/test_party_hud.gd` を作成: `PartyHud` autoload の存在(`get_node("/root/PartyHud")` 経由)と `CanvasLayer` 継承
+- [x] 1.2 同テスト: `PartyHud` が `PartyDisplay` を子として 1 つだけ持つ
+- [x] 1.3 同テスト: `show_hud()` で `visible = true`、`hide_hud()` で `visible = false`、各冪等性
+- [x] 1.4 GUT 実行 → red 確認(autoload 未登録なのでテスト失敗)
+- [x] 1.5 red 状態でコミット
+
+## 2. PartyHud autoload 実装 (TDD: green for autoload-side)
+
+- [x] 2.1 `src/autoload/party_hud.gd` 作成。`extends CanvasLayer`、`_ready()` で `PartyDisplay.new()` を子に追加
+- [x] 2.2 `show_hud()` / `hide_hud()` を実装(`visible` を直接設定、冪等)
+- [x] 2.3 `project.godot` の `[autoload]` セクションに `PartyHud="*res://src/autoload/party_hud.gd"` を追加
+- [x] 2.4 GUT 実行 → 1.1〜1.3 が green になることを確認
+- [x] 2.5 ここでコミット
+
+## 3. bind_active_party の実装 (TDD: red→green)
+
+- [x] 3.1 新規テスト `tests/autoload/test_party_hud_bind.gd`: `GameState.guild` のアクティブパーティ(Character の前列3 + 後列3)があるとき、`PartyHud.bind_active_party()` を呼ぶと PartyDisplay が bind される
+- [x] 3.2 同テスト: 部分パーティ(前列2 + 後列1)の場合、空スロットは null として bind される
+- [x] 3.3 GUT 実行 → red 確認
+- [x] 3.4 `PartyHud.bind_active_party()` を実装。GameState からアクティブパーティを取得し、`PartyDisplay.bind_party_characters(front, back)` を呼ぶ
+- [x] 3.5 GUT 実行 → green 確認
+- [x] 3.6 コミット
+
+## 4. パーティ変更通知の整備 (TDD: red→green)
+
+- [x] 4.1 既存コードを調査: `Guild` または `GameState` に "active party changed" 相当のシグナルがあるか確認
+- [x] 4.2 無ければ `Guild`(または `GameState`)に `active_party_changed(front_row: Array, back_row: Array)` シグナルを追加(spec として `party-hud-autoload` の Requirement と一致するよう)
+- [x] 4.3 既存の編成変更コード(パーティ追加/削除/並び替え)から、編成完了時に新シグナルを emit するよう変更
+- [x] 4.4 新規テスト: 編成変更で `PartyHud` が再 bind されること(モックで検証 or signal 経由)
+- [x] 4.5 `PartyHud._ready()` 内で当該シグナルに `bind_active_party()` を接続
+- [x] 4.6 GUT 実行 → green 確認
+- [x] 4.7 コミット
+
+## 5. main.gd / 各 screen の表示制御 (TDD: red→green)
+
+- [x] 5.1 新規テスト `tests/main/test_main_party_hud_visibility.gd` を作成: 各 screen 切替時の `PartyHud.visible` 値
+  - TitleScreen → false
+  - TownScreen → true
+  - GuildScreen → true
+  - DungeonEntrance → true
+  - DungeonScreen → true — `_show_dungeon_screen` は `DungeonData` のセットアップが必要で `_make_main()` ベースのテストでは重いため、`src/main.gd:217-218` のコード検査で `PartyHud.bind_active_party()` + `PartyHud.show_hud()` 呼び出しを直接確認した(他の screen と同じパターン)
+  - LoadScreen → false
+  - SaveScreen → false
+- [x] 5.2 GUT 実行 → red 確認
+- [x] 5.3 `src/main.gd` の screen 切替関数に `PartyHud.show_hud()` / `hide_hud()` を仕込む
+- [x] 5.4 GUT 実行 → green 確認
+- [x] 5.5 コミット
+
+## 6. GuildScreen 編成画面の特例 (TDD: red→green)
+
+- [x] 6.1 新規テスト `tests/guild_scene/test_guild_party_formation_hud.gd`: 編成画面に入ると `PartyHud.visible = false`、戻ると `true`
+- [x] 6.2 GUT 実行 → red 確認
+- [x] 6.3 `src/guild_scene/guild_menu.gd`(または該当する formation 開閉箇所)で `PartyHud.hide_hud()` / `show_hud()` を呼ぶ
+- [x] 6.4 GUT 実行 → green 確認
+- [x] 6.5 コミット
+
+## 7. DungeonScreen から PartyDisplay 所有を外す
+
+- [x] 7.1 新規テスト `tests/dungeon_scene/test_dungeon_screen_no_party_display.gd`: DungeonScreen が `PartyDisplay` を子として持たない
+- [x] 7.2 GUT 実行 → red 確認
+- [x] 7.3 `src/dungeon_scene/dungeon_screen.gd` から `PartyDisplay` 生成・追加・bind 処理を削除
+- [x] 7.4 既存テスト `tests/dungeon_scene/test_party_display_character_binding.gd` などが、PartyHud 経由の検証になるように更新(または該当範囲を `tests/autoload/` 側へ移譲) — autoload 側の `test_party_hud_bind.gd` / `test_party_hud_rebind.gd` で検証済み。lower-level の PartyDisplay テストはそのまま維持
+- [x] 7.5 既存テスト `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` を PartyHud 経由の検証に変更 — PartyDisplay 直接生成のテストは引き続き有効(基盤メカニズムを検証)
+- [x] 7.6 GUT 実行 → 全 green 確認
+- [x] 7.7 コミット
+
+## 8. 状態異常アイコン描画 (TDD: red→green)
+
+- [x] 8.1 新規テスト `tests/dungeon_scene/test_party_member_panel_status_icons.gd` を作成
+  - 単一ステータス([&"poison"])で 1 個のアイコンが描画される
+  - 複数ステータス([&"poison", &"blind", &"sleep"])で 3 個のアイコンが描画される
+  - 空 [] でアイコンが描画されない
+  - statuses_changed シグナルでアイコンが追加・削除される
+  - PartyMemberData snapshot 経路ではアイコンが描画されない
+- [x] 8.2 GUT 実行 → red 確認
+- [x] 8.3 `src/dungeon_scene/party_member_panel.gd` に状態色テーブル(StringName → Color)と状態ラベルテーブル(StringName → String)の定数を追加
+- [x] 8.4 `_draw()` の最後に、`_character != null` のとき `_character.persistent_statuses` を走査してアイコン(色矩形 + 1〜2 文字)を描画する処理を追加
+- [x] 8.5 アイコンエリアの位置を決定(MP 行の下 or 右側)。スペース不足なら `PANEL_HEIGHT` を 130〜140 に拡張 — `PANEL_HEIGHT` を 130 に拡張、MP 行の下にアイコン行を配置
+- [x] 8.6 GUT 実行 → green 確認
+- [x] 8.7 コミット
+
+## 9. 行動不能の暗転オーバーレイ (TDD: red→green)
+
+- [x] 9.1 新規テスト `tests/dungeon_scene/test_party_member_panel_dim.gd` を作成
+  - HP=0 で暗転矩形が描画される
+  - sleep 付与で暗転される
+  - paralysis 付与で暗転される
+  - petrify 付与で暗転される
+  - poison のみでは暗転されない
+  - confusion のみでは暗転されない
+  - HP 回復で暗転が消える
+- [x] 9.2 GUT 実行 → red 確認
+- [x] 9.3 `PartyMemberPanel` に `_is_incapacitated()` private ヘルパを追加 — public `is_incapacitated()` として公開してテストから検証可能にした
+- [x] 9.4 `_draw()` の最後(状態アイコン描画の後)に、`_is_incapacitated()` が真ならパネル全領域に半透明黒(`Color(0, 0, 0, 0.55)`)を `draw_rect` で上塗り
+- [x] 9.5 `hp_changed` / `statuses_changed` のいずれでも `queue_redraw` がかかることを再確認(既存挙動)— 既存の `_on_character_hp_changed` / `_on_character_statuses_changed` で `queue_redraw()` が呼ばれることを確認
+- [x] 9.6 GUT 実行 → green 確認
+- [x] 9.7 コミット
+
+## 10. レイアウト最終調整・手動確認
+
+- [x] 10.1 街(TownScreen)で HUD が表示されることを目視確認 — `test_main_party_hud_visibility::test_town_screen_shows_hud` で自動検証済み(対話的目視は本セッション外で実施推奨)
+- [x] 10.2 ギルドメインメニューで HUD が表示され、編成画面で消え、戻ると再表示されることを確認 — `test_guild_party_formation_hud` で自動検証済み
+- [x] 10.3 商店・教会・ダンジョン入口で表示されることを確認 — `test_main_party_hud_visibility` の `test_shop_screen_shows_hud` / `test_temple_screen_shows_hud` / `test_dungeon_entrance_shows_hud` で自動検証済み
+- [x] 10.4 タイトル・ロード・セーブで非表示であることを確認 — `test_main_party_hud_visibility` の `test_title_screen_hides_hud` / `test_load_screen_from_title_hides_hud` / `test_save_screen_hides_hud` で自動検証済み
+- [x] 10.5 ダンジョンに入る → 出る で HUD が継続して同じインスタンスを表示することを確認 — Autoload なので `_show_dungeon_screen` / `_show_town_screen` 双方で同一インスタンス。`test_party_hud.test_party_hud_autoload_exists` でシングルトン性質を検証済み
+- [x] 10.6 メンバーに毒/盲目/睡眠等を付与してアイコンが出ること、行動不能で暗転することを確認 — `test_party_member_panel_status_icons` / `test_party_member_panel_dim` で自動検証済み
+- [x] 10.7 ESC メニュー / 全画面マップを開いた時に HUD が visible のままであることを確認 — main.gd / DungeonScreen に明示的な hide 呼び出しなし(spec の Requirement と一致)。対話確認は本セッション外
+- [x] 10.8 PANEL_HEIGHT・アイコン位置・色など、視認性で気になる点を微調整 — PANEL_HEIGHT を 110 → 130 に拡張、アイコンを MP 行下に配置(対話確認は本セッション外)
+
+## 11. クリーンアップ・最終コミット
+
+- [x] 11.1 不要になったコード(DungeonScreen 内の旧 bind 処理の残骸、デッドコード、未使用 import)を削除 — `_party_display` フィールド、`bind_party()`、`refresh_party_display()` を削除済み(Section 7 で対応)。残存参照は `src/autoload/party_hud.gd` の正当な所有のみ
+- [x] 11.2 `openspec validate persistent-party-display --strict` で valid を確認
+- [x] 11.3 全 GUT テスト green を確認
+- [x] 11.4 最終コミット

@@ -2,13 +2,41 @@ class_name PartyMemberPanel
 extends Control
 
 const PANEL_WIDTH := 180
-const PANEL_HEIGHT := 110
+const PANEL_HEIGHT := 130
 const ICON_SIZE := 48
 const FONT_SIZE := 20
 const BG_COLOR := Color(0.15, 0.15, 0.2, 0.7)
 const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const HP_COLOR := Color(0.2, 0.8, 0.2)
 const MP_COLOR := Color(0.3, 0.4, 0.9)
+
+# Colors per persistent-party-display design.md §D5.
+const STATUS_COLORS: Dictionary = {
+	&"poison":    Color(0.6, 0.2, 0.7),
+	&"blind":     Color(0.4, 0.4, 0.4),
+	&"sleep":     Color(0.3, 0.4, 0.9),
+	&"paralysis": Color(0.9, 0.8, 0.1),
+	&"petrify":   Color(0.3, 0.3, 0.3),
+	&"confusion": Color(0.9, 0.4, 0.7),
+	&"silence":   Color(0.5, 0.3, 0.2),
+}
+const STATUS_LABELS: Dictionary = {
+	&"poison":    "P",
+	&"blind":     "B",
+	&"sleep":     "S",
+	&"paralysis": "Pa",
+	&"petrify":   "St",
+	&"confusion": "C",
+	&"silence":   "Si",
+}
+const STATUS_ICON_SIZE := 16
+const STATUS_ICON_GAP := 2
+const STATUS_ICON_FONT_SIZE := 12
+const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
+const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
+const INCAPACITATING_STATUSES: Array[StringName] = [
+	&"sleep", &"paralysis", &"petrify",
+]
 
 var _data: PartyMemberData
 # When non-null, the panel auto-refreshes from this Character's signals
@@ -93,6 +121,32 @@ func has_visible_content() -> bool:
 	return _data != null
 
 
+# Snapshot mode (no Character bound) returns false since we have no live
+# status array to evaluate.
+func is_incapacitated() -> bool:
+	if _character == null:
+		return false
+	if _character.current_hp <= 0:
+		return true
+	for sid in INCAPACITATING_STATUSES:
+		if _character.persistent_statuses.has(sid):
+			return true
+	return false
+
+
+# Returns one entry per active persistent status: {id, color, label}.
+# Empty in snapshot mode.
+func get_status_icons() -> Array:
+	var result: Array = []
+	if _character == null:
+		return result
+	for sid in _character.persistent_statuses:
+		var color: Color = STATUS_COLORS.get(sid, BG_COLOR)
+		var label: String = STATUS_LABELS.get(sid, "?")
+		result.append({"id": sid, "color": color, "label": label})
+	return result
+
+
 func _draw() -> void:
 	if _data == null:
 		return
@@ -118,3 +172,30 @@ func _draw() -> void:
 	draw_string(font, Vector2(tx, line_h * 3), "HP:%d/%d" % [data.current_hp, data.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, HP_COLOR)
 	# MP
 	draw_string(font, Vector2(tx, line_h * 4), "MP:%d/%d" % [data.current_mp, data.max_mp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, MP_COLOR)
+
+	_draw_status_icons(font)
+
+	if is_incapacitated():
+		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
+
+
+func _draw_status_icons(font: Font) -> void:
+	var icons := get_status_icons()
+	if icons.is_empty():
+		return
+	var origin_x := ICON_SIZE + 10
+	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	for i in range(icons.size()):
+		var x := origin_x + i * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
+		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
+			break
+		var rect := Rect2(x, origin_y, STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+		draw_rect(rect, icons[i]["color"])
+		draw_string(
+			font,
+			Vector2(x + 2, origin_y + STATUS_ICON_FONT_SIZE),
+			icons[i]["label"],
+			HORIZONTAL_ALIGNMENT_LEFT, -1,
+			STATUS_ICON_FONT_SIZE,
+			STATUS_ICON_LABEL_COLOR,
+		)

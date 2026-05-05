@@ -2,6 +2,28 @@ class_name TestHelpers
 extends RefCounted
 
 
+# Lightweight Character with no race/job/stats — sufficient for HUD and
+# party-binding tests that only care about the fields the panel reads.
+static func make_test_character(
+	p_name: String,
+	hp: int = 10,
+	statuses: Array[StringName] = [],
+) -> Character:
+	var ch := Character.new()
+	ch.character_name = p_name
+	ch.level = 1
+	ch.max_hp = 10
+	ch.current_hp = hp
+	ch.max_mp = 0
+	ch.current_mp = 0
+	ch.persistent_statuses = statuses
+	return ch
+
+
+static func get_party_hud() -> Node:
+	return Engine.get_main_loop().root.get_node("/root/PartyHud")
+
+
 static func make_key_event(keycode: int, pressed: bool = true, echo: bool = false) -> InputEventKey:
 	var event := InputEventKey.new()
 	event.keycode = keycode

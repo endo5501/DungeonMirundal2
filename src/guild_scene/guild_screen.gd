@@ -25,6 +25,7 @@ func _show_menu() -> void:
 	menu.character_list_selected.connect(_on_character_list)
 	menu.leave_selected.connect(_on_leave)
 	_switch_view(menu)
+	PartyHud.show_hud()
 
 func _on_create_character() -> void:
 	var creation := CharacterCreation.new()
@@ -37,6 +38,7 @@ func _on_party_formation() -> void:
 	formation.setup(guild)
 	formation.back_requested.connect(_show_menu)
 	_switch_view(formation)
+	PartyHud.hide_hud()
 
 func _on_character_list() -> void:
 	var char_list := CharacterList.new()
