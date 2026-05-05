@@ -13,6 +13,13 @@ enum ItemResolution {
 	TOWN_ESCAPE,
 }
 
+# UI-facing signals consumed by PartyHud during combat.
+signal actor_action_started(actor: CombatActor, action_kind: StringName)
+signal actor_dealt_damage(target: CombatActor, amount: int, source: CombatActor)
+signal actor_healed(target: CombatActor, amount: int, source: CombatActor)
+signal actor_died(actor: CombatActor)
+signal actor_status_inflicted(actor: CombatActor, status_id: StringName)
+
 var state: State = State.IDLE
 var party: Array = []  # Array[PartyCombatant or CombatActor-compatible]
 var monsters: Array = []  # Array[MonsterCombatant or CombatActor-compatible]
@@ -27,6 +34,11 @@ var _outcome: EncounterOutcome
 # Cached `party + monsters` rebuilt in start_battle so per-turn allocations
 # (status tick, confusion target pool, battle-end cleanup) reuse one Array.
 var _all_actors: Array = []
+# Snapshots used to deduplicate actor_died emissions: an actor dies at most
+# once per resolve_turn, regardless of how many take_damage call sites the
+# killing blow flows through.
+var _alive_at_resolve_start: Dictionary = {}
+var _died_emitted: Dictionary = {}
 
 
 func start_battle(p_party: Array, p_monsters: Array) -> void:
@@ -67,6 +79,14 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 		return report
 	state = State.RESOLVING
 
+	# Snapshot which actors enter this turn alive so actor_died only fires for
+	# alive→dead transitions caused by THIS turn's events.
+	_alive_at_resolve_start.clear()
+	_died_emitted.clear()
+	for actor in _all_actors:
+		if actor != null and actor.is_alive():
+			_alive_at_resolve_start[actor] = true
+
 	# Tick at the head of every turn. We only terminate early on a wipe that
 	# the tick itself caused — otherwise a pre-existing dead state would skip
 	# the action loop and break cast/item resolution semantics.
@@ -86,15 +106,22 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 		if cmd == null:
 			continue
 		if cmd is DefendCommand:
-			(cmd as DefendCommand).apply_to(party[i])
-			report.add_defend(party[i])
+			var defender: CombatActor = party[i]
+			if defender != null and defender.is_alive():
+				actor_action_started.emit(defender, &"defend")
+			(cmd as DefendCommand).apply_to(defender)
+			report.add_defend(defender)
 
 	# Handle Escape as a party-level roll (one roll regardless of how many submitted).
+	# We still iterate every submitter so each one emits an action_started signal.
 	var any_escape := false
 	for i in range(party.size()):
-		if _pending_commands.get(i, null) is EscapeCommand:
+		var ec: RefCounted = _pending_commands.get(i, null) as RefCounted
+		if ec is EscapeCommand:
 			any_escape = true
-			break
+			var escaper: CombatActor = party[i]
+			if escaper != null and escaper.is_alive():
+				actor_action_started.emit(escaper, &"escape")
 	var escape_succeeded := false
 	if any_escape:
 		escape_succeeded = rng.randf() < escape_threshold
@@ -131,18 +158,22 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if actor.has_confusion_flag():
 				var random_target := _pick_random_living_excluding(actor, rng)
 				if random_target != null:
+					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
 
 			if cmd is ItemCommand:
+				actor_action_started.emit(actor, &"item")
 				var handled := _resolve_item(actor, cmd as ItemCommand, report)
 				if handled == ItemResolution.TOWN_ESCAPE:
 					early_escape_town = true
 					break
 				continue
 			if cmd is AttackCommand:
+				actor_action_started.emit(actor, &"attack")
 				_resolve_attack(actor, cmd.target, rng, report)
 			elif cmd is CastCommand:
+				actor_action_started.emit(actor, &"cast")
 				if actor.has_silence_flag():
 					report.add_cast_silenced(actor, (cmd as CastCommand).spell_id)
 					continue
@@ -152,10 +183,12 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if actor.has_confusion_flag():
 				var random_target := _pick_random_living_excluding(actor, rng)
 				if random_target != null:
+					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
 			var target: CombatActor = _pick_living_party(rng)
 			if target != null:
+				actor_action_started.emit(actor, &"attack")
 				_resolve_attack(actor, target, rng, report)
 		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
@@ -190,19 +223,34 @@ func _tick_statuses_for_all(report: TurnReport) -> bool:
 		var ticks: Array = actor.statuses.tick_battle_turn(actor, repo)
 		for t in ticks:
 			var killed := bool(t.get("killed_by_tick", false))
+			var hp_loss := int(t.get("hp_loss", 0))
 			report.add_tick_damage(
 				actor,
 				t.get("status_id"),
-				int(t.get("hp_loss", 0)),
+				hp_loss,
 				killed,
 			)
+			if hp_loss > 0:
+				actor_dealt_damage.emit(actor, hp_loss, null)
 			if killed:
 				any_kill = true
+		_check_and_emit_death(actor)
 		# Damage from a tick still triggers cures_on_damage (e.g. poison
 		# tick on a sleeper would wake the sleeper).
 		if not ticks.is_empty():
 			_apply_damage_taken_cure(actor, report)
 	return any_kill
+
+
+func _check_and_emit_death(actor) -> void:
+	if actor == null or actor.is_alive():
+		return
+	if not _alive_at_resolve_start.get(actor, false):
+		return
+	if _died_emitted.get(actor, false):
+		return
+	_died_emitted[actor] = true
+	actor_died.emit(actor)
 
 
 func _apply_damage_taken_cure(actor, report: TurnReport) -> void:
@@ -285,9 +333,12 @@ func _resolve_attack(
 		return
 	var defended := effective_target.is_defending()
 	var applied := effective_target.take_damage(result.amount)
+	if applied > 0:
+		actor_dealt_damage.emit(effective_target, applied, attacker)
 	report.add_attack(attacker, effective_target, applied, defended, retargeted_from, confusion_swap)
 	if applied > 0:
 		_apply_damage_taken_cure(effective_target, report)
+	_check_and_emit_death(effective_target)
 	if not effective_target.is_alive():
 		report.add_defeated(effective_target)
 
@@ -316,11 +367,18 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 	if spell_resolution != null:
 		for e in spell_resolution.entries:
 			var actor: CombatActor = e.get("actor")
+			var hp_delta: int = int(e.get("hp_delta", 0))
+			if hp_delta < 0:
+				actor_dealt_damage.emit(actor, -hp_delta, caster)
+			elif hp_delta > 0:
+				actor_healed.emit(actor, hp_delta, caster)
 			for evt in e.get("events", []):
 				match evt.get("type"):
 					"inflict":
 						if bool(evt.get("success", false)):
 							report.add_inflict(actor, evt.get("status_id", &""), true)
+							if bool(evt.get("was_new", true)):
+								actor_status_inflicted.emit(actor, evt.get("status_id", &""))
 					"resist":
 						report.add_resist(actor, evt.get("status_id", &""))
 					"cure":
@@ -332,8 +390,9 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 							evt.get("delta", 0),
 							int(evt.get("turns", 0)),
 						)
-			if int(e.get("hp_delta", 0)) < 0:
+			if hp_delta < 0:
 				_apply_damage_taken_cure(actor, report)
+			_check_and_emit_death(actor)
 	for t in targets:
 		if t != null and not t.is_alive():
 			report.add_defeated(t)

@@ -17,23 +17,23 @@
 
 ## 2. TurnEngine の UI シグナル追加 (TDD: red→green)
 
-- [ ] 2.1 新規テスト `tests/combat/test_turn_engine_ui_signals.gd`:
+- [x] 2.1 新規テスト `tests/combat/test_turn_engine_ui_signals.gd`:
   - attack コマンドで `actor_action_started(pc, &"attack")` が action 解決前に発火
   - 各 command 種(defend / cast / item / escape)でも対応する action_kind で発火
   - 死亡している actor の保留コマンドでは発火しない
-- [ ] 2.2 同テスト: `actor_dealt_damage(target, amount, source)` が hit 時のみ正しい amount で発火、miss では発火しない、defend で半減した amount が渡る
-- [ ] 2.3 同テスト: `actor_healed(target, amount, source)` が回復時のみ発火、max_hp 上限でクリップされた actual amount が渡る、満タンには発火しない
-- [ ] 2.4 同テスト: `actor_died(actor)` が is_alive() の true→false 遷移時に 1 回発火、ダメージ起因と毒 tick 起因の両方で発火、既に死んでいる actor では発火しない
-- [ ] 2.5 同テスト: `actor_status_inflicted(actor, status_id)` が新規付与でのみ発火、既に同じ status を持っている場合発火しない
-- [ ] 2.6 GUT 実行 → red 確認
-- [ ] 2.7 `src/combat/turn_engine.gd` に 5 シグナルを宣言
-- [ ] 2.8 各 command resolution の入口で `actor_action_started` を emit
-- [ ] 2.9 damage 適用箇所 (`take_damage` 呼び出し直後で actual delta > 0 の時) で `actor_dealt_damage` を emit
-- [ ] 2.10 heal 適用箇所で actual delta > 0 の時 `actor_healed` を emit
-- [ ] 2.11 actor の HP が 0 になり、かつ前ターンの状態で alive だった時のみ `actor_died` を emit
-- [ ] 2.12 `StatusTrack.apply` での新規付与時に `actor_status_inflicted` を emit
-- [ ] 2.13 GUT 実行 → green 確認
-- [ ] 2.14 コミット
+- [x] 2.2 同テスト: `actor_dealt_damage(target, amount, source)` が hit 時のみ正しい amount で発火、miss では発火しない、defend で半減した amount が渡る
+- [x] 2.3 同テスト: `actor_healed(target, amount, source)` が回復時のみ発火、max_hp 上限でクリップされた actual amount が渡る、満タンには発火しない
+- [x] 2.4 同テスト: `actor_died(actor)` が is_alive() の true→false 遷移時に 1 回発火、ダメージ起因と毒 tick 起因の両方で発火、既に死んでいる actor では発火しない
+- [x] 2.5 同テスト: `actor_status_inflicted(actor, status_id)` が新規付与でのみ発火、既に同じ status を持っている場合発火しない
+- [x] 2.6 GUT 実行 → red 確認
+- [x] 2.7 `src/combat/turn_engine.gd` に 5 シグナルを宣言
+- [x] 2.8 各 command resolution の入口で `actor_action_started` を emit
+- [x] 2.9 damage 適用箇所 (`take_damage` 呼び出し直後で actual delta > 0 の時) で `actor_dealt_damage` を emit
+- [x] 2.10 heal 適用箇所で actual delta > 0 の時 `actor_healed` を emit
+- [x] 2.11 actor の HP が 0 になり、かつ前ターンの状態で alive だった時のみ `actor_died` を emit
+- [x] 2.12 `StatusTrack.apply` での新規付与時に `actor_status_inflicted` を emit
+- [x] 2.13 GUT 実行 → green 確認
+- [x] 2.14 コミット
 
 ## 3. PartyMemberPanel に CombatActor バインディング (TDD: red→green)
 
