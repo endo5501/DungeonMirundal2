@@ -2,9 +2,10 @@ class_name Guild
 extends RefCounted
 
 # Emitted whenever the active party composition changes — i.e. a Character
-# is assigned to or removed from a row/position. Carries snapshots of the
-# front and back rows (each length 3, entries are Character or null).
-signal active_party_changed(front_row: Array, back_row: Array)
+# is assigned to or removed from a row/position. Listeners pull the new
+# rows from GameState rather than the signal so we keep a single source
+# of truth.
+signal active_party_changed
 
 var _characters: Array[Character] = []
 var _front_row: Array = [null, null, null]
@@ -37,7 +38,7 @@ func assign_to_party(character: Character, row: int, position: int) -> bool:
 	if target_row[position] != null:
 		return false
 	target_row[position] = character
-	active_party_changed.emit(_front_row.duplicate(), _back_row.duplicate())
+	active_party_changed.emit()
 	return true
 
 func remove_from_party(row: int, position: int) -> void:
@@ -45,7 +46,7 @@ func remove_from_party(row: int, position: int) -> void:
 	if target_row[position] == null:
 		return
 	target_row[position] = null
-	active_party_changed.emit(_front_row.duplicate(), _back_row.duplicate())
+	active_party_changed.emit()
 
 func get_party_data() -> PartyData:
 	return PartyData.new(_row_to_party_member_data(_front_row), _row_to_party_member_data(_back_row))

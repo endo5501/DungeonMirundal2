@@ -18,18 +18,7 @@ func after_each() -> void:
 
 
 func _hud() -> Node:
-	return get_node("/root/PartyHud")
-
-
-func _make_character(p_name: String) -> Character:
-	var ch := Character.new()
-	ch.character_name = p_name
-	ch.level = 1
-	ch.max_hp = 10
-	ch.current_hp = 10
-	ch.max_mp = 0
-	ch.current_mp = 0
-	return ch
+	return TestHelpers.get_party_hud()
 
 
 func _display_panels(hud: Node) -> Array:
@@ -39,12 +28,12 @@ func _display_panels(hud: Node) -> Array:
 
 func test_bind_active_party_full_party():
 	var guild: Guild = GameState.guild
-	var f0 := _make_character("F0")
-	var f1 := _make_character("F1")
-	var f2 := _make_character("F2")
-	var b0 := _make_character("B0")
-	var b1 := _make_character("B1")
-	var b2 := _make_character("B2")
+	var f0 := TestHelpers.make_test_character("F0")
+	var f1 := TestHelpers.make_test_character("F1")
+	var f2 := TestHelpers.make_test_character("F2")
+	var b0 := TestHelpers.make_test_character("B0")
+	var b1 := TestHelpers.make_test_character("B1")
+	var b2 := TestHelpers.make_test_character("B2")
 	guild.register(f0); guild.register(f1); guild.register(f2)
 	guild.register(b0); guild.register(b1); guild.register(b2)
 	guild.assign_to_party(f0, 0, 0)
@@ -70,9 +59,9 @@ func test_bind_active_party_full_party():
 
 func test_bind_active_party_partial_leaves_nulls():
 	var guild: Guild = GameState.guild
-	var f0 := _make_character("F0")
-	var f1 := _make_character("F1")
-	var b0 := _make_character("B0")
+	var f0 := TestHelpers.make_test_character("F0")
+	var f1 := TestHelpers.make_test_character("F1")
+	var b0 := TestHelpers.make_test_character("B0")
 	guild.register(f0); guild.register(f1); guild.register(b0)
 	guild.assign_to_party(f0, 0, 0)
 	guild.assign_to_party(f1, 0, 1)

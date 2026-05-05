@@ -29,7 +29,7 @@ func _make_main() -> Node:
 
 
 func _hud() -> Node:
-	return get_node("/root/PartyHud")
+	return TestHelpers.get_party_hud()
 
 
 # --- Hidden screens (start visible, expect hidden after transition) ---

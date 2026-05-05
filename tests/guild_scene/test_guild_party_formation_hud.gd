@@ -17,7 +17,7 @@ func after_each() -> void:
 
 
 func _hud() -> CanvasLayer:
-	return get_node("/root/PartyHud")
+	return TestHelpers.get_party_hud()
 
 
 func _make_guild_screen() -> GuildScreen:

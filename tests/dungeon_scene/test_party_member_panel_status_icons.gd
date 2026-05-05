@@ -6,18 +6,6 @@ extends GutTest
 # are produced.
 
 
-func _make_character(p_name: String, statuses: Array[StringName] = []) -> Character:
-	var ch := Character.new()
-	ch.character_name = p_name
-	ch.level = 1
-	ch.max_hp = 10
-	ch.current_hp = 10
-	ch.max_mp = 0
-	ch.current_mp = 0
-	ch.persistent_statuses = statuses
-	return ch
-
-
 func _make_panel() -> PartyMemberPanel:
 	var p := PartyMemberPanel.new()
 	add_child_autofree(p)
@@ -27,7 +15,7 @@ func _make_panel() -> PartyMemberPanel:
 # --- Single status ---
 
 func test_single_status_yields_one_icon():
-	var ch := _make_character("Alice", [&"poison"])
+	var ch := TestHelpers.make_test_character("Alice", 10, [&"poison"])
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	var icons: Array = panel.get_status_icons()
@@ -45,7 +33,7 @@ func test_single_status_yields_one_icon():
 # --- Multiple statuses ---
 
 func test_multiple_statuses_yield_one_icon_each():
-	var ch := _make_character("Bob", [&"poison", &"blind", &"sleep"])
+	var ch := TestHelpers.make_test_character("Bob", 10, [&"poison", &"blind", &"sleep"])
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	var icons: Array = panel.get_status_icons()
@@ -59,7 +47,7 @@ func test_multiple_statuses_yield_one_icon_each():
 # --- Empty statuses ---
 
 func test_no_statuses_yield_zero_icons():
-	var ch := _make_character("Carol", [])
+	var ch := TestHelpers.make_test_character("Carol", 10, [])
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	assert_eq(panel.get_status_icons().size(), 0)
@@ -68,7 +56,7 @@ func test_no_statuses_yield_zero_icons():
 # --- statuses_changed updates icon list ---
 
 func test_status_icons_update_when_statuses_change():
-	var ch := _make_character("Dave", [])
+	var ch := TestHelpers.make_test_character("Dave", 10, [])
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	assert_eq(panel.get_status_icons().size(), 0)
@@ -95,7 +83,7 @@ func test_all_seven_status_ids_have_color_mappings():
 		&"poison", &"blind", &"sleep", &"paralysis",
 		&"petrify", &"confusion", &"silence",
 	]
-	var ch := _make_character("Multi", all_ids)
+	var ch := TestHelpers.make_test_character("Multi", 10, all_ids)
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	var icons: Array = panel.get_status_icons()
@@ -111,7 +99,7 @@ func test_all_seven_status_ids_have_color_mappings():
 # --- Smoke: _draw() runs without errors when statuses are present ---
 
 func test_draw_runs_with_statuses():
-	var ch := _make_character("Drawer", [&"poison", &"sleep"])
+	var ch := TestHelpers.make_test_character("Drawer", 10, [&"poison", &"sleep"])
 	var panel := _make_panel()
 	panel.bind_character(ch)
 	# Forcing a redraw exercises the icon-drawing branch. We assert the

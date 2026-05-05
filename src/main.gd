@@ -42,9 +42,6 @@ func _setup_encounter_coordinator() -> void:
 
 func _on_combat_party_state_changed() -> void:
 	if _current_screen is DungeonScreen and GameState.guild != null:
-		# Re-bind PartyHud to live Characters. bind_character is idempotent
-		# when the panel is already bound to the same Character, so this is
-		# cheap and guarantees post-combat panels stay in live-refresh mode.
 		PartyHud.bind_active_party()
 
 

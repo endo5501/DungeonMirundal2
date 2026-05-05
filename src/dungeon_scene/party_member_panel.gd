@@ -10,8 +10,7 @@ const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const HP_COLOR := Color(0.2, 0.8, 0.2)
 const MP_COLOR := Color(0.3, 0.4, 0.9)
 
-# Persistent-status icon table. Colors per design.md D5; labels are
-# 1-2 ASCII chars chosen to be unambiguous when shown together.
+# Colors per persistent-party-display design.md §D5.
 const STATUS_COLORS: Dictionary = {
 	&"poison":    Color(0.6, 0.2, 0.7),
 	&"blind":     Color(0.4, 0.4, 0.4),
@@ -122,11 +121,8 @@ func has_visible_content() -> bool:
 	return _data != null
 
 
-# A bound Character is incapacitated when current_hp <= 0 OR persistent
-# statuses include any of sleep / paralysis / petrify. confusion, silence,
-# blind, and poison alone do NOT incapacitate (the character can still act).
-# In snapshot mode (no Character bound) we conservatively return false —
-# we don't have access to a live status array.
+# Snapshot mode (no Character bound) returns false since we have no live
+# status array to evaluate.
 func is_incapacitated() -> bool:
 	if _character == null:
 		return false
@@ -138,10 +134,8 @@ func is_incapacitated() -> bool:
 	return false
 
 
-# Build the icon descriptor list for the bound Character's persistent
-# statuses. Empty when the panel has no Character bound (snapshot mode)
-# or the Character has no persistent statuses. Each entry is a Dictionary
-# with keys: id (StringName), color (Color), label (String).
+# Returns one entry per active persistent status: {id, color, label}.
+# Empty in snapshot mode.
 func get_status_icons() -> Array:
 	var result: Array = []
 	if _character == null:
@@ -189,14 +183,12 @@ func _draw_status_icons(font: Font) -> void:
 	var icons := get_status_icons()
 	if icons.is_empty():
 		return
-	# Row sits below the MP line, anchored to the panel's left edge after
-	# the portrait icon so it doesn't overlap the four text lines above.
 	var origin_x := ICON_SIZE + 10
 	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
 	for i in range(icons.size()):
 		var x := origin_x + i * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
 		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
-			break  # overflow guard; surplus icons drop off the edge
+			break
 		var rect := Rect2(x, origin_y, STATUS_ICON_SIZE, STATUS_ICON_SIZE)
 		draw_rect(rect, icons[i]["color"])
 		draw_string(

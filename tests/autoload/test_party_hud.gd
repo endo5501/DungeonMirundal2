@@ -6,7 +6,7 @@ extends GutTest
 
 
 func _hud() -> Node:
-	return get_node("/root/PartyHud")
+	return TestHelpers.get_party_hud()
 
 
 func test_party_hud_autoload_exists():
