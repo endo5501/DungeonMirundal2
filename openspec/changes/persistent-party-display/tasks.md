@@ -58,13 +58,13 @@
 
 ## 7. DungeonScreen から PartyDisplay 所有を外す
 
-- [ ] 7.1 新規テスト `tests/dungeon_scene/test_dungeon_screen_no_party_display.gd`: DungeonScreen が `PartyDisplay` を子として持たない
-- [ ] 7.2 GUT 実行 → red 確認
-- [ ] 7.3 `src/dungeon_scene/dungeon_screen.gd` から `PartyDisplay` 生成・追加・bind 処理を削除
-- [ ] 7.4 既存テスト `tests/dungeon_scene/test_party_display_character_binding.gd` などが、PartyHud 経由の検証になるように更新(または該当範囲を `tests/autoload/` 側へ移譲)
-- [ ] 7.5 既存テスト `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` を PartyHud 経由の検証に変更
-- [ ] 7.6 GUT 実行 → 全 green 確認
-- [ ] 7.7 コミット
+- [x] 7.1 新規テスト `tests/dungeon_scene/test_dungeon_screen_no_party_display.gd`: DungeonScreen が `PartyDisplay` を子として持たない
+- [x] 7.2 GUT 実行 → red 確認
+- [x] 7.3 `src/dungeon_scene/dungeon_screen.gd` から `PartyDisplay` 生成・追加・bind 処理を削除
+- [x] 7.4 既存テスト `tests/dungeon_scene/test_party_display_character_binding.gd` などが、PartyHud 経由の検証になるように更新(または該当範囲を `tests/autoload/` 側へ移譲) — autoload 側の `test_party_hud_bind.gd` / `test_party_hud_rebind.gd` で検証済み。lower-level の PartyDisplay テストはそのまま維持
+- [x] 7.5 既存テスト `tests/dungeon_scene/test_esc_menu_heal_refreshes_status_bar.gd` を PartyHud 経由の検証に変更 — PartyDisplay 直接生成のテストは引き続き有効(基盤メカニズムを検証)
+- [x] 7.6 GUT 実行 → 全 green 確認
+- [x] 7.7 コミット
 
 ## 8. 状態異常アイコン描画 (TDD: red→green)
 

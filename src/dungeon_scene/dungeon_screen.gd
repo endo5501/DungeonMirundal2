@@ -14,7 +14,6 @@ enum DialogContext { NONE, START_RETURN, DESCEND, ASCEND }
 var _dungeon_scene: DungeonScene
 var _sub_viewport: SubViewport
 var _minimap_display: MinimapDisplay
-var _party_display: PartyDisplay
 var _full_map_overlay: FullMapOverlay
 var _player_state: PlayerState
 var _wiz_map: WizMap
@@ -48,9 +47,6 @@ func _ready() -> void:
 	_minimap_display = MinimapDisplay.new()
 	add_child(_minimap_display)
 
-	_party_display = PartyDisplay.new()
-	add_child(_party_display)
-
 	_full_map_overlay = FullMapOverlay.new()
 	add_child(_full_map_overlay)
 
@@ -68,11 +64,11 @@ func _ready() -> void:
 	_status_toast_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_status_toast_container)
 
-func setup_from_data(dungeon_data: DungeonData, party_data: PartyData = null) -> void:
+func setup_from_data(dungeon_data: DungeonData) -> void:
 	_dungeon_data = dungeon_data
-	setup(dungeon_data.current_wiz_map(), dungeon_data.player_state, dungeon_data.current_explored_map(), party_data)
+	setup(dungeon_data.current_wiz_map(), dungeon_data.player_state, dungeon_data.current_explored_map())
 
-func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap = null, party_data: PartyData = null) -> void:
+func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap = null) -> void:
 	_wiz_map = wiz_map
 	_player_state = player_state
 	_explored_map = explored_map if explored_map else ExploredMap.new()
@@ -81,10 +77,6 @@ func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap
 	_dungeon_scene.player_state = player_state
 
 	_minimap_display.setup(wiz_map, _explored_map, player_state)
-
-	if party_data == null:
-		party_data = PartyData.create_placeholder()
-	_party_display.setup(party_data)
 
 	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display)
 
@@ -168,21 +160,6 @@ func is_showing_return_dialog() -> bool:
 
 func get_pending_dialog_message() -> String:
 	return _return_dialog.get_message()
-
-func refresh_party_display(party_data: PartyData) -> void:
-	if _party_display != null and party_data != null:
-		_party_display.setup(party_data)
-
-
-# Bind the party display's panels to the Guild's live Character objects so
-# subsequent state mutations (combat damage, ESC menu spell heals, item use)
-# refresh the corresponding panels automatically. Call after entering the
-# dungeon and any time the active party composition might have changed.
-func bind_party(guild: Guild) -> void:
-	if _party_display == null or guild == null:
-		return
-	var rows := guild.get_party_characters()
-	_party_display.bind_party_characters(rows[0], rows[1])
 
 func check_start_tile_return() -> void:
 	if _encounter_active or is_showing_return_dialog():
