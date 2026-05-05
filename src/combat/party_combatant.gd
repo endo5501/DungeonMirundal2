@@ -68,7 +68,9 @@ func _get_base_agility() -> int:
 	return equipment_provider.get_agility(character)
 
 
-# Player resistance is the sum of race and job resists, clamped to [0, 1].
+# Player resistance is the raw sum of race and job resists. Negative values are
+# preserved (they represent increased vulnerability); the [0, 1] clamp applies
+# only at the inflict-chance site (StatusInflictHelper).
 # An empty resist_key disables resistance lookup entirely.
 func get_resist(resist_key: StringName) -> float:
 	if resist_key == &"" or character == null:
@@ -78,7 +80,7 @@ func get_resist(resist_key: StringName) -> float:
 		sum += float(character.race.resists.get(resist_key, 0.0))
 	if character.job != null:
 		sum += float(character.job.resists.get(resist_key, 0.0))
-	return clamp(sum, 0.0, 1.0)
+	return sum
 
 
 # Writes back PERSISTENT statuses to character.persistent_statuses; BATTLE_ONLY

@@ -8,6 +8,7 @@ const _SPELL_IDS: Array[StringName] = [
 	&"poison_dart", &"madi", &"dialma",
 	&"morlis", &"dilto", &"sopic",
 	&"porfic", &"bamatu", &"varyu", &"maporfic",
+	&"dazil", &"madalto", &"badi", &"calfo",
 ]
 
 
@@ -111,8 +112,9 @@ func test_outside_ok_set_includes_healing_lineup_and_status_cures():
 	# heal / heala / allheal: add-magic-system. dios: add-status-sleep-and-silence.
 	# madi / dialma: add-status-poison-and-petrify.
 	# porfic / bamatu / varyu: add-stat-modifier-spells (single-target buffs).
+	# calfo: add-status-confusion-blind-paralysis.
 	var expected: Array[StringName] = [
-		&"allheal", &"bamatu", &"dialma", &"dios", &"heal", &"heala",
+		&"allheal", &"bamatu", &"calfo", &"dialma", &"dios", &"heal", &"heala",
 		&"madi", &"porfic", &"varyu",
 	]
 	expected.sort()
@@ -357,3 +359,71 @@ func test_maporfic_fields():
 	assert_eq(eff.stat, &"defense")
 	assert_eq(eff.delta, 2)
 	assert_eq(eff.turns, 4)
+
+
+# --- add-status-confusion-blind-paralysis: dazil / madalto / badi / calfo ---
+
+func test_dazil_fields():
+	var spell := load("res://data/spells/dazil.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"dazil")
+	assert_eq(spell.display_name, "ダジール")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 1)
+	assert_eq(spell.mp_cost, 2)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatusInflictSpellEffect, "dazil effect should be StatusInflictSpellEffect")
+	var eff := spell.effect as StatusInflictSpellEffect
+	assert_eq(eff.status_id, &"blind")
+	assert_almost_eq(eff.chance, 0.55, 0.001)
+	assert_eq(eff.duration, 4)
+
+
+func test_madalto_fields():
+	var spell := load("res://data/spells/madalto.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"madalto")
+	assert_eq(spell.display_name, "マダルト")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 2)
+	assert_eq(spell.mp_cost, 3)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_GROUP)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatusInflictSpellEffect, "madalto effect should be StatusInflictSpellEffect")
+	var eff := spell.effect as StatusInflictSpellEffect
+	assert_eq(eff.status_id, &"confusion")
+	assert_almost_eq(eff.chance, 0.5, 0.001)
+	assert_eq(eff.duration, 3)
+
+
+func test_badi_fields():
+	var spell := load("res://data/spells/badi.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"badi")
+	assert_eq(spell.display_name, "バディ")
+	assert_eq(spell.school, SpellData.SCHOOL_MAGE)
+	assert_eq(spell.level, 3)
+	assert_eq(spell.mp_cost, 5)
+	assert_eq(spell.target_type, SpellData.TargetType.ENEMY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.BATTLE_ONLY)
+	assert_is(spell.effect, StatusInflictSpellEffect, "badi effect should be StatusInflictSpellEffect")
+	var eff := spell.effect as StatusInflictSpellEffect
+	assert_eq(eff.status_id, &"paralysis")
+	assert_almost_eq(eff.chance, 0.5, 0.001)
+	assert_eq(eff.duration, 2)
+
+
+func test_calfo_fields():
+	var spell := load("res://data/spells/calfo.tres") as SpellData
+	assert_not_null(spell)
+	assert_eq(spell.id, &"calfo")
+	assert_eq(spell.display_name, "カルフォ")
+	assert_eq(spell.school, SpellData.SCHOOL_PRIEST)
+	assert_eq(spell.level, 1)
+	assert_eq(spell.mp_cost, 2)
+	assert_eq(spell.target_type, SpellData.TargetType.ALLY_ONE)
+	assert_eq(spell.scope, SpellData.Scope.OUTSIDE_OK)
+	assert_is(spell.effect, CureStatusSpellEffect, "calfo effect should be CureStatusSpellEffect")
+	var eff := spell.effect as CureStatusSpellEffect
+	assert_eq(eff.status_id, &"blind")

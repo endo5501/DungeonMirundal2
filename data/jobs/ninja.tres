@@ -20,4 +20,7 @@ required_pie = 15
 required_vit = 15
 required_agi = 15
 required_luc = 15
-resists = {}
+resists = {
+&"paralysis": 0.20,
+&"sleep": 0.10,
+}

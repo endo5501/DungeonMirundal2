@@ -12,4 +12,7 @@ base_pie = 10
 base_vit = 10
 base_agi = 5
 base_luc = 6
-resists = {}
+resists = {
+&"poison": 0.20,
+&"petrify": 0.10,
+}

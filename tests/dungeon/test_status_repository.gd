@@ -61,7 +61,10 @@ func test_bulk_load_includes_all_known_statuses():
 	assert_true(repo.has_id(&"silence"), "silence should be loaded")
 	assert_true(repo.has_id(&"poison"), "poison should be loaded")
 	assert_true(repo.has_id(&"petrify"), "petrify should be loaded")
-	assert_eq(repo.size(), 4, "sleep / silence / poison / petrify should ship now")
+	assert_true(repo.has_id(&"confusion"), "confusion should be loaded")
+	assert_true(repo.has_id(&"blind"), "blind should be loaded")
+	assert_true(repo.has_id(&"paralysis"), "paralysis should be loaded")
+	assert_eq(repo.size(), 7, "sleep / silence / poison / petrify / confusion / blind / paralysis should ship now")
 
 
 func test_loaded_sleep_fields_match_spec():
@@ -144,3 +147,66 @@ func test_loaded_petrify_fields_match_spec():
 	assert_false(s.cures_on_damage)
 	assert_false(s.cures_on_battle_end)
 	assert_eq(s.resist_key, &"petrify")
+
+
+func test_loaded_confusion_fields_match_spec():
+	DataLoader._status_repo_cache = null
+	var repo := DataLoader.new().load_status_repository()
+	var s := repo.find(&"confusion")
+	assert_not_null(s)
+	assert_eq(s.id, &"confusion")
+	assert_eq(s.display_name, "混乱")
+	assert_eq(s.scope, StatusData.Scope.BATTLE_ONLY)
+	assert_false(s.prevents_action)
+	assert_true(s.randomizes_target)
+	assert_false(s.blocks_cast)
+	assert_eq(s.hit_penalty, 0.0)
+	assert_eq(s.default_duration, 3)
+	assert_eq(s.tick_in_battle, 0)
+	assert_eq(s.tick_in_dungeon, 0)
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+	assert_true(s.cures_on_damage)
+	assert_true(s.cures_on_battle_end)
+	assert_eq(s.resist_key, &"confusion")
+
+
+func test_loaded_blind_fields_match_spec():
+	DataLoader._status_repo_cache = null
+	var repo := DataLoader.new().load_status_repository()
+	var s := repo.find(&"blind")
+	assert_not_null(s)
+	assert_eq(s.id, &"blind")
+	assert_eq(s.display_name, "暗闇")
+	assert_eq(s.scope, StatusData.Scope.BATTLE_ONLY)
+	assert_false(s.prevents_action)
+	assert_false(s.randomizes_target)
+	assert_false(s.blocks_cast)
+	assert_eq(s.hit_penalty, 0.20)
+	assert_eq(s.default_duration, 4)
+	assert_eq(s.tick_in_battle, 0)
+	assert_eq(s.tick_in_dungeon, 0)
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+	assert_false(s.cures_on_damage)
+	assert_true(s.cures_on_battle_end)
+	assert_eq(s.resist_key, &"blind")
+
+
+func test_loaded_paralysis_fields_match_spec():
+	DataLoader._status_repo_cache = null
+	var repo := DataLoader.new().load_status_repository()
+	var s := repo.find(&"paralysis")
+	assert_not_null(s)
+	assert_eq(s.id, &"paralysis")
+	assert_eq(s.display_name, "麻痺")
+	assert_eq(s.scope, StatusData.Scope.BATTLE_ONLY)
+	assert_true(s.prevents_action)
+	assert_false(s.randomizes_target)
+	assert_false(s.blocks_cast)
+	assert_eq(s.hit_penalty, 0.0)
+	assert_eq(s.default_duration, 2)
+	assert_eq(s.tick_in_battle, 0)
+	assert_eq(s.tick_in_dungeon, 0)
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+	assert_false(s.cures_on_damage)
+	assert_true(s.cures_on_battle_end)
+	assert_eq(s.resist_key, &"paralysis")

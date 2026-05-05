@@ -4,17 +4,18 @@
 
 [resource]
 script = ExtResource("1")
-monster_id = &"bat"
-monster_name = "Bat"
-max_hp_min = 3
-max_hp_max = 6
-attack = 2
-defense = 0
-agility = 7
-experience = 3
-gold_min = 2
-gold_max = 8
+monster_id = &"skeleton"
+monster_name = "Skeleton"
+max_hp_min = 10
+max_hp_max = 16
+attack = 6
+defense = 3
+agility = 5
+experience = 10
+gold_min = 4
+gold_max = 12
 resists = {
-&"poison": 0.30,
-&"blind": 1.0,
+&"poison": 1.0,
+&"sleep": 1.0,
+&"paralysis": 0.50,
 }

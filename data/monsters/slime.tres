@@ -14,4 +14,7 @@ agility = 2
 experience = 4
 gold_min = 1
 gold_max = 3
-resists = {}
+resists = {
+&"poison": 1.0,
+&"sleep": 0.30,
+}

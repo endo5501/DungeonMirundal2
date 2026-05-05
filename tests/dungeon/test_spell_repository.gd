@@ -58,11 +58,12 @@ func test_has_id_returns_true_for_registered():
 func test_bulk_load_populates_v1_and_status_spells():
 	var loader := DataLoader.new()
 	var repo := loader.load_spell_repository()
-	# v1 set (8) + sleep/silence cures (3) + poison/petrify (3) + stat modifiers (7) = 21
-	assert_eq(repo.size(), 21, "should hold exactly 8 v1 + 3 sleep-silence + 3 poison-petrify + 7 stat-modifier spells")
+	# v1 (8) + sleep/silence (3) + poison/petrify (3) + stat modifiers (7) + confusion/blind/paralysis (4) = 25
+	assert_eq(repo.size(), 25, "should hold exactly 8 v1 + 3 sleep-silence + 3 poison-petrify + 7 stat-modifier + 4 confusion-blind-paralysis spells")
 	for sid in [&"fire", &"frost", &"flame", &"blizzard", &"heal", &"holy", &"heala", &"allheal",
 				&"katino", &"manifo", &"dios",
 				&"poison_dart", &"madi", &"dialma",
 				&"morlis", &"dilto", &"sopic",
-				&"porfic", &"bamatu", &"varyu", &"maporfic"]:
+				&"porfic", &"bamatu", &"varyu", &"maporfic",
+				&"dazil", &"madalto", &"badi", &"calfo"]:
 		assert_true(repo.has_id(sid), "missing spell id: %s" % sid)

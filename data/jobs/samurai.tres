@@ -23,4 +23,6 @@ required_pie = 10
 required_vit = 14
 required_agi = 10
 required_luc = 0
-resists = {}
+resists = {
+&"confusion": 0.10,
+}

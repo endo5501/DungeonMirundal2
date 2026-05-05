@@ -74,9 +74,10 @@ func test_loaded_fighter_has_no_requirements():
 	assert_eq(fighter.required_luc, 0)
 
 
-func test_load_all_monsters_returns_3():
+func test_load_all_monsters_returns_6():
 	var monsters := _loader.load_all_monsters()
-	assert_eq(monsters.size(), 3)
+	# slime / goblin / bat (initial) + skeleton / ghost / dragon (add-status-confusion-blind-paralysis)
+	assert_eq(monsters.size(), 6)
 
 
 func test_load_all_monsters_contains_expected_ids():
@@ -87,6 +88,9 @@ func test_load_all_monsters_contains_expected_ids():
 	assert_true(ids.has(&"slime"))
 	assert_true(ids.has(&"goblin"))
 	assert_true(ids.has(&"bat"))
+	assert_true(ids.has(&"skeleton"))
+	assert_true(ids.has(&"ghost"))
+	assert_true(ids.has(&"dragon"))
 
 
 func test_loaded_slime_has_correct_fields():
@@ -234,7 +238,8 @@ func test_load_all_spells_returns_v1_plus_status_spells():
 	var spells := _loader.load_all_spells()
 	# 8 (add-magic-system) + 3 (add-status-sleep-and-silence) + 3 (poison_dart / madi / dialma)
 	# + 7 (add-stat-modifier-spells: morlis, dilto, sopic, porfic, bamatu, varyu, maporfic)
-	assert_eq(spells.size(), 21)
+	# + 4 (add-status-confusion-blind-paralysis: dazil, madalto, badi, calfo)
+	assert_eq(spells.size(), 25)
 
 
 func test_load_all_spells_contains_expected_ids():
@@ -246,14 +251,15 @@ func test_load_all_spells_contains_expected_ids():
 					 &"katino", &"manifo", &"dios",
 					 &"poison_dart", &"madi", &"dialma",
 					 &"morlis", &"dilto", &"sopic",
-					 &"porfic", &"bamatu", &"varyu", &"maporfic"]:
+					 &"porfic", &"bamatu", &"varyu", &"maporfic",
+					 &"dazil", &"madalto", &"badi", &"calfo"]:
 		assert_true(ids.has(expected), "missing spell id: %s" % expected)
 
 
 func test_load_spell_repository_returns_populated_repo():
 	var repo := _loader.load_spell_repository()
 	assert_not_null(repo)
-	assert_eq(repo.size(), 21)
+	assert_eq(repo.size(), 25)
 
 
 # --- status repository (add-status-effect-infrastructure) ---

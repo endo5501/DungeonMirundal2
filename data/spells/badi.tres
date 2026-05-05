@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/status_inflict_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="StatusInflict_badi"]
+script = ExtResource("2")
+status_id = &"paralysis"
+chance = 0.5
+duration = 2
+
+[resource]
+script = ExtResource("1")
+id = &"badi"
+display_name = "バディ"
+school = &"mage"
+level = 3
+mp_cost = 5
+target_type = 0
+scope = 0
+effect = SubResource("StatusInflict_badi")

@@ -197,7 +197,8 @@ func test_mage_lv1_starts_with_lv1_mage_spells():
 	assert_not_null(ch)
 	assert_true(ch.known_spells.has(&"fire"))
 	assert_true(ch.known_spells.has(&"frost"))
-	assert_eq(ch.known_spells.size(), 2)
+	assert_true(ch.known_spells.has(&"dazil"))
+	assert_eq(ch.known_spells.size(), 3)
 
 
 func test_priest_lv1_starts_with_lv1_priest_spells():
@@ -206,7 +207,8 @@ func test_priest_lv1_starts_with_lv1_priest_spells():
 	assert_not_null(ch)
 	assert_true(ch.known_spells.has(&"heal"))
 	assert_true(ch.known_spells.has(&"holy"))
-	assert_eq(ch.known_spells.size(), 2)
+	assert_true(ch.known_spells.has(&"calfo"))
+	assert_eq(ch.known_spells.size(), 3)
 
 
 func test_bishop_lv1_starts_with_no_spells_until_lv2():
@@ -241,11 +243,12 @@ func test_bishop_level_up_to_lv2_grants_lv1_set():
 	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
 	ch.gain_experience(ch.job.exp_to_reach_level(2))
 	assert_gte(ch.level, 2)
-	# After add-stat-modifier-spells: 7 prior + morlis, dilto, sopic, porfic, bamatu, varyu = 13
+	# After add-status-confusion-blind-paralysis: 13 prior + dazil, madalto, calfo = 16
 	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios",
-				&"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu"]:
+				&"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu",
+				&"dazil", &"madalto", &"calfo"]:
 		assert_true(ch.known_spells.has(sid), "Bishop lv2 should learn %s" % sid)
-	assert_eq(ch.known_spells.size(), 13, "Bishop lv2 should learn exactly 13 spells")
+	assert_eq(ch.known_spells.size(), 16, "Bishop lv2 should learn exactly 16 spells")
 
 
 # --- add-status-sleep-and-silence: Lv2 status spells ---
@@ -298,8 +301,8 @@ func test_bishop_level_up_to_lv5_grants_six_spells():
 	var ch := Character.create("B", _human_loaded(), _job_loaded("bishop"), allocation, 8)
 	ch.gain_experience(ch.job.exp_to_reach_level(5))
 	assert_gte(ch.level, 5)
-	# After add-stat-modifier-spells: 6 prior + maporfic = 7 at lv5
-	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic"]:
+	# After add-status-confusion-blind-paralysis: 7 prior + badi = 8 at lv5
+	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic", &"badi"]:
 		assert_true(ch.known_spells.has(sid), "Bishop lv5 should learn %s" % sid)
 	assert_false(ch.known_spells.has(&"dialma"), "Bishop must NOT learn dialma (Priest only)")
 
@@ -330,6 +333,24 @@ func test_priest_level_up_to_lv3_grants_maporfic():
 	ch.gain_experience(ch.job.exp_to_reach_level(3))
 	assert_gte(ch.level, 3)
 	assert_true(ch.known_spells.has(&"maporfic"), "Priest lv3 should learn maporfic")
+
+
+# --- add-status-confusion-blind-paralysis: Lv1/Lv2/Lv3 progression ---
+
+func test_mage_level_up_to_lv2_grants_madalto():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(2))
+	assert_gte(ch.level, 2)
+	assert_true(ch.known_spells.has(&"madalto"), "Mage lv2 should learn madalto")
+
+
+func test_mage_level_up_to_lv3_grants_badi():
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("M", _human_loaded(), _job_loaded("mage"), allocation)
+	ch.gain_experience(ch.job.exp_to_reach_level(3))
+	assert_gte(ch.level, 3)
+	assert_true(ch.known_spells.has(&"badi"), "Mage lv3 should learn badi")
 
 
 func test_level_up_does_not_duplicate_already_known_spells():
