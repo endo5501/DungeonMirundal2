@@ -85,15 +85,17 @@ func _format_action(action: Dictionary) -> String:
 	var damage: int = int(action.get("damage", 0))
 	var defended: bool = bool(action.get("defended", false))
 	var retargeted_from: String = action.get("retargeted_from", "")
+	var confusion_swap: bool = bool(action.get("confusion_swap", false))
+	var confusion_prefix: String = "(混乱中) " if confusion_swap else ""
 	match type:
 		"attack":
 			if retargeted_from != "":
 				return "%s は既に倒れているため %s を攻撃：%d ダメージ" % [retargeted_from, target, damage]
 			if defended:
-				return "%s の攻撃！ %s は身を守り %d ダメージ" % [attacker, target, damage]
-			return "%s の攻撃！ %s に %d ダメージ" % [attacker, target, damage]
+				return "%s%s の攻撃！ %s は身を守り %d ダメージ" % [confusion_prefix, attacker, target, damage]
+			return "%s%s の攻撃！ %s に %d ダメージ" % [confusion_prefix, attacker, target, damage]
 		"miss":
-			return "%s の攻撃！ しかし %s は身をかわした" % [attacker, target]
+			return "%s%s の攻撃！ しかし %s は身をかわした" % [confusion_prefix, attacker, target]
 		"defend":
 			return "%s は身を守っている" % attacker
 		"escape":

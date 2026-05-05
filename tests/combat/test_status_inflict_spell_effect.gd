@@ -149,6 +149,30 @@ func test_full_resist_blocks_inflict():
 	assert_false(target.statuses.has(&"sleep"))
 
 
+# --- add-status-confusion-blind-paralysis: negative resist boosts effective inflict ---
+
+func test_negative_resist_increases_effective_chance():
+	# chance 0.5, resist -0.30 → effective clamp(0.5 - (-0.30), 0, 1) = 0.80.
+	# roll 75 → 75 < 80 → hit (would have missed at base 0.5 since 75 >= 50).
+	var e := _make_effect(&"sleep", 0.5, 3)
+	var target := _FakeActor.new(20, -0.30)
+	var rng := _FixedRng.new()
+	rng.enqueue([75])
+	e.apply(null, [target], rng)
+	assert_true(target.statuses.has(&"sleep"), "negative resist should raise effective above the roll")
+
+
+func test_negative_resist_clamped_to_one_at_inflict_site():
+	# chance 0.9, resist -0.50 → 0.9 - (-0.50) = 1.4 → clamped to 1.0.
+	# roll 99 → 99 < 100 → hit.
+	var e := _make_effect(&"sleep", 0.9, 3)
+	var target := _FakeActor.new(20, -0.50)
+	var rng := _FixedRng.new()
+	rng.enqueue([99])
+	e.apply(null, [target], rng)
+	assert_true(target.statuses.has(&"sleep"), "effective should clamp to 1.0 at the inflict site")
+
+
 # --- unknown status_id is no-op ---
 
 func test_unknown_status_id_yields_empty_resolution():

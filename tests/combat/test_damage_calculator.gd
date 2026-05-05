@@ -179,11 +179,14 @@ func test_hit_chance_clamps_at_lower_bound_005():
 	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.05, 0.0001)
 
 
-# BLIND_PENALTY is 0.0 today; status-effect change will wire the real value.
-func test_hit_chance_blind_flag_currently_no_effect():
+func test_hit_chance_blind_flag_drops_by_blind_hit_penalty():
+	# Reset the cache so the test reads the live blind.hit_penalty value (0.20).
+	DataLoader._status_repo_cache = null
+	DataLoader.new().load_status_repository()
 	var attacker := _StubActor.new(0, 0, 5, 0.0, 0.0, true)
 	var target := _StubActor.new(0, 0, 5)
-	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.85, 0.0001)
+	# 0.85 base - 0.20 blind = 0.65
+	assert_almost_eq(DamageCalculator.hit_chance(attacker, target), 0.65, 0.0001)
 
 
 # --- calculate(actor, actor, rng) → DamageResult (orchestrator integration) ---

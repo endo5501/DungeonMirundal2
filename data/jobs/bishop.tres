@@ -14,8 +14,8 @@ hp_per_level = 4
 mp_per_level = 1
 exp_table = PackedInt64Array(1200, 2105, 3692, 6477, 11363, 19935, 34973, 61356, 107642, 188845, 331307, 581240)
 spell_progression = {
-2: Array[StringName]([&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios", &"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu"]),
-5: Array[StringName]([&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic"]),
+2: Array[StringName]([&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios", &"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu", &"dazil", &"madalto", &"calfo"]),
+5: Array[StringName]([&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic", &"badi"]),
 }
 required_str = 0
 required_int = 12

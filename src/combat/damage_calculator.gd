@@ -7,11 +7,22 @@ const SPREAD_MAX: int = 2
 const BASE_HIT: float = 0.85
 const AGI_K: float = 0.02
 const AGI_CAP: float = 0.30
-# BLIND_PENALTY is 0.0 in this change; a later change (add-status-effect-infrastructure)
-# fills the real value via StatusData.
-const BLIND_PENALTY: float = 0.0
 const FINAL_HIT_MIN: float = 0.05
 const FINAL_HIT_MAX: float = 0.99
+
+
+# Reads the blind status's hit_penalty from the registered StatusRepository so
+# the value tracks data/statuses/blind.tres. Returns 0.0 if the repo or entry
+# is missing so tests that bypass the repo (e.g. unit tests) keep their existing
+# behavior.
+static func _blind_hit_penalty() -> float:
+	var repo := StatusRepoLocator.resolve(null)
+	if repo == null:
+		return 0.0
+	var data: StatusData = repo.find(&"blind")
+	if data == null:
+		return 0.0
+	return data.hit_penalty
 
 
 static func apply_formula(attack: int, defense: int, spread: int) -> int:
@@ -32,7 +43,7 @@ static func hit_chance(attacker: CombatActor, target: CombatActor) -> float:
 	var eva_mod: float = clampf(target.get_evasion_modifier_total(), -CombatActor.MOD_CAP, CombatActor.MOD_CAP)
 	var agi_diff: int = attacker.get_agility() - target.get_agility()
 	var agi_term: float = clampf(float(agi_diff) * AGI_K, -AGI_CAP, AGI_CAP)
-	var blind_term: float = BLIND_PENALTY if attacker.has_blind_flag() else 0.0
+	var blind_term: float = _blind_hit_penalty() if attacker.has_blind_flag() else 0.0
 	var raw: float = BASE_HIT + hit_mod - eva_mod + agi_term - blind_term
 	return clampf(raw, FINAL_HIT_MIN, FINAL_HIT_MAX)
 

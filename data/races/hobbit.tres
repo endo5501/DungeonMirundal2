@@ -12,4 +12,7 @@ base_pie = 7
 base_vit = 6
 base_agi = 10
 base_luc = 15
-resists = {}
+resists = {
+&"sleep": 0.10,
+&"paralysis": 0.10,
+}

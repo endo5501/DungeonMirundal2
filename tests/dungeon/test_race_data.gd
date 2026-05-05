@@ -89,3 +89,45 @@ func test_loaded_race_tres_files_have_resists_dictionary():
 	for race in races:
 		assert_typeof(race.resists, TYPE_DICTIONARY,
 			"race %s.resists should be Dictionary" % race.resource_path)
+
+
+# --- add-status-confusion-blind-paralysis: race-specific resist values ---
+
+func _find_race(name: String) -> RaceData:
+	for r in DataLoader.new().load_all_races():
+		if r.race_name == name:
+			return r
+	return null
+
+
+func test_loaded_human_has_empty_resists():
+	var human := _find_race("Human")
+	assert_not_null(human)
+	assert_eq(human.resists.size(), 0, "Human should have no resists")
+
+
+func test_loaded_elf_has_silence_and_poison_vulnerabilities():
+	var elf := _find_race("Elf")
+	assert_not_null(elf)
+	assert_almost_eq(float(elf.resists.get(&"silence", 0.0)), -0.10, 0.001)
+	assert_almost_eq(float(elf.resists.get(&"poison", 0.0)), -0.10, 0.001)
+
+
+func test_loaded_dwarf_resists_poison_and_petrify():
+	var dwarf := _find_race("Dwarf")
+	assert_not_null(dwarf)
+	assert_almost_eq(float(dwarf.resists.get(&"poison", 0.0)), 0.20, 0.001)
+	assert_almost_eq(float(dwarf.resists.get(&"petrify", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_hobbit_resists_sleep_and_paralysis():
+	var hobbit := _find_race("Hobbit")
+	assert_not_null(hobbit)
+	assert_almost_eq(float(hobbit.resists.get(&"sleep", 0.0)), 0.10, 0.001)
+	assert_almost_eq(float(hobbit.resists.get(&"paralysis", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_gnome_resists_silence():
+	var gnome := _find_race("Gnome")
+	assert_not_null(gnome)
+	assert_almost_eq(float(gnome.resists.get(&"silence", 0.0)), 0.10, 0.001)

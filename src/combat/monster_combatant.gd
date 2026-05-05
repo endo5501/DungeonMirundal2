@@ -71,8 +71,10 @@ func _get_base_agility() -> int:
 	return monster.data.agility
 
 
-# Monster resistance comes straight from MonsterData.resists, clamped to [0, 1].
+# Monster resistance comes straight from MonsterData.resists. Negative values
+# are preserved (e.g. an undead vulnerable to holy); the [0, 1] clamp applies
+# only at the inflict-chance site (StatusInflictHelper).
 func get_resist(resist_key: StringName) -> float:
 	if resist_key == &"" or monster == null or monster.data == null:
 		return 0.0
-	return clamp(float(monster.data.resists.get(resist_key, 0.0)), 0.0, 1.0)
+	return float(monster.data.resists.get(resist_key, 0.0))

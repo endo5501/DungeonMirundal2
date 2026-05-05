@@ -199,3 +199,50 @@ func test_loaded_monster_tres_files_have_resists_dictionary():
 	for m in monsters:
 		assert_typeof(m.resists, TYPE_DICTIONARY,
 			"monster %s.resists should be Dictionary" % m.resource_path)
+
+
+# --- add-status-confusion-blind-paralysis: representative monster resists ---
+
+func _find_monster(id: StringName) -> MonsterData:
+	for m in DataLoader.new().load_all_monsters():
+		if m.monster_id == id:
+			return m
+	return null
+
+
+func test_loaded_slime_is_fully_poison_immune():
+	var slime := _find_monster(&"slime")
+	assert_not_null(slime)
+	assert_almost_eq(float(slime.resists.get(&"poison", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(slime.resists.get(&"sleep", 0.0)), 0.30, 0.001)
+
+
+func test_loaded_skeleton_is_immune_to_poison_and_sleep():
+	var sk := _find_monster(&"skeleton")
+	assert_not_null(sk)
+	assert_almost_eq(float(sk.resists.get(&"poison", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(sk.resists.get(&"sleep", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(sk.resists.get(&"paralysis", 0.0)), 0.50, 0.001)
+
+
+func test_loaded_ghost_is_immune_to_physical_flavored_statuses():
+	var g := _find_monster(&"ghost")
+	assert_not_null(g)
+	assert_almost_eq(float(g.resists.get(&"poison", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(g.resists.get(&"sleep", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(g.resists.get(&"blind", 0.0)), 1.0, 0.001)
+
+
+func test_loaded_bat_resists_blind_fully_and_poison_partially():
+	var b := _find_monster(&"bat")
+	assert_not_null(b)
+	assert_almost_eq(float(b.resists.get(&"blind", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(b.resists.get(&"poison", 0.0)), 0.30, 0.001)
+
+
+func test_loaded_dragon_resists_multiple_mind_affecting_statuses():
+	var d := _find_monster(&"dragon")
+	assert_not_null(d)
+	assert_gt(float(d.resists.get(&"sleep", 0.0)), 0.0)
+	assert_gt(float(d.resists.get(&"paralysis", 0.0)), 0.0)
+	assert_gt(float(d.resists.get(&"confusion", 0.0)), 0.0)

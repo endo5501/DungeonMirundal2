@@ -204,11 +204,14 @@ func test_loaded_mage_has_only_mage_school_and_progression_at_levels_1_and_3():
 	var lv1: Array = m.spell_progression[1]
 	assert_true(lv1.has(&"fire"))
 	assert_true(lv1.has(&"frost"))
+	assert_true(lv1.has(&"dazil"), "Mage lv1 should also include dazil")
+	assert_eq(lv1.size(), 3, "Mage lv1 should have exactly fire / frost / dazil")
 	var lv3: Array = m.spell_progression[3]
 	assert_true(lv3.has(&"flame"))
 	assert_true(lv3.has(&"blizzard"))
 	assert_true(lv3.has(&"poison_dart"), "Mage lv3 should also include poison_dart")
-	assert_eq(lv3.size(), 3, "Mage lv3 should have exactly flame / blizzard / poison_dart")
+	assert_true(lv3.has(&"badi"), "Mage lv3 should also include badi")
+	assert_eq(lv3.size(), 4, "Mage lv3 should have exactly flame / blizzard / poison_dart / badi")
 
 
 func test_loaded_mage_has_katino_and_manifo_at_level_2():
@@ -216,9 +219,9 @@ func test_loaded_mage_has_katino_and_manifo_at_level_2():
 	assert_not_null(m)
 	assert_true(m.spell_progression.has(2), "Mage should have spell_progression[2]")
 	var lv2: Array = m.spell_progression[2]
-	# After add-stat-modifier-spells: katino, manifo + morlis, dilto, sopic
-	assert_eq(lv2.size(), 5, "Mage lv2 should hold exactly 5 spells")
-	for sid in [&"katino", &"manifo", &"morlis", &"dilto", &"sopic"]:
+	# After add-status-confusion-blind-paralysis: katino, manifo + morlis, dilto, sopic + madalto
+	assert_eq(lv2.size(), 6, "Mage lv2 should hold exactly 6 spells")
+	for sid in [&"katino", &"manifo", &"morlis", &"dilto", &"sopic", &"madalto"]:
 		assert_true(lv2.has(sid), "Mage lv2 missing %s" % sid)
 
 
@@ -227,7 +230,7 @@ func test_loaded_priest_has_dios_at_level_2():
 	assert_not_null(p)
 	assert_true(p.spell_progression.has(2), "Priest should have spell_progression[2]")
 	var lv2: Array = p.spell_progression[2]
-	# After add-stat-modifier-spells: dios + porfic, bamatu, varyu
+	# Priest lv2 unchanged: dios + porfic, bamatu, varyu
 	assert_eq(lv2.size(), 4, "Priest lv2 should hold exactly 4 spells")
 	for sid in [&"dios", &"porfic", &"bamatu", &"varyu"]:
 		assert_true(lv2.has(sid), "Priest lv2 missing %s" % sid)
@@ -241,6 +244,8 @@ func test_loaded_priest_has_only_priest_school_and_progression():
 	var lv1: Array = p.spell_progression[1]
 	assert_true(lv1.has(&"heal"))
 	assert_true(lv1.has(&"holy"))
+	assert_true(lv1.has(&"calfo"), "Priest lv1 should also include calfo")
+	assert_eq(lv1.size(), 3, "Priest lv1 should have exactly heal / holy / calfo")
 
 
 func test_loaded_priest_lv3_includes_madi():
@@ -271,16 +276,17 @@ func test_loaded_bishop_has_both_schools_and_progression_at_levels_2_and_5():
 	assert_true(b.spell_progression.has(2))
 	assert_true(b.spell_progression.has(5))
 	var lv2: Array = b.spell_progression[2]
-	# After add-stat-modifier-spells: 7 prior + morlis, dilto, sopic, porfic, bamatu, varyu = 13
+	# After add-status-confusion-blind-paralysis: 13 prior + dazil, madalto, calfo = 16
 	for sid in [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios",
-				&"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu"]:
+				&"morlis", &"dilto", &"sopic", &"porfic", &"bamatu", &"varyu",
+				&"dazil", &"madalto", &"calfo"]:
 		assert_true(lv2.has(sid), "bishop lv2 missing %s" % sid)
-	assert_eq(lv2.size(), 13, "bishop lv2 should hold exactly 13 spells")
+	assert_eq(lv2.size(), 16, "bishop lv2 should hold exactly 16 spells")
 	var lv5: Array = b.spell_progression[5]
-	# After add-stat-modifier-spells: 6 prior + maporfic = 7
-	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic"]:
+	# After add-status-confusion-blind-paralysis: 7 prior + badi = 8
+	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi", &"maporfic", &"badi"]:
 		assert_true(lv5.has(sid), "bishop lv5 missing %s" % sid)
-	assert_eq(lv5.size(), 7, "bishop lv5 should hold exactly 7 spells")
+	assert_eq(lv5.size(), 8, "bishop lv5 should hold exactly 8 spells")
 	assert_false(lv5.has(&"dialma"), "bishop must NOT learn dialma (Priest only)")
 
 
@@ -343,3 +349,55 @@ func test_loaded_job_tres_files_have_resists_dictionary():
 	for job in jobs:
 		assert_typeof(job.resists, TYPE_DICTIONARY,
 			"job %s.resists should be Dictionary" % job.resource_path)
+
+
+# --- add-status-confusion-blind-paralysis: job-specific resist values ---
+
+func test_loaded_fighter_resists_sleep_and_confusion():
+	var f := _find_loaded("Fighter")
+	assert_not_null(f)
+	assert_almost_eq(float(f.resists.get(&"sleep", 0.0)), 0.10, 0.001)
+	assert_almost_eq(float(f.resists.get(&"confusion", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_mage_is_vulnerable_to_silence():
+	var m := _find_loaded("Mage")
+	assert_not_null(m)
+	assert_almost_eq(float(m.resists.get(&"silence", 0.0)), -0.20, 0.001)
+
+
+func test_loaded_priest_is_moderately_vulnerable_to_silence():
+	var p := _find_loaded("Priest")
+	assert_not_null(p)
+	assert_almost_eq(float(p.resists.get(&"silence", 0.0)), -0.10, 0.001)
+
+
+func test_loaded_thief_resists_paralysis():
+	var t := _find_loaded("Thief")
+	assert_not_null(t)
+	assert_almost_eq(float(t.resists.get(&"paralysis", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_ninja_resists_paralysis_and_sleep():
+	var n := _find_loaded("Ninja")
+	assert_not_null(n)
+	assert_almost_eq(float(n.resists.get(&"paralysis", 0.0)), 0.20, 0.001)
+	assert_almost_eq(float(n.resists.get(&"sleep", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_bishop_has_empty_resists():
+	var b := _find_loaded("Bishop")
+	assert_not_null(b)
+	assert_eq(b.resists.size(), 0, "Bishop should have no resists")
+
+
+func test_loaded_samurai_resists_confusion():
+	var s := _find_loaded("Samurai")
+	assert_not_null(s)
+	assert_almost_eq(float(s.resists.get(&"confusion", 0.0)), 0.10, 0.001)
+
+
+func test_loaded_lord_is_slightly_vulnerable_to_silence():
+	var l := _find_loaded("Lord")
+	assert_not_null(l)
+	assert_almost_eq(float(l.resists.get(&"silence", 0.0)), -0.05, 0.001)

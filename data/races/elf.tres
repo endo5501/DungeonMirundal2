@@ -12,4 +12,7 @@ base_pie = 10
 base_vit = 6
 base_agi = 9
 base_luc = 6
-resists = {}
+resists = {
+&"silence": -0.10,
+&"poison": -0.10,
+}

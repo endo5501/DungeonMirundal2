@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/spell_data.gd" id="1"]
+[ext_resource type="Script" path="res://src/combat/spells/status_inflict_spell_effect.gd" id="2"]
+
+[sub_resource type="Resource" id="StatusInflict_madalto"]
+script = ExtResource("2")
+status_id = &"confusion"
+chance = 0.5
+duration = 3
+
+[resource]
+script = ExtResource("1")
+id = &"madalto"
+display_name = "マダルト"
+school = &"mage"
+level = 2
+mp_cost = 3
+target_type = 1
+scope = 0
+effect = SubResource("StatusInflict_madalto")
