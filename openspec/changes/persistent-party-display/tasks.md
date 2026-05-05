@@ -40,7 +40,7 @@
   - TownScreen → true
   - GuildScreen → true
   - DungeonEntrance → true
-  - DungeonScreen → true
+  - DungeonScreen → true — `_show_dungeon_screen` は `DungeonData` のセットアップが必要で `_make_main()` ベースのテストでは重いため、`src/main.gd:217-218` のコード検査で `PartyHud.bind_active_party()` + `PartyHud.show_hud()` 呼び出しを直接確認した(他の screen と同じパターン)
   - LoadScreen → false
   - SaveScreen → false
 - [x] 5.2 GUT 実行 → red 確認

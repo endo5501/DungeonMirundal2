@@ -51,8 +51,9 @@
 - 既に bind 済みの Character と一致する場合は何もしない最適化を入れてよい(bind_party_characters の冪等性で実現)。
 
 ### D4. パーティ変更通知シグナル
-- 採用: `GameState.guild` または `Guild` クラスに `active_party_changed(front_row, back_row)` シグナル(StringName ID ではなく Character 配列)を追加し、PartyHud が購読する。
-- 既存の編成変更コードを洗い出し、編成完了で発火する場所に `emit` を1行加える。
+- 採用: `Guild` クラスに `active_party_changed` シグナル(ペイロードなし)を追加し、PartyHud が購読する。listener は `GameState.guild` から最新の編成を再取得する(single source of truth)。
+- 既存の編成変更コード(`assign_to_party` / `remove_from_party`)から、編成変更完了時に `emit()` を呼ぶ。
+- ペイロードを持たせない理由: PartyHud は最新の `GameState.guild` を再 query する設計(D3)なので、シグナル経由で渡された配列を信頼するより GameState の現状を読み直すほうが整合的。配列を引数で渡すと毎回 `_front_row.duplicate()` が必要で(参照渡しによる内部状態破壊を避けるため)、その allocation も不要になる。
 - 代替案: 毎フレーム差分監視 → 過剰、却下。
 
 ### D5. 状態アイコン描画(暫定デザイン)
