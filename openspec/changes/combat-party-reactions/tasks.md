@@ -66,7 +66,7 @@
 
 ## 5. PartyMemberPanel のアニメーション機構 (TDD: red→green)
 
-- [ ] 5.1 新規テスト `tests/dungeon_scene/test_party_member_panel_animations.gd`:
+- [x] 5.1 新規テスト `tests/dungeon_scene/test_party_member_panel_animations.gd`:
   - hp_changed で delta < 0 → shake 用 Tween が起動(`_active_shake_tween` が non-null)
   - hp_changed で delta > 0 → flash 用 Tween が起動(`_active_flash_tween` が non-null)
   - hp_changed で delta = 0 → 何も起動しない
@@ -74,18 +74,18 @@
   - `play_lift_animation()` で lift 用 Tween が起動
   - `play_die_animation()` で `modulate.a` が 0.7 に向かう Tween が起動
   - 死亡後の hp 回復(蘇生)で `modulate.a` が 1.0 に戻る
-- [ ] 5.2 GUT 実行 → red
-- [ ] 5.3 `PartyMemberPanel` に `_layout_position: Vector2` を追加(`PartyDisplay` が配置時に設定)
-- [ ] 5.4 `_active_shake_tween` / `_active_flash_tween` / `_active_lift_tween` / `_active_die_tween` フィールドを追加
-- [ ] 5.5 `_prev_hp` フィールドを追加(bind_character で初期化)、hp_changed で delta を計算
-- [ ] 5.6 shake: delta < 0 で `_play_shake()` を呼ぶ。Tween で `position.x = layout_x ± 4` を 4 サイクル、計 0.2 秒で振動 → restore
-- [ ] 5.7 heal flash: delta > 0 で `_play_heal_flash()` を呼ぶ。`_flash_alpha` を 0.5 → 0 に 0.3 秒で Tween。`_draw()` で `_flash_alpha > 0` のとき緑半透明矩形を描画
-- [ ] 5.8 lift: `play_lift_animation()` を実装。`position.y = layout_y - 8` を 0.15 秒、戻すのに 0.15 秒(計 0.3 秒)
-- [ ] 5.9 die: `play_die_animation()` を実装。`modulate.a = 1.0 → 0.7` を 0.4 秒で
-- [ ] 5.10 hp_changed のハンドラで蘇生(prev_hp = 0, new > 0)時に `modulate.a = 1.0` に戻す
-- [ ] 5.11 連続再生時は対応する `_active_*_tween.kill()` を呼んでから新規 Tween を作成
-- [ ] 5.12 GUT 実行 → green
-- [ ] 5.13 コミット
+- [x] 5.2 GUT 実行 → red
+- [x] 5.3 `PartyMemberPanel` に `_layout_position: Vector2` を追加(`PartyDisplay` が配置時に設定)
+- [x] 5.4 `_active_shake_tween` / `_active_flash_tween` / `_active_lift_tween` / `_active_die_tween` フィールドを追加
+- [x] 5.5 `_prev_hp` フィールドを追加(bind_character で初期化)、hp_changed で delta を計算
+- [x] 5.6 shake: delta < 0 で `_play_shake()` を呼ぶ。Tween で `position.x = layout_x ± 4` を 4 サイクル、計 0.2 秒で振動 → restore
+- [x] 5.7 heal flash: delta > 0 で `_play_heal_flash()` を呼ぶ。`_flash_alpha` を 0.5 → 0 に 0.3 秒で Tween。`_draw()` で `_flash_alpha > 0` のとき緑半透明矩形を描画
+- [x] 5.8 lift: `play_lift_animation()` を実装。`position.y = layout_y - 8` を 0.15 秒、戻すのに 0.15 秒(計 0.3 秒)
+- [x] 5.9 die: `play_die_animation()` を実装。`modulate.a = 1.0 → 0.7` を 0.4 秒で
+- [x] 5.10 hp_changed のハンドラで蘇生(prev_hp = 0, new > 0)時に `modulate.a = 1.0` に戻す
+- [x] 5.11 連続再生時は対応する `_active_*_tween.kill()` を呼んでから新規 Tween を作成
+- [x] 5.12 GUT 実行 → green
+- [x] 5.13 コミット
 
 ## 6. PartyDisplay が PartyMemberPanel に layout_position を渡す
 

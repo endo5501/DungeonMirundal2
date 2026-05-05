@@ -60,6 +60,34 @@ var _character: Character
 # react to stat_modifiers_changed. Cleared on detach (bind_combat_actor(null)).
 var _combat_actor: CombatActor
 
+# PartyDisplay assigns this when it positions the panel; shake/lift Tweens
+# offset from this anchor and snap back here when they complete.
+var _layout_position: Vector2 = Vector2.ZERO
+# Previous current_hp observed via hp_changed; used to compute delta so we
+# can pick shake (delta < 0) vs. flash (delta > 0). Resets in bind_character.
+var _prev_hp: int = 0
+# Heal flash overlay alpha tweened down from FLASH_START to 0 over FLASH_DURATION.
+var _flash_alpha: float = 0.0
+
+# Active animation Tweens — one slot per kind so consecutive triggers can
+# kill the previous and start a fresh Tween (per design D4).
+var _active_shake_tween: Tween
+var _active_flash_tween: Tween
+var _active_lift_tween: Tween
+var _active_die_tween: Tween
+
+# Animation parameters.
+const SHAKE_AMPLITUDE: float = 4.0
+const SHAKE_DURATION: float = 0.2
+const FLASH_START: float = 0.5
+const FLASH_DURATION: float = 0.3
+const FLASH_OVERLAY_COLOR := Color(0.4, 1.0, 0.4, 1.0)  # alpha multiplied by _flash_alpha
+const LIFT_OFFSET: float = 8.0
+const LIFT_HALF_DURATION: float = 0.15
+const DIE_TARGET_ALPHA: float = 0.7
+const DIE_DURATION: float = 0.4
+
+
 func _init() -> void:
 	custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,8 +106,10 @@ func bind_character(ch: Character) -> void:
 		_character.mp_changed.connect(_on_character_mp_changed)
 		_character.statuses_changed.connect(_on_character_statuses_changed)
 		_data = _character.to_party_member_data()
+		_prev_hp = _character.current_hp
 	else:
 		_data = null
+		_prev_hp = 0
 	queue_redraw()
 
 
@@ -129,10 +159,22 @@ func _on_stat_modifiers_changed() -> void:
 	queue_redraw()
 
 
-func _on_character_hp_changed(_current_hp: int, _max_hp: int) -> void:
+func _on_character_hp_changed(p_current_hp: int, _max_hp: int) -> void:
 	if _character == null:
 		return
 	_data = _character.to_party_member_data()
+	var delta: int = p_current_hp - _prev_hp
+	if delta < 0:
+		_play_shake()
+	elif delta > 0:
+		_play_heal_flash()
+		# Revival from 0 → positive: clear the die fade.
+		if _prev_hp == 0:
+			if _active_die_tween != null and _active_die_tween.is_valid():
+				_active_die_tween.kill()
+			_active_die_tween = null
+			modulate.a = 1.0
+	_prev_hp = p_current_hp
 	queue_redraw()
 
 
@@ -155,6 +197,54 @@ func _exit_tree() -> void:
 	# Character outlives the panel (e.g., on scene change).
 	_disconnect_from_character()
 	_disconnect_from_combat_actor()
+
+
+# --- Animation API ---
+
+func play_lift_animation() -> void:
+	if _active_lift_tween != null and _active_lift_tween.is_valid():
+		_active_lift_tween.kill()
+	# Snap y back to layout before re-entering so the lift always starts from
+	# rest, even if the previous Tween was killed mid-flight.
+	position.y = _layout_position.y
+	var t := create_tween()
+	t.tween_property(self, "position:y", _layout_position.y - LIFT_OFFSET, LIFT_HALF_DURATION)
+	t.tween_property(self, "position:y", _layout_position.y, LIFT_HALF_DURATION)
+	_active_lift_tween = t
+
+
+func play_die_animation() -> void:
+	if _active_die_tween != null and _active_die_tween.is_valid():
+		_active_die_tween.kill()
+	var t := create_tween()
+	t.tween_property(self, "modulate:a", DIE_TARGET_ALPHA, DIE_DURATION)
+	_active_die_tween = t
+
+
+func _play_shake() -> void:
+	if _active_shake_tween != null and _active_shake_tween.is_valid():
+		_active_shake_tween.kill()
+	# Always restore x to the layout anchor before chaining a new shake so
+	# successive damage doesn't accumulate offsets.
+	position.x = _layout_position.x
+	var t := create_tween()
+	var step: float = SHAKE_DURATION / 4.0
+	t.tween_property(self, "position:x", _layout_position.x + SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x - SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x + SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x, step)
+	_active_shake_tween = t
+
+
+func _play_heal_flash() -> void:
+	if _active_flash_tween != null and _active_flash_tween.is_valid():
+		_active_flash_tween.kill()
+	_flash_alpha = FLASH_START
+	queue_redraw()
+	var t := create_tween()
+	t.tween_property(self, "_flash_alpha", 0.0, FLASH_DURATION)
+	t.tween_callback(queue_redraw)
+	_active_flash_tween = t
 
 
 # Mirrors _draw()'s early-return condition so tests can verify "panel
@@ -238,6 +328,11 @@ func _draw() -> void:
 
 	var status_count: int = _draw_status_icons(font)
 	_draw_stat_modifier_icons(font, status_count)
+
+	if _flash_alpha > 0.0:
+		var c: Color = FLASH_OVERLAY_COLOR
+		c.a = _flash_alpha
+		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), c)
 
 	if is_incapacitated():
 		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
