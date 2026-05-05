@@ -1,10 +1,10 @@
 ## 1. Autoload 基盤の準備 (TDD: red)
 
-- [ ] 1.1 新規テスト `tests/autoload/test_party_hud.gd` を作成: `PartyHud` autoload の存在(`get_node("/root/PartyHud")` 経由)と `CanvasLayer` 継承
-- [ ] 1.2 同テスト: `PartyHud` が `PartyDisplay` を子として 1 つだけ持つ
-- [ ] 1.3 同テスト: `show_hud()` で `visible = true`、`hide_hud()` で `visible = false`、各冪等性
-- [ ] 1.4 GUT 実行 → red 確認(autoload 未登録なのでテスト失敗)
-- [ ] 1.5 red 状態でコミット
+- [x] 1.1 新規テスト `tests/autoload/test_party_hud.gd` を作成: `PartyHud` autoload の存在(`get_node("/root/PartyHud")` 経由)と `CanvasLayer` 継承
+- [x] 1.2 同テスト: `PartyHud` が `PartyDisplay` を子として 1 つだけ持つ
+- [x] 1.3 同テスト: `show_hud()` で `visible = true`、`hide_hud()` で `visible = false`、各冪等性
+- [x] 1.4 GUT 実行 → red 確認(autoload 未登録なのでテスト失敗)
+- [x] 1.5 red 状態でコミット
 
 ## 2. PartyHud autoload 実装 (TDD: green for autoload-side)
 
