@@ -5,6 +5,7 @@ var monster: Monster
 
 
 func _init(p_monster: Monster) -> void:
+	super()
 	monster = p_monster
 	if monster != null and monster.data != null:
 		actor_name = monster.data.monster_name

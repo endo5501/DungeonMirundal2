@@ -6,6 +6,7 @@ var equipment_provider: EquipmentProvider
 
 
 func _init(p_character: Character, p_provider: EquipmentProvider) -> void:
+	super()
 	character = p_character
 	equipment_provider = p_provider
 	if character != null:

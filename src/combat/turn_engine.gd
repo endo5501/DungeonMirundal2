@@ -13,6 +13,13 @@ enum ItemResolution {
 	TOWN_ESCAPE,
 }
 
+# UI-facing signals consumed by PartyHud during combat.
+signal actor_action_started(actor: CombatActor, action_kind: StringName)
+signal actor_dealt_damage(target: CombatActor, amount: int, source: CombatActor)
+signal actor_healed(target: CombatActor, amount: int, source: CombatActor)
+signal actor_died(actor: CombatActor)
+signal actor_status_inflicted(actor: CombatActor, status_id: StringName)
+
 var state: State = State.IDLE
 var party: Array = []  # Array[PartyCombatant or CombatActor-compatible]
 var monsters: Array = []  # Array[MonsterCombatant or CombatActor-compatible]
@@ -27,6 +34,24 @@ var _outcome: EncounterOutcome
 # Cached `party + monsters` rebuilt in start_battle so per-turn allocations
 # (status tick, confusion target pool, battle-end cleanup) reuse one Array.
 var _all_actors: Array = []
+# Snapshots used to deduplicate actor_died emissions: an actor dies at most
+# once per resolve_turn, regardless of how many take_damage call sites the
+# killing blow flows through.
+var _alive_at_resolve_start: Dictionary = {}
+var _died_emitted: Dictionary = {}
+# Active TurnReport during resolve_turn so signal subscribers (PartyHud) can
+# read report.actions.size() at emission time and tag queued events with the
+# index of the related log entry. null outside of resolve_turn.
+var _resolve_report: TurnReport = null
+
+
+# Returns the index in `_resolve_report.actions` where the next log entry
+# would be appended. Used by PartyHud to align deferred animations with the
+# log line they belong to. Returns -1 outside of resolve_turn.
+func get_pending_action_index() -> int:
+	if _resolve_report == null:
+		return -1
+	return _resolve_report.actions.size()
 
 
 func start_battle(p_party: Array, p_monsters: Array) -> void:
@@ -62,10 +87,27 @@ func outcome() -> EncounterOutcome:
 
 
 func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
+	# Wrapper exists so _resolve_report is cleared on every return path
+	# without sprinkling manual cleanup through the body.
+	var report := _resolve_turn_inner(rng)
+	_resolve_report = null
+	return report
+
+
+func _resolve_turn_inner(rng: RandomNumberGenerator) -> TurnReport:
 	var report := TurnReport.new()
 	if state != State.COMMAND_INPUT:
 		return report
 	state = State.RESOLVING
+	_resolve_report = report
+
+	# Snapshot which actors enter this turn alive so actor_died only fires for
+	# alive→dead transitions caused by THIS turn's events.
+	_alive_at_resolve_start.clear()
+	_died_emitted.clear()
+	for actor in _all_actors:
+		if actor != null and actor.is_alive():
+			_alive_at_resolve_start[actor] = true
 
 	# Tick at the head of every turn. We only terminate early on a wipe that
 	# the tick itself caused — otherwise a pre-existing dead state would skip
@@ -86,15 +128,22 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 		if cmd == null:
 			continue
 		if cmd is DefendCommand:
-			(cmd as DefendCommand).apply_to(party[i])
-			report.add_defend(party[i])
+			var defender: CombatActor = party[i]
+			if defender != null and defender.is_alive():
+				actor_action_started.emit(defender, &"defend")
+			(cmd as DefendCommand).apply_to(defender)
+			report.add_defend(defender)
 
 	# Handle Escape as a party-level roll (one roll regardless of how many submitted).
+	# We still iterate every submitter so each one emits an action_started signal.
 	var any_escape := false
 	for i in range(party.size()):
-		if _pending_commands.get(i, null) is EscapeCommand:
+		var ec: RefCounted = _pending_commands.get(i, null) as RefCounted
+		if ec is EscapeCommand:
 			any_escape = true
-			break
+			var escaper: CombatActor = party[i]
+			if escaper != null and escaper.is_alive():
+				actor_action_started.emit(escaper, &"escape")
 	var escape_succeeded := false
 	if any_escape:
 		escape_succeeded = rng.randf() < escape_threshold
@@ -131,18 +180,22 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if actor.has_confusion_flag():
 				var random_target := _pick_random_living_excluding(actor, rng)
 				if random_target != null:
+					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
 
 			if cmd is ItemCommand:
+				actor_action_started.emit(actor, &"item")
 				var handled := _resolve_item(actor, cmd as ItemCommand, report)
 				if handled == ItemResolution.TOWN_ESCAPE:
 					early_escape_town = true
 					break
 				continue
 			if cmd is AttackCommand:
+				actor_action_started.emit(actor, &"attack")
 				_resolve_attack(actor, cmd.target, rng, report)
 			elif cmd is CastCommand:
+				actor_action_started.emit(actor, &"cast")
 				if actor.has_silence_flag():
 					report.add_cast_silenced(actor, (cmd as CastCommand).spell_id)
 					continue
@@ -152,10 +205,12 @@ func resolve_turn(rng: RandomNumberGenerator) -> TurnReport:
 			if actor.has_confusion_flag():
 				var random_target := _pick_random_living_excluding(actor, rng)
 				if random_target != null:
+					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
 			var target: CombatActor = _pick_living_party(rng)
 			if target != null:
+				actor_action_started.emit(actor, &"attack")
 				_resolve_attack(actor, target, rng, report)
 		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
@@ -190,10 +245,18 @@ func _tick_statuses_for_all(report: TurnReport) -> bool:
 		var ticks: Array = actor.statuses.tick_battle_turn(actor, repo)
 		for t in ticks:
 			var killed := bool(t.get("killed_by_tick", false))
+			var hp_loss := int(t.get("hp_loss", 0))
+			# Emit BEFORE add_tick_damage so the signal's pending-action-index
+			# matches the index where this tick line will land. PartyHud uses
+			# that index to align deferred animations with log playback.
+			if hp_loss > 0:
+				actor_dealt_damage.emit(actor, hp_loss, null)
+			if killed:
+				_check_and_emit_death(actor)
 			report.add_tick_damage(
 				actor,
 				t.get("status_id"),
-				int(t.get("hp_loss", 0)),
+				hp_loss,
 				killed,
 			)
 			if killed:
@@ -203,6 +266,17 @@ func _tick_statuses_for_all(report: TurnReport) -> bool:
 		if not ticks.is_empty():
 			_apply_damage_taken_cure(actor, report)
 	return any_kill
+
+
+func _check_and_emit_death(actor) -> void:
+	if actor == null or actor.is_alive():
+		return
+	if not _alive_at_resolve_start.get(actor, false):
+		return
+	if _died_emitted.get(actor, false):
+		return
+	_died_emitted[actor] = true
+	actor_died.emit(actor)
 
 
 func _apply_damage_taken_cure(actor, report: TurnReport) -> void:
@@ -244,6 +318,12 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 	# Atomic validate-and-consume via Inventory; guards against duplicate ItemCommands
 	# pointing at the same instance and against target state changing mid-turn
 	# (e.g. AliveOnly now failing because the target was KO'd earlier in the order).
+	# Snapshot the target's HP so we can emit actor_healed / actor_dealt_damage
+	# after the effect resolves. Items mutate Character.current_hp directly,
+	# so without this the panel would never see a heal flash for in-combat
+	# potions (Character.hp_changed is suppressed while a CombatActor is bound).
+	var hp_target: CombatActor = cmd.target if cmd.target is CombatActor else null
+	var hp_before: int = hp_target.current_hp if hp_target != null else -1
 	var result: ItemEffectResult
 	if inventory != null:
 		result = inventory.use_item(cmd.item_instance, targets, ctx)
@@ -253,6 +333,16 @@ func _resolve_item(actor: CombatActor, cmd: ItemCommand, report: TurnReport) -> 
 		cmd.cancelled = true
 		report.add_item_cancelled(actor, item_name)
 		return ItemResolution.NORMAL
+	# Emit BEFORE add_item_use so PartyHud's pending-action-index lines up
+	# with the item log line during buffered playback (design.md §D10).
+	if hp_target != null and hp_before >= 0:
+		var delta: int = hp_target.current_hp - hp_before
+		if delta > 0:
+			actor_healed.emit(hp_target, delta, actor)
+		elif delta < 0:
+			actor_dealt_damage.emit(hp_target, -delta, actor)
+		if not hp_target.is_alive():
+			_check_and_emit_death(hp_target)
 	report.add_item_use(actor, item_name, cmd.target, result.message)
 	if result.request_town_return:
 		return ItemResolution.TOWN_ESCAPE
@@ -285,10 +375,17 @@ func _resolve_attack(
 		return
 	var defended := effective_target.is_defending()
 	var applied := effective_target.take_damage(result.amount)
+	# Emit BEFORE add_attack so the signal's pending-action-index lines up
+	# with the attack log entry.
+	if applied > 0:
+		actor_dealt_damage.emit(effective_target, applied, attacker)
 	report.add_attack(attacker, effective_target, applied, defended, retargeted_from, confusion_swap)
 	if applied > 0:
 		_apply_damage_taken_cure(effective_target, report)
 	if not effective_target.is_alive():
+		# Emit died right before add_defeated so its pending-action-index
+		# matches the defeated log entry (not the attack one).
+		_check_and_emit_death(effective_target)
 		report.add_defeated(effective_target)
 
 
@@ -312,10 +409,27 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 		report.add_cast_skipped_no_mp(caster, spell)
 		return
 	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
+	# Pre-emit damage/heal/status_inflicted BEFORE add_cast so their
+	# pending-action-index lines up with the cast log entry. The cast log
+	# entry itself carries per-target hp_delta, so panels react together
+	# when the cast line is shown.
+	if spell_resolution != null:
+		for e in spell_resolution.entries:
+			var pre_actor: CombatActor = e.get("actor")
+			var pre_hp_delta: int = int(e.get("hp_delta", 0))
+			if pre_hp_delta < 0:
+				actor_dealt_damage.emit(pre_actor, -pre_hp_delta, caster)
+			elif pre_hp_delta > 0:
+				actor_healed.emit(pre_actor, pre_hp_delta, caster)
+			for evt in e.get("events", []):
+				if evt.get("type") == "inflict" and bool(evt.get("success", false)):
+					if bool(evt.get("was_new", true)):
+						actor_status_inflicted.emit(pre_actor, evt.get("status_id", &""))
 	report.add_cast(caster, spell, spell_resolution, retargeted_from)
 	if spell_resolution != null:
 		for e in spell_resolution.entries:
 			var actor: CombatActor = e.get("actor")
+			var hp_delta: int = int(e.get("hp_delta", 0))
 			for evt in e.get("events", []):
 				match evt.get("type"):
 					"inflict":
@@ -332,10 +446,13 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 							evt.get("delta", 0),
 							int(evt.get("turns", 0)),
 						)
-			if int(e.get("hp_delta", 0)) < 0:
+			if hp_delta < 0:
 				_apply_damage_taken_cure(actor, report)
 	for t in targets:
 		if t != null and not t.is_alive():
+			# Emit died right before add_defeated so the deferred animation
+			# fires with the defeated log line (not the cast line).
+			_check_and_emit_death(t)
 			report.add_defeated(t)
 
 

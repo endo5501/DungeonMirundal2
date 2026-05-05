@@ -24,11 +24,13 @@ static func try_inflict(
 		var dur := duration
 		if data.scope == StatusData.Scope.PERSISTENT:
 			dur = StatusTrack.PERSISTENT_DURATION
+		var was_new: bool = not target.statuses.has(data.id)
 		target.statuses.apply(data.id, dur)
 		(entry["events"] as Array).append({
 			"type": "inflict",
 			"status_id": data.id,
 			"success": true,
+			"was_new": was_new,
 		})
 		return true
 	(entry["events"] as Array).append({

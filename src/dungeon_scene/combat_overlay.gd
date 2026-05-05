@@ -42,6 +42,10 @@ var _combat_log: CombatLog
 var _result_panel: CombatResultPanel
 var _log_timer: Timer
 var _log_pending_actions: Array = []
+# How many log lines have already been displayed since the current
+# resolve_turn started. Drives PartyHud.flush_up_to_step so HUD animations
+# track log playback (combat-party-reactions §D10).
+var _log_displayed_count: int = 0
 # Cached separately from TurnEngine._outcome because unit tests call
 # show_result() with a hand-built EncounterOutcome that never passed through
 # a TurnEngine. Revisit if items-and-economy drops that test surface.
@@ -68,6 +72,9 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	_turn_engine = TurnEngine.new()
 	_turn_engine.inventory = GameState.inventory if GameState != null else null
 	_turn_engine.start_battle(party_combatants, monster_combatants)
+	# Subscribe the persistent HUD so panels react (lift / die / stat-mod
+	# icons) to engine signals for the duration of this encounter.
+	PartyHud.attach_to_turn_engine(_turn_engine)
 	_is_active = true
 	visible = true
 	_last_outcome = null
@@ -339,6 +346,9 @@ func _resolve_turn_now() -> void:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
 		_item_use_panel.visible = false
+	# Buffer signal-driven HUD animations so they fire alongside the log
+	# lines they describe, instead of all at once when resolve_turn returns.
+	PartyHud.begin_buffering()
 	var report := _turn_engine.resolve_turn(_rng)
 	_refresh_panels()
 	_play_log_sequentially(report)
@@ -346,6 +356,7 @@ func _resolve_turn_now() -> void:
 
 func _play_log_sequentially(report: TurnReport) -> void:
 	_log_pending_actions.clear()
+	_log_displayed_count = 0
 	if report != null:
 		_log_pending_actions = report.actions.duplicate()
 	_ensure_log_timer()
@@ -368,9 +379,13 @@ func _show_next_log_line() -> void:
 	if _log_pending_actions.is_empty():
 		_on_log_playback_finished()
 		return
+	# Release any HUD events whose pending-action-index matches the line
+	# we're about to display (or earlier ones we hadn't released yet).
+	PartyHud.flush_up_to_step(_log_displayed_count)
 	var action = _log_pending_actions.pop_front()
 	if _combat_log != null:
 		_combat_log.append_from_report_action(action)
+	_log_displayed_count += 1
 	if log_line_delay > 0.0:
 		_log_timer.start(log_line_delay)
 	else:
@@ -385,9 +400,15 @@ func cancel_log_playback() -> void:
 	_log_pending_actions.clear()
 	if _log_timer != null:
 		_log_timer.stop()
+	# Drain any leftover HUD events so panels don't get stuck mid-buffer
+	# when the overlay is torn down or playback is interrupted.
+	PartyHud.end_buffering()
 
 
 func _on_log_playback_finished() -> void:
+	# Fire any HUD events that didn't have a matching log line (e.g. the
+	# last action's animation slot) before transitioning back to input.
+	PartyHud.end_buffering()
 	if _turn_engine.state == TurnEngine.State.FINISHED:
 		_finalize_battle()
 	else:
@@ -432,6 +453,9 @@ func _on_result_confirmed() -> void:
 	if _last_outcome == null:
 		_last_outcome = EncounterOutcome.new(EncounterOutcome.Result.CLEARED)
 	cancel_log_playback()
+	# Release the engine reference and clear panel combat-actor bindings so
+	# stat-modifier icons disappear once the battle ends.
+	PartyHud.detach_from_turn_engine()
 	_is_active = false
 	visible = false
 	if _result_panel != null:

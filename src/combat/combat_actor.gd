@@ -3,10 +3,20 @@ extends RefCounted
 
 const MOD_CAP: float = 0.40
 
+# Fires when modifier_stack mutates in a visually meaningful way (entry added,
+# stronger replacement, or tick removal). Duration-only updates are silent.
+signal stat_modifiers_changed()
+
 var actor_name: String = ""
 
 var modifier_stack: StatModifierStack = StatModifierStack.new()
 var statuses: StatusTrack = StatusTrack.new()
+
+
+func _init() -> void:
+	# WeakRef avoids a strong cycle (actor → stack → callable → actor) that
+	# RefCounted can't break; without this, actors leak at game exit.
+	modifier_stack._owner_weak = weakref(self)
 
 var _defending: bool = false
 # Tests inject a StatusRepository here; production path goes through DataLoader.

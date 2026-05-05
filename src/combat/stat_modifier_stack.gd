@@ -16,6 +16,17 @@ const STAT_HIT: StringName = &"hit"
 const STAT_EVASION: StringName = &"evasion"
 
 var _entries: Array = []
+# Owner (CombatActor) is held via WeakRef so the stack doesn't keep its
+# owner alive. A strong reference here would form a cycle
+# (actor → stack → callable → actor) that RefCounted can't break,
+# leaking actors at game exit.
+#
+# When the stack mutates in a "visually meaningful" way (new entry,
+# stronger replacement, or tick-driven removal), _notify_change resolves
+# the weak ref and emits the owner's stat_modifiers_changed signal.
+# Duration-only updates stay silent so HUD subscribers don't redraw
+# every turn for stable modifiers.
+var _owner_weak: WeakRef = null
 
 
 func is_empty() -> bool:
@@ -30,12 +41,14 @@ func add(stat: StringName, delta, duration: int) -> void:
 			"delta": delta,
 			"duration": duration,
 		})
+		_notify_change()
 		return
 	var new_abs: float = absf(float(delta))
 	var existing_abs: float = absf(float(existing["delta"]))
 	if new_abs > existing_abs:
 		existing["delta"] = delta
 		existing["duration"] = duration
+		_notify_change()
 		return
 	if new_abs == existing_abs:
 		existing["duration"] = max(int(existing["duration"]), duration)
@@ -58,12 +71,16 @@ func sum(stat: StringName):
 
 func tick_battle_turn() -> void:
 	var keep: Array = []
+	var removed := false
 	for e in _entries:
 		e["duration"] = int(e["duration"]) - 1
 		if int(e["duration"]) <= 0:
+			removed = true
 			continue
 		keep.append(e)
 	_entries = keep
+	if removed:
+		_notify_change()
 
 
 func clear_battle_only() -> void:
@@ -75,3 +92,11 @@ func _find(stat: StringName) -> Dictionary:
 		if e["stat"] == stat:
 			return e
 	return {}
+
+
+func _notify_change() -> void:
+	if _owner_weak == null:
+		return
+	var owner = _owner_weak.get_ref()
+	if owner != null and owner.has_signal(&"stat_modifiers_changed"):
+		owner.stat_modifiers_changed.emit()

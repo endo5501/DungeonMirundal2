@@ -34,6 +34,18 @@ const STATUS_ICON_GAP := 2
 const STATUS_ICON_FONT_SIZE := 12
 const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
 const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
+
+# Stat modifier icon styling. Buff (delta > 0) leans green, debuff (delta < 0)
+# leans red so the player can read intent at a glance.
+const STAT_BUFF_COLOR := Color(0.25, 0.75, 0.25)
+const STAT_DEBUFF_COLOR := Color(0.85, 0.25, 0.25)
+const STAT_SHORT_LABELS: Dictionary = {
+	&"attack":  "A",
+	&"defense": "D",
+	&"agility": "Ag",
+	&"hit":     "H",
+	&"evasion": "E",
+}
 const INCAPACITATING_STATUSES: Array[StringName] = [
 	&"sleep", &"paralysis", &"petrify",
 ]
@@ -43,6 +55,38 @@ var _data: PartyMemberData
 # (hp_changed / mp_changed / statuses_changed). When null, the panel is
 # operating in legacy snapshot mode via set_member(PartyMemberData).
 var _character: Character
+# Combat-only binding: PartyHud.attach_to_turn_engine wires this to the
+# matching PartyCombatant so the panel can read stat_modifier_stack and
+# react to stat_modifiers_changed. Cleared on detach (bind_combat_actor(null)).
+var _combat_actor: CombatActor
+
+# PartyDisplay assigns this when it positions the panel; shake/lift Tweens
+# offset from this anchor and snap back here when they complete.
+var _layout_position: Vector2 = Vector2.ZERO
+# Previous current_hp observed via hp_changed; used to compute delta so we
+# can pick shake (delta < 0) vs. flash (delta > 0). Resets in bind_character.
+var _prev_hp: int = 0
+# Heal flash overlay alpha tweened down from FLASH_START to 0 over FLASH_DURATION.
+var _flash_alpha: float = 0.0
+
+# Active animation Tweens — one slot per kind so consecutive triggers can
+# kill the previous and start a fresh Tween (per design D4).
+var _active_shake_tween: Tween
+var _active_flash_tween: Tween
+var _active_lift_tween: Tween
+var _active_die_tween: Tween
+
+# Animation parameters.
+const SHAKE_AMPLITUDE: float = 4.0
+const SHAKE_DURATION: float = 0.2
+const FLASH_START: float = 0.5
+const FLASH_DURATION: float = 0.3
+const FLASH_OVERLAY_COLOR := Color(0.4, 1.0, 0.4, 1.0)  # alpha multiplied by _flash_alpha
+const LIFT_OFFSET: float = 8.0
+const LIFT_HALF_DURATION: float = 0.15
+const DIE_TARGET_ALPHA: float = 0.7
+const DIE_DURATION: float = 0.4
+
 
 func _init() -> void:
 	custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
@@ -62,8 +106,23 @@ func bind_character(ch: Character) -> void:
 		_character.mp_changed.connect(_on_character_mp_changed)
 		_character.statuses_changed.connect(_on_character_statuses_changed)
 		_data = _character.to_party_member_data()
+		_prev_hp = _character.current_hp
 	else:
 		_data = null
+		_prev_hp = 0
+	queue_redraw()
+
+
+# Bind a CombatActor for combat-only state (stat_modifier_stack icon row).
+# Pass null to clear. Switching actors disconnects the previous one before
+# connecting the new one.
+func bind_combat_actor(actor: CombatActor) -> void:
+	if _combat_actor == actor:
+		return
+	_disconnect_from_combat_actor()
+	_combat_actor = actor
+	if _combat_actor != null:
+		_combat_actor.stat_modifiers_changed.connect(_on_stat_modifiers_changed)
 	queue_redraw()
 
 
@@ -88,11 +147,54 @@ func _disconnect_from_character() -> void:
 	_character = null
 
 
-func _on_character_hp_changed(_current_hp: int, _max_hp: int) -> void:
+func _disconnect_from_combat_actor() -> void:
+	if _combat_actor == null:
+		return
+	if _combat_actor.stat_modifiers_changed.is_connected(_on_stat_modifiers_changed):
+		_combat_actor.stat_modifiers_changed.disconnect(_on_stat_modifiers_changed)
+	_combat_actor = null
+
+
+func _on_stat_modifiers_changed() -> void:
+	queue_redraw()
+
+
+func _on_character_hp_changed(p_current_hp: int, _max_hp: int) -> void:
 	if _character == null:
 		return
 	_data = _character.to_party_member_data()
+	var delta: int = p_current_hp - _prev_hp
+	# In combat, animations are driven by PartyHud via TurnEngine signals so
+	# they sync with log playback. Out of combat (no CombatActor bound), hp
+	# changes drive shake / heal flash / revival immediately as before.
+	if _combat_actor == null:
+		if delta < 0:
+			_play_shake()
+		elif delta > 0:
+			_play_heal_flash()
+			if _prev_hp == 0:
+				if _active_die_tween != null and _active_die_tween.is_valid():
+					_active_die_tween.kill()
+				_active_die_tween = null
+				modulate.a = 1.0
+	_prev_hp = p_current_hp
 	queue_redraw()
+
+
+# Public wrappers PartyHud invokes after dequeuing buffered combat events.
+# Out of combat, _on_character_hp_changed handles these directly.
+func play_shake_animation() -> void:
+	_play_shake()
+
+
+func play_heal_flash_animation() -> void:
+	_play_heal_flash()
+	# A heal restores any lingering die fade. Cheap no-op when modulate is
+	# already 1.0; avoids needing PartyHud to track prior dead state.
+	if _active_die_tween != null and _active_die_tween.is_valid():
+		_active_die_tween.kill()
+	_active_die_tween = null
+	modulate.a = 1.0
 
 
 func _on_character_mp_changed(_current_mp: int, _max_mp: int) -> void:
@@ -113,6 +215,55 @@ func _exit_tree() -> void:
 	# Detach from Character so the signal Callable doesn't dangle if the
 	# Character outlives the panel (e.g., on scene change).
 	_disconnect_from_character()
+	_disconnect_from_combat_actor()
+
+
+# --- Animation API ---
+
+func play_lift_animation() -> void:
+	if _active_lift_tween != null and _active_lift_tween.is_valid():
+		_active_lift_tween.kill()
+	# Snap y back to layout before re-entering so the lift always starts from
+	# rest, even if the previous Tween was killed mid-flight.
+	position.y = _layout_position.y
+	var t := create_tween()
+	t.tween_property(self, "position:y", _layout_position.y - LIFT_OFFSET, LIFT_HALF_DURATION)
+	t.tween_property(self, "position:y", _layout_position.y, LIFT_HALF_DURATION)
+	_active_lift_tween = t
+
+
+func play_die_animation() -> void:
+	if _active_die_tween != null and _active_die_tween.is_valid():
+		_active_die_tween.kill()
+	var t := create_tween()
+	t.tween_property(self, "modulate:a", DIE_TARGET_ALPHA, DIE_DURATION)
+	_active_die_tween = t
+
+
+func _play_shake() -> void:
+	if _active_shake_tween != null and _active_shake_tween.is_valid():
+		_active_shake_tween.kill()
+	# Always restore x to the layout anchor before chaining a new shake so
+	# successive damage doesn't accumulate offsets.
+	position.x = _layout_position.x
+	var t := create_tween()
+	var step: float = SHAKE_DURATION / 4.0
+	t.tween_property(self, "position:x", _layout_position.x + SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x - SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x + SHAKE_AMPLITUDE, step)
+	t.tween_property(self, "position:x", _layout_position.x, step)
+	_active_shake_tween = t
+
+
+func _play_heal_flash() -> void:
+	if _active_flash_tween != null and _active_flash_tween.is_valid():
+		_active_flash_tween.kill()
+	_flash_alpha = FLASH_START
+	queue_redraw()
+	var t := create_tween()
+	t.tween_property(self, "_flash_alpha", 0.0, FLASH_DURATION)
+	t.tween_callback(queue_redraw)
+	_active_flash_tween = t
 
 
 # Mirrors _draw()'s early-return condition so tests can verify "panel
@@ -147,6 +298,27 @@ func get_status_icons() -> Array:
 	return result
 
 
+# Returns one entry per StatModifierStack entry while a CombatActor is bound:
+# {stat, delta, color, label}. Empty when no actor is bound or the stack
+# itself is empty. Buffs lean green, debuffs lean red.
+func get_stat_modifier_icons() -> Array:
+	var result: Array = []
+	if _combat_actor == null:
+		return result
+	for e in _combat_actor.modifier_stack._entries:
+		var stat: StringName = e["stat"]
+		var delta = e["delta"]
+		var sign_label: String = "+" if float(delta) >= 0.0 else "-"
+		var stat_label: String = STAT_SHORT_LABELS.get(stat, "?")
+		result.append({
+			"stat": stat,
+			"delta": delta,
+			"color": STAT_BUFF_COLOR if float(delta) >= 0.0 else STAT_DEBUFF_COLOR,
+			"label": stat_label + sign_label,
+		})
+	return result
+
+
 func _draw() -> void:
 	if _data == null:
 		return
@@ -173,23 +345,60 @@ func _draw() -> void:
 	# MP
 	draw_string(font, Vector2(tx, line_h * 4), "MP:%d/%d" % [data.current_mp, data.max_mp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, MP_COLOR)
 
-	_draw_status_icons(font)
+	var status_count: int = _draw_status_icons(font)
+	_draw_stat_modifier_icons(font, status_count)
+
+	if _flash_alpha > 0.0:
+		var c: Color = FLASH_OVERLAY_COLOR
+		c.a = _flash_alpha
+		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), c)
 
 	if is_incapacitated():
 		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
 
 
-func _draw_status_icons(font: Font) -> void:
-	var icons := get_status_icons()
+# Returns the number of icons drawn so adjacent rows can offset their x.
+func _draw_status_icons(font: Font) -> int:
+	var icons: Array = get_status_icons()
 	if icons.is_empty():
-		return
+		return 0
 	var origin_x := ICON_SIZE + 10
 	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	var drawn := 0
 	for i in range(icons.size()):
 		var x := origin_x + i * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
 		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
 			break
 		var rect := Rect2(x, origin_y, STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+		draw_rect(rect, icons[i]["color"])
+		draw_string(
+			font,
+			Vector2(x + 2, origin_y + STATUS_ICON_FONT_SIZE),
+			icons[i]["label"],
+			HORIZONTAL_ALIGNMENT_LEFT, -1,
+			STATUS_ICON_FONT_SIZE,
+			STATUS_ICON_LABEL_COLOR,
+		)
+		drawn += 1
+	return drawn
+
+
+# Stat modifier icons sit on the same row as persistent_status icons, offset
+# to the right of them. The label is 2-3 chars wide so we widen the box.
+func _draw_stat_modifier_icons(font: Font, leading_count: int) -> void:
+	var icons: Array = get_stat_modifier_icons()
+	if icons.is_empty():
+		return
+	var icon_w := STATUS_ICON_SIZE + 6  # extra width for 2-char labels
+	var base_x := ICON_SIZE + 10 + leading_count * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
+	if leading_count > 0:
+		base_x += STATUS_ICON_GAP * 2  # visible gap between status row and stat row
+	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	for i in range(icons.size()):
+		var x := base_x + i * (icon_w + STATUS_ICON_GAP)
+		if x + icon_w > PANEL_WIDTH - 4:
+			break
+		var rect := Rect2(x, origin_y, icon_w, STATUS_ICON_SIZE)
 		draw_rect(rect, icons[i]["color"])
 		draw_string(
 			font,
