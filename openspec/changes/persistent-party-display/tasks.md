@@ -35,7 +35,7 @@
 
 ## 5. main.gd / 各 screen の表示制御 (TDD: red→green)
 
-- [ ] 5.1 新規テスト `tests/main/test_main_party_hud_visibility.gd` を作成: 各 screen 切替時の `PartyHud.visible` 値
+- [x] 5.1 新規テスト `tests/main/test_main_party_hud_visibility.gd` を作成: 各 screen 切替時の `PartyHud.visible` 値
   - TitleScreen → false
   - TownScreen → true
   - GuildScreen → true
@@ -43,10 +43,10 @@
   - DungeonScreen → true
   - LoadScreen → false
   - SaveScreen → false
-- [ ] 5.2 GUT 実行 → red 確認
-- [ ] 5.3 `src/main.gd` の screen 切替関数に `PartyHud.show_hud()` / `hide_hud()` を仕込む
-- [ ] 5.4 GUT 実行 → green 確認
-- [ ] 5.5 コミット
+- [x] 5.2 GUT 実行 → red 確認
+- [x] 5.3 `src/main.gd` の screen 切替関数に `PartyHud.show_hud()` / `hide_hud()` を仕込む
+- [x] 5.4 GUT 実行 → green 確認
+- [x] 5.5 コミット
 
 ## 6. GuildScreen 編成画面の特例 (TDD: red→green)
 

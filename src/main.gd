@@ -80,6 +80,7 @@ func _show_title_screen() -> void:
 	screen.load_game.connect(_on_load_from_title)
 	screen.quit_game.connect(_on_quit_game)
 	_switch_screen(screen)
+	PartyHud.hide_hud()
 
 func _on_start_new_game() -> void:
 	GameState.new_game()
@@ -97,6 +98,7 @@ func _on_load_from_title() -> void:
 	screen.load_requested.connect(_on_load_slot_selected)
 	screen.back_requested.connect(_on_load_title_back)
 	_switch_screen(screen)
+	PartyHud.hide_hud()
 
 func _on_load_title_back() -> void:
 	_show_title_screen()
@@ -144,6 +146,8 @@ func _show_town_screen(notify_arrival: bool = false) -> void:
 	screen.open_dungeon_entrance.connect(_on_open_dungeon_entrance)
 	screen.setup(GameState.guild)
 	_switch_screen(screen)
+	PartyHud.bind_active_party()
+	PartyHud.show_hud()
 	if notify_arrival:
 		screen.notify_arrival()
 
@@ -154,6 +158,7 @@ func _on_open_shop() -> void:
 	screen.setup(GameState.inventory, GameState.guild, shop_inventory)
 	screen.back_requested.connect(_on_shop_back)
 	_switch_screen(screen)
+	PartyHud.show_hud()
 
 
 func _on_shop_back() -> void:
@@ -165,6 +170,7 @@ func _on_open_temple() -> void:
 	screen.setup(GameState.inventory, GameState.guild)
 	screen.back_requested.connect(_on_temple_back)
 	_switch_screen(screen)
+	PartyHud.show_hud()
 
 
 func _on_temple_back() -> void:
@@ -177,6 +183,7 @@ func _on_open_guild() -> void:
 	screen.setup(GameState.guild)
 	screen.back_requested.connect(_on_guild_back)
 	_switch_screen(screen)
+	PartyHud.show_hud()
 
 func _on_guild_back() -> void:
 	_show_town_screen()
@@ -189,6 +196,7 @@ func _on_open_dungeon_entrance() -> void:
 	screen.enter_dungeon.connect(_on_enter_dungeon)
 	screen.back_requested.connect(_on_dungeon_entrance_back)
 	_switch_screen(screen)
+	PartyHud.show_hud()
 
 func _on_dungeon_entrance_back() -> void:
 	_show_town_screen()
@@ -211,6 +219,8 @@ func _show_dungeon_screen(dungeon_data: DungeonData) -> void:
 	# state mutations from combat, ESC menu spells, or item use propagate to
 	# the status bar without explicit refresh calls.
 	screen.bind_party(GameState.guild)
+	PartyHud.bind_active_party()
+	PartyHud.show_hud()
 	_attach_encounter_coordinator_to_screen(screen)
 
 func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
@@ -237,6 +247,7 @@ func _on_save_requested() -> void:
 	screen.save_completed.connect(_on_save_completed)
 	screen.back_requested.connect(_on_save_back)
 	_switch_screen(screen)
+	PartyHud.hide_hud()
 
 func _on_save_completed() -> void:
 	_esc_menu.on_save_completed()
@@ -251,6 +262,7 @@ func _on_load_requested() -> void:
 	screen.load_requested.connect(_on_load_slot_selected)
 	screen.back_requested.connect(_on_load_back)
 	_switch_screen(screen)
+	PartyHud.hide_hud()
 
 func _on_load_slot_selected(slot_number: int) -> void:
 	if _load_game(slot_number):
