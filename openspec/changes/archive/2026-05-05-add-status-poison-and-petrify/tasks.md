@@ -106,5 +106,5 @@
 
 ## 12. アーカイブ準備
 
-- [ ] 12.1 `/opsx:verify add-status-poison-and-petrify`
-- [ ] 12.2 `/opsx:archive add-status-poison-and-petrify`
+- [x] 12.1 `/opsx:verify add-status-poison-and-petrify`
+- [x] 12.2 `/opsx:archive add-status-poison-and-petrify`

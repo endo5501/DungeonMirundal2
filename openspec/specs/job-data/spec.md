@@ -173,9 +173,9 @@ The progression after this change SHALL be:
 | fighter | {} |
 | thief | {} |
 | ninja | {} |
-| mage | { 1: [&"fire", &"frost"], 2: [&"katino", &"manifo"], 3: [&"flame", &"blizzard"] } |
-| priest | { 1: [&"heal", &"holy"], 2: [&"dios"], 3: [&"heala", &"allheal"] } |
-| bishop | { 2: [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios"], 5: [&"flame", &"blizzard", &"heala", &"allheal"] } |
+| mage | { 1: [&"fire", &"frost"], 2: [&"katino", &"manifo"], 3: [&"flame", &"blizzard", &"poison_dart"] } |
+| priest | { 1: [&"heal", &"holy"], 2: [&"dios"], 3: [&"heala", &"allheal", &"madi"], 5: [&"dialma"] } |
+| bishop | { 2: [&"fire", &"frost", &"heal", &"holy", &"katino", &"manifo", &"dios"], 5: [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi"] } |
 | samurai | { 4: [&"fire", &"frost"], 8: [&"flame", &"blizzard"] } |
 | lord | { 4: [&"heal", &"holy"], 8: [&"heala", &"allheal"] } |
 
@@ -193,13 +193,29 @@ Spell ids in `spell_progression` SHALL match a real `SpellData.id` from `data/sp
 - **WHEN** `mage.tres` is loaded
 - **THEN** `spell_progression[2]` SHALL contain exactly `&"katino"` and `&"manifo"`
 
+#### Scenario: Mage learns poison_dart at level 3 alongside flame and blizzard
+- **WHEN** `mage.tres` is loaded
+- **THEN** `spell_progression[3]` SHALL contain exactly `&"flame"`, `&"blizzard"`, `&"poison_dart"`
+
 #### Scenario: Priest learns dios at level 2
 - **WHEN** `priest.tres` is loaded
 - **THEN** `spell_progression[2]` SHALL contain exactly `&"dios"`
 
+#### Scenario: Priest learns madi at level 3 alongside heala and allheal
+- **WHEN** `priest.tres` is loaded
+- **THEN** `spell_progression[3]` SHALL contain exactly `&"heala"`, `&"allheal"`, `&"madi"`
+
+#### Scenario: Priest learns dialma at level 5
+- **WHEN** `priest.tres` is loaded
+- **THEN** `spell_progression[5]` SHALL contain exactly `&"dialma"`
+
 #### Scenario: Bishop learns at levels 2 and 5
 - **WHEN** `bishop.tres` is loaded
-- **THEN** `spell_progression` SHALL have keys exactly `{2, 5}`, with `2` containing the seven spell-level-1 ids `&"fire"`, `&"frost"`, `&"heal"`, `&"holy"`, `&"katino"`, `&"manifo"`, `&"dios"` and `5` containing the four spell-level-2 ids `&"flame"`, `&"blizzard"`, `&"heala"`, `&"allheal"`
+- **THEN** `spell_progression` SHALL have keys exactly `{2, 5}`, with `2` containing the seven spell-level-1 ids `&"fire"`, `&"frost"`, `&"heal"`, `&"holy"`, `&"katino"`, `&"manifo"`, `&"dios"` and `5` containing the six ids `&"flame"`, `&"blizzard"`, `&"heala"`, `&"allheal"`, `&"poison_dart"`, `&"madi"`
+
+#### Scenario: Bishop does not learn dialma
+- **WHEN** `bishop.tres` is loaded
+- **THEN** `spell_progression[5]` SHALL NOT contain `&"dialma"` (Priest only)
 
 #### Scenario: Samurai learns mage spells starting at level 4
 - **WHEN** `samurai.tres` is loaded

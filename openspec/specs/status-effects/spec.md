@@ -7,23 +7,24 @@ TBD - created by archiving change add-status-effect-infrastructure. Update Purpo
 
 The system SHALL provide a `StatusData` Custom Resource that defines a status effect template. `StatusData` SHALL expose the following fields:
 
-- `id: StringName` — unique identifier matching the `.tres` filename basename (e.g. `poison.tres` → `&"poison"`).
+- `id: StringName` — unique identifier matching the `.tres` filename basename.
 - `display_name: String` — Japanese display name shown in UI.
-- `scope: int` — enum value from `StatusData.Scope`: `BATTLE_ONLY (0)` or `PERSISTENT (1)`.
-- `prevents_action: bool` — when true, an actor with this status MUST be skipped during battle action resolution.
-- `randomizes_target: bool` — when true, an actor with this status (e.g. confusion) MUST have its action's target randomized at resolution time.
-- `blocks_cast: bool` — when true, an actor with this status (e.g. silence) MUST have any `CastCommand` resolved as a no-op.
-- `hit_penalty: float` — when this status is held by the *attacker* (e.g. blind), this value SHALL be subtracted from the hit chance during damage calculation.
-- `default_duration: int` — default turn count granted at inflict time when not overridden. Only meaningful for `BATTLE_ONLY`.
-- `tick_in_battle: int` — at the head of every battle turn, an actor holding this status SHALL take this many HP of damage. `0` means no battle tick.
-- `tick_in_dungeon: int` — at every dungeon step, a character holding this status SHALL lose this many HP, floored at HP=1. `0` means no dungeon tick. Only meaningful for `PERSISTENT`.
-- `cures_on_damage: bool` — when true, this status is removed from any actor that takes damage (e.g. sleep wakes on hit).
-- `cures_on_battle_end: bool` — descriptive metadata on the status template indicating that the status is conceptually a battle-only effect that vanishes at battle end. The actual cure-at-battle-end decision is made by `StatusTrack.cure_all_battle_only(repo)`, which removes every entry whose `scope == BATTLE_ONLY` regardless of this flag's value. Authors of `data/statuses/*.tres` SHOULD set this `true` for `BATTLE_ONLY` statuses and `false` for `PERSISTENT` statuses to keep the data self-documenting; future changes MAY refactor the cure logic to consult this flag directly if a `BATTLE_ONLY`-but-survives or `PERSISTENT`-but-auto-cures case ever appears.
-- `resist_key: StringName` — the resistance dictionary key looked up on `RaceData.resists`, `JobData.resists`, and `MonsterData.resists`. Empty string disables resistance.
+- `scope: int` — `StatusData.Scope`: `BATTLE_ONLY (0)` or `PERSISTENT (1)`.
+- `prevents_action: bool`
+- `randomizes_target: bool`
+- `blocks_cast: bool`
+- `hit_penalty: float`
+- `default_duration: int` — turns granted at inflict for `BATTLE_ONLY`.
+- `tick_in_battle: int` — flat HP damage at the head of each battle turn. `0` means no battle tick.
+- `tick_in_dungeon: int` — flat HP damage applied each time `StatusTickService.tick_character_step` is invoked (used when `tick_in_dungeon_ratio == 0`). Only meaningful for `PERSISTENT`. Note: the dungeon coordinator gates how often `tick_character_step` is called per step (see `dungeon-movement` spec).
+- `tick_in_dungeon_ratio: int` — when `> 0`, dungeon step damage SHALL equal `maxi(1, character.max_hp / tick_in_dungeon_ratio)` (integer division, minimum 1). When `> 0`, this value takes precedence over `tick_in_dungeon`.
+- `cures_on_damage: bool`
+- `cures_on_battle_end: bool`
+- `resist_key: StringName`
 
-#### Scenario: StatusData carries required fields
-- **WHEN** a StatusData resource is created with all required fields populated
-- **THEN** every field SHALL be readable and typed consistently with its declaration
+#### Scenario: StatusData carries required fields including dungeon_ratio
+- **WHEN** a StatusData resource is created
+- **THEN** it SHALL expose all listed fields including `tick_in_dungeon_ratio`
 
 #### Scenario: id matches filename
 - **WHEN** `data/statuses/poison.tres` is loaded
@@ -32,6 +33,10 @@ The system SHALL provide a `StatusData` Custom Resource that defines a status ef
 #### Scenario: scope is one of the recognized values
 - **WHEN** any StatusData file is loaded
 - **THEN** `scope` SHALL be either `0 (BATTLE_ONLY)` or `1 (PERSISTENT)`
+
+#### Scenario: Both tick fields default to zero
+- **WHEN** a StatusData is created without overriding tick fields
+- **THEN** `tick_in_battle == 0`, `tick_in_dungeon == 0`, `tick_in_dungeon_ratio == 0` (no tick at all)
 
 ### Requirement: StatusRepository provides StatusData lookup by id
 
@@ -118,21 +123,33 @@ The system SHALL provide a static helper `StatusTickService.tick_character_step(
 
 1. Returns immediately if `character.is_dead()`.
 2. Iterates `character.persistent_statuses`, looks up each in `repo`.
-3. For each StatusData with `scope == PERSISTENT` and `tick_in_dungeon > 0`, applies `loss = mini(tick_in_dungeon, max(0, character.current_hp - 1))` and decrements `current_hp` by that amount.
-4. The character's HP SHALL NOT drop below `1` due to dungeon ticks.
-5. Returns `{ "total_loss": int, "ticks": [{ "status_id": StringName, "amount": int }] }`.
+3. For each StatusData with `scope == PERSISTENT`, computes the requested damage:
+   - If `tick_in_dungeon_ratio > 0`, `requested = maxi(1, character.max_hp / tick_in_dungeon_ratio)`.
+   - Else if `tick_in_dungeon > 0`, `requested = tick_in_dungeon`.
+   - Else: skip this status (no tick).
+4. Applies `loss = mini(requested, max(0, character.current_hp - 1))` and decrements `current_hp` by that amount.
+5. The character's HP SHALL NOT drop below `1` due to dungeon ticks.
+6. Returns `{ "total_loss": int, "ticks": [{ "status_id": StringName, "amount": int }] }`.
 
-#### Scenario: Dungeon tick deals damage but floors at 1
-- **WHEN** a character with `current_hp = 5` holds a PERSISTENT status with `tick_in_dungeon = 3` and `tick_character_step` is called
-- **THEN** the character's `current_hp` SHALL become `2` and the result SHALL include the tick of amount 3
+#### Scenario: Ratio-based dungeon tick
+- **WHEN** a character with `current_hp = 32`, `max_hp = 32` holds a PERSISTENT status with `tick_in_dungeon_ratio = 16` (and `tick_in_dungeon = 0`)
+- **THEN** `tick_character_step` SHALL apply `loss = 32 / 16 = 2`, `current_hp` SHALL become `30`, and the result SHALL include the tick of amount 2
+
+#### Scenario: Ratio with low max_hp floors at 1
+- **WHEN** `max_hp = 10`, `current_hp = 10`, status `tick_in_dungeon_ratio = 16`
+- **THEN** `requested = maxi(1, 10 / 16) = maxi(1, 0) = 1`, the loss SHALL be 1
+
+#### Scenario: Ratio takes precedence over flat amount
+- **WHEN** a status has both `tick_in_dungeon = 5` and `tick_in_dungeon_ratio = 16`, applied to a character with `max_hp = 32, current_hp = 32`
+- **THEN** the loss SHALL be `2` (ratio wins) not `5`
+
+#### Scenario: Both tick fields zero is a no-op
+- **WHEN** a status has `tick_in_dungeon = 0` and `tick_in_dungeon_ratio = 0`
+- **THEN** `tick_character_step` SHALL produce no entry for that status
 
 #### Scenario: Dungeon tick floors at HP=1 when tick would kill
-- **WHEN** a character with `current_hp = 2` holds a PERSISTENT status with `tick_in_dungeon = 3`
-- **THEN** the character's `current_hp` SHALL become `1` (loss capped at 1) and the result SHALL include the tick of amount 1
-
-#### Scenario: Already at HP=1 does not change
-- **WHEN** a character with `current_hp = 1` holds a PERSISTENT status with `tick_in_dungeon = 3`
-- **THEN** the character's `current_hp` SHALL remain `1` and the result SHALL include the tick of amount 0
+- **WHEN** a character with `current_hp = 2, max_hp = 32` holds poison with `tick_in_dungeon_ratio = 16` (requested loss 2)
+- **THEN** the loss SHALL be capped at `1` (HP floor) and `current_hp` SHALL become `1`
 
 #### Scenario: Dead character is skipped
 - **WHEN** a character with `is_dead() == true` is passed to `tick_character_step`
