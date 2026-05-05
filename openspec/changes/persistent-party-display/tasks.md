@@ -50,11 +50,11 @@
 
 ## 6. GuildScreen 編成画面の特例 (TDD: red→green)
 
-- [ ] 6.1 新規テスト `tests/guild_scene/test_guild_party_formation_hud.gd`: 編成画面に入ると `PartyHud.visible = false`、戻ると `true`
-- [ ] 6.2 GUT 実行 → red 確認
-- [ ] 6.3 `src/guild_scene/guild_menu.gd`(または該当する formation 開閉箇所)で `PartyHud.hide_hud()` / `show_hud()` を呼ぶ
-- [ ] 6.4 GUT 実行 → green 確認
-- [ ] 6.5 コミット
+- [x] 6.1 新規テスト `tests/guild_scene/test_guild_party_formation_hud.gd`: 編成画面に入ると `PartyHud.visible = false`、戻ると `true`
+- [x] 6.2 GUT 実行 → red 確認
+- [x] 6.3 `src/guild_scene/guild_menu.gd`(または該当する formation 開閉箇所)で `PartyHud.hide_hud()` / `show_hud()` を呼ぶ
+- [x] 6.4 GUT 実行 → green 確認
+- [x] 6.5 コミット
 
 ## 7. DungeonScreen から PartyDisplay 所有を外す
 
