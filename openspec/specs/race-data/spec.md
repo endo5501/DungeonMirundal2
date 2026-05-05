@@ -71,13 +71,35 @@ SHALL: `RaceData` SHALL declare an `@export var id: StringName` field that uniqu
 
 ### Requirement: RaceData carries a resists dictionary
 
-The system SHALL extend `RaceData` with `@export var resists: Dictionary = {}` mapping `StringName` resist keys to `float` values in the range `[0.0, 1.0]`. Missing keys SHALL be treated as `0.0` resistance. All five existing `.tres` race files (human, elf, dwarf, gnome, hobbit) SHALL be updated to include `resists = {}` (no resistances configured by default in this change).
+The system SHALL extend `RaceData` with `@export var resists: Dictionary = {}` mapping `StringName` resist keys to `float` values. Negative values are allowed (representing increased vulnerability).
 
-#### Scenario: RaceData exposes resists
-- **WHEN** a RaceData resource is instantiated
-- **THEN** the `resists` field SHALL be a Dictionary that is at least readable
+The five existing race `.tres` files SHALL declare resists as follows:
 
-#### Scenario: All race tres files have a resists field
-- **WHEN** any of the five race `.tres` files is loaded
-- **THEN** `resists` SHALL be a Dictionary (empty in this change)
+| Race | resists |
+|------|---------|
+| human | `{}` |
+| elf | `{ &"silence": -0.10, &"poison": -0.10 }` |
+| dwarf | `{ &"poison": 0.20, &"petrify": 0.10 }` |
+| hobbit | `{ &"sleep": 0.10, &"paralysis": 0.10 }` |
+| gnome | `{ &"silence": 0.10 }` |
+
+#### Scenario: Human has no resists
+- **WHEN** `human.tres` is loaded
+- **THEN** `resists` SHALL be `{}`
+
+#### Scenario: Elf is vulnerable to silence and poison
+- **WHEN** `elf.tres` is loaded
+- **THEN** `resists` SHALL contain `{&"silence": -0.10, &"poison": -0.10}`
+
+#### Scenario: Dwarf resists poison and petrify
+- **WHEN** `dwarf.tres` is loaded
+- **THEN** `resists` SHALL contain `{&"poison": 0.20, &"petrify": 0.10}`
+
+#### Scenario: Hobbit resists sleep and paralysis
+- **WHEN** `hobbit.tres` is loaded
+- **THEN** `resists` SHALL contain `{&"sleep": 0.10, &"paralysis": 0.10}`
+
+#### Scenario: Gnome resists silence
+- **WHEN** `gnome.tres` is loaded
+- **THEN** `resists` SHALL contain `{&"silence": 0.10}`
 
