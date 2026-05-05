@@ -9,12 +9,13 @@ const LABEL_AREA_HEIGHT := 26
 const LABEL_COLOR := Color(0.95, 0.95, 0.95, 1.0)
 const LABEL_OUTLINE_SIZE := 3
 const LABEL_OUTLINE_COLOR := Color(0, 0, 0, 0.85)
+const LABEL_BOX_WIDTH := 200.0
 
 const HUD_HEIGHT := LABEL_AREA_HEIGHT + PartyMemberPanel.PANEL_HEIGHT + 4
 
 var _front_panels: Array  # Array[PartyMemberPanel]
 var _back_panels: Array   # Array[PartyMemberPanel]
-var _layout_width: float = 0.0
+
 
 func _ready() -> void:
 	anchor_left = 0.0
@@ -30,8 +31,8 @@ func _ready() -> void:
 	_front_panels = _create_panels()
 	_back_panels = _create_panels()
 
-	_layout_panels()
-	resized.connect(_layout_panels)
+	_layout_panels(size.x)
+	resized.connect(func() -> void: _layout_panels(size.x))
 
 
 func _create_panels() -> Array:
@@ -43,78 +44,62 @@ func _create_panels() -> Array:
 	return panels
 
 
-# Recomputes panel positions for the given width. When override_width is
-# negative (the default), the current self.size.x is used — that's the
-# normal in-tree path triggered by the resized signal. Tests pass an
-# explicit override_width to avoid relying on the deferred anchor resolution.
-# Front row is left-aligned with MARGIN inset; back row is right-aligned
-# with MARGIN inset from the right edge. Both rows share the same y.
-func _layout_panels(override_width: float = -1.0) -> void:
-	if _front_panels == null or _back_panels == null:
-		return
+# Front row left-aligned with MARGIN inset; back row right-aligned with
+# MARGIN inset from the right edge. Both rows share the same y. Idempotent
+# when called twice with the same width — skips redundant resized firings.
+func _layout_panels(width: float) -> void:
 	if _front_panels.is_empty() or _back_panels.is_empty():
 		return
 
-	var width: float = size.x if override_width < 0.0 else override_width
-	_layout_width = width
+	var pw: float = float(PartyMemberPanel.PANEL_WIDTH)
+	var m: float = float(MARGIN)
+
+	# Skip when the previously-applied width matches.
+	var prev_right_edge: float = _back_panels[2].position.x + pw + m
+	if is_equal_approx(prev_right_edge, width):
+		return
 
 	var panel_y: float = float(LABEL_AREA_HEIGHT)
-	var step: float = float(PartyMemberPanel.PANEL_WIDTH + MARGIN)
+	var step: float = pw + m
 
 	for i in range(3):
-		var fx: float = float(MARGIN) + float(i) * step
-		_front_panels[i].position = Vector2(fx, panel_y)
-
-	for i in range(3):
-		# i = 0 leftmost back, i = 2 rightmost back. Rightmost panel's right
-		# edge sits at width - MARGIN.
-		var bx: float = width - float(MARGIN) \
-			- float(3 - i) * float(PartyMemberPanel.PANEL_WIDTH) \
-			- float(2 - i) * float(MARGIN)
-		_back_panels[i].position = Vector2(bx, panel_y)
+		_front_panels[i].position = Vector2(m + float(i) * step, panel_y)
+		_back_panels[i].position = Vector2(width - m - float(3 - i) * pw - float(2 - i) * m, panel_y)
 
 	queue_redraw()
 
 
 func _draw() -> void:
-	if _front_panels == null or _back_panels == null:
-		return
 	if _front_panels.is_empty() or _back_panels.is_empty():
 		return
 
 	var font := ThemeDB.fallback_font
-	var pos_front: Vector2 = get_front_label_position()
-	# Outline first (drawn behind), then the foreground glyph. Without the
-	# outline, the white labels disappear against light dungeon walls.
-	draw_string_outline(font, pos_front, FRONT_LABEL,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
-	draw_string(font, pos_front, FRONT_LABEL,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_FONT_SIZE, LABEL_COLOR)
-
+	# Outline so labels stay legible against light dungeon walls.
+	_draw_label(font, FRONT_LABEL, get_front_label_position(), HORIZONTAL_ALIGNMENT_LEFT, -1.0)
 	var pos_back: Vector2 = get_back_label_position()
-	# Right-align by drawing within a fixed-width box ending at pos_back.x.
-	var label_box_width: float = 200.0
-	var back_draw_x: float = pos_back.x - label_box_width
-	draw_string_outline(font, Vector2(back_draw_x, pos_back.y), BACK_LABEL,
-		HORIZONTAL_ALIGNMENT_RIGHT, label_box_width, LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
-	draw_string(font, Vector2(back_draw_x, pos_back.y), BACK_LABEL,
-		HORIZONTAL_ALIGNMENT_RIGHT, label_box_width, LABEL_FONT_SIZE, LABEL_COLOR)
+	_draw_label(font, BACK_LABEL,
+		Vector2(pos_back.x - LABEL_BOX_WIDTH, pos_back.y),
+		HORIZONTAL_ALIGNMENT_RIGHT, LABEL_BOX_WIDTH)
 
 
-# The position returned is the baseline anchor for draw_string: x is the left
-# edge of the label, y is the baseline. Anchored to the front-row group's
-# left edge.
+func _draw_label(font: Font, text: String, pos: Vector2, alignment: int, box_width: float) -> void:
+	draw_string_outline(font, pos, text, alignment, box_width,
+		LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
+	draw_string(font, pos, text, alignment, box_width,
+		LABEL_FONT_SIZE, LABEL_COLOR)
+
+
+# x = front-row group's left edge, y = label baseline.
 func get_front_label_position() -> Vector2:
 	return Vector2(float(MARGIN), float(LABEL_FONT_SIZE))
 
 
-# The position returned is the right edge of the BACK label baseline: x is
-# the right boundary, y is the baseline. Anchored to the back-row group's
-# right edge. Uses the width established by the most recent _layout_panels()
-# call so tests get deterministic values.
+# x = back-row group's right edge, y = label baseline. Derived from the
+# rightmost back panel's actual position so callers always see the current
+# layout.
 func get_back_label_position() -> Vector2:
-	var width: float = _layout_width if _layout_width > 0.0 else size.x
-	return Vector2(width - float(MARGIN), float(LABEL_FONT_SIZE))
+	var right_edge: float = _back_panels[2].position.x + float(PartyMemberPanel.PANEL_WIDTH)
+	return Vector2(right_edge, float(LABEL_FONT_SIZE))
 
 
 func setup(party_data: PartyData) -> void:

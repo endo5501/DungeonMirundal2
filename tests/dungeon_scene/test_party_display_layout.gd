@@ -1,9 +1,7 @@
 extends GutTest
 
-# Verifies the new PartyDisplay layout: full-bottom anchors, front-row left-
-# aligned, back-row right-aligned, single shared y, gap in the center, and no
-# global ColorRect background. Tests force a known size and re-run the layout
-# helper so they work regardless of parent type.
+# Tests force a known width via _layout_panels(width) so layout assertions
+# work without depending on parent-driven anchor resolution.
 
 const TEST_WIDTH := 1280.0
 
@@ -15,8 +13,6 @@ func _make_display(width: float = TEST_WIDTH) -> PartyDisplay:
 	return d
 
 
-# --- 1.2 Anchors fill bottom width ---
-
 func test_anchors_are_full_bottom():
 	var d := _make_display()
 	assert_eq(d.anchor_left, 0.0, "anchor_left should be 0.0")
@@ -24,8 +20,6 @@ func test_anchors_are_full_bottom():
 	assert_eq(d.anchor_top, 1.0, "anchor_top should be 1.0")
 	assert_eq(d.anchor_bottom, 1.0, "anchor_bottom should be 1.0")
 
-
-# --- 1.3 Front row left-aligned ---
 
 func test_front_panels_left_aligned_increasing_x():
 	var d := _make_display()
@@ -42,8 +36,6 @@ func test_leftmost_front_panel_within_margin_of_left_edge():
 	assert_true(leftmost_x <= float(PartyDisplay.MARGIN),
 		"leftmost front panel x (%f) should be <= MARGIN (%d)" % [leftmost_x, PartyDisplay.MARGIN])
 
-
-# --- 1.4 Back row right-aligned ---
 
 func test_back_panels_right_aligned_increasing_x():
 	var d := _make_display()
@@ -65,8 +57,6 @@ func test_rightmost_back_panel_right_edge_within_margin_of_display_right_edge():
 		"rightmost back panel right edge should be within MARGIN of right edge; got distance=%f" % distance_from_right)
 
 
-# --- 1.5 Front and back rows share the same y ---
-
 func test_all_panels_share_position_y():
 	var d := _make_display()
 	var y: float = d._front_panels[0].position.y
@@ -76,8 +66,6 @@ func test_all_panels_share_position_y():
 		assert_eq(panel.position.y, y, "back panel y mismatch")
 
 
-# --- 1.6 Center gap between front and back ---
-
 func test_center_gap_between_front_right_and_back_left():
 	var d := _make_display()
 	var front_right: float = d._front_panels[2].position.x + float(PartyMemberPanel.PANEL_WIDTH)
@@ -85,8 +73,6 @@ func test_center_gap_between_front_right_and_back_left():
 	assert_true(back_left > front_right,
 		"back row should start after front row ends; front_right=%f back_left=%f" % [front_right, back_left])
 
-
-# --- 1.7 No global ColorRect background ---
 
 func test_no_color_rect_background_child():
 	var d := _make_display()

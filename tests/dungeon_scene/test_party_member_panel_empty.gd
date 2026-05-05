@@ -1,9 +1,7 @@
 extends GutTest
 
-# Verifies that a PartyMemberPanel with no data renders nothing (the early
-# return path), and that null slots in PartyDisplay don't shift other panels.
-# We use the public hook has_visible_content() to verify the early return
-# without invoking the live draw context.
+# has_visible_content() mirrors _draw()'s early-return branch so we can verify
+# "renders nothing" without invoking the live draw context.
 
 const TEST_WIDTH := 1280.0
 
@@ -32,8 +30,6 @@ func _make_display() -> PartyDisplay:
 	return d
 
 
-# --- 1.10 Empty panel does not draw ---
-
 func test_empty_panel_reports_no_visible_content():
 	var p := _make_panel()
 	# Default state: no bind_character, no set_member.
@@ -57,8 +53,6 @@ func test_panel_unbound_to_null_loses_visible_content():
 	assert_false(p.has_visible_content(),
 		"panel unbound (bind_character(null)) should report no visible content")
 
-
-# --- 1.11 Null middle slot does not shift the third panel ---
 
 func test_null_middle_slot_does_not_pack_third_panel_left():
 	var d := _make_display()

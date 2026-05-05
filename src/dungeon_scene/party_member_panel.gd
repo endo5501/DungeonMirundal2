@@ -87,9 +87,8 @@ func _exit_tree() -> void:
 	_disconnect_from_character()
 
 
-# Test hook: reports whether _draw() would render anything in the panel's
-# current state. When false, _draw() takes the early-return path and emits
-# no draw_rect / draw_string calls.
+# Mirrors _draw()'s early-return condition so tests can verify "panel
+# renders nothing" without invoking the live draw context.
 func has_visible_content() -> bool:
 	return _data != null
 
