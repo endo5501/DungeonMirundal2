@@ -18,9 +18,14 @@ static func tick_character_step(character: Character, repo: StatusRepository) ->
 			continue
 		if data.scope != StatusData.Scope.PERSISTENT:
 			continue
-		if data.tick_in_dungeon <= 0:
+		var requested: int = 0
+		if data.tick_in_dungeon_ratio > 0:
+			requested = maxi(1, character.max_hp / data.tick_in_dungeon_ratio)
+		elif data.tick_in_dungeon > 0:
+			requested = data.tick_in_dungeon
+		else:
 			continue
-		var loss: int = mini(data.tick_in_dungeon, max(0, character.current_hp - 1))
+		var loss: int = mini(requested, max(0, character.current_hp - 1))
 		if loss > 0:
 			character.current_hp -= loss
 		result["total_loss"] = int(result["total_loss"]) + loss

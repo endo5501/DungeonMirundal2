@@ -345,7 +345,23 @@ func _build_character_entry(ch: Character) -> VBoxContainer:
 	stats_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	entry.add_child(stats_label)
 
+	var status_line := Label.new()
+	status_line.text = _build_status_line(ch)
+	status_line.add_theme_font_size_override("font_size", 14)
+	status_line.add_theme_color_override("font_color", Color(0.85, 0.85, 0.6))
+	entry.add_child(status_line)
+
 	return entry
+
+
+func _build_status_line(ch: Character) -> String:
+	if ch == null or ch.persistent_statuses.is_empty():
+		return "状態: 通常"
+	var repo := StatusRepoLocator.resolve(null)
+	var names: Array[String] = []
+	for sid in ch.persistent_statuses:
+		names.append(repo.get_display_name(sid))
+	return "状態: " + ", ".join(names)
 
 
 func _get_guild_members() -> Array[Character]:

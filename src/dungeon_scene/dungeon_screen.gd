@@ -26,6 +26,9 @@ var _return_dialog: ConfirmDialog
 var _encounter_active: bool = false
 var _pending_dialog_context: int = DialogContext.NONE
 
+var _status_toast_container: VBoxContainer
+const STATUS_TOAST_LIFETIME_SECONDS := 2.0
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_dungeon_view = DungeonView.new()
@@ -55,6 +58,15 @@ func _ready() -> void:
 	add_child(_return_dialog)
 	_return_dialog.confirmed.connect(_on_return_confirmed)
 	_return_dialog.cancelled.connect(_on_return_cancelled)
+
+	_status_toast_container = VBoxContainer.new()
+	_status_toast_container.set_anchors_and_offsets_preset(PRESET_TOP_WIDE)
+	_status_toast_container.offset_top = 12
+	_status_toast_container.offset_left = 12
+	_status_toast_container.offset_right = -12
+	_status_toast_container.add_theme_constant_override("separation", 4)
+	_status_toast_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status_toast_container)
 
 func setup_from_data(dungeon_data: DungeonData, party_data: PartyData = null) -> void:
 	_dungeon_data = dungeon_data
@@ -214,6 +226,31 @@ func _on_return_confirmed() -> void:
 
 func _on_return_cancelled() -> void:
 	_pending_dialog_context = DialogContext.NONE
+
+func get_status_toast_container() -> VBoxContainer:
+	return _status_toast_container
+
+
+func show_status_tick(character_name: String, status_id: StringName, amount: int) -> void:
+	if _status_toast_container == null:
+		return
+	var label := Label.new()
+	var display_name := StatusRepoLocator.resolve(null).get_display_name(status_id)
+	label.text = "%s は %s で %d ダメージ" % [character_name, display_name, amount]
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_toast_container.add_child(label)
+	var timer := get_tree().create_timer(STATUS_TOAST_LIFETIME_SECONDS)
+	timer.timeout.connect(func(): _expire_status_tick(label))
+
+
+func _expire_status_tick(label: Label) -> void:
+	if label == null or not is_instance_valid(label):
+		return
+	if label.is_inside_tree():
+		label.queue_free()
+
 
 func _change_floor(delta: int, target_tile: int) -> void:
 	var next_floor := _player_state.current_floor + delta

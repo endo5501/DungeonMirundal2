@@ -114,3 +114,77 @@ func test_existing_image_hides_fallback():
 		"fallback must be hidden when image loads successfully")
 	assert_true(s.is_texture_visible(),
 		"TextureRect must be visible when image loads successfully")
+
+
+# --- add-status-poison-and-petrify: auto-cure on town arrival ---
+
+func _make_character(char_name: String, statuses: Array[StringName] = []) -> Character:
+	var human := load("res://data/races/human.tres") as RaceData
+	var fighter := load("res://data/jobs/fighter.tres") as JobData
+	var ch := Character.new()
+	ch.character_name = char_name
+	ch.race = human
+	ch.job = fighter
+	ch.level = 1
+	ch.base_stats = {&"STR": 8, &"INT": 8, &"PIE": 8, &"VIT": 8, &"AGI": 8, &"LUC": 8}
+	ch.max_hp = 10
+	ch.current_hp = 10
+	ch.max_mp = 0
+	ch.current_mp = 0
+	ch.persistent_statuses = statuses
+	return ch
+
+
+func test_notify_arrival_clears_persistent_statuses_for_all_members():
+	var guild := Guild.new()
+	var alice := _make_character("Alice", [&"poison"])
+	var bob := _make_character("Bob", [&"petrify"])
+	guild.register(alice)
+	guild.register(bob)
+	guild.assign_to_party(alice, 0, 0)
+	guild.assign_to_party(bob, 0, 1)
+	var s := _make_screen()
+	s.setup(guild)
+	s.notify_arrival()
+	assert_eq(alice.persistent_statuses.size(), 0)
+	assert_eq(bob.persistent_statuses.size(), 0)
+
+
+func test_notify_arrival_shows_message_when_someone_was_afflicted():
+	var guild := Guild.new()
+	var alice := _make_character("Alice", [&"poison"])
+	guild.register(alice)
+	guild.assign_to_party(alice, 0, 0)
+	var s := _make_screen()
+	s.setup(guild)
+	s.notify_arrival()
+	assert_true(s.get_arrival_message().contains("状態異常"),
+		"arrival message should mention 状態異常 when cures occurred")
+
+
+func test_notify_arrival_no_message_when_no_one_afflicted():
+	var guild := Guild.new()
+	var alice := _make_character("Alice")
+	guild.register(alice)
+	guild.assign_to_party(alice, 0, 0)
+	var s := _make_screen()
+	s.setup(guild)
+	s.notify_arrival()
+	assert_eq(s.get_arrival_message(), "")
+
+
+func test_notify_arrival_emits_message_only_once_for_multiple_cures():
+	# Multiple afflicted members should still trigger only a single notification.
+	var guild := Guild.new()
+	var alice := _make_character("Alice", [&"poison"])
+	var bob := _make_character("Bob", [&"poison", &"petrify"])
+	guild.register(alice)
+	guild.register(bob)
+	guild.assign_to_party(alice, 0, 0)
+	guild.assign_to_party(bob, 0, 1)
+	var s := _make_screen()
+	s.setup(guild)
+	s.notify_arrival()
+	# get_arrival_message returns the single composed message; we just verify
+	# it is non-empty (single notification semantics).
+	assert_true(s.get_arrival_message() != "")

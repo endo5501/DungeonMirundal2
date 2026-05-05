@@ -50,6 +50,11 @@ var _illustration_texture: TextureRect
 var _illustration_overlay: ColorRect
 var _illustration_label: Label
 
+var _guild: Guild = null
+var _arrival_label: Label
+var _arrival_message: String = ""
+const ARRIVAL_CURE_MESSAGE := "教会の祈りで状態異常が癒えた"
+
 func _init() -> void:
 	_menu = CursorMenu.new(MENU_ITEMS, DISABLED_INDICES)
 
@@ -121,8 +126,16 @@ func _ready() -> void:
 	_illustration_label.offset_bottom = 0
 	right.add_child(_illustration_label)
 
+	_arrival_label = Label.new()
+	_arrival_label.add_theme_font_size_override("font_size", 14)
+	_arrival_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.5))
+	_arrival_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_arrival_label.visible = false
+	left.add_child(_arrival_label)
+
 	_menu.update_rows(_rows)
 	_update_illustration()
+	_refresh_arrival_label()
 
 func _update_illustration() -> void:
 	var index := _menu.selected_index
@@ -199,3 +212,32 @@ func select_item(index: int) -> void:
 		MAIN_IDX_SHOP: open_shop.emit()
 		MAIN_IDX_TEMPLE: open_temple.emit()
 		MAIN_IDX_DUNGEON_ENTRANCE: open_dungeon_entrance.emit()
+
+
+func setup(guild: Guild) -> void:
+	_guild = guild
+
+
+func notify_arrival() -> void:
+	if _guild == null:
+		return
+	var any_cured := false
+	for ch in _guild.get_all_characters():
+		if ch == null:
+			continue
+		if not ch.persistent_statuses.is_empty():
+			ch.persistent_statuses.clear()
+			any_cured = true
+	_arrival_message = ARRIVAL_CURE_MESSAGE if any_cured else ""
+	_refresh_arrival_label()
+
+
+func get_arrival_message() -> String:
+	return _arrival_message
+
+
+func _refresh_arrival_label() -> void:
+	if _arrival_label == null:
+		return
+	_arrival_label.text = _arrival_message
+	_arrival_label.visible = _arrival_message != ""

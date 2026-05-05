@@ -63,3 +63,53 @@ func test_status_view_shows_empty_message_when_no_party():
 	assert_eq(status_container.get_child_count(), 3)
 	var last_child := status_container.get_child(2) as Label
 	assert_eq(last_child.text, "パーティが編成されていません")
+
+
+# --- add-status-poison-and-petrify: persistent_statuses status line ---
+
+func _find_status_line(node: Node) -> String:
+	# Walk descendants and return the first Label whose text starts with "状態:".
+	if node is Label:
+		var text: String = (node as Label).text
+		if text.begins_with("状態:"):
+			return text
+	for child in node.get_children():
+		var found := _find_status_line(child)
+		if found != "":
+			return found
+	return ""
+
+
+func _open_status_view_for(ch: Character) -> EscMenu:
+	GameState.new_game()
+	GameState.guild.register(ch)
+	GameState.guild.assign_to_party(ch, 0, 0)
+	var menu := EscMenu.new()
+	add_child_autofree(menu)
+	menu.show_menu()
+	menu.select_current_item()  # → party menu
+	menu.select_current_item()  # → status
+	return menu
+
+
+func test_clean_character_status_line_says_normal():
+	var ch := _make_character("Clean")
+	var menu := _open_status_view_for(ch)
+	var line := _find_status_line(menu._status_container)
+	assert_eq(line, "状態: 通常")
+
+
+func test_poisoned_character_shows_status_name():
+	var ch := _make_character("Toxic")
+	ch.persistent_statuses = [&"poison"]
+	var menu := _open_status_view_for(ch)
+	var line := _find_status_line(menu._status_container)
+	assert_eq(line, "状態: 毒")
+
+
+func test_multi_status_character_shows_comma_separated():
+	var ch := _make_character("Doomed")
+	ch.persistent_statuses = [&"poison", &"petrify"]
+	var menu := _open_status_view_for(ch)
+	var line := _find_status_line(menu._status_container)
+	assert_eq(line, "状態: 毒, 石化")

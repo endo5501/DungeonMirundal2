@@ -31,6 +31,7 @@ func _setup_encounter_coordinator() -> void:
 	_encounter_rng.randomize()
 	_equipment_provider = InventoryEquipmentProvider.new()
 	_encounter_coordinator = EncounterCoordinator.new(repository, _encounter_rng)
+	_encounter_coordinator.set_status_repo(loader.load_status_repository())
 	_combat_overlay = CombatOverlay.new()
 	_combat_overlay.log_line_delay = 0.4
 	_combat_overlay.party_state_changed.connect(_on_combat_party_state_changed)
@@ -133,7 +134,7 @@ func _on_quit_to_title() -> void:
 
 # --- Town Screen ---
 
-func _show_town_screen() -> void:
+func _show_town_screen(notify_arrival: bool = false) -> void:
 	GameState.game_location = GameState.LOCATION_TOWN
 	GameState.current_dungeon_index = -1
 	var screen := TownScreen.new()
@@ -141,7 +142,10 @@ func _show_town_screen() -> void:
 	screen.open_shop.connect(_on_open_shop)
 	screen.open_temple.connect(_on_open_temple)
 	screen.open_dungeon_entrance.connect(_on_open_dungeon_entrance)
+	screen.setup(GameState.guild)
 	_switch_screen(screen)
+	if notify_arrival:
+		screen.notify_arrival()
 
 
 func _on_open_shop() -> void:
@@ -213,6 +217,8 @@ func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 	if _encounter_coordinator == null:
 		return
 	_encounter_coordinator.set_tables_by_floor(_encounter_tables_by_floor)
+	if GameState != null and GameState.guild != null:
+		_encounter_coordinator.set_guild(GameState.guild)
 	var current_floor_1based := _current_dungeon_data.player_state.current_floor + 1 if _current_dungeon_data != null else 1
 	_encounter_coordinator.set_floor(current_floor_1based)
 	_encounter_coordinator.attach_screen(screen)
@@ -221,7 +227,7 @@ func _attach_encounter_coordinator_to_screen(screen: DungeonScreen) -> void:
 func _on_return_to_town() -> void:
 	GameState.heal_party()
 	_current_dungeon_data = null
-	_show_town_screen()
+	_show_town_screen(true)
 
 # --- Save/Load from ESC Menu ---
 

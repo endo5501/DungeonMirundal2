@@ -344,6 +344,14 @@ func _make_character_with_hp(hp: int, statuses: Array[StringName] = []) -> Chara
 	return ch
 
 
+func _emit_status_tick_interval_steps(screen: DungeonScreen) -> void:
+	# Status ticks fire every Nth dungeon step, so tests that expect a single
+	# tick must drive the screen N times (matching EncounterCoordinator's
+	# STATUS_TICK_STEP_INTERVAL).
+	for i in range(EncounterCoordinator.STATUS_TICK_STEP_INTERVAL):
+		screen.step_taken.emit(Vector2i(4, 4))
+
+
 func test_step_taken_invokes_dungeon_tick_on_each_party_character():
 	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
 	add_child_autofree(coord)
@@ -356,9 +364,28 @@ func test_step_taken_invokes_dungeon_tick_on_each_party_character():
 	coord.set_guild(guild)
 	var screen := _make_screen()
 	coord.attach_screen(screen)
-	screen.step_taken.emit(Vector2i(4, 4))
-	# Poison ticks 3 → hp goes from 10 to 7.
+	_emit_status_tick_interval_steps(screen)
+	# Poison ticks 3 once per interval → hp goes from 10 to 7.
 	assert_eq(ch.current_hp, 7)
+
+
+func test_step_taken_below_interval_does_not_tick():
+	# Walking fewer than STATUS_TICK_STEP_INTERVAL steps must NOT damage poisoned
+	# characters yet — the slow drain is part of the gameplay feel.
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(10, [&"poison"])
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	for i in range(EncounterCoordinator.STATUS_TICK_STEP_INTERVAL - 1):
+		screen.step_taken.emit(Vector2i(4, 4))
+	assert_eq(ch.current_hp, 10)
 
 
 func test_step_taken_with_empty_persistent_statuses_does_nothing():
@@ -373,7 +400,7 @@ func test_step_taken_with_empty_persistent_statuses_does_nothing():
 	coord.set_guild(guild)
 	var screen := _make_screen()
 	coord.attach_screen(screen)
-	screen.step_taken.emit(Vector2i(4, 4))
+	_emit_status_tick_interval_steps(screen)
 	assert_eq(ch.current_hp, 10)
 
 
@@ -389,7 +416,7 @@ func test_step_taken_skips_dead_party_members():
 	coord.set_guild(guild)
 	var screen := _make_screen()
 	coord.attach_screen(screen)
-	screen.step_taken.emit(Vector2i(4, 4))
+	_emit_status_tick_interval_steps(screen)
 	# Dead character is skipped; HP stays at 0.
 	assert_eq(dead_ch.current_hp, 0)
 
@@ -418,3 +445,67 @@ func test_encounter_finished_carries_outcome():
 	coord.get_overlay().resolve()
 	assert_signal_emitted(coord, "encounter_finished")
 	assert_not_null(coord.last_outcome())
+
+
+# --- add-status-poison-and-petrify: dungeon_status_tick HUD signal ---
+
+func test_coordinator_defines_dungeon_status_tick_signal():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	assert_true(coord.has_signal("dungeon_status_tick"))
+
+
+func test_step_taken_emits_dungeon_status_tick_for_poisoned_member():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(10, [&"poison"])
+	ch.character_name = "Alice"
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	watch_signals(coord)
+	_emit_status_tick_interval_steps(screen)
+	assert_signal_emitted(coord, "dungeon_status_tick")
+	assert_signal_emitted_with_parameters(coord, "dungeon_status_tick", ["Alice", &"poison", 3])
+
+
+func test_step_taken_does_not_emit_signal_when_no_one_afflicted():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(10)  # no statuses
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	watch_signals(coord)
+	_emit_status_tick_interval_steps(screen)
+	assert_signal_emit_count(coord, "dungeon_status_tick", 0)
+
+
+func test_step_taken_emits_floored_amount_when_low_hp():
+	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())
+	add_child_autofree(coord)
+	coord.set_table(_make_never_trigger_table())
+	coord.set_status_repo(_make_status_repo())  # poison: tick_in_dungeon = 3
+	var guild := Guild.new()
+	var ch := _make_character_with_hp(2, [&"poison"])
+	ch.character_name = "Bob"
+	guild.register(ch)
+	guild.assign_to_party(ch, 0, 0)
+	coord.set_guild(guild)
+	var screen := _make_screen()
+	coord.attach_screen(screen)
+	watch_signals(coord)
+	_emit_status_tick_interval_steps(screen)
+	# requested=3 but capped at HP-1=1 → amount=1
+	assert_signal_emitted_with_parameters(coord, "dungeon_status_tick", ["Bob", &"poison", 1])
+	assert_eq(ch.current_hp, 1)

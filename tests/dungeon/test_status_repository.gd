@@ -49,17 +49,19 @@ func test_has_id_returns_true_for_registered():
 	assert_false(repo.has_id(&"sleep"))
 
 
-# --- Bulk-load via DataLoader: sleep / silence ship in this change ---
+# --- Bulk-load via DataLoader: sleep / silence / poison / petrify ship after this change ---
 
-func test_bulk_load_includes_sleep_and_silence():
-	# Reset cache so add-status-sleep-and-silence loads fresh on every run.
+func test_bulk_load_includes_all_known_statuses():
+	# Reset cache so the loader picks up newly-added .tres files on every run.
 	DataLoader._status_repo_cache = null
 	var loader := DataLoader.new()
 	var repo := loader.load_status_repository()
 	assert_not_null(repo)
 	assert_true(repo.has_id(&"sleep"), "sleep should be loaded")
 	assert_true(repo.has_id(&"silence"), "silence should be loaded")
-	assert_eq(repo.size(), 2, "exactly sleep and silence should ship in this change")
+	assert_true(repo.has_id(&"poison"), "poison should be loaded")
+	assert_true(repo.has_id(&"petrify"), "petrify should be loaded")
+	assert_eq(repo.size(), 4, "sleep / silence / poison / petrify should ship now")
 
 
 func test_loaded_sleep_fields_match_spec():
@@ -100,3 +102,45 @@ func test_loaded_silence_fields_match_spec():
 	assert_false(s.cures_on_damage)
 	assert_true(s.cures_on_battle_end)
 	assert_eq(s.resist_key, &"silence")
+
+
+func test_loaded_poison_fields_match_spec():
+	DataLoader._status_repo_cache = null
+	var repo := DataLoader.new().load_status_repository()
+	var s := repo.find(&"poison")
+	assert_not_null(s)
+	assert_eq(s.id, &"poison")
+	assert_eq(s.display_name, "毒")
+	assert_eq(s.scope, StatusData.Scope.PERSISTENT)
+	assert_false(s.prevents_action)
+	assert_false(s.randomizes_target)
+	assert_false(s.blocks_cast)
+	assert_eq(s.hit_penalty, 0.0)
+	assert_eq(s.default_duration, 0)
+	assert_eq(s.tick_in_battle, 1)
+	assert_eq(s.tick_in_dungeon, 1)
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+	assert_false(s.cures_on_damage)
+	assert_false(s.cures_on_battle_end)
+	assert_eq(s.resist_key, &"poison")
+
+
+func test_loaded_petrify_fields_match_spec():
+	DataLoader._status_repo_cache = null
+	var repo := DataLoader.new().load_status_repository()
+	var s := repo.find(&"petrify")
+	assert_not_null(s)
+	assert_eq(s.id, &"petrify")
+	assert_eq(s.display_name, "石化")
+	assert_eq(s.scope, StatusData.Scope.PERSISTENT)
+	assert_true(s.prevents_action)
+	assert_false(s.randomizes_target)
+	assert_false(s.blocks_cast)
+	assert_eq(s.hit_penalty, 0.0)
+	assert_eq(s.default_duration, 0)
+	assert_eq(s.tick_in_battle, 0)
+	assert_eq(s.tick_in_dungeon, 0)
+	assert_eq(s.tick_in_dungeon_ratio, 0)
+	assert_false(s.cures_on_damage)
+	assert_false(s.cures_on_battle_end)
+	assert_eq(s.resist_key, &"petrify")

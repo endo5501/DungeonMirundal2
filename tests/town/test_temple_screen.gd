@@ -129,3 +129,21 @@ func test_revive_is_100_percent_success():
 		add_child_autofree(s)
 		assert_true(s.revive(dead))
 		assert_eq(dead.current_hp, 1)
+
+
+# --- add-status-poison-and-petrify: hint about town-arrival auto-cure ---
+
+func test_temple_screen_renders_status_cure_hint():
+	var s := _make_screen()
+	var hint := _find_label_with_substring(s, "状態異常")
+	assert_not_null(hint, "TempleScreen should render a hint label mentioning 状態異常")
+
+
+func _find_label_with_substring(node: Node, needle: String) -> Label:
+	if node is Label and (node as Label).text.contains(needle):
+		return node as Label
+	for child in node.get_children():
+		var found := _find_label_with_substring(child, needle)
+		if found != null:
+			return found
+	return null

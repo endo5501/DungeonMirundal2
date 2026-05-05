@@ -207,6 +207,8 @@ func test_loaded_mage_has_only_mage_school_and_progression_at_levels_1_and_3():
 	var lv3: Array = m.spell_progression[3]
 	assert_true(lv3.has(&"flame"))
 	assert_true(lv3.has(&"blizzard"))
+	assert_true(lv3.has(&"poison_dart"), "Mage lv3 should also include poison_dart")
+	assert_eq(lv3.size(), 3, "Mage lv3 should have exactly flame / blizzard / poison_dart")
 
 
 func test_loaded_mage_has_katino_and_manifo_at_level_2():
@@ -238,6 +240,26 @@ func test_loaded_priest_has_only_priest_school_and_progression():
 	assert_true(lv1.has(&"holy"))
 
 
+func test_loaded_priest_lv3_includes_madi():
+	var p := _find_loaded("Priest")
+	assert_not_null(p)
+	assert_true(p.spell_progression.has(3))
+	var lv3: Array = p.spell_progression[3]
+	assert_true(lv3.has(&"heala"))
+	assert_true(lv3.has(&"allheal"))
+	assert_true(lv3.has(&"madi"))
+	assert_eq(lv3.size(), 3, "Priest lv3 should have exactly heala / allheal / madi")
+
+
+func test_loaded_priest_lv5_grants_dialma():
+	var p := _find_loaded("Priest")
+	assert_not_null(p)
+	assert_true(p.spell_progression.has(5), "Priest should have spell_progression[5]")
+	var lv5: Array = p.spell_progression[5]
+	assert_true(lv5.has(&"dialma"))
+	assert_eq(lv5.size(), 1, "Priest lv5 should have exactly dialma")
+
+
 func test_loaded_bishop_has_both_schools_and_progression_at_levels_2_and_5():
 	var b := _find_loaded("Bishop")
 	assert_not_null(b)
@@ -250,9 +272,10 @@ func test_loaded_bishop_has_both_schools_and_progression_at_levels_2_and_5():
 		assert_true(lv2.has(sid), "bishop lv2 missing %s" % sid)
 	assert_eq(lv2.size(), 7, "bishop lv2 should hold exactly 7 spells (4 + 3 status)")
 	var lv5: Array = b.spell_progression[5]
-	for sid in [&"flame", &"blizzard", &"heala", &"allheal"]:
+	for sid in [&"flame", &"blizzard", &"heala", &"allheal", &"poison_dart", &"madi"]:
 		assert_true(lv5.has(sid), "bishop lv5 missing %s" % sid)
-	assert_eq(lv5.size(), 4, "bishop lv5 should hold exactly 4 spells")
+	assert_eq(lv5.size(), 6, "bishop lv5 should hold exactly 6 spells")
+	assert_false(lv5.has(&"dialma"), "bishop must NOT learn dialma (Priest only)")
 
 
 func test_loaded_samurai_has_mage_school_and_starts_at_level_4():
