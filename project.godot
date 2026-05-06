@@ -18,14 +18,14 @@ config/name="DungeonMirundal2"
 run/main_scene="res://src/main.tscn"
 config/features=PackedStringArray("4.6")
 
-[dotnet]
-
-project/assembly_name="DungeonMirundal2"
-
 [autoload]
 
 GameState="*res://src/game_state.gd"
 PartyHud="*res://src/autoload/party_hud.gd"
+
+[dotnet]
+
+project/assembly_name="DungeonMirundal2"
 
 [editor_plugins]
 
