@@ -12,7 +12,6 @@ const LABEL_OUTLINE_COLOR := Color(0, 0, 0, 0.85)
 const LABEL_BOX_WIDTH := 200.0
 const WINDOW_PADDING := 8.0
 const WINDOW_BG_COLOR := Color(0.04, 0.04, 0.05, 0.62)
-const WINDOW_FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
 
 const HUD_HEIGHT := LABEL_AREA_HEIGHT + PartyMemberPanel.PANEL_HEIGHT + 4
 
@@ -97,8 +96,7 @@ func _draw_label(font: Font, text: String, pos: Vector2, alignment: int, box_wid
 
 
 func _draw_window(rect: Rect2) -> void:
-	draw_rect(rect, WINDOW_BG_COLOR)
-	draw_rect(rect, WINDOW_FRAME_COLOR, false, 2.0)
+	CombatWindowStyle.draw_window(self, rect, WINDOW_BG_COLOR)
 
 
 func get_front_window_rect() -> Rect2:

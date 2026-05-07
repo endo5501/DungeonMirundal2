@@ -35,11 +35,9 @@ func _build_ui() -> void:
 	clip_contents = true
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.clip_contents = true
-	panel.add_theme_stylebox_override("panel", _make_window_style())
+	panel.add_theme_stylebox_override("panel", CombatWindowStyle.make_panel())
 	add_child(panel)
 	var vbox := VBoxContainer.new()
-	vbox.clip_contents = true
 	panel.add_child(vbox)
 	_title_label = Label.new()
 	_title_label.text = TITLE_TEXT
@@ -54,9 +52,11 @@ func _build_ui() -> void:
 
 
 func append_line(text: String) -> void:
-	var display_lines := text.split("\n", false)
-	for line in display_lines:
-		_lines.append(line)
+	if text.find("\n") == -1:
+		_lines.append(text)
+	else:
+		for line in text.split("\n", false):
+			_lines.append(line)
 	while _lines.size() > MAX_LINES:
 		_lines.pop_front()
 	_refresh_label()
@@ -94,15 +94,6 @@ func _refresh_label() -> void:
 func _ensure_ready() -> void:
 	if _label == null:
 		_build_ui()
-
-
-func _make_window_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.05, 0.74)
-	style.border_color = Color(0.72, 0.58, 0.28, 0.95)
-	style.set_border_width_all(2)
-	style.set_content_margin_all(8.0)
-	return style
 
 
 func _format_action(action: Dictionary) -> String:

@@ -318,6 +318,20 @@ func test_monster_dummy_visuals_are_lower_and_baseline_aligned():
 			"dummy enemy visuals should share a stable baseline")
 
 
+func test_monster_dummy_visuals_reflow_when_panel_size_changes_with_same_monsters():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	var combatants := _make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m))
+	panel.size = Vector2(900, 500)
+	panel.refresh(combatants, {&"slime": 3})
+	var before_rects: Array = panel.get_dummy_visual_rects()
+	panel.size = Vector2(450, 500)
+	panel.refresh(combatants, {&"slime": 3})
+	var after_rects: Array = panel.get_dummy_visual_rects()
+	assert_ne(after_rects[0], before_rects[0],
+		"dummy enemy visuals should reflow when panel size changes even if living monsters are unchanged")
+
+
 # --- party_state_changed signal (replaces PartyStatusPanel; dungeon UI refreshes instead) ---
 
 func test_start_encounter_emits_party_state_changed():

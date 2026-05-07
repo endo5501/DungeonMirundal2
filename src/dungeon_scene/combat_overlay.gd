@@ -571,7 +571,7 @@ func _build_combat_ui() -> void:
 
 	_item_use_panel = PanelContainer.new()
 	_place_right_command_panel(_item_use_panel)
-	_item_use_panel.add_theme_stylebox_override("panel", _make_window_style())
+	_item_use_panel.add_theme_stylebox_override("panel", CombatWindowStyle.make_panel())
 	_item_use_panel.visible = false
 	add_child(_item_use_panel)
 
@@ -602,15 +602,6 @@ func _place(ctrl: Control, left: float, top: float, right: float, bottom: float)
 
 func _place_right_command_panel(ctrl: Control) -> void:
 	_place(ctrl, RIGHT_COLUMN_LEFT, RIGHT_COMMAND_TOP, RIGHT_COLUMN_RIGHT, RIGHT_COMMAND_BOTTOM)
-
-
-func _make_window_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.05, 0.74)
-	style.border_color = Color(0.72, 0.58, 0.28, 0.95)
-	style.set_border_width_all(2)
-	style.set_content_margin_all(8.0)
-	return style
 
 
 func _refresh_panels() -> void:

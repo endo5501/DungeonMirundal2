@@ -5,7 +5,6 @@ const TITLE_TEXT := "ENEMY"
 const VISUAL_COLOR := Color(0.25, 0.75, 0.25, 0.85)
 const VISUAL_OUTLINE_COLOR := Color(0.05, 0.12, 0.05, 1.0)
 const WINDOW_BG_COLOR := Color(0.04, 0.04, 0.05, 0.78)
-const WINDOW_FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
 const WINDOW_INSET := 8.0
 const LIST_WINDOW_SIZE := Vector2(300, 138)
 const TITLE_FONT_SIZE := 18
@@ -77,9 +76,7 @@ func get_dummy_visual_rects() -> Array:
 
 
 func _draw() -> void:
-	var list_rect := get_enemy_list_window_rect()
-	draw_rect(list_rect, WINDOW_BG_COLOR)
-	draw_rect(list_rect, WINDOW_FRAME_COLOR, false, 2.0)
+	CombatWindowStyle.draw_window(self, get_enemy_list_window_rect(), WINDOW_BG_COLOR)
 	for rect in _dummy_visual_rects:
 		draw_rect(rect.grow(2.0), VISUAL_OUTLINE_COLOR)
 		draw_rect(rect, VISUAL_COLOR)
