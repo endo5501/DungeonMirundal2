@@ -19,6 +19,11 @@ signal actor_dealt_damage(target: CombatActor, amount: int, source: CombatActor)
 signal actor_healed(target: CombatActor, amount: int, source: CombatActor)
 signal actor_died(actor: CombatActor)
 signal actor_status_inflicted(actor: CombatActor, status_id: StringName)
+# Emitted exactly once per cast in which spend_mp(spell.mp_cost) succeeded
+# AND spell.mp_cost > 0 — silence/no_target/no_mp/zero-cost paths skip it.
+# Pre-emitted before report.add_cast so subscribers reading
+# get_pending_action_index() see the index where the cast log entry will land.
+signal actor_spent_mp(actor: CombatActor, cost: int)
 
 var state: State = State.IDLE
 var party: Array = []  # Array[PartyCombatant or CombatActor-compatible]
@@ -408,6 +413,12 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 	if not caster.spend_mp(spell.mp_cost):
 		report.add_cast_skipped_no_mp(caster, spell)
 		return
+	# Pre-emit MP spend BEFORE add_cast so subscribers reading
+	# get_pending_action_index() see the index where the cast log entry will land.
+	# Skip when mp_cost == 0 (no MP was actually deducted) so HUD subscribers
+	# don't queue zero-delta events.
+	if spell.mp_cost > 0:
+		actor_spent_mp.emit(caster, spell.mp_cost)
 	var spell_resolution: SpellResolution = spell.effect.apply(caster, targets, SpellRng.new(rng)) if spell.effect != null else SpellResolution.new()
 	# Pre-emit damage/heal/status_inflicted BEFORE add_cast so their
 	# pending-action-index lines up with the cast log entry. The cast log

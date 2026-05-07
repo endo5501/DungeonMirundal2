@@ -9,16 +9,26 @@ extends CanvasLayer
 # PartyMemberPanel. detach_from_turn_engine() is called when combat ends to
 # release the engine reference.
 
+# Event queue type tags. Constants prevent typos between the producer
+# (handlers) and consumer (_play_event match) silently dropping events.
+const EVT_LIFT: StringName = &"lift"
+const EVT_SHAKE: StringName = &"shake"
+const EVT_FLASH: StringName = &"flash"
+const EVT_MP_SPEND: StringName = &"mp_spend"
+const EVT_DIE: StringName = &"die"
+const EVT_REDRAW: StringName = &"redraw"
+
 var _party_display: PartyDisplay
 var _bound_guild: Guild
 var _attached_engine: TurnEngine = null
+var _attached_monster_panel: CombatMonsterPanel = null
 
 # Buffering machinery (combat-party-reactions §D10): while begin_buffering()
 # is active, signal handlers queue events tagged with the engine's pending
 # action index so CombatOverlay can release them in lockstep with log line
 # playback. Outside the begin/end window, handlers fire immediately.
 var _is_buffering: bool = false
-var _event_queue: Array = []  # [{ "type": String, "actor": CombatActor, "step": int }, ...]
+var _event_queue: Array = []  # [{ "type": StringName, "actor": CombatActor, "delta": int?, "step": int }, ...]
 
 
 func _ready() -> void:
@@ -81,6 +91,7 @@ func attach_to_turn_engine(engine: TurnEngine) -> void:
 	engine.actor_healed.connect(_on_actor_healed)
 	engine.actor_died.connect(_on_actor_died)
 	engine.actor_status_inflicted.connect(_on_actor_status_inflicted)
+	engine.actor_spent_mp.connect(_on_actor_spent_mp)
 	for pc in engine.party:
 		var panel: PartyMemberPanel = _find_panel_for_combat_actor(pc)
 		if panel != null:
@@ -104,6 +115,9 @@ func detach_from_turn_engine() -> void:
 		e.actor_died.disconnect(_on_actor_died)
 	if e.actor_status_inflicted.is_connected(_on_actor_status_inflicted):
 		e.actor_status_inflicted.disconnect(_on_actor_status_inflicted)
+	if e.actor_spent_mp.is_connected(_on_actor_spent_mp):
+		e.actor_spent_mp.disconnect(_on_actor_spent_mp)
+	detach_monster_panel()
 	_attached_engine = null
 	if _party_display == null:
 		return
@@ -127,6 +141,16 @@ func _find_panel_for_combat_actor(actor) -> PartyMemberPanel:
 		if (panel as PartyMemberPanel)._character == ch:
 			return panel
 	return null
+
+
+# --- monster panel bridging ---
+
+func attach_monster_panel(panel: CombatMonsterPanel) -> void:
+	_attached_monster_panel = panel
+
+
+func detach_monster_panel() -> void:
+	_attached_monster_panel = null
 
 
 # --- buffering API ---
@@ -167,77 +191,77 @@ func _emit_step() -> int:
 
 func _play_event(ev: Dictionary) -> void:
 	var actor = ev.get("actor")
-	match String(ev.get("type", "")):
-		"lift":
-			_do_lift(actor)
-		"shake":
-			_do_shake(actor)
-		"flash":
-			_do_flash(actor)
-		"die":
-			_do_die(actor)
-		"redraw":
-			_do_redraw(actor)
-
-
-func _do_lift(actor) -> void:
+	var delta: int = int(ev.get("delta", 0))
+	var type: StringName = ev.get("type", &"")
+	# Monster die is the only event that doesn't target a PartyMemberPanel,
+	# so it's resolved before the panel lookup.
+	if type == EVT_DIE and not (actor is PartyCombatant):
+		if _attached_monster_panel != null and actor != null:
+			_attached_monster_panel.apply_died(actor)
+		return
 	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.play_lift_animation()
-
-
-func _do_shake(actor) -> void:
-	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.play_shake_animation()
-
-
-func _do_flash(actor) -> void:
-	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.play_heal_flash_animation()
-
-
-func _do_die(actor) -> void:
-	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.play_die_animation()
-
-
-func _do_redraw(actor) -> void:
-	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
-	if panel != null:
-		panel.queue_redraw()
+	if panel == null:
+		return
+	match type:
+		EVT_LIFT:
+			panel.play_lift_animation()
+		EVT_SHAKE:
+			panel.apply_combat_hp_delta(delta)
+			panel.play_shake_animation()
+		EVT_FLASH:
+			panel.apply_combat_hp_delta(delta)
+			panel.play_heal_flash_animation()
+		EVT_MP_SPEND:
+			panel.apply_combat_mp_delta(delta)
+		EVT_DIE:
+			# Zero displayed HP first so the faded panel never shows a positive bar.
+			panel.set_combat_displayed_hp(0)
+			panel.play_die_animation()
+		EVT_REDRAW:
+			panel.queue_redraw()
 
 
 # --- signal handlers ---
 
 func _on_actor_action_started(actor: CombatActor, _kind: StringName) -> void:
 	if _is_buffering:
-		_event_queue.append({"type": "lift", "actor": actor, "step": _emit_step()})
+		_event_queue.append({"type": EVT_LIFT, "actor": actor, "step": _emit_step()})
 	else:
-		_do_lift(actor)
+		_play_event({"type": EVT_LIFT, "actor": actor})
 
 
 func _on_actor_died(actor: CombatActor) -> void:
 	if _is_buffering:
-		_event_queue.append({"type": "die", "actor": actor, "step": _emit_step()})
+		_event_queue.append({"type": EVT_DIE, "actor": actor, "step": _emit_step()})
 	else:
-		_do_die(actor)
+		_play_event({"type": EVT_DIE, "actor": actor})
 
 
-func _on_actor_dealt_damage(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+func _on_actor_dealt_damage(target: CombatActor, amount: int, _source: CombatActor) -> void:
+	var ev := {"type": EVT_SHAKE, "actor": target, "delta": -amount}
 	if _is_buffering:
-		_event_queue.append({"type": "shake", "actor": target, "step": _emit_step()})
+		ev["step"] = _emit_step()
+		_event_queue.append(ev)
 	else:
-		_do_shake(target)
+		_play_event(ev)
 
 
-func _on_actor_healed(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+func _on_actor_healed(target: CombatActor, amount: int, _source: CombatActor) -> void:
+	var ev := {"type": EVT_FLASH, "actor": target, "delta": amount}
 	if _is_buffering:
-		_event_queue.append({"type": "flash", "actor": target, "step": _emit_step()})
+		ev["step"] = _emit_step()
+		_event_queue.append(ev)
 	else:
-		_do_flash(target)
+		_play_event(ev)
+
+
+func _on_actor_spent_mp(actor: CombatActor, cost: int) -> void:
+	var ev := {"type": EVT_MP_SPEND, "actor": actor, "delta": -cost}
+	if _is_buffering:
+		ev["step"] = _emit_step()
+		_event_queue.append(ev)
+	else:
+		_play_event(ev)
 
 
 # Persistent statuses are committed at battle end so the panel's icon row
@@ -245,6 +269,6 @@ func _on_actor_healed(target: CombatActor, _amount: int, _source: CombatActor) -
 # future per-status combat icon work has a hook.
 func _on_actor_status_inflicted(actor: CombatActor, _status_id: StringName) -> void:
 	if _is_buffering:
-		_event_queue.append({"type": "redraw", "actor": actor, "step": _emit_step()})
+		_event_queue.append({"type": EVT_REDRAW, "actor": actor, "step": _emit_step()})
 	else:
-		_do_redraw(actor)
+		_play_event({"type": EVT_REDRAW, "actor": actor})

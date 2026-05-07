@@ -81,6 +81,12 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	# Subscribe the persistent HUD so panels react (lift / die / stat-mod
 	# icons) to engine signals for the duration of this encounter.
 	PartyHud.attach_to_turn_engine(_turn_engine)
+	# Initialize the monster panel's displayed_alive table from the live
+	# combatant set, then register it with PartyHud so monster actor_died
+	# events are bridged through the buffering pipeline (combat-overlay spec).
+	if _monster_panel != null:
+		_monster_panel.setup_for_battle(_turn_engine.monsters)
+	PartyHud.attach_monster_panel(_monster_panel)
 	_is_active = true
 	visible = true
 	_last_outcome = null
@@ -95,7 +101,6 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	if _spell_selector != null:
 		_spell_selector.hide_selector()
 	cancel_log_playback()
-	_refresh_panels()
 	_begin_command_phase()
 
 
@@ -354,9 +359,12 @@ func _resolve_turn_now() -> void:
 		_item_use_panel.visible = false
 	# Buffer signal-driven HUD animations so they fire alongside the log
 	# lines they describe, instead of all at once when resolve_turn returns.
+	# We deliberately do NOT call _refresh_panels() here — monster removal
+	# and party HP/MP must lag until the matching log line is shown. A final
+	# _refresh_panels() runs from _on_log_playback_finished to reconcile any
+	# residual drift with the engine's canonical state.
 	PartyHud.begin_buffering()
 	var report := _turn_engine.resolve_turn(_rng)
-	_refresh_panels()
 	_play_log_sequentially(report)
 
 
@@ -406,15 +414,16 @@ func cancel_log_playback() -> void:
 	_log_pending_actions.clear()
 	if _log_timer != null:
 		_log_timer.stop()
-	# Drain any leftover HUD events so panels don't get stuck mid-buffer
-	# when the overlay is torn down or playback is interrupted.
+	# Drain leftover HUD events and reconcile so an interrupted playback
+	# never leaves the panels showing stale lagged state.
 	PartyHud.end_buffering()
+	if _turn_engine != null:
+		_refresh_panels()
 
 
 func _on_log_playback_finished() -> void:
-	# Fire any HUD events that didn't have a matching log line (e.g. the
-	# last action's animation slot) before transitioning back to input.
 	PartyHud.end_buffering()
+	_refresh_panels()
 	if _turn_engine.state == TurnEngine.State.FINISHED:
 		_finalize_battle()
 	else:

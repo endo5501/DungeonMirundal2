@@ -18,6 +18,7 @@ class _SignalRecorder:
 	var heals: Array = []            # [[target, amount, source], ...]
 	var deaths: Array = []           # [actor, ...]
 	var inflicts: Array = []         # [[actor, status_id], ...]
+	var mp_spends: Array = []        # [[actor, cost], ...]
 
 	func record_action(actor, kind: StringName) -> void:
 		actions.append([actor, kind])
@@ -33,6 +34,9 @@ class _SignalRecorder:
 
 	func record_inflict(actor, status_id: StringName) -> void:
 		inflicts.append([actor, status_id])
+
+	func record_mp_spent(actor, cost: int) -> void:
+		mp_spends.append([actor, cost])
 
 
 class _StubPartyActor extends CombatActor:
@@ -135,17 +139,20 @@ func _wire_recorder(engine: TurnEngine, rec: _SignalRecorder) -> void:
 	engine.actor_healed.connect(rec.record_heal)
 	engine.actor_died.connect(rec.record_died)
 	engine.actor_status_inflicted.connect(rec.record_inflict)
+	if engine.has_signal("actor_spent_mp"):
+		engine.actor_spent_mp.connect(rec.record_mp_spent)
 
 
 # --- signal declarations exist ---
 
-func test_turn_engine_declares_all_five_ui_signals():
+func test_turn_engine_declares_all_six_ui_signals():
 	var engine := TurnEngine.new()
 	assert_true(engine.has_signal("actor_action_started"))
 	assert_true(engine.has_signal("actor_dealt_damage"))
 	assert_true(engine.has_signal("actor_healed"))
 	assert_true(engine.has_signal("actor_died"))
 	assert_true(engine.has_signal("actor_status_inflicted"))
+	assert_true(engine.has_signal("actor_spent_mp"))
 
 
 # --- actor_action_started: per command kind ---
@@ -561,3 +568,114 @@ func test_already_inflicted_status_does_not_re_emit():
 		if inf[0] == m:
 			m_inflicts += 1
 	assert_eq(m_inflicts, 0, "re-applying an existing status must not emit")
+
+
+# --- actor_spent_mp ---
+
+func _make_silence_status_repo() -> StatusRepository:
+	var repo := StatusRepository.new()
+	var sil := StatusData.new()
+	sil.id = &"silence"
+	sil.display_name = "silence"
+	sil.scope = StatusData.Scope.BATTLE_ONLY
+	sil.blocks_cast = true
+	repo.register(sil)
+	return repo
+
+
+func _make_repo_with_zero_cost_fire() -> SpellRepository:
+	var repo := SpellRepository.new()
+	var fire := SpellData.new()
+	fire.id = &"free_fire"
+	fire.display_name = "ファイア(無料)"
+	fire.school = SpellData.SCHOOL_MAGE
+	fire.level = 1
+	fire.mp_cost = 0
+	fire.target_type = SpellData.TargetType.ENEMY_ONE
+	fire.scope = SpellData.Scope.BATTLE_ONLY
+	var eff := DamageSpellEffect.new()
+	eff.base_damage = 1
+	eff.spread = 0
+	fire.effect = eff
+	repo.register(fire)
+	return repo
+
+
+func test_successful_cast_emits_actor_spent_mp():
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire()
+	var pc := _StubPartyActor.new("Mage", 30, 0, 0, 99, 5)
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, CastCommand.new(&"fire", 0, m))
+	engine.resolve_turn(_make_rng())
+	var pc_spends := []
+	for s in rec.mp_spends:
+		if s[0] == pc:
+			pc_spends.append(s)
+	assert_eq(pc_spends.size(), 1, "successful cast must emit actor_spent_mp once")
+	assert_eq(int(pc_spends[0][1]), 2, "cost must equal spell.mp_cost")
+
+
+func test_silenced_cast_does_not_emit_actor_spent_mp():
+	var engine := TurnEngine.new()
+	var status_repo := _make_silence_status_repo()
+	engine.status_repo = status_repo
+	engine.spell_repo = _make_repo_with_fire()
+	var pc := _StubPartyActor.new("Mage", 30, 0, 0, 99, 5)
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	pc.set_status_repo_for_testing(status_repo)
+	m.set_status_repo_for_testing(status_repo)
+	pc.statuses.apply(&"silence", 3)
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, CastCommand.new(&"fire", 0, m))
+	engine.resolve_turn(_make_rng())
+	assert_eq(rec.mp_spends.size(), 0, "silenced cast must not emit actor_spent_mp")
+	assert_eq(pc.current_mp, 5, "MP must not be consumed when silenced")
+
+
+func test_cast_skipped_no_target_does_not_emit_actor_spent_mp():
+	# Target is dead at resolve time and no replacement available → no MP consumed.
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire()
+	var pc := _StubPartyActor.new("Mage", 30, 0, 0, 99, 5)
+	var m := _StubMonsterActor.new("M1", 0, 0)  # already dead
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, CastCommand.new(&"fire", 0, m))
+	engine.resolve_turn(_make_rng())
+	assert_eq(rec.mp_spends.size(), 0, "cast skipped (no target) must not emit actor_spent_mp")
+	assert_eq(pc.current_mp, 5, "MP must not be consumed when no valid target")
+
+
+func test_cast_skipped_no_mp_does_not_emit_actor_spent_mp():
+	# Caster has 0 MP, spell requires 2 → spend_mp returns false.
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_fire()
+	var pc := _StubPartyActor.new("Mage", 30, 0, 0, 99, 0)  # 0 MP
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, CastCommand.new(&"fire", 0, m))
+	engine.resolve_turn(_make_rng())
+	assert_eq(rec.mp_spends.size(), 0, "cast skipped (no MP) must not emit actor_spent_mp")
+
+
+func test_zero_cost_cast_does_not_emit_actor_spent_mp():
+	# A spell with mp_cost == 0 succeeds but no MP was actually deducted; no signal.
+	var engine := TurnEngine.new()
+	engine.spell_repo = _make_repo_with_zero_cost_fire()
+	var pc := _StubPartyActor.new("Mage", 30, 0, 0, 99, 0)  # 0 MP is fine for free spell
+	var m := _StubMonsterActor.new("M1", 30, 0)
+	engine.start_battle([pc], [m])
+	var rec := _SignalRecorder.new()
+	_wire_recorder(engine, rec)
+	engine.submit_command(0, CastCommand.new(&"free_fire", 0, m))
+	engine.resolve_turn(_make_rng())
+	assert_eq(rec.mp_spends.size(), 0, "zero-cost cast must not emit actor_spent_mp")

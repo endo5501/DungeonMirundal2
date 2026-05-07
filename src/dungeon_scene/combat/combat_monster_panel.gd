@@ -14,12 +14,53 @@ var _title_label: Label
 var _label: Label
 var _display_text: String = ""
 var _dummy_visual_rects: Array[Rect2] = []
+# MonsterCombatant -> bool. While _battle_active, refresh() reads from this
+# dict instead of the live is_alive() so a dying monster stays visible until
+# PartyHud flushes the matching actor_died step.
+var _displayed_alive: Dictionary = {}
+# Frozen at setup_for_battle so per-id "X/Y" denominators don't drift as
+# monsters die. Reused across every apply_died.
+var _initial_counts: Dictionary = {}
+# Distinguishes "battle in progress with zero monsters registered" from
+# "outside any battle"; the former still wants displayed_alive semantics.
+var _battle_active: bool = false
 
 
 func _ready() -> void:
 	_build_ui()
 	resized.connect(_sync_label_layout)
 	_sync_label_layout()
+
+
+func setup_for_battle(monsters: Array) -> void:
+	_displayed_alive.clear()
+	for mc in monsters:
+		if mc != null:
+			_displayed_alive[mc] = true
+	_initial_counts = _initial_counts_from(monsters)
+	_battle_active = true
+	refresh(monsters, _initial_counts)
+
+
+func apply_died(actor) -> void:
+	if actor == null:
+		return
+	if not _displayed_alive.get(actor, false):
+		return
+	_displayed_alive[actor] = false
+	# Iteration order of the dict matches the insertion order from
+	# setup_for_battle, which is the order the player saw at battle start.
+	refresh(_displayed_alive.keys(), _initial_counts)
+
+
+func _initial_counts_from(monsters: Array) -> Dictionary:
+	var counts: Dictionary = {}
+	for mc in monsters:
+		if mc == null or mc.monster == null or mc.monster.data == null:
+			continue
+		var id: StringName = mc.monster.data.monster_id
+		counts[id] = counts.get(id, 0) + 1
+	return counts
 
 
 func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
@@ -35,7 +76,8 @@ func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 		if not name_by_id.has(id):
 			name_by_id[id] = mc.monster.data.monster_name
 			order.append(id)
-		if mc.is_alive():
+		var alive: bool = _displayed_alive.get(mc, true) if _battle_active else mc.is_alive()
+		if alive:
 			alive_counts[id] = alive_counts.get(id, 0) + 1
 			living_count += 1
 	var lines: Array = []

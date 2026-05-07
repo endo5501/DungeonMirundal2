@@ -222,3 +222,278 @@ func test_panel_suppresses_hp_changed_shake_during_combat_binding():
 	ch.current_hp = ch.current_hp - 1
 	assert_same(panel._active_shake_tween, before_shake,
 		"panel must NOT shake from hp_changed while a CombatActor is bound")
+
+
+# --- 4.x: delta on shake / flash / mp_spend events ---
+
+func test_dealt_damage_queue_entry_carries_negative_delta():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_dealt_damage.emit(pc, 7, null)
+	assert_eq(hud._event_queue.size(), 1)
+	var ev: Dictionary = hud._event_queue[0]
+	assert_eq(String(ev.get("type", "")), "shake")
+	assert_eq(int(ev.get("delta", 999)), -7)
+	assert_eq(int(ev.get("step", -1)), 0)
+
+
+func test_healed_queue_entry_carries_positive_delta():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_healed.emit(pc, 5, null)
+	assert_eq(hud._event_queue.size(), 1)
+	var ev: Dictionary = hud._event_queue[0]
+	assert_eq(String(ev.get("type", "")), "flash")
+	assert_eq(int(ev.get("delta", -999)), 5)
+
+
+func test_actor_spent_mp_signal_is_subscribed():
+	var setup := _setup_party_with_one_member()
+	var _pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([setup[1]], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	assert_true(engine.actor_spent_mp.is_connected(hud._on_actor_spent_mp))
+
+
+func test_spent_mp_queue_entry_carries_negative_delta():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_spent_mp.emit(pc, 4)
+	assert_eq(hud._event_queue.size(), 1)
+	var ev: Dictionary = hud._event_queue[0]
+	assert_eq(String(ev.get("type", "")), "mp_spend")
+	assert_eq(int(ev.get("delta", 999)), -4)
+	assert_eq(int(ev.get("step", -1)), 0)
+
+
+# --- 4.x: flush applies delta then plays animation ---
+
+func test_flush_shake_applies_hp_delta_then_plays_animation():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := _front_panel(0)
+	# bind_combat_actor latched displayed_hp from pc.current_hp; record it.
+	var hp_before: int = panel._combat_displayed_hp
+	var before_shake = panel._active_shake_tween
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_dealt_damage.emit(pc, 3, null)
+	hud.flush_up_to_step(0)
+	assert_eq(panel._combat_displayed_hp, hp_before - 3,
+		"apply_combat_hp_delta must reduce displayed HP by amount")
+	assert_ne(panel._active_shake_tween, before_shake,
+		"shake animation must fire after delta is applied")
+
+
+func test_flush_flash_applies_hp_delta_then_plays_animation():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := _front_panel(0)
+	# Set displayed HP low so heal delta visibly increases it.
+	panel.set_combat_displayed_hp(2)
+	var before_flash = panel._active_flash_tween
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_healed.emit(pc, 4, null)
+	hud.flush_up_to_step(0)
+	assert_eq(panel._combat_displayed_hp, 6,
+		"apply_combat_hp_delta must increase displayed HP by amount")
+	assert_ne(panel._active_flash_tween, before_flash,
+		"flash animation must fire after delta is applied")
+
+
+func test_flush_mp_spend_applies_mp_delta_with_no_extra_animation():
+	var setup := _setup_party_with_one_member()
+	var ch: Character = setup[0]
+	ch.max_mp = 10
+	ch.current_mp = 5
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := _front_panel(0)
+	# bind_combat_actor latched displayed_mp = 5 from the live MP.
+	var before_shake = panel._active_shake_tween
+	var before_flash = panel._active_flash_tween
+	var before_lift = panel._active_lift_tween
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_spent_mp.emit(pc, 2)
+	hud.flush_up_to_step(0)
+	assert_eq(panel._combat_displayed_mp, 3,
+		"apply_combat_mp_delta must reduce displayed MP by cost")
+	assert_same(panel._active_shake_tween, before_shake, "no shake on mp_spend")
+	assert_same(panel._active_flash_tween, before_flash, "no flash on mp_spend")
+	assert_same(panel._active_lift_tween, before_lift, "no lift on mp_spend")
+
+
+func test_flush_die_zeroes_displayed_hp_then_fades():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := _front_panel(0)
+	# Suppose previous shakes already left displayed_hp positive.
+	panel.set_combat_displayed_hp(2)
+	var before_die = panel._active_die_tween
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_died.emit(pc)
+	hud.flush_up_to_step(0)
+	assert_eq(panel._combat_displayed_hp, 0,
+		"die flush must zero displayed HP before fading")
+	assert_ne(panel._active_die_tween, before_die,
+		"play_die_animation must fire after displayed HP is zeroed")
+
+
+func test_non_buffering_spent_mp_applies_delta_immediately():
+	var setup := _setup_party_with_one_member()
+	var ch: Character = setup[0]
+	ch.max_mp = 10
+	ch.current_mp = 5
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([pc], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := _front_panel(0)
+	# bind_combat_actor latched displayed_mp = 5.
+	# No begin_buffering — direct emit must apply immediately.
+	engine.actor_spent_mp.emit(pc, 2)
+	assert_eq(panel._combat_displayed_mp, 3)
+
+
+func test_detach_disconnects_actor_spent_mp():
+	var setup := _setup_party_with_one_member()
+	var _pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	engine.start_battle([setup[1]], [_MonsterStub.new()])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	hud.detach_from_turn_engine()
+	assert_false(engine.actor_spent_mp.is_connected(hud._on_actor_spent_mp))
+
+
+# --- 6.x: monster panel bridging ---
+
+func _make_monster_data() -> MonsterData:
+	var d := MonsterData.new()
+	d.monster_id = &"goblin"
+	d.monster_name = "ゴブリン"
+	d.max_hp_min = 5
+	d.max_hp_max = 5
+	d.attack = 1
+	d.defense = 0
+	d.agility = 1
+	return d
+
+
+func _make_monster() -> MonsterCombatant:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	return MonsterCombatant.new(Monster.new(_make_monster_data(), rng))
+
+
+func test_party_hud_exposes_monster_panel_api():
+	var hud := _hud()
+	assert_true(hud.has_method("attach_monster_panel"))
+	assert_true(hud.has_method("detach_monster_panel"))
+
+
+func test_buffered_monster_die_queues_event_and_flushes_via_apply_died():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	var mc := _make_monster()
+	engine.start_battle([pc], [mc])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.setup_for_battle([mc])
+	hud.attach_monster_panel(panel)
+	hud.begin_buffering()
+	engine._resolve_report = TurnReport.new()
+	engine.actor_died.emit(mc)
+	# Before flush: still alive in display.
+	assert_true(panel._displayed_alive.get(mc, false), "monster must remain alive until flushed")
+	hud.flush_up_to_step(0)
+	assert_false(panel._displayed_alive.get(mc, true),
+		"flush_up_to_step must invoke apply_died on the attached monster panel")
+
+
+func test_unbuffered_monster_die_applies_immediately():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	var mc := _make_monster()
+	engine.start_battle([pc], [mc])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.setup_for_battle([mc])
+	hud.attach_monster_panel(panel)
+	# No begin_buffering — direct emit must apply immediately.
+	engine.actor_died.emit(mc)
+	assert_false(panel._displayed_alive.get(mc, true),
+		"unbuffered monster actor_died must call apply_died synchronously")
+
+
+func test_monster_die_without_attached_panel_is_noop():
+	var setup := _setup_party_with_one_member()
+	var pc: CombatActor = setup[1]
+	var engine := TurnEngine.new()
+	var mc := _make_monster()
+	engine.start_battle([pc], [mc])
+	var hud := _hud()
+	hud.attach_to_turn_engine(engine)
+	# No attach_monster_panel — should not crash.
+	engine.actor_died.emit(mc)
+	# If we reach here without error the no-op path worked.
+	assert_true(true)
+
+
+func test_detach_clears_attached_monster_panel():
+	var hud := _hud()
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	hud.attach_monster_panel(panel)
+	# attach_to_turn_engine is required so detach_from_turn_engine actually runs.
+	var engine := TurnEngine.new()
+	engine.start_battle([_setup_party_with_one_member()[1]], [_MonsterStub.new()])
+	hud.attach_to_turn_engine(engine)
+	hud.detach_from_turn_engine()
+	assert_null(hud._attached_monster_panel,
+		"detach_from_turn_engine must release the attached monster panel reference")
