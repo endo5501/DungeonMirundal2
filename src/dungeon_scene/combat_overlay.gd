@@ -19,6 +19,12 @@ const _OPT_ITEM: int = CombatCommandMenu.OPT_ITEM
 const _OPT_ESCAPE: int = CombatCommandMenu.OPT_ESCAPE
 const _OPT_CAST_MAGE: int = CombatCommandMenu.OPT_CAST_MAGE
 const _OPT_CAST_PRIEST: int = CombatCommandMenu.OPT_CAST_PRIEST
+const RIGHT_COLUMN_LEFT := 0.74
+const RIGHT_COLUMN_RIGHT := 0.98
+const RIGHT_LOG_TOP := 0.0
+const RIGHT_LOG_BOTTOM := 0.36
+const RIGHT_COMMAND_TOP := 0.38
+const RIGHT_COMMAND_BOTTOM := 0.65
 
 signal party_state_changed
 
@@ -529,44 +535,43 @@ func _build_monster_combatants(monster_party: MonsterParty) -> Array:
 
 func _build_combat_ui() -> void:
 	_monster_panel = CombatMonsterPanel.new()
-	_place(_monster_panel, 0.05, 0.02, 0.55, 0.28)
+	_place(_monster_panel, 0.02, 0.02, 0.72, 0.64)
 	add_child(_monster_panel)
 
 	_combat_log = CombatLog.new()
-	# CombatLog sits below the dungeon minimap (top-right). Use absolute
-	# top offset so it clears the minimap at any viewport height.
-	_combat_log.anchor_left = 0.60
-	_combat_log.anchor_top = 0.0
-	_combat_log.anchor_right = 0.98
-	_combat_log.anchor_bottom = 0.60
+	_combat_log.anchor_left = RIGHT_COLUMN_LEFT
+	_combat_log.anchor_top = RIGHT_LOG_TOP
+	_combat_log.anchor_right = RIGHT_COLUMN_RIGHT
+	_combat_log.anchor_bottom = RIGHT_LOG_BOTTOM
 	_combat_log.offset_left = 0
-	_combat_log.offset_top = 160  # minimap 140 + margin 16 + small gap
+	_combat_log.offset_top = 0
 	_combat_log.offset_right = 0
 	_combat_log.offset_bottom = 0
 	add_child(_combat_log)
 
 	_command_menu = CombatCommandMenu.new()
-	_place(_command_menu, 0.15, 0.32, 0.55, 0.62)
+	_place_right_command_panel(_command_menu)
 	_command_menu.visible = false
 	_command_menu.command_selected.connect(_handle_command_choice)
 	add_child(_command_menu)
 
 	_target_selector = CombatTargetSelector.new()
-	_place(_target_selector, 0.15, 0.32, 0.55, 0.62)
+	_place_right_command_panel(_target_selector)
 	_target_selector.visible = false
 	_target_selector.target_selected.connect(_handle_target_choice)
 	_target_selector.cancelled.connect(_on_target_selector_cancelled)
 	add_child(_target_selector)
 
 	_spell_selector = CombatSpellSelector.new()
-	_place(_spell_selector, 0.15, 0.32, 0.55, 0.62)
+	_place_right_command_panel(_spell_selector)
 	_spell_selector.visible = false
 	_spell_selector.spell_selected.connect(_on_spell_selected)
 	_spell_selector.cancelled.connect(_on_spell_selector_cancelled)
 	add_child(_spell_selector)
 
 	_item_use_panel = PanelContainer.new()
-	_place(_item_use_panel, 0.15, 0.32, 0.55, 0.62)
+	_place_right_command_panel(_item_use_panel)
+	_item_use_panel.add_theme_stylebox_override("panel", CombatWindowStyle.make_panel())
 	_item_use_panel.visible = false
 	add_child(_item_use_panel)
 
@@ -593,6 +598,10 @@ func _place(ctrl: Control, left: float, top: float, right: float, bottom: float)
 	ctrl.offset_top = 0
 	ctrl.offset_right = 0
 	ctrl.offset_bottom = 0
+
+
+func _place_right_command_panel(ctrl: Control) -> void:
+	_place(ctrl, RIGHT_COLUMN_LEFT, RIGHT_COMMAND_TOP, RIGHT_COLUMN_RIGHT, RIGHT_COMMAND_BOTTOM)
 
 
 func _refresh_panels() -> void:

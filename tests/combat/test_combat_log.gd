@@ -1,6 +1,42 @@
 extends GutTest
 
 
+func test_combat_log_keeps_enough_lines_for_tall_window():
+	assert_eq(CombatLog.MAX_LINES, 8,
+		"CombatLog should retain eight lines to fit the compact battle log window without overlapping commands")
+
+
+func test_combat_log_clips_lines_to_its_window():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	await get_tree().process_frame
+	assert_true(log.clip_contents,
+		"CombatLog should clip content so retained lines cannot draw over the command window")
+
+
+func test_combat_log_splits_multiline_actions_into_display_lines():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	log.append_line("A\nB\nC")
+	assert_eq(log.get_lines(), ["A", "B", "C"],
+		"multi-line log text should be retained as visible display lines")
+
+
+func test_combat_log_retains_eight_visible_lines_after_multiline_actions():
+	var log := CombatLog.new()
+	add_child_autofree(log)
+	for i in range(4):
+		log.append_line("Action%d-1\nAction%d-2\nAction%d-3" % [i, i, i])
+	var lines := log.get_lines()
+	assert_eq(lines.size(), CombatLog.MAX_LINES,
+		"CombatLog should cap retained visible lines, not just action entries")
+	for line in lines:
+		assert_false((line as String).contains("\n"),
+			"retained lines should not contain embedded newlines: %s" % line)
+	assert_eq(lines[0], "Action1-2")
+	assert_eq(lines[-1], "Action3-3")
+
+
 func test_miss_action_renders_dodge_message():
 	var log := CombatLog.new()
 	add_child_autofree(log)

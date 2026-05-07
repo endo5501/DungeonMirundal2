@@ -20,6 +20,7 @@ func _build_ui() -> void:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.add_theme_stylebox_override("panel", CombatWindowStyle.make_panel())
 	add_child(panel)
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)

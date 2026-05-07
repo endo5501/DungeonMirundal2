@@ -2,13 +2,21 @@ class_name PartyMemberPanel
 extends Control
 
 const PANEL_WIDTH := 180
-const PANEL_HEIGHT := 130
-const ICON_SIZE := 48
-const FONT_SIZE := 20
+const PANEL_HEIGHT := 168
+const PORTRAIT_WIDTH := 128
+const PORTRAIT_HEIGHT := 104
+const ICON_SIZE := PORTRAIT_WIDTH
+const FONT_SIZE := 14
+const BADGE_FONT_SIZE := 12
 const BG_COLOR := Color(0.15, 0.15, 0.2, 0.7)
 const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
+const FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
 const HP_COLOR := Color(0.2, 0.8, 0.2)
 const MP_COLOR := Color(0.3, 0.4, 0.9)
+const BAR_BG_COLOR := Color(0.04, 0.04, 0.05, 0.9)
+const BAR_OUTLINE_COLOR := Color(0.0, 0.0, 0.0, 0.85)
+const TEXT_COLOR := Color(0.95, 0.95, 0.95, 1.0)
+const BADGE_BG_COLOR := Color(0.05, 0.05, 0.06, 0.9)
 
 # Colors per persistent-party-display design.md §D5.
 const STATUS_COLORS: Dictionary = {
@@ -319,31 +327,63 @@ func get_stat_modifier_icons() -> Array:
 	return result
 
 
+func get_portrait_rect() -> Rect2:
+	return Rect2((float(PANEL_WIDTH) - float(PORTRAIT_WIDTH)) * 0.5, 6.0, PORTRAIT_WIDTH, PORTRAIT_HEIGHT)
+
+
+func get_level_badge_rect() -> Rect2:
+	var portrait := get_portrait_rect()
+	return Rect2(portrait.position.x + portrait.size.x - 34.0, portrait.position.y + 2.0, 32.0, 18.0)
+
+
+func get_name_badge_rect() -> Rect2:
+	var portrait := get_portrait_rect()
+	return Rect2(portrait.position.x + 4.0, portrait.position.y + portrait.size.y - 20.0, portrait.size.x - 8.0, 18.0)
+
+
+func get_hp_bar_rect() -> Rect2:
+	return Rect2(32, 112, 88, 12)
+
+
+func get_mp_bar_rect() -> Rect2:
+	return Rect2(32, 134, 88, 12)
+
+
+func get_icon_row_origin() -> Vector2:
+	return Vector2(6, PANEL_HEIGHT - STATUS_ICON_SIZE - 5)
+
+
+func stat_bar_ratio(current_value: int, max_value: int) -> float:
+	if max_value <= 0:
+		return 0.0
+	return clamp(float(current_value) / float(max_value), 0.0, 1.0)
+
+
+func get_status_icon_rects() -> Array:
+	return _build_status_icon_rects(get_status_icons().size(), 0.0)
+
+
+func get_stat_modifier_icon_rects(leading_count: int = 0) -> Array:
+	var leading_width := float(leading_count) * float(STATUS_ICON_SIZE + STATUS_ICON_GAP)
+	if leading_count > 0:
+		leading_width += float(STATUS_ICON_GAP * 2)
+	return _build_stat_modifier_icon_rects(get_stat_modifier_icons().size(), leading_width)
+
+
 func _draw() -> void:
 	if _data == null:
 		return
 
 	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), BG_COLOR)
+	draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), FRAME_COLOR, false, 2.0)
 
 	var data := _data
-
-	# Placeholder icon
-	var icon_rect := Rect2(4, 4, ICON_SIZE, ICON_SIZE)
-	draw_rect(icon_rect, ICON_BG_COLOR)
-
-	# Text area starts after icon
-	var tx := ICON_SIZE + 10
 	var font := ThemeDB.fallback_font
-	var line_h := FONT_SIZE + 4
 
-	# Name
-	draw_string(font, Vector2(tx, line_h), data.member_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE)
-	# LV
-	draw_string(font, Vector2(tx, line_h * 2), "LV:%d" % data.level, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE)
-	# HP
-	draw_string(font, Vector2(tx, line_h * 3), "HP:%d/%d" % [data.current_hp, data.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, HP_COLOR)
-	# MP
-	draw_string(font, Vector2(tx, line_h * 4), "MP:%d/%d" % [data.current_mp, data.max_mp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, MP_COLOR)
+	_draw_portrait(font, data)
+	_draw_name(font, data)
+	_draw_stat_bar(font, "HP", data.current_hp, data.max_hp, get_hp_bar_rect(), HP_COLOR)
+	_draw_stat_bar(font, "MP", data.current_mp, data.max_mp, get_mp_bar_rect(), MP_COLOR)
 
 	var status_count: int = _draw_status_icons(font)
 	_draw_stat_modifier_icons(font, status_count)
@@ -357,23 +397,52 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_WIDTH, PANEL_HEIGHT)), DIM_OVERLAY_COLOR)
 
 
+func _draw_portrait(font: Font, data: PartyMemberData) -> void:
+	var portrait := get_portrait_rect()
+	draw_rect(portrait, ICON_BG_COLOR)
+	draw_rect(Rect2(portrait.position + Vector2(10, 10), portrait.size - Vector2(20, 20)), Color(0.35, 0.35, 0.42, 1.0))
+	var badge := get_level_badge_rect()
+	draw_rect(badge, BADGE_BG_COLOR)
+	draw_string(font, Vector2(badge.position.x + 3.0, badge.position.y + BADGE_FONT_SIZE + 2.0),
+		"LV.%d" % data.level, HORIZONTAL_ALIGNMENT_LEFT, badge.size.x - 4.0, BADGE_FONT_SIZE, TEXT_COLOR)
+
+
+func _draw_name(font: Font, data: PartyMemberData) -> void:
+	var badge := get_name_badge_rect()
+	draw_rect(badge, BADGE_BG_COLOR)
+	draw_string(font, Vector2(badge.position.x + 4.0, badge.position.y + FONT_SIZE),
+		data.member_name, HORIZONTAL_ALIGNMENT_CENTER, badge.size.x - 8.0, FONT_SIZE, TEXT_COLOR)
+
+
+func _draw_stat_bar(font: Font, label: String, current_value: int, max_value: int, bar_rect: Rect2, color: Color) -> void:
+	draw_string(font, Vector2(7, bar_rect.position.y + FONT_SIZE - 1.0), label,
+		HORIZONTAL_ALIGNMENT_LEFT, 24.0, FONT_SIZE, color)
+	draw_rect(bar_rect.grow(1.0), BAR_OUTLINE_COLOR)
+	draw_rect(bar_rect, BAR_BG_COLOR)
+	var fill := bar_rect
+	fill.size.x *= stat_bar_ratio(current_value, max_value)
+	if fill.size.x > 0.0:
+		draw_rect(fill, color)
+	var value_text := "%d / %d" % [current_value, max_value]
+	draw_string(font, Vector2(124, bar_rect.position.y + FONT_SIZE - 1.0), value_text,
+		HORIZONTAL_ALIGNMENT_RIGHT, PANEL_WIDTH - 130, FONT_SIZE, TEXT_COLOR)
+
+
 # Returns the number of icons drawn so adjacent rows can offset their x.
 func _draw_status_icons(font: Font) -> int:
 	var icons: Array = get_status_icons()
 	if icons.is_empty():
 		return 0
-	var origin_x := ICON_SIZE + 10
-	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
 	var drawn := 0
+	var rects := get_status_icon_rects()
 	for i in range(icons.size()):
-		var x := origin_x + i * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
-		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
+		if i >= rects.size():
 			break
-		var rect := Rect2(x, origin_y, STATUS_ICON_SIZE, STATUS_ICON_SIZE)
+		var rect: Rect2 = rects[i]
 		draw_rect(rect, icons[i]["color"])
 		draw_string(
 			font,
-			Vector2(x + 2, origin_y + STATUS_ICON_FONT_SIZE),
+			Vector2(rect.position.x + 2, rect.position.y + STATUS_ICON_FONT_SIZE),
 			icons[i]["label"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1,
 			STATUS_ICON_FONT_SIZE,
@@ -389,22 +458,40 @@ func _draw_stat_modifier_icons(font: Font, leading_count: int) -> void:
 	var icons: Array = get_stat_modifier_icons()
 	if icons.is_empty():
 		return
-	var icon_w := STATUS_ICON_SIZE + 6  # extra width for 2-char labels
-	var base_x := ICON_SIZE + 10 + leading_count * (STATUS_ICON_SIZE + STATUS_ICON_GAP)
-	if leading_count > 0:
-		base_x += STATUS_ICON_GAP * 2  # visible gap between status row and stat row
-	var origin_y := PANEL_HEIGHT - STATUS_ICON_SIZE - 4
+	var rects := get_stat_modifier_icon_rects(leading_count)
 	for i in range(icons.size()):
-		var x := base_x + i * (icon_w + STATUS_ICON_GAP)
-		if x + icon_w > PANEL_WIDTH - 4:
+		if i >= rects.size():
 			break
-		var rect := Rect2(x, origin_y, icon_w, STATUS_ICON_SIZE)
+		var rect: Rect2 = rects[i]
 		draw_rect(rect, icons[i]["color"])
 		draw_string(
 			font,
-			Vector2(x + 2, origin_y + STATUS_ICON_FONT_SIZE),
+			Vector2(rect.position.x + 2, rect.position.y + STATUS_ICON_FONT_SIZE),
 			icons[i]["label"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1,
 			STATUS_ICON_FONT_SIZE,
 			STATUS_ICON_LABEL_COLOR,
 		)
+
+
+func _build_status_icon_rects(count: int, offset_x: float) -> Array:
+	var rects: Array = []
+	var origin := get_icon_row_origin()
+	for i in range(count):
+		var x := origin.x + offset_x + float(i) * float(STATUS_ICON_SIZE + STATUS_ICON_GAP)
+		if x + STATUS_ICON_SIZE > PANEL_WIDTH - 4:
+			break
+		rects.append(Rect2(x, origin.y, STATUS_ICON_SIZE, STATUS_ICON_SIZE))
+	return rects
+
+
+func _build_stat_modifier_icon_rects(count: int, offset_x: float) -> Array:
+	var rects: Array = []
+	var origin := get_icon_row_origin()
+	var icon_w := STATUS_ICON_SIZE + 6
+	for i in range(count):
+		var x := origin.x + offset_x + float(i) * float(icon_w + STATUS_ICON_GAP)
+		if x + icon_w > PANEL_WIDTH - 4:
+			break
+		rects.append(Rect2(x, origin.y, icon_w, STATUS_ICON_SIZE))
+	return rects

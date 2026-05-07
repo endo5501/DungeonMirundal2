@@ -108,3 +108,19 @@ func test_draw_runs_with_statuses():
 	panel.queue_redraw()
 	await get_tree().process_frame
 	assert_eq(panel.get_status_icons().size(), 2)
+
+
+func test_status_icon_rects_do_not_overlap_hp_or_mp_bars():
+	var ch := TestHelpers.make_test_character("IconLayout", 10, [&"poison", &"sleep"])
+	var panel := _make_panel()
+	panel.bind_character(ch)
+	if not panel.has_method("get_status_icon_rects"):
+		fail_test("PartyMemberPanel should expose get_status_icon_rects")
+		return
+	var icon_rects: Array = panel.get_status_icon_rects()
+	assert_gt(icon_rects.size(), 0)
+	for rect in icon_rects:
+		assert_false((rect as Rect2).intersects(panel.get_hp_bar_rect()),
+			"status icon should not overlap HP bar")
+		assert_false((rect as Rect2).intersects(panel.get_mp_bar_rect()),
+			"status icon should not overlap MP bar")

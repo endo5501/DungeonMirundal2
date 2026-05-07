@@ -42,6 +42,7 @@ func _build_ui() -> void:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.add_theme_stylebox_override("panel", CombatWindowStyle.make_panel())
 	add_child(panel)
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)
@@ -172,3 +173,5 @@ func _refresh_rows() -> void:
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)
 		_rows[i].set_disabled(is_row_disabled(i))
+
+

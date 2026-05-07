@@ -23,6 +23,7 @@ var _dungeon_view: DungeonView
 
 var _return_dialog: ConfirmDialog
 var _encounter_active: bool = false
+var _minimap_visible_before_encounter: bool = true
 var _pending_dialog_context: int = DialogContext.NONE
 
 var _status_toast_container: VBoxContainer
@@ -150,6 +151,14 @@ func _on_position_changed() -> void:
 		_show_tile_dialog_for_current_position()
 
 func set_encounter_active(active: bool) -> void:
+	if _encounter_active == active:
+		return
+	if active:
+		_minimap_visible_before_encounter = _minimap_display.visible if _minimap_display != null else true
+		if _minimap_display != null:
+			_minimap_display.visible = false
+	elif _minimap_display != null:
+		_minimap_display.visible = _minimap_visible_before_encounter
 	_encounter_active = active
 
 func is_encounter_active() -> bool:
