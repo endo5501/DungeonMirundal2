@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="MonsterData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/images/monsters/goblin.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -14,4 +15,5 @@ agility = 4
 experience = 7
 gold_min = 5
 gold_max = 15
+battle_texture = ExtResource("2")
 resists = {}

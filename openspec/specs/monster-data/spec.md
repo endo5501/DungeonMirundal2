@@ -2,15 +2,21 @@
 モンスター（MonsterData）リソースの定義と各種バランス数値を規定する。HP・攻撃力・防御力・経験値・ドロップテーブル・出現階層などの項目を対象とする。
 ## Requirements
 ### Requirement: MonsterData defines a monster template
-The system SHALL provide a `MonsterData` Custom Resource that defines a monster template with identifier, display name, stat ranges, and reward values.
+The system SHALL provide a `MonsterData` Custom Resource that defines a monster template with identifier, display name, stat ranges, reward values, and an optional battle visual.
 
-`MonsterData` SHALL expose the following fields: `monster_id: StringName`, `monster_name: String`, `max_hp_min: int`, `max_hp_max: int`, `attack: int`, `defense: int`, `agility: int`, `experience: int`, `gold_min: int`, `gold_max: int`.
+`MonsterData` SHALL expose the following fields: `monster_id: StringName`, `monster_name: String`, `max_hp_min: int`, `max_hp_max: int`, `attack: int`, `defense: int`, `agility: int`, `experience: int`, `gold_min: int`, `gold_max: int`, `battle_texture: Texture2D`.
 
 The `gold_min` and `gold_max` fields represent the inclusive range of gold awarded when a single instance of this monster dies. The range SHALL satisfy `0 <= gold_min <= gold_max`.
 
+`battle_texture` SHALL be optional. Missing battle art SHALL NOT make otherwise valid MonsterData unusable, because combat rendering provides a fallback visual.
+
 #### Scenario: MonsterData carries required fields
-- **WHEN** a MonsterData resource is created with `monster_id`, `monster_name`, `max_hp_min`, `max_hp_max`, `attack`, `defense`, `agility`, `experience`, `gold_min`, `gold_max`
+- **WHEN** a MonsterData resource is created with `monster_id`, `monster_name`, `max_hp_min`, `max_hp_max`, `attack`, `defense`, `agility`, `experience`, `gold_min`, `gold_max`, and `battle_texture`
 - **THEN** every field SHALL be readable and typed consistently with its declaration
+
+#### Scenario: Battle texture is optional
+- **WHEN** a MonsterData resource has `battle_texture == null`
+- **THEN** validation SHALL still accept the monster when all non-visual fields are valid
 
 #### Scenario: HP range is valid
 - **WHEN** a MonsterData has `max_hp_min = 5` and `max_hp_max = 10`
@@ -104,4 +110,17 @@ Other monsters MAY declare `resists = {}` if no thematic resistance applies.
 #### Scenario: Dragon resists multiple mind-affecting statuses
 - **WHEN** `dragon.tres` is loaded
 - **THEN** `resists` SHALL contain at least `&"sleep"`, `&"paralysis"`, `&"confusion"` with positive values
+
+### Requirement: Shipped monsters reference generated battle art
+The system SHALL include generated battle image assets for the six shipped monster ids and SHALL wire each corresponding `data/monsters/*.tres` resource to its image through `MonsterData.battle_texture`.
+
+The committed monster image assets SHALL live under `assets/images/monsters/` using `<monster_id>.png` filenames for `slime`, `goblin`, `bat`, `skeleton`, `ghost`, and `dragon`.
+
+#### Scenario: Existing shipped monsters have battle textures
+- **WHEN** `DataLoader.load_all_monsters()` is invoked
+- **THEN** the returned MonsterData for `&"slime"`, `&"goblin"`, `&"bat"`, `&"skeleton"`, `&"ghost"`, and `&"dragon"` SHALL each have a non-null `battle_texture`
+
+#### Scenario: Monster art files follow the stable path convention
+- **WHEN** the shipped monster art assets are inspected
+- **THEN** the files SHALL exist at `assets/images/monsters/slime.png`, `assets/images/monsters/goblin.png`, `assets/images/monsters/bat.png`, `assets/images/monsters/skeleton.png`, `assets/images/monsters/ghost.png`, and `assets/images/monsters/dragon.png`
 

@@ -33,6 +33,12 @@ func _make_monster_data(id: StringName, display_name: String, atk: int = 3, def:
 	return data
 
 
+func _make_test_texture(color: Color = Color.RED) -> Texture2D:
+	var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	image.fill(color)
+	return ImageTexture.create_from_image(image)
+
+
 func _make_monster_party(species_counts: Dictionary) -> MonsterParty:
 	var party := MonsterParty.new()
 	for id in species_counts.keys():
@@ -293,6 +299,41 @@ func test_monster_panel_exposes_dummy_visuals_for_living_enemies():
 	assert_gt(rects.size(), 0, "living enemies should produce dummy visual rects")
 
 
+func test_monster_panel_exposes_texture_backed_visuals_for_living_enemies():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.size = Vector2(900, 500)
+	var data := _make_monster_data(&"slime", "Slime")
+	var texture := _make_test_texture(Color.GREEN)
+	data.set("battle_texture", texture)
+	var monster := MonsterCombatant.new(Monster.new(data, _make_rng()))
+	panel.refresh([monster], {&"slime": 1})
+	if not panel.has_method("get_monster_visual_entries"):
+		fail_test("CombatMonsterPanel should expose get_monster_visual_entries")
+		return
+	var entries: Array = panel.get_monster_visual_entries()
+	assert_eq(entries.size(), 1)
+	assert_eq(entries[0].get("texture"), texture,
+		"living enemy visual should retain the MonsterData battle texture")
+
+
+func test_monster_panel_visual_entries_fall_back_without_texture():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.size = Vector2(900, 500)
+	var data := _make_monster_data(&"slime", "Slime")
+	data.set("battle_texture", null)
+	var monster := MonsterCombatant.new(Monster.new(data, _make_rng()))
+	panel.refresh([monster], {&"slime": 1})
+	if not panel.has_method("get_monster_visual_entries"):
+		fail_test("CombatMonsterPanel should expose get_monster_visual_entries")
+		return
+	var entries: Array = panel.get_monster_visual_entries()
+	assert_eq(entries.size(), 1)
+	assert_eq(entries[0].get("texture"), null,
+		"missing battle texture should be represented by a fallback visual entry")
+
+
 func test_monster_panel_uses_enemy_title_and_separate_list_window():
 	var panel := CombatMonsterPanel.new()
 	add_child_autofree(panel)
@@ -319,6 +360,17 @@ func test_monster_dummy_visuals_are_lower_and_baseline_aligned():
 	for rect in rects:
 		assert_almost_eq((rect as Rect2).position.y, first_y, 0.001,
 			"dummy enemy visuals should share a stable baseline")
+
+
+func test_monster_visual_slots_are_enlarged_for_art_readability():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.size = Vector2(900, 500)
+	panel.refresh(_make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m)), {&"slime": 3})
+	var rects: Array = panel.get_dummy_visual_rects()
+	assert_eq(rects.size(), 3)
+	assert_eq((rects[0] as Rect2).size, Vector2(180, 144),
+		"enemy visual slots should be roughly 1.5x the previous 120x96 size")
 
 
 func test_monster_dummy_visuals_reflow_when_panel_size_changes_with_same_monsters():

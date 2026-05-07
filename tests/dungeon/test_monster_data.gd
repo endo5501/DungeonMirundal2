@@ -38,6 +38,20 @@ func test_slime_fields_readable():
 	assert_eq(_slime.defense, 1)
 	assert_eq(_slime.agility, 2)
 	assert_eq(_slime.experience, 4)
+	assert_eq(_slime.get("battle_texture"), null)
+
+
+func test_monster_data_battle_texture_is_writable():
+	var image := Image.create(4, 4, false, Image.FORMAT_RGBA8)
+	image.fill(Color.RED)
+	var texture := ImageTexture.create_from_image(image)
+	_slime.set("battle_texture", texture)
+	assert_eq(_slime.get("battle_texture"), texture)
+
+
+func test_is_valid_accepts_missing_battle_texture():
+	_slime.set("battle_texture", null)
+	assert_true(_slime.is_valid())
 
 
 func test_goblin_fields_readable():
@@ -199,6 +213,25 @@ func test_loaded_monster_tres_files_have_resists_dictionary():
 	for m in monsters:
 		assert_typeof(m.resists, TYPE_DICTIONARY,
 			"monster %s.resists should be Dictionary" % m.resource_path)
+
+
+# --- add-monster-visual-art: battle textures ---
+
+func test_shipped_monsters_have_battle_textures():
+	var required_ids := [&"slime", &"goblin", &"bat", &"skeleton", &"ghost", &"dragon"]
+	for id in required_ids:
+		var monster := _find_monster(id)
+		assert_not_null(monster, "monster %s should be loadable" % String(id))
+		assert_not_null(monster.get("battle_texture"),
+			"monster %s should reference a generated battle texture" % String(id))
+
+
+func test_shipped_monster_art_files_exist_at_stable_paths():
+	var required_ids := [&"slime", &"goblin", &"bat", &"skeleton", &"ghost", &"dragon"]
+	for id in required_ids:
+		var path := "res://assets/images/monsters/%s.png" % String(id)
+		assert_true(ResourceLoader.exists(path),
+			"monster art should exist at %s" % path)
 
 
 # --- add-status-confusion-blind-paralysis: representative monster resists ---

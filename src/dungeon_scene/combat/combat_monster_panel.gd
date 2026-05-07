@@ -9,6 +9,9 @@ const WINDOW_INSET := 8.0
 const LIST_WINDOW_SIZE := Vector2(300, 138)
 const TITLE_FONT_SIZE := 18
 const LIST_FONT_SIZE := 18
+const DESIRED_VISUAL_SIZE := Vector2(180, 144)
+const MIN_VISUAL_SCALE := 0.45
+const VISUAL_GAP := 28.0
 
 var _title_label: Label
 var _label: Label
@@ -24,6 +27,7 @@ var _initial_counts: Dictionary = {}
 # Distinguishes "battle in progress with zero monsters registered" from
 # "outside any battle"; the former still wants displayed_alive semantics.
 var _battle_active: bool = false
+var _monster_visual_entries: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -68,7 +72,7 @@ func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 	var alive_counts: Dictionary = {}
 	var name_by_id: Dictionary = {}
 	var order: Array = []
-	var living_count := 0
+	var living_monsters: Array = []
 	for mc in monster_combatants:
 		if mc == null or mc.monster == null or mc.monster.data == null:
 			continue
@@ -79,7 +83,7 @@ func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 		var alive: bool = _displayed_alive.get(mc, true) if _battle_active else mc.is_alive()
 		if alive:
 			alive_counts[id] = alive_counts.get(id, 0) + 1
-			living_count += 1
+			living_monsters.append(mc)
 	var lines: Array = []
 	for id_raw in order:
 		var id: StringName = id_raw
@@ -87,7 +91,8 @@ func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 		var initial: int = initial_counts.get(id, alive)
 		lines.append("%s %d/%d" % [name_by_id[id], alive, initial])
 	_display_text = "\n".join(lines)
-	_dummy_visual_rects = _build_dummy_visual_rects(living_count)
+	_monster_visual_entries = _build_monster_visual_entries(living_monsters)
+	_dummy_visual_rects = _collect_dummy_visual_rects(_monster_visual_entries)
 	if _label != null:
 		_label.text = _display_text
 	_sync_label_layout()
@@ -117,13 +122,19 @@ func get_dummy_visual_rects() -> Array:
 	return _dummy_visual_rects.duplicate()
 
 
+func get_monster_visual_entries() -> Array:
+	return _monster_visual_entries.duplicate(true)
+
+
 func _draw() -> void:
 	CombatWindowStyle.draw_window(self, get_enemy_list_window_rect(), WINDOW_BG_COLOR)
-	for rect in _dummy_visual_rects:
-		draw_rect(rect.grow(2.0), VISUAL_OUTLINE_COLOR)
-		draw_rect(rect, VISUAL_COLOR)
-		var shine := Rect2(rect.position + Vector2(rect.size.x * 0.2, rect.size.y * 0.18), rect.size * 0.18)
-		draw_rect(shine, Color(0.8, 1.0, 0.55, 0.75))
+	for entry in _monster_visual_entries:
+		var rect: Rect2 = entry.get("rect", Rect2())
+		var texture: Texture2D = entry.get("texture", null)
+		if texture != null:
+			draw_texture_rect(texture, _fit_texture_rect(texture, rect), false)
+		else:
+			_draw_dummy_visual(rect)
 
 
 func _build_ui() -> void:
@@ -146,15 +157,63 @@ func _build_dummy_visual_rects(living_count: int) -> Array[Rect2]:
 	if living_count <= 0:
 		return rects
 	var count: int = min(living_count, 6)
-	var visual_size := Vector2(72, 48)
-	var total_width := float(count) * visual_size.x + float(max(count - 1, 0)) * 28.0
 	var visual_area := get_enemy_visual_area_rect()
+	var gaps_width := float(max(count - 1, 0)) * VISUAL_GAP
+	var scale := 1.0
+	var desired_total_width := float(count) * DESIRED_VISUAL_SIZE.x + gaps_width
+	if desired_total_width > visual_area.size.x:
+		scale = max(MIN_VISUAL_SCALE, (visual_area.size.x - gaps_width) / (float(count) * DESIRED_VISUAL_SIZE.x))
+	var visual_size := DESIRED_VISUAL_SIZE * scale
+	var total_width := float(count) * visual_size.x + gaps_width
 	var start_x: float = visual_area.position.x + max(12.0, (visual_area.size.x - total_width) * 0.5)
 	var base_y: float = visual_area.position.y + max(0.0, visual_area.size.y - visual_size.y - 36.0)
 	for i in range(count):
-		var x := start_x + float(i) * (visual_size.x + 28.0)
+		var x := start_x + float(i) * (visual_size.x + VISUAL_GAP)
 		rects.append(Rect2(Vector2(x, base_y), visual_size))
 	return rects
+
+
+func _build_monster_visual_entries(living_monsters: Array) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var rects := _build_dummy_visual_rects(living_monsters.size())
+	for i in range(rects.size()):
+		var mc = living_monsters[i]
+		var texture: Texture2D = null
+		if mc != null and mc.monster != null and mc.monster.data != null:
+			texture = mc.monster.data.battle_texture
+		entries.append({
+			"rect": rects[i],
+			"texture": texture,
+		})
+	return entries
+
+
+func _collect_dummy_visual_rects(entries: Array[Dictionary]) -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for entry in entries:
+		if entry.get("texture", null) == null:
+			rects.append(entry.get("rect", Rect2()))
+	return rects
+
+
+func _draw_dummy_visual(rect: Rect2) -> void:
+	draw_rect(rect.grow(2.0), VISUAL_OUTLINE_COLOR)
+	draw_rect(rect, VISUAL_COLOR)
+	var shine := Rect2(rect.position + Vector2(rect.size.x * 0.2, rect.size.y * 0.18), rect.size * 0.18)
+	draw_rect(shine, Color(0.8, 1.0, 0.55, 0.75))
+
+
+func _fit_texture_rect(texture: Texture2D, slot_rect: Rect2) -> Rect2:
+	var texture_size := texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return slot_rect
+	var scale: float = min(slot_rect.size.x / texture_size.x, slot_rect.size.y / texture_size.y)
+	var draw_size := texture_size * scale
+	var position := Vector2(
+		slot_rect.position.x + (slot_rect.size.x - draw_size.x) * 0.5,
+		slot_rect.position.y + slot_rect.size.y - draw_size.y
+	)
+	return Rect2(position, draw_size)
 
 
 func _ensure_label_ready() -> void:
