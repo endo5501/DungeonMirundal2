@@ -101,7 +101,6 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	if _spell_selector != null:
 		_spell_selector.hide_selector()
 	cancel_log_playback()
-	_refresh_panels()
 	_begin_command_phase()
 
 
@@ -415,19 +414,15 @@ func cancel_log_playback() -> void:
 	_log_pending_actions.clear()
 	if _log_timer != null:
 		_log_timer.stop()
-	# Drain any leftover HUD events so panels don't get stuck mid-buffer
-	# when the overlay is torn down or playback is interrupted.
+	# Drain leftover HUD events and reconcile so an interrupted playback
+	# never leaves the panels showing stale lagged state.
 	PartyHud.end_buffering()
+	if _turn_engine != null:
+		_refresh_panels()
 
 
 func _on_log_playback_finished() -> void:
-	# Fire any HUD events that didn't have a matching log line (e.g. the
-	# last action's animation slot) before transitioning back to input.
 	PartyHud.end_buffering()
-	# Final reconciliation between displayed state and the engine's canonical
-	# state. After end_buffering all queued deltas have been applied, but the
-	# panel-side _displayed_alive / _combat_displayed_* may still drift if
-	# anything was missed; this snaps them back to truth.
 	_refresh_panels()
 	if _turn_engine.state == TurnEngine.State.FINISHED:
 		_finalize_battle()

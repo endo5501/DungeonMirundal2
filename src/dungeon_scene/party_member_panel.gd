@@ -145,34 +145,33 @@ func bind_combat_actor(actor: CombatActor) -> void:
 	queue_redraw()
 
 
-# Apply a signed delta to the combat-displayed HP, clamped to [0, max_hp].
-# PartyHud calls this from flush_up_to_step right before the matching shake
-# or heal-flash animation, so the bar value transitions in sync with the log
-# line that explains the change.
 func apply_combat_hp_delta(delta: int) -> void:
 	if _combat_actor == null:
 		return
-	var max_hp: int = _combat_actor.max_hp
-	_combat_displayed_hp = clampi(_combat_displayed_hp + delta, 0, max_hp)
+	var new_hp: int = clampi(_combat_displayed_hp + delta, 0, _combat_actor.max_hp)
+	if new_hp == _combat_displayed_hp:
+		return
+	_combat_displayed_hp = new_hp
 	queue_redraw()
 
 
 func apply_combat_mp_delta(delta: int) -> void:
 	if _combat_actor == null:
 		return
-	var max_mp: int = _combat_actor.max_mp
-	_combat_displayed_mp = clampi(_combat_displayed_mp + delta, 0, max_mp)
+	var new_mp: int = clampi(_combat_displayed_mp + delta, 0, _combat_actor.max_mp)
+	if new_mp == _combat_displayed_mp:
+		return
+	_combat_displayed_mp = new_mp
 	queue_redraw()
 
 
-# Force the displayed HP to a specific value (clamped). Used by PartyHud to
-# zero the bar immediately before play_die_animation so a faded panel never
-# shows a positive HP bar.
 func set_combat_displayed_hp(value: int) -> void:
 	if _combat_actor == null:
 		return
-	var max_hp: int = _combat_actor.max_hp
-	_combat_displayed_hp = clampi(value, 0, max_hp)
+	var new_hp: int = clampi(value, 0, _combat_actor.max_hp)
+	if new_hp == _combat_displayed_hp:
+		return
+	_combat_displayed_hp = new_hp
 	queue_redraw()
 
 
@@ -322,13 +321,10 @@ func has_visible_content() -> bool:
 	return _data != null
 
 
-# Snapshot mode (no Character bound) returns false since we have no live
-# status array to evaluate.
 func is_incapacitated() -> bool:
 	if _character == null:
 		return false
-	# In combat the panel's "is the bar empty?" check has to use the lagged
-	# display value so dim overlay appears together with the death log line,
+	# In combat use the lagged value so dim appears with the death log line,
 	# not the moment the engine zeroes live HP.
 	if _combat_actor != null:
 		if _combat_displayed_hp <= 0:
@@ -430,9 +426,6 @@ func _draw() -> void:
 
 	_draw_portrait(font, data)
 	_draw_name(font, data)
-	# In combat mode the panel renders the lagged display values so the bars
-	# advance in step with PartyHud's flush_up_to_step calls. Out of combat the
-	# live snapshot in _data drives the bars directly.
 	var hp_value: int = _combat_displayed_hp if _combat_actor != null else data.current_hp
 	var mp_value: int = _combat_displayed_mp if _combat_actor != null else data.current_mp
 	_draw_stat_bar(font, "HP", hp_value, data.max_hp, get_hp_bar_rect(), HP_COLOR)
