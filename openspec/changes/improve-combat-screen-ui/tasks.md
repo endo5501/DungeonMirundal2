@@ -47,5 +47,5 @@
 
 - [x] 5.1 Run the focused combat overlay and party display test files through `scripts/run_tests.ps1` until they pass.
 - [x] 5.2 Run the full recommended test wrapper `.\scripts\run_tests.ps1`.
-- [ ] 5.3 Capture or inspect the combat screen visually and compare against `tmp/dungeon5.png` and `tmp/update_graphics2.png`, confirming dungeon background rendering was not changed.
+- [x] 5.3 Capture or inspect the combat screen visually and compare against `tmp/dungeon5.png` and `tmp/update_graphics2.png`, confirming dungeon background rendering was not changed.
 - [x] 5.4 Update `tasks.md` checkboxes as each implementation task is completed.
