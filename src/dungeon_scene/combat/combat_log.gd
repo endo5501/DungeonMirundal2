@@ -1,10 +1,12 @@
 class_name CombatLog
 extends Control
 
-const MAX_LINES: int = 4
+const MAX_LINES: int = 8
+const TITLE_TEXT := "BATTLE LOG"
 
 var _lines: Array[String] = []
 var _label: Label
+var _title_label: Label
 var _status_repo_override: StatusRepository = null
 
 
@@ -30,19 +32,31 @@ func _ready() -> void:
 func _build_ui() -> void:
 	if _label != null:
 		return
+	clip_contents = true
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.clip_contents = true
+	panel.add_theme_stylebox_override("panel", _make_window_style())
 	add_child(panel)
+	var vbox := VBoxContainer.new()
+	vbox.clip_contents = true
+	panel.add_child(vbox)
+	_title_label = Label.new()
+	_title_label.text = TITLE_TEXT
+	_title_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(_title_label)
 	_label = Label.new()
 	_label.add_theme_font_size_override("font_size", 14)
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_label.size_flags_vertical = Control.SIZE_FILL
-	panel.add_child(_label)
+	vbox.add_child(_label)
 
 
 func append_line(text: String) -> void:
-	_lines.append(text)
+	var display_lines := text.split("\n", false)
+	for line in display_lines:
+		_lines.append(line)
 	while _lines.size() > MAX_LINES:
 		_lines.pop_front()
 	_refresh_label()
@@ -62,6 +76,10 @@ func get_display_text() -> String:
 	return "\n".join(_lines)
 
 
+func get_title_text() -> String:
+	return TITLE_TEXT
+
+
 func clear_log() -> void:
 	_lines.clear()
 	_refresh_label()
@@ -76,6 +94,15 @@ func _refresh_label() -> void:
 func _ensure_ready() -> void:
 	if _label == null:
 		_build_ui()
+
+
+func _make_window_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.05, 0.74)
+	style.border_color = Color(0.72, 0.58, 0.28, 0.95)
+	style.set_border_width_all(2)
+	style.set_content_margin_all(8.0)
+	return style
 
 
 func _format_action(action: Dictionary) -> String:

@@ -184,6 +184,64 @@ func test_turn_engine_is_seeded_with_party_and_monsters():
 	assert_eq(engine.monsters.size(), 3)  # 2 slimes + 1 goblin
 
 
+# --- combat screen layout ---
+
+func _assert_right_column_panel(ctrl: Control, label: String) -> void:
+	assert_not_null(ctrl, "%s should exist" % label)
+	assert_gte(ctrl.anchor_left, 0.68, "%s should start in the right-side battle column" % label)
+	assert_lte(ctrl.anchor_right, 1.0, "%s should remain inside the screen width" % label)
+
+
+func test_combat_log_is_anchored_in_right_battle_column():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	_assert_right_column_panel(overlay._combat_log, "CombatLog")
+
+
+func test_combat_log_starts_at_top_when_minimap_is_hidden_for_combat():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	assert_eq(overlay._combat_log.offset_top, 0.0,
+		"CombatLog should no longer reserve top space for the minimap during combat")
+
+
+func test_command_and_selection_panels_are_anchored_in_right_battle_column():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	_assert_right_column_panel(overlay._command_menu, "CommandMenu")
+	_assert_right_column_panel(overlay._target_selector, "CombatTargetSelector")
+	_assert_right_column_panel(overlay._spell_selector, "CombatSpellSelector")
+	_assert_right_column_panel(overlay._item_use_panel, "ItemUsePanel")
+
+
+func test_log_and_command_windows_do_not_overlap_vertically():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	assert_lte(overlay._combat_log.anchor_bottom, overlay._command_menu.anchor_top,
+		"CombatLog and CommandMenu should have separated vertical anchor ranges")
+	assert_lte(overlay._command_menu.anchor_bottom, 0.66,
+		"CommandMenu should leave a clear gap above the bottom party HUD area")
+
+
+func test_right_column_log_is_compact_and_command_starts_higher():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	assert_lte(overlay._combat_log.anchor_bottom, 0.38,
+		"Battle log should use a compact vertical range for title plus retained lines")
+	assert_lte(overlay._command_menu.anchor_top, 0.42,
+		"Command window should start higher after compacting the battle log")
+
+
 # --- MonsterPanel content ---
 
 func test_monster_panel_shows_species_names_and_counts():
@@ -218,6 +276,46 @@ func test_monster_panel_does_not_show_per_individual_hp():
 	var text := overlay.get_monster_panel_text()
 	# Individual HP is "current/max" like "8/8". Panel shouldn't show that.
 	assert_false(text.contains("8/8"), "text should not show individual HP: %s" % text)
+
+
+func test_monster_panel_exposes_dummy_visuals_for_living_enemies():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 2, &"goblin": 1}))
+	if not overlay._monster_panel.has_method("get_dummy_visual_rects"):
+		fail_test("CombatMonsterPanel should expose get_dummy_visual_rects")
+		return
+	var rects: Array = overlay._monster_panel.get_dummy_visual_rects()
+	assert_gt(rects.size(), 0, "living enemies should produce dummy visual rects")
+
+
+func test_monster_panel_uses_enemy_title_and_separate_list_window():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.size = Vector2(900, 500)
+	panel.refresh(_make_monster_party({&"slime": 2, &"goblin": 1}).members.map(func(m): return MonsterCombatant.new(m)), {&"slime": 2, &"goblin": 1})
+	assert_eq(panel.get_title_text(), "ENEMY")
+	var list_rect: Rect2 = panel.get_enemy_list_window_rect()
+	var visual_rect: Rect2 = panel.get_enemy_visual_area_rect()
+	assert_lte(list_rect.size.x, 340.0, "enemy list window should not span the graphics area")
+	assert_lte(list_rect.size.y, 170.0, "enemy list window should be sized for the enemy name list")
+	assert_true(visual_rect.position.y >= list_rect.position.y + list_rect.size.y,
+		"enemy graphics should be below the enemy list window")
+
+
+func test_monster_dummy_visuals_are_lower_and_baseline_aligned():
+	var panel := CombatMonsterPanel.new()
+	add_child_autofree(panel)
+	panel.size = Vector2(900, 500)
+	panel.refresh(_make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m)), {&"slime": 3})
+	var rects: Array = panel.get_dummy_visual_rects()
+	assert_eq(rects.size(), 3)
+	var first_y: float = (rects[0] as Rect2).position.y
+	assert_gte(first_y, panel.size.y * 0.55, "enemy visuals should sit lower in the battle area")
+	for rect in rects:
+		assert_almost_eq((rect as Rect2).position.y, first_y, 0.001,
+			"dummy enemy visuals should share a stable baseline")
 
 
 # --- party_state_changed signal (replaces PartyStatusPanel; dungeon UI refreshes instead) ---

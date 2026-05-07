@@ -42,6 +42,7 @@ func _build_ui() -> void:
 		return
 	var panel := PanelContainer.new()
 	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.add_theme_stylebox_override("panel", _make_window_style())
 	add_child(panel)
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)
@@ -172,3 +173,12 @@ func _refresh_rows() -> void:
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)
 		_rows[i].set_disabled(is_row_disabled(i))
+
+
+func _make_window_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.04, 0.05, 0.74)
+	style.border_color = Color(0.72, 0.58, 0.28, 0.95)
+	style.set_border_width_all(2)
+	style.set_content_margin_all(8.0)
+	return style

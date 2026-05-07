@@ -24,6 +24,23 @@ func test_screen_has_status_toast_container():
 		"DungeonScreen must expose a toast container for status ticks")
 
 
+func test_encounter_active_hides_minimap():
+	var screen := _make_screen()
+	screen._minimap_display.visible = true
+	screen.set_encounter_active(true)
+	assert_false(screen._minimap_display.visible,
+		"minimap should be hidden while combat is active")
+
+
+func test_encounter_inactive_restores_minimap():
+	var screen := _make_screen()
+	screen._minimap_display.visible = true
+	screen.set_encounter_active(true)
+	screen.set_encounter_active(false)
+	assert_true(screen._minimap_display.visible,
+		"minimap should be restored after combat ends")
+
+
 func test_show_status_tick_appends_label_with_message():
 	var screen := _make_screen()
 	screen.show_status_tick("Alice", &"poison", 2)

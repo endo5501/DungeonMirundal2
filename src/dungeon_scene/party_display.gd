@@ -10,6 +10,9 @@ const LABEL_COLOR := Color(0.95, 0.95, 0.95, 1.0)
 const LABEL_OUTLINE_SIZE := 3
 const LABEL_OUTLINE_COLOR := Color(0, 0, 0, 0.85)
 const LABEL_BOX_WIDTH := 200.0
+const WINDOW_PADDING := 8.0
+const WINDOW_BG_COLOR := Color(0.04, 0.04, 0.05, 0.62)
+const WINDOW_FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
 
 const HUD_HEIGHT := LABEL_AREA_HEIGHT + PartyMemberPanel.PANEL_HEIGHT + 4
 
@@ -76,6 +79,8 @@ func _draw() -> void:
 		return
 
 	var font := ThemeDB.fallback_font
+	_draw_window(get_front_window_rect())
+	_draw_window(get_back_window_rect())
 	# Outline so labels stay legible against light dungeon walls.
 	_draw_label(font, FRONT_LABEL, get_front_label_position(), HORIZONTAL_ALIGNMENT_LEFT, -1.0)
 	var pos_back: Vector2 = get_back_label_position()
@@ -89,6 +94,34 @@ func _draw_label(font: Font, text: String, pos: Vector2, alignment: int, box_wid
 		LABEL_FONT_SIZE, LABEL_OUTLINE_SIZE, LABEL_OUTLINE_COLOR)
 	draw_string(font, pos, text, alignment, box_width,
 		LABEL_FONT_SIZE, LABEL_COLOR)
+
+
+func _draw_window(rect: Rect2) -> void:
+	draw_rect(rect, WINDOW_BG_COLOR)
+	draw_rect(rect, WINDOW_FRAME_COLOR, false, 2.0)
+
+
+func get_front_window_rect() -> Rect2:
+	return _row_window_rect(_front_panels)
+
+
+func get_back_window_rect() -> Rect2:
+	return _row_window_rect(_back_panels)
+
+
+func _row_window_rect(panels: Array) -> Rect2:
+	if panels.is_empty():
+		return Rect2()
+	var left := INF
+	var right := -INF
+	for panel in panels:
+		var p := panel as PartyMemberPanel
+		left = min(left, p.position.x)
+		right = max(right, p.position.x + float(PartyMemberPanel.PANEL_WIDTH))
+	return Rect2(
+		Vector2(left - WINDOW_PADDING, 0.0),
+		Vector2(right - left + WINDOW_PADDING * 2.0, float(HUD_HEIGHT))
+	)
 
 
 # x = front-row group's left edge, y = label baseline.

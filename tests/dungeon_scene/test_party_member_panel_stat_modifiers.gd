@@ -97,3 +97,21 @@ func test_debuff_color_is_reddish():
 	var icons: Array = p.get_stat_modifier_icons()
 	var c: Color = icons[0]["color"]
 	assert_gt(c.r, c.g, "debuff icon color should lean red")
+
+
+func test_stat_modifier_icon_rects_do_not_overlap_hp_or_mp_bars():
+	var p := _make_panel()
+	var a := _StubActor.new()
+	a.modifier_stack.add(&"attack", 2, 3)
+	a.modifier_stack.add(&"defense", -1, 2)
+	p.bind_combat_actor(a)
+	if not p.has_method("get_stat_modifier_icon_rects"):
+		fail_test("PartyMemberPanel should expose get_stat_modifier_icon_rects")
+		return
+	var rects: Array = p.get_stat_modifier_icon_rects(0)
+	assert_gt(rects.size(), 0)
+	for rect in rects:
+		assert_false((rect as Rect2).intersects(p.get_hp_bar_rect()),
+			"stat modifier icon should not overlap HP bar")
+		assert_false((rect as Rect2).intersects(p.get_mp_bar_rect()),
+			"stat modifier icon should not overlap MP bar")
