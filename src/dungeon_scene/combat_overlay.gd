@@ -81,6 +81,12 @@ func start_encounter(monster_party: MonsterParty) -> void:
 	# Subscribe the persistent HUD so panels react (lift / die / stat-mod
 	# icons) to engine signals for the duration of this encounter.
 	PartyHud.attach_to_turn_engine(_turn_engine)
+	# Initialize the monster panel's displayed_alive table from the live
+	# combatant set, then register it with PartyHud so monster actor_died
+	# events are bridged through the buffering pipeline (combat-overlay spec).
+	if _monster_panel != null:
+		_monster_panel.setup_for_battle(_turn_engine.monsters)
+	PartyHud.attach_monster_panel(_monster_panel)
 	_is_active = true
 	visible = true
 	_last_outcome = null
@@ -354,9 +360,12 @@ func _resolve_turn_now() -> void:
 		_item_use_panel.visible = false
 	# Buffer signal-driven HUD animations so they fire alongside the log
 	# lines they describe, instead of all at once when resolve_turn returns.
+	# We deliberately do NOT call _refresh_panels() here — monster removal
+	# and party HP/MP must lag until the matching log line is shown. A final
+	# _refresh_panels() runs from _on_log_playback_finished to reconcile any
+	# residual drift with the engine's canonical state.
 	PartyHud.begin_buffering()
 	var report := _turn_engine.resolve_turn(_rng)
-	_refresh_panels()
 	_play_log_sequentially(report)
 
 
@@ -415,6 +424,11 @@ func _on_log_playback_finished() -> void:
 	# Fire any HUD events that didn't have a matching log line (e.g. the
 	# last action's animation slot) before transitioning back to input.
 	PartyHud.end_buffering()
+	# Final reconciliation between displayed state and the engine's canonical
+	# state. After end_buffering all queued deltas have been applied, but the
+	# panel-side _displayed_alive / _combat_displayed_* may still drift if
+	# anything was missed; this snaps them back to truth.
+	_refresh_panels()
 	if _turn_engine.state == TurnEngine.State.FINISHED:
 		_finalize_battle()
 	else:

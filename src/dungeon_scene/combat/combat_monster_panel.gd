@@ -14,6 +14,12 @@ var _title_label: Label
 var _label: Label
 var _display_text: String = ""
 var _dummy_visual_rects: Array[Rect2] = []
+# MonsterCombatant -> bool. Drives count rendering during a battle so monsters
+# remain in the ENEMY list until PartyHud flushes their actor_died step,
+# instead of disappearing the moment TurnEngine.resolve_turn returns.
+# Empty outside of a battle, in which case refresh() falls back to the live
+# is_alive() check on each combatant.
+var _displayed_alive: Dictionary = {}
 
 
 func _ready() -> void:
@@ -22,12 +28,48 @@ func _ready() -> void:
 	_sync_label_layout()
 
 
+func setup_for_battle(monsters: Array) -> void:
+	_displayed_alive.clear()
+	for mc in monsters:
+		if mc != null:
+			_displayed_alive[mc] = true
+	refresh(monsters, _initial_counts_from(monsters))
+
+
+# Mark a single monster as displayed-dead and re-render. PartyHud invokes this
+# from flush_up_to_step when releasing a buffered actor_died event whose actor
+# is a MonsterCombatant.
+func apply_died(actor) -> void:
+	if actor == null:
+		return
+	_displayed_alive[actor] = false
+	# Refresh from the current display set; preserve declared species order by
+	# iterating the same keys we registered in setup_for_battle.
+	var monsters: Array = _displayed_alive.keys()
+	refresh(monsters, _initial_counts_from(monsters))
+
+
+func _initial_counts_from(monsters: Array) -> Dictionary:
+	var counts: Dictionary = {}
+	for mc in monsters:
+		if mc == null or mc.monster == null or mc.monster.data == null:
+			continue
+		var id: StringName = mc.monster.data.monster_id
+		counts[id] = counts.get(id, 0) + 1
+	return counts
+
+
 func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 	_ensure_label_ready()
 	var alive_counts: Dictionary = {}
 	var name_by_id: Dictionary = {}
 	var order: Array = []
 	var living_count := 0
+	# In battle (when _displayed_alive is populated) use it as the source of
+	# truth so the player sees the dying monster removed only when PartyHud
+	# flushes the matching death step. Outside a battle (empty dict), fall
+	# back to the live is_alive() check.
+	var use_displayed: bool = not _displayed_alive.is_empty()
 	for mc in monster_combatants:
 		if mc == null or mc.monster == null or mc.monster.data == null:
 			continue
@@ -35,7 +77,8 @@ func refresh(monster_combatants: Array, initial_counts: Dictionary) -> void:
 		if not name_by_id.has(id):
 			name_by_id[id] = mc.monster.data.monster_name
 			order.append(id)
-		if mc.is_alive():
+		var alive: bool = _displayed_alive.get(mc, true) if use_displayed else mc.is_alive()
+		if alive:
 			alive_counts[id] = alive_counts.get(id, 0) + 1
 			living_count += 1
 	var lines: Array = []

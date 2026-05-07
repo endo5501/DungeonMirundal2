@@ -121,3 +121,39 @@ func test_confirm_result_detaches_party_hud_from_turn_engine():
 		"PartyHud should be unsubscribed after confirm_result")
 	assert_eq(engine.actor_died.get_connections().size(), 0,
 		"PartyHud should be unsubscribed after confirm_result")
+
+
+# --- 7.x: monster panel registration with PartyHud at battle start ---
+
+func test_start_encounter_initializes_monster_panel_displayed_alive():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party())
+	var monster_panel: CombatMonsterPanel = overlay._monster_panel
+	# After setup_for_battle, _displayed_alive must contain every engine monster.
+	for mc in overlay.get_turn_engine().monsters:
+		assert_true(monster_panel._displayed_alive.get(mc, false),
+			"every spawned monster should be displayed-alive after start_encounter")
+
+
+func test_start_encounter_attaches_monster_panel_to_party_hud():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party())
+	var hud := TestHelpers.get_party_hud()
+	assert_same(hud._attached_monster_panel, overlay._monster_panel,
+		"PartyHud should reference overlay's monster panel after start_encounter")
+
+
+func test_confirm_result_releases_monster_panel_reference():
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party())
+	overlay.show_result(EncounterOutcome.new(EncounterOutcome.Result.CLEARED), BattleSummary.new())
+	overlay.confirm_result()
+	var hud := TestHelpers.get_party_hud()
+	assert_null(hud._attached_monster_panel,
+		"detach_from_turn_engine in confirm_result must clear the monster panel ref")

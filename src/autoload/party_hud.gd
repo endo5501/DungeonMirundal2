@@ -12,13 +12,19 @@ extends CanvasLayer
 var _party_display: PartyDisplay
 var _bound_guild: Guild
 var _attached_engine: TurnEngine = null
+# Single CombatMonsterPanel registered via attach_monster_panel; receives
+# apply_died bridging from monster actor_died events so monsters disappear in
+# step with their death log line, not at resolve_turn return.
+var _attached_monster_panel: CombatMonsterPanel = null
 
 # Buffering machinery (combat-party-reactions §D10): while begin_buffering()
 # is active, signal handlers queue events tagged with the engine's pending
 # action index so CombatOverlay can release them in lockstep with log line
 # playback. Outside the begin/end window, handlers fire immediately.
+# Damage / heal / mp_spend entries also carry a `delta` so flush can advance
+# the panel's combat-displayed values together with the matching animation.
 var _is_buffering: bool = false
-var _event_queue: Array = []  # [{ "type": String, "actor": CombatActor, "step": int }, ...]
+var _event_queue: Array = []  # [{ "type": String, "actor": CombatActor, "delta": int?, "step": int }, ...]
 
 
 func _ready() -> void:
@@ -81,6 +87,7 @@ func attach_to_turn_engine(engine: TurnEngine) -> void:
 	engine.actor_healed.connect(_on_actor_healed)
 	engine.actor_died.connect(_on_actor_died)
 	engine.actor_status_inflicted.connect(_on_actor_status_inflicted)
+	engine.actor_spent_mp.connect(_on_actor_spent_mp)
 	for pc in engine.party:
 		var panel: PartyMemberPanel = _find_panel_for_combat_actor(pc)
 		if panel != null:
@@ -104,6 +111,9 @@ func detach_from_turn_engine() -> void:
 		e.actor_died.disconnect(_on_actor_died)
 	if e.actor_status_inflicted.is_connected(_on_actor_status_inflicted):
 		e.actor_status_inflicted.disconnect(_on_actor_status_inflicted)
+	if e.actor_spent_mp.is_connected(_on_actor_spent_mp):
+		e.actor_spent_mp.disconnect(_on_actor_spent_mp)
+	detach_monster_panel()
 	_attached_engine = null
 	if _party_display == null:
 		return
@@ -127,6 +137,19 @@ func _find_panel_for_combat_actor(actor) -> PartyMemberPanel:
 		if (panel as PartyMemberPanel)._character == ch:
 			return panel
 	return null
+
+
+# --- monster panel bridging ---
+
+# CombatOverlay registers its CombatMonsterPanel here right after attaching to
+# the engine, so monster actor_died events can be released through the
+# buffering pipeline (see _on_actor_died for the dispatch).
+func attach_monster_panel(panel: CombatMonsterPanel) -> void:
+	_attached_monster_panel = panel
+
+
+func detach_monster_panel() -> void:
+	_attached_monster_panel = null
 
 
 # --- buffering API ---
@@ -167,17 +190,34 @@ func _emit_step() -> int:
 
 func _play_event(ev: Dictionary) -> void:
 	var actor = ev.get("actor")
+	var delta: int = int(ev.get("delta", 0))
 	match String(ev.get("type", "")):
 		"lift":
 			_do_lift(actor)
 		"shake":
+			_apply_panel_hp_delta(actor, delta)
 			_do_shake(actor)
 		"flash":
+			_apply_panel_hp_delta(actor, delta)
 			_do_flash(actor)
+		"mp_spend":
+			_apply_panel_mp_delta(actor, delta)
 		"die":
 			_do_die(actor)
 		"redraw":
 			_do_redraw(actor)
+
+
+func _apply_panel_hp_delta(actor, delta: int) -> void:
+	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
+	if panel != null:
+		panel.apply_combat_hp_delta(delta)
+
+
+func _apply_panel_mp_delta(actor, delta: int) -> void:
+	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
+	if panel != null:
+		panel.apply_combat_mp_delta(delta)
 
 
 func _do_lift(actor) -> void:
@@ -199,9 +239,16 @@ func _do_flash(actor) -> void:
 
 
 func _do_die(actor) -> void:
+	# Party-side die: zero the displayed HP first so a faded panel never shows
+	# a positive bar, then trigger the fade. Monster-side die is bridged
+	# separately to the attached monster panel.
 	var panel: PartyMemberPanel = _find_panel_for_combat_actor(actor)
 	if panel != null:
+		panel.set_combat_displayed_hp(0)
 		panel.play_die_animation()
+		return
+	if _attached_monster_panel != null and actor != null:
+		_attached_monster_panel.apply_died(actor)
 
 
 func _do_redraw(actor) -> void:
@@ -226,18 +273,27 @@ func _on_actor_died(actor: CombatActor) -> void:
 		_do_die(actor)
 
 
-func _on_actor_dealt_damage(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+func _on_actor_dealt_damage(target: CombatActor, amount: int, _source: CombatActor) -> void:
 	if _is_buffering:
-		_event_queue.append({"type": "shake", "actor": target, "step": _emit_step()})
+		_event_queue.append({"type": "shake", "actor": target, "delta": -amount, "step": _emit_step()})
 	else:
+		_apply_panel_hp_delta(target, -amount)
 		_do_shake(target)
 
 
-func _on_actor_healed(target: CombatActor, _amount: int, _source: CombatActor) -> void:
+func _on_actor_healed(target: CombatActor, amount: int, _source: CombatActor) -> void:
 	if _is_buffering:
-		_event_queue.append({"type": "flash", "actor": target, "step": _emit_step()})
+		_event_queue.append({"type": "flash", "actor": target, "delta": amount, "step": _emit_step()})
 	else:
+		_apply_panel_hp_delta(target, amount)
 		_do_flash(target)
+
+
+func _on_actor_spent_mp(actor: CombatActor, cost: int) -> void:
+	if _is_buffering:
+		_event_queue.append({"type": "mp_spend", "actor": actor, "delta": -cost, "step": _emit_step()})
+	else:
+		_apply_panel_mp_delta(actor, -cost)
 
 
 # Persistent statuses are committed at battle end so the panel's icon row

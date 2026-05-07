@@ -74,6 +74,12 @@ var _layout_position: Vector2 = Vector2.ZERO
 # Previous current_hp observed via hp_changed; used to compute delta so we
 # can pick shake (delta < 0) vs. flash (delta > 0). Resets in bind_character.
 var _prev_hp: int = 0
+# Combat-only display state. -1 means "not in combat mode" (panel reads from
+# live _data). When >= 0, _draw_stat_bar and is_incapacitated use these values
+# instead of the live Character so HP/MP bars and dim overlay stay in lockstep
+# with PartyHud's buffered log playback. Latched in bind_combat_actor.
+var _combat_displayed_hp: int = -1
+var _combat_displayed_mp: int = -1
 # Heal flash overlay alpha tweened down from FLASH_START to 0 over FLASH_DURATION.
 var _flash_alpha: float = 0.0
 
@@ -131,6 +137,42 @@ func bind_combat_actor(actor: CombatActor) -> void:
 	_combat_actor = actor
 	if _combat_actor != null:
 		_combat_actor.stat_modifiers_changed.connect(_on_stat_modifiers_changed)
+		_combat_displayed_hp = _combat_actor.current_hp
+		_combat_displayed_mp = _combat_actor.current_mp
+	else:
+		_combat_displayed_hp = -1
+		_combat_displayed_mp = -1
+	queue_redraw()
+
+
+# Apply a signed delta to the combat-displayed HP, clamped to [0, max_hp].
+# PartyHud calls this from flush_up_to_step right before the matching shake
+# or heal-flash animation, so the bar value transitions in sync with the log
+# line that explains the change.
+func apply_combat_hp_delta(delta: int) -> void:
+	if _combat_actor == null:
+		return
+	var max_hp: int = _combat_actor.max_hp
+	_combat_displayed_hp = clampi(_combat_displayed_hp + delta, 0, max_hp)
+	queue_redraw()
+
+
+func apply_combat_mp_delta(delta: int) -> void:
+	if _combat_actor == null:
+		return
+	var max_mp: int = _combat_actor.max_mp
+	_combat_displayed_mp = clampi(_combat_displayed_mp + delta, 0, max_mp)
+	queue_redraw()
+
+
+# Force the displayed HP to a specific value (clamped). Used by PartyHud to
+# zero the bar immediately before play_die_animation so a faded panel never
+# shows a positive HP bar.
+func set_combat_displayed_hp(value: int) -> void:
+	if _combat_actor == null:
+		return
+	var max_hp: int = _combat_actor.max_hp
+	_combat_displayed_hp = clampi(value, 0, max_hp)
 	queue_redraw()
 
 
@@ -285,7 +327,13 @@ func has_visible_content() -> bool:
 func is_incapacitated() -> bool:
 	if _character == null:
 		return false
-	if _character.current_hp <= 0:
+	# In combat the panel's "is the bar empty?" check has to use the lagged
+	# display value so dim overlay appears together with the death log line,
+	# not the moment the engine zeroes live HP.
+	if _combat_actor != null:
+		if _combat_displayed_hp <= 0:
+			return true
+	elif _character.current_hp <= 0:
 		return true
 	for sid in INCAPACITATING_STATUSES:
 		if _character.persistent_statuses.has(sid):
@@ -382,8 +430,13 @@ func _draw() -> void:
 
 	_draw_portrait(font, data)
 	_draw_name(font, data)
-	_draw_stat_bar(font, "HP", data.current_hp, data.max_hp, get_hp_bar_rect(), HP_COLOR)
-	_draw_stat_bar(font, "MP", data.current_mp, data.max_mp, get_mp_bar_rect(), MP_COLOR)
+	# In combat mode the panel renders the lagged display values so the bars
+	# advance in step with PartyHud's flush_up_to_step calls. Out of combat the
+	# live snapshot in _data drives the bars directly.
+	var hp_value: int = _combat_displayed_hp if _combat_actor != null else data.current_hp
+	var mp_value: int = _combat_displayed_mp if _combat_actor != null else data.current_mp
+	_draw_stat_bar(font, "HP", hp_value, data.max_hp, get_hp_bar_rect(), HP_COLOR)
+	_draw_stat_bar(font, "MP", mp_value, data.max_mp, get_mp_bar_rect(), MP_COLOR)
 
 	var status_count: int = _draw_status_icons(font)
 	_draw_stat_modifier_icons(font, status_count)

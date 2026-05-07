@@ -260,11 +260,14 @@ func test_monster_panel_reflects_killed_monster():
 	add_child_autofree(overlay)
 	overlay.setup_dependencies(_guild, _provider, _make_rng())
 	overlay.start_encounter(_make_monster_party({&"slime": 2}))
-	# Kill one slime
-	overlay.get_turn_engine().monsters[0].take_damage(100)
-	overlay.refresh_monster_panel()
+	# Per the sync-combat-hud-with-log spec, monster panel updates flow via
+	# apply_died (driven by PartyHud's actor_died bridge in production), not
+	# from live take_damage / is_alive().
+	var killed: MonsterCombatant = overlay.get_turn_engine().monsters[0]
+	killed.take_damage(100)
+	overlay._monster_panel.apply_died(killed)
 	var text := overlay.get_monster_panel_text()
-	# Two initial, one alive → count should be 1
+	# Two initial, one displayed-alive → count should be 1
 	assert_true(text.contains("1"), "text should show remaining count: %s" % text)
 
 
@@ -688,6 +691,72 @@ func test_cancel_log_playback_prevents_pending_lines():
 	overlay.cancel_log_playback()
 	await get_tree().create_timer(0.08).timeout
 	assert_eq(overlay.get_combat_log_lines().size(), 1)
+
+
+# --- 7.x: refresh timing is bound to log playback, not resolve_turn return ---
+
+func test_on_log_playback_finished_triggers_refresh_panels():
+	# After log playback completes, _on_log_playback_finished must perform a
+	# final _refresh_panels so monster counts and party HUD ultimately match
+	# canonical engine state.
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	GameState.guild = _guild
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	# Submit a defend so resolve_turn produces a no-kill turn.
+	for i in range(overlay.get_turn_engine().party.size()):
+		overlay.get_turn_engine().submit_command(i, DefendCommand.new())
+	# Drive resolution + synchronous log playback (log_line_delay defaults 0.0).
+	overlay._resolve_turn_now()
+	# Monster panel should reflect the engine's canonical state after playback.
+	var monsters := overlay.get_turn_engine().monsters
+	for mc in monsters:
+		assert_eq(monster_panel(overlay)._displayed_alive.get(mc, false), mc.is_alive(),
+			"after log playback finishes, displayed_alive must mirror engine state")
+
+
+func monster_panel(overlay: CombatOverlay) -> CombatMonsterPanel:
+	return overlay._monster_panel
+
+
+func test_displayed_alive_lags_engine_state_during_async_playback():
+	# With log_line_delay > 0, log lines are released across multiple frames.
+	# After resolve_turn returns but before the kill step is flushed, the
+	# monster panel must still show the monster as displayed-alive.
+	var overlay := CombatOverlay.new()
+	add_child_autofree(overlay)
+	GameState.guild = _guild
+	overlay.setup_dependencies(_guild, _provider, _make_rng())
+	overlay.log_line_delay = 0.05
+	overlay.start_encounter(_make_monster_party({&"slime": 1}))
+	# Build a hand-crafted report that includes attack + defeated against the
+	# only monster, simulating a kill. We bypass _turn_engine.resolve_turn to
+	# avoid RNG dependence; this is a pure UI-sync test.
+	var only_monster: MonsterCombatant = overlay.get_turn_engine().monsters[0]
+	# Simulate engine atomic kill (current_hp = 0) BEFORE log playback advances.
+	only_monster.monster.current_hp = 0
+	# Begin buffering manually as _resolve_turn_now would.
+	TestHelpers.get_party_hud().begin_buffering()
+	var report := TurnReport.new()
+	report.actions = [
+		{"type": "attack", "attacker_name": "P1", "target_name": "Slime", "amount": 8, "defended": false},
+		{"type": "defeated", "actor_name": "Slime"},
+	]
+	# Emit the buffered die for step 1 (matches the defeated entry's index).
+	overlay.get_turn_engine()._resolve_report = report
+	# Pre-fill 1 action so step is 1 when actor_died emits.
+	report.actions = [report.actions[0]]
+	overlay.get_turn_engine().actor_died.emit(only_monster)
+	report.actions.append({"type": "defeated", "actor_name": "Slime"})
+	# At this point, the panel should still show the monster alive.
+	assert_true(monster_panel(overlay)._displayed_alive.get(only_monster, false),
+		"monster must remain displayed-alive before its death log step is flushed")
+	# Now flush past step 1.
+	TestHelpers.get_party_hud().flush_up_to_step(1)
+	assert_false(monster_panel(overlay)._displayed_alive.get(only_monster, true),
+		"monster must be displayed-dead after flush past its death step")
+	TestHelpers.get_party_hud().end_buffering()
 
 
 # --- ResultPanel ---
