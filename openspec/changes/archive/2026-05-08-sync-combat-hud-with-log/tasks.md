@@ -98,4 +98,4 @@
 
 ## 9. アーカイブ準備
 
-- [ ] 9.1 全タスク完了後、`/opsx:archive sync-combat-hud-with-log` 相当の手順でアーカイブする (8.2 の目視確認後に実施)
+- [x] 9.1 全タスク完了後、`/opsx:archive sync-combat-hud-with-log` 相当の手順でアーカイブする (8.2 の目視確認後に実施)
