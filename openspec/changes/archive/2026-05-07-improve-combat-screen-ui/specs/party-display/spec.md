@@ -1,6 +1,6 @@
 ## MODIFIED Requirements
 
-### Requirement: PartyMemberPanel uses compact body text for a visual card layout
+### Requirement: PartyMemberPanel uses an enlarged font size for body text
 
 `PartyMemberPanel` SHALL render body text such as HP/MP numeric values at a compact font size suitable for a portrait-forward card layout. The member name and level SHALL NOT be rendered as normal stacked body-text lines; they SHALL be rendered as badges over the portrait area. Text and bars SHALL fit cleanly within the panel without clipping.
 
@@ -24,7 +24,7 @@
 - **WHEN** `PartyMemberPanel` renders with non-null data
 - **THEN** the name, level badge, HP bar, MP bar, numeric HP/MP values, and icon row SHALL fit within `PANEL_HEIGHT` without clipping
 
-### Requirement: PartyMemberPanel uses an enlarged panel height to accommodate visual status cards
+### Requirement: PartyMemberPanel uses an enlarged panel height to accommodate body text
 
 `PartyMemberPanel` SHALL define `PANEL_HEIGHT` large enough to contain an enlarged character portrait placeholder, a level badge, member name, HP/MP bars with numeric values, and status/stat modifier icons with sane padding. `PANEL_WIDTH` SHALL remain at `180` for this change.
 
