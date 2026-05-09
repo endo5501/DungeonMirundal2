@@ -102,15 +102,15 @@ func test_undo_from_second_actor_steps_back_to_first():
 	engine.submit_command(0, DefendCommand.new())
 	overlay._advance_to_next_actor()
 	assert_eq(overlay._current_actor_index, 1, "now at B")
-	assert_true(engine._pending_commands.has(0), "A's pending command exists")
+	assert_true(engine.has_pending_command(0), "A's pending command exists")
 
 	overlay.request_undo_actor()
 
 	assert_eq(overlay._current_actor_index, 0, "returns to A")
-	assert_false(engine._pending_commands.has(0), "A's pending command is withdrawn")
+	assert_false(engine.has_pending_command(0), "A's pending command is withdrawn")
 	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.COMMAND_MENU)
 	assert_true(overlay._command_menu.visible, "command menu re-shown")
-	assert_eq(overlay._command_menu._current_actor, engine.party[0], "menu bound to A")
+	assert_eq(overlay.get_current_command_actor(), engine.party[0], "menu bound to A")
 
 
 # --- 3.2 triple cancel from D walks D → C → B → A ---
@@ -124,20 +124,21 @@ func test_repeated_undo_walks_back_to_first():
 		engine.submit_command(i, DefendCommand.new())
 		overlay._advance_to_next_actor()
 	assert_eq(overlay._current_actor_index, 3, "at D")
-	assert_eq(engine._pending_commands.size(), 3)
+	for i in range(3):
+		assert_true(engine.has_pending_command(i))
 
 	overlay.request_undo_actor()  # → C
 	assert_eq(overlay._current_actor_index, 2)
-	assert_false(engine._pending_commands.has(2))
+	assert_false(engine.has_pending_command(2))
 
 	overlay.request_undo_actor()  # → B
 	assert_eq(overlay._current_actor_index, 1)
-	assert_false(engine._pending_commands.has(1))
+	assert_false(engine.has_pending_command(1))
 
 	overlay.request_undo_actor()  # → A
 	assert_eq(overlay._current_actor_index, 0)
-	assert_false(engine._pending_commands.has(0))
-	assert_eq(engine._pending_commands.size(), 0)
+	for i in range(4):
+		assert_false(engine.has_pending_command(i))
 
 
 # --- 3.3 dead member B is skipped on the way back ---
@@ -158,11 +159,11 @@ func test_undo_skips_dead_party_member_backwards():
 
 	overlay.request_undo_actor()  # D → C (no skip needed)
 	assert_eq(overlay._current_actor_index, 2)
-	assert_false(engine._pending_commands.has(2), "C's command withdrawn")
+	assert_false(engine.has_pending_command(2), "C's command withdrawn")
 
 	overlay.request_undo_actor()  # C → A (skipping dead B)
 	assert_eq(overlay._current_actor_index, 0, "skips dead B and lands on A")
-	assert_false(engine._pending_commands.has(0), "A's command withdrawn")
+	assert_false(engine.has_pending_command(0), "A's command withdrawn")
 
 
 # --- 3.4 first-living member: undo is a no-op ---
@@ -175,7 +176,8 @@ func test_undo_on_first_living_actor_is_noop():
 	overlay.request_undo_actor()
 
 	assert_eq(overlay._current_actor_index, 0, "index unchanged")
-	assert_eq(engine._pending_commands.size(), 0, "no pending commands touched")
+	for i in range(3):
+		assert_false(engine.has_pending_command(i), "no pending commands touched")
 	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.COMMAND_MENU)
 
 
@@ -194,7 +196,7 @@ func test_undo_outside_command_menu_phase_is_noop():
 
 	# Index unchanged, A's pending command still present.
 	assert_eq(overlay._current_actor_index, 1)
-	assert_true(engine._pending_commands.has(0))
+	assert_true(engine.has_pending_command(0))
 	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.TARGET_SELECT)
 
 

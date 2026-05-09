@@ -248,8 +248,6 @@ func _on_spell_selector_cancelled() -> void:
 
 func _on_target_selector_cancelled() -> void:
 	if _current_phase == Phase.TARGET_SELECT:
-		# Attack target selection: drop back to the same actor's CommandMenu
-		# without committing a command.
 		_target_selector.hide_selector()
 		_current_phase = Phase.COMMAND_MENU
 		_command_menu.show_for(_turn_engine.party[_current_actor_index])
@@ -350,10 +348,6 @@ func _advance_to_next_actor() -> void:
 	_prompt_next_actor()
 
 
-# Public: invoked by CombatInputRouter when ui_cancel arrives during
-# COMMAND_MENU. Steps back to the most recent prior LIVING PartyCombatant
-# in Guild order, withdrawing that actor's pending command. Safe no-op
-# outside COMMAND_MENU or when no prior living actor exists.
 func request_undo_actor() -> void:
 	if _current_phase != Phase.COMMAND_MENU:
 		return
@@ -364,14 +358,7 @@ func request_undo_actor() -> void:
 		return
 	_turn_engine.withdraw_command(prev)
 	_current_actor_index = prev
-	if _target_selector != null:
-		_target_selector.hide_selector()
-	if _spell_selector != null:
-		_spell_selector.hide_selector()
-	if _item_use_flow != null:
-		_item_use_flow.visible = false
-	if _item_use_panel != null:
-		_item_use_panel.visible = false
+	_hide_all_subpanels()
 	_command_menu.show_for(_turn_engine.party[prev])
 
 
@@ -385,9 +372,7 @@ func _find_previous_living_actor_index() -> int:
 	return -1
 
 
-func _resolve_turn_now() -> void:
-	_current_phase = Phase.RESOLVING
-	_command_menu.hide_menu()
+func _hide_all_subpanels() -> void:
 	if _target_selector != null:
 		_target_selector.hide_selector()
 	if _spell_selector != null:
@@ -396,6 +381,12 @@ func _resolve_turn_now() -> void:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
 		_item_use_panel.visible = false
+
+
+func _resolve_turn_now() -> void:
+	_current_phase = Phase.RESOLVING
+	_command_menu.hide_menu()
+	_hide_all_subpanels()
 	# Buffer signal-driven HUD animations so they fire alongside the log
 	# lines they describe, instead of all at once when resolve_turn returns.
 	# We deliberately do NOT call _refresh_panels() here — monster removal
@@ -485,14 +476,7 @@ func show_result(outcome: EncounterOutcome, summary: BattleSummary) -> void:
 	_current_phase = Phase.RESULT
 	if _command_menu != null:
 		_command_menu.hide_menu()
-	if _target_selector != null:
-		_target_selector.hide_selector()
-	if _spell_selector != null:
-		_spell_selector.hide_selector()
-	if _item_use_flow != null:
-		_item_use_flow.visible = false
-	if _item_use_panel != null:
-		_item_use_panel.visible = false
+	_hide_all_subpanels()
 	if _result_panel != null:
 		_result_panel.show_result(outcome, summary)
 

@@ -99,7 +99,7 @@ func test_target_select_cancel_returns_to_command_menu():
 	assert_false(overlay._target_selector.visible, "selector hidden after cancel")
 	assert_true(overlay._command_menu.visible, "command menu re-shown")
 	assert_eq(overlay._current_actor_index, 0, "still on the same actor")
-	assert_false(engine._pending_commands.has(0), "no command was submitted")
+	assert_false(engine.has_pending_command(0), "no command was submitted")
 
 
 # --- 4.2 SPELL_TARGET cancel still returns to SPELL_SELECT (regression) ---
@@ -127,4 +127,4 @@ func test_spell_target_cancel_still_returns_to_spell_select():
 
 	assert_eq(overlay.get_current_phase(), CombatOverlay.Phase.SPELL_SELECT,
 		"SPELL_TARGET cancel should return to SPELL_SELECT, not COMMAND_MENU")
-	assert_false(engine._pending_commands.has(0), "no command was submitted")
+	assert_false(engine.has_pending_command(0), "no command was submitted")

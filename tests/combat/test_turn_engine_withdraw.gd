@@ -54,7 +54,7 @@ func test_withdraw_removes_pending_command_and_breaks_completeness():
 
 	engine.withdraw_command(0)
 
-	assert_false(engine._pending_commands.has(0), "pending entry removed")
+	assert_false(engine.has_pending_command(0), "pending entry removed")
 	assert_false(engine.are_party_commands_complete(), "completeness flips back to false")
 
 
@@ -68,11 +68,11 @@ func test_withdraw_outside_command_input_is_noop():
 	# Force RESOLVING manually (we don't want to drive a real resolve here).
 	engine.state = TurnEngine.State.RESOLVING
 	engine.withdraw_command(0)
-	assert_true(engine._pending_commands.has(0), "RESOLVING: pending unchanged")
+	assert_true(engine.has_pending_command(0), "RESOLVING: pending unchanged")
 
 	engine.state = TurnEngine.State.FINISHED
 	engine.withdraw_command(0)
-	assert_true(engine._pending_commands.has(0), "FINISHED: pending unchanged")
+	assert_true(engine.has_pending_command(0), "FINISHED: pending unchanged")
 
 
 # 1.3 withdraw on an index without a pending command is a safe no-op
@@ -84,7 +84,8 @@ func test_withdraw_on_empty_index_is_safe_noop():
 	engine.withdraw_command(0)
 	engine.withdraw_command(99)  # also out-of-range key; dict erase is safe
 
-	assert_eq(engine._pending_commands.size(), 0)
+	assert_false(engine.has_pending_command(0))
+	assert_false(engine.has_pending_command(99))
 
 
 # 1.4 cast submit + withdraw leaves MP unchanged and emits no signals
