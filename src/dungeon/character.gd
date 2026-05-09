@@ -295,5 +295,23 @@ static func from_dict(data: Dictionary, inventory: Inventory = null, repo: Spell
 
 func to_party_member_data() -> PartyMemberData:
 	return PartyMemberData.new(
-		character_name, level, current_hp, max_hp, current_mp, max_mp
+		character_name,
+		level,
+		current_hp,
+		max_hp,
+		current_mp,
+		max_mp,
+		_resolve_job_id_for_display()
 	)
+
+
+func _resolve_job_id_for_display() -> StringName:
+	if job == null:
+		return &""
+	if job.id != &"":
+		return job.id
+	if job.resource_path != "":
+		return StringName(job.resource_path.get_file().get_basename())
+	if job.job_name != "":
+		return StringName(job.job_name.to_lower().replace(" ", "_"))
+	return &""
