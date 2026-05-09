@@ -7,11 +7,11 @@ const VISUAL_OUTLINE_COLOR := Color(0.05, 0.12, 0.05, 1.0)
 const WINDOW_BG_COLOR := Color(0.04, 0.04, 0.05, 0.78)
 const WINDOW_INSET := 8.0
 const LIST_WINDOW_SIZE := Vector2(300, 138)
-const TITLE_FONT_SIZE := 18
-const LIST_FONT_SIZE := 18
-const DESIRED_VISUAL_SIZE := Vector2(180, 144)
+const TITLE_FONT_SIZE := 27
+const LIST_FONT_SIZE := 27
+const DESIRED_VISUAL_SIZE := Vector2(270, 216)
 const MIN_VISUAL_SCALE := 0.45
-const VISUAL_GAP := 28.0
+const VISUAL_GAP := 42.0
 
 var _title_label: Label
 var _label: Label

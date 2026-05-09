@@ -3,7 +3,7 @@ extends GutTest
 # has_visible_content() mirrors _draw()'s early-return branch so we can verify
 # "renders nothing" without invoking the live draw context.
 
-const TEST_WIDTH := 1280.0
+const TEST_WIDTH := 1600.0
 
 
 func _make_character(name: String, hp: int) -> Character:

@@ -3,19 +3,19 @@ extends GutTest
 # Verifies the enlarged size constants on PartyMemberPanel.
 
 
-func test_panel_width_is_180():
-	assert_eq(PartyMemberPanel.PANEL_WIDTH, 180,
-		"PANEL_WIDTH should remain 180 in this change")
+func test_panel_width_is_240():
+	assert_eq(PartyMemberPanel.PANEL_WIDTH, 240,
+		"PANEL_WIDTH should be 240 to fit six panels in the 1600 design canvas")
 
 
-func test_panel_height_is_greater_than_130():
-	assert_true(PartyMemberPanel.PANEL_HEIGHT > 130,
-		"PANEL_HEIGHT should be greater than 130 for portrait-forward cards; got %d" % PartyMemberPanel.PANEL_HEIGHT)
+func test_panel_height_is_at_least_200():
+	assert_true(PartyMemberPanel.PANEL_HEIGHT >= 200,
+		"PANEL_HEIGHT should be at least 200 for the bumped portrait-forward cards; got %d" % PartyMemberPanel.PANEL_HEIGHT)
 
 
-func test_body_font_size_is_compact():
-	assert_true(PartyMemberPanel.FONT_SIZE < 20,
-		"FONT_SIZE should be compact for the new card layout; got %d" % PartyMemberPanel.FONT_SIZE)
+func test_body_font_size_is_enlarged_for_readability():
+	assert_true(PartyMemberPanel.FONT_SIZE >= 21 and PartyMemberPanel.FONT_SIZE <= 30,
+		"FONT_SIZE should be in [21, 30] under the new design canvas; got %d" % PartyMemberPanel.FONT_SIZE)
 
 
 func test_portrait_rect_is_larger_than_old_icon():

@@ -5,7 +5,7 @@ extends GutTest
 # get_front_label_position / get_back_label_position) so we can verify intent
 # without invoking the live draw context.
 
-const TEST_WIDTH := 1280.0
+const TEST_WIDTH := 1600.0
 
 
 func _make_display() -> PartyDisplay:
