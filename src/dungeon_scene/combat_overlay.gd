@@ -247,9 +247,13 @@ func _on_spell_selector_cancelled() -> void:
 
 
 func _on_target_selector_cancelled() -> void:
-	# Only the spell flow expects to cancel out of target selection. The attack
-	# flow's TARGET_SELECT phase doesn't route ui_cancel, so this signal won't
-	# fire there.
+	if _current_phase == Phase.TARGET_SELECT:
+		# Attack target selection: drop back to the same actor's CommandMenu
+		# without committing a command.
+		_target_selector.hide_selector()
+		_current_phase = Phase.COMMAND_MENU
+		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		return
 	if _current_phase != Phase.SPELL_TARGET:
 		return
 	_target_selector.hide_selector()

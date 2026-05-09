@@ -37,12 +37,12 @@
 
 ## 4. CombatOverlay TARGET_SELECT cancel handling (TDD)
 
-- [ ] 4.1 Write GUT test: in `Phase.TARGET_SELECT`, dispatch the existing `target_selector.cancelled` signal (or simulate `request_cancel` followed by `cancelled`) → `_current_phase == Phase.COMMAND_MENU`, `_command_menu.show_for(current_actor)` invoked, `target_selector` hidden, no `submit_command` for the current actor
-- [ ] 4.2 Write GUT test: in `Phase.SPELL_TARGET`, the same signal still routes to `Phase.SPELL_SELECT` (regression guard for existing Cast cancel)
-- [ ] 4.3 Run tests, confirm they fail (red)
-- [ ] 4.4 Extend `_on_target_selector_cancelled` in `src/dungeon_scene/combat_overlay.gd` to handle `Phase.TARGET_SELECT`: hide selector, set phase to `COMMAND_MENU`, re-show `_command_menu` for current actor; keep existing SPELL_TARGET branch intact
-- [ ] 4.5 Run tests, confirm they pass (green)
-- [ ] 4.6 Commit: `Allow ui_cancel during attack target selection to return to command menu`
+- [x] 4.1 Write GUT test: in `Phase.TARGET_SELECT`, dispatch the existing `target_selector.cancelled` signal (or simulate `request_cancel` followed by `cancelled`) → `_current_phase == Phase.COMMAND_MENU`, `_command_menu.show_for(current_actor)` invoked, `target_selector` hidden, no `submit_command` for the current actor
+- [x] 4.2 Write GUT test: in `Phase.SPELL_TARGET`, the same signal still routes to `Phase.SPELL_SELECT` (regression guard for existing Cast cancel)
+- [x] 4.3 Run tests, confirm they fail (red)
+- [x] 4.4 Extend `_on_target_selector_cancelled` in `src/dungeon_scene/combat_overlay.gd` to handle `Phase.TARGET_SELECT`: hide selector, set phase to `COMMAND_MENU`, re-show `_command_menu` for current actor; keep existing SPELL_TARGET branch intact
+- [x] 4.5 Run tests, confirm they pass (green)
+- [x] 4.6 Commit: `Allow ui_cancel during attack target selection to return to command menu`
 
 ## 5. End-to-end regression checks
 
