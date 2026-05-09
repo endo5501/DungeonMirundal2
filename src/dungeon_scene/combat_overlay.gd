@@ -247,9 +247,11 @@ func _on_spell_selector_cancelled() -> void:
 
 
 func _on_target_selector_cancelled() -> void:
-	# Only the spell flow expects to cancel out of target selection. The attack
-	# flow's TARGET_SELECT phase doesn't route ui_cancel, so this signal won't
-	# fire there.
+	if _current_phase == Phase.TARGET_SELECT:
+		_target_selector.hide_selector()
+		_current_phase = Phase.COMMAND_MENU
+		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		return
 	if _current_phase != Phase.SPELL_TARGET:
 		return
 	_target_selector.hide_selector()
@@ -346,9 +348,31 @@ func _advance_to_next_actor() -> void:
 	_prompt_next_actor()
 
 
-func _resolve_turn_now() -> void:
-	_current_phase = Phase.RESOLVING
-	_command_menu.hide_menu()
+func request_undo_actor() -> void:
+	if _current_phase != Phase.COMMAND_MENU:
+		return
+	if _turn_engine == null:
+		return
+	var prev := _find_previous_living_actor_index()
+	if prev < 0:
+		return
+	_turn_engine.withdraw_command(prev)
+	_current_actor_index = prev
+	_hide_all_subpanels()
+	_command_menu.show_for(_turn_engine.party[prev])
+
+
+func _find_previous_living_actor_index() -> int:
+	var idx := _current_actor_index - 1
+	while idx >= 0:
+		var actor: CombatActor = _turn_engine.party[idx]
+		if actor != null and actor.is_alive():
+			return idx
+		idx -= 1
+	return -1
+
+
+func _hide_all_subpanels() -> void:
 	if _target_selector != null:
 		_target_selector.hide_selector()
 	if _spell_selector != null:
@@ -357,6 +381,12 @@ func _resolve_turn_now() -> void:
 		_item_use_flow.visible = false
 	if _item_use_panel != null:
 		_item_use_panel.visible = false
+
+
+func _resolve_turn_now() -> void:
+	_current_phase = Phase.RESOLVING
+	_command_menu.hide_menu()
+	_hide_all_subpanels()
 	# Buffer signal-driven HUD animations so they fire alongside the log
 	# lines they describe, instead of all at once when resolve_turn returns.
 	# We deliberately do NOT call _refresh_panels() here — monster removal
@@ -446,14 +476,7 @@ func show_result(outcome: EncounterOutcome, summary: BattleSummary) -> void:
 	_current_phase = Phase.RESULT
 	if _command_menu != null:
 		_command_menu.hide_menu()
-	if _target_selector != null:
-		_target_selector.hide_selector()
-	if _spell_selector != null:
-		_spell_selector.hide_selector()
-	if _item_use_flow != null:
-		_item_use_flow.visible = false
-	if _item_use_panel != null:
-		_item_use_panel.visible = false
+	_hide_all_subpanels()
 	if _result_panel != null:
 		_result_panel.show_result(outcome, summary)
 
@@ -511,6 +534,7 @@ func _panels_dict() -> Dictionary:
 		"item_selector": null,
 		"spell_selector": _spell_selector,
 		"result_panel": _result_panel,
+		"overlay": self,
 	}
 
 

@@ -5,8 +5,12 @@ extends RefCounted
 static func route(event: InputEvent, phase: int, panels: Dictionary) -> bool:
 	match phase:
 		CombatOverlay.Phase.COMMAND_MENU:
+			if event != null and event.is_action_pressed("ui_cancel"):
+				return _route_undo_to_overlay(panels.get("overlay", null))
 			return _route_to_panel(event, panels.get("command_menu", null))
-		CombatOverlay.Phase.TARGET_SELECT, CombatOverlay.Phase.ITEM_TARGET:
+		CombatOverlay.Phase.TARGET_SELECT:
+			return _route_to_panel_cancellable(event, panels.get("target_selector", null))
+		CombatOverlay.Phase.ITEM_TARGET:
 			return _route_to_panel(event, panels.get("target_selector", null))
 		CombatOverlay.Phase.SPELL_TARGET:
 			return _route_to_panel_cancellable(event, panels.get("target_selector", null))
@@ -16,6 +20,13 @@ static func route(event: InputEvent, phase: int, panels: Dictionary) -> bool:
 			return _route_to_panel(event, panels.get("result_panel", null))
 		_:
 			return false
+
+
+static func _route_undo_to_overlay(overlay) -> bool:
+	if overlay == null or not overlay.has_method("request_undo_actor"):
+		return false
+	overlay.request_undo_actor()
+	return true
 
 
 static func _route_to_panel(event: InputEvent, panel) -> bool:
