@@ -46,7 +46,7 @@
 
 ## 5. End-to-end regression checks
 
-- [ ] 5.1 Run the full GUT suite to ensure no existing combat / overlay test regressed
+- [x] 5.1 Run the full GUT suite to ensure no existing combat / overlay test regressed (2177/2177 passing)
 - [ ] 5.2 Manual playtest: Attack → ui_cancel returns to command menu (no submit)
 - [ ] 5.3 Manual playtest: Cast (mage / priest) → spell select cancel → command menu (regression)
 - [ ] 5.4 Manual playtest: Cast → target select cancel → spell select (regression, NOT command menu)
@@ -54,10 +54,10 @@
 - [ ] 5.6 Manual playtest: 4-member party (one mid-party member dead), confirm dead-skip on backward navigation
 - [ ] 5.7 Manual playtest: ui_cancel on first living member is silently ignored
 - [ ] 5.8 Manual playtest: Item flow cancel still returns to command menu
-- [ ] 5.9 Update `MEMORY.md` if any non-obvious gotchas surfaced (only if applicable)
+- [x] 5.9 Update `MEMORY.md` if any non-obvious gotchas surfaced (only if applicable) — none surfaced
 
 ## 6. Validation
 
-- [ ] 6.1 `openspec validate add-combat-command-undo --strict`
+- [x] 6.1 `openspec validate add-combat-command-undo --strict`
 - [ ] 6.2 `openspec verify add-combat-command-undo` (or `/opsx:verify`) once implementation is complete
 - [ ] 6.3 Final commit (if any cleanup): `Finalize add-combat-command-undo`
