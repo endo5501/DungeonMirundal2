@@ -385,12 +385,20 @@ func get_name_badge_rect() -> Rect2:
 	return Rect2(portrait.position.x + 4.0, portrait.position.y + portrait.size.y - 20.0, portrait.size.x - 8.0, 18.0)
 
 
+const BAR_HEIGHT := 12
+const BAR_GAP := 4
+const BAR_LEFT := 32
+const BAR_WIDTH := 88
+
+
 func get_hp_bar_rect() -> Rect2:
-	return Rect2(32, 184, 88, 12)
+	var portrait := get_portrait_rect()
+	return Rect2(BAR_LEFT, portrait.position.y + portrait.size.y + BAR_GAP, BAR_WIDTH, BAR_HEIGHT)
 
 
 func get_mp_bar_rect() -> Rect2:
-	return Rect2(32, 200, 88, 12)
+	var hp := get_hp_bar_rect()
+	return Rect2(hp.position.x, hp.position.y + hp.size.y + BAR_GAP, hp.size.x, hp.size.y)
 
 
 func get_icon_row_origin() -> Vector2:

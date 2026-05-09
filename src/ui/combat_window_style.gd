@@ -6,6 +6,12 @@ const PANEL_BG_COLOR := Color(0.04, 0.04, 0.05, 0.74)
 const BORDER_WIDTH: int = 2
 const CONTENT_MARGIN: float = 8.0
 
+# Shared typography for combat panels. Calibrated for the 1600x900 design canvas.
+const TITLE_FONT_SIZE: int = 24
+const BODY_FONT_SIZE: int = 21
+const ROW_FONT_SIZE: int = 24
+const HINT_FONT_SIZE: int = 18
+
 
 static func make_panel() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

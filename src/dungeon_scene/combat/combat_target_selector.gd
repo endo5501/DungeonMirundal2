@@ -26,7 +26,7 @@ func _build_ui() -> void:
 	panel.add_child(vbox)
 	_title_label = Label.new()
 	_title_label.text = "対象を選択:"
-	_title_label.add_theme_font_size_override("font_size", 24)
+	_title_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	vbox.add_child(_title_label)
 	_options_vbox = VBoxContainer.new()
 	vbox.add_child(_options_vbox)
@@ -139,7 +139,7 @@ func _rebuild_rows() -> void:
 		_options_vbox.remove_child(child)
 		child.queue_free()
 	for i in range(_targets.size()):
-		_rows.append(CursorMenuRow.create(_options_vbox, _targets[i].actor_name, 24))
+		_rows.append(CursorMenuRow.create(_options_vbox, _targets[i].actor_name, CombatWindowStyle.ROW_FONT_SIZE))
 
 
 func _refresh_rows() -> void:
