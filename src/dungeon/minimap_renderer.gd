@@ -3,16 +3,22 @@ extends RefCounted
 
 const VIEW_RADIUS := 3
 const VIEW_SIZE := VIEW_RADIUS * 2 + 1  # 7
-const CELL_PX := 3
-const WALL_PX := 1
-const STRIDE := CELL_PX + WALL_PX  # 4
-const IMAGE_SIZE := STRIDE * VIEW_SIZE + WALL_PX  # 29
+const CELL_PX := 9
+const WALL_PX := 3
+const STRIDE := CELL_PX + WALL_PX  # 12
+const IMAGE_SIZE := STRIDE * VIEW_SIZE + WALL_PX  # 87
+const STAIRS_UP_ICON_PATH := "res://assets/images/map_icons/stairs_up.png"
+const STAIRS_DOWN_ICON_PATH := "res://assets/images/map_icons/stairs_down.png"
 
 static var COLOR_FLOOR := Color8(102, 102, 89)
 static var COLOR_WALL := Color8(178, 178, 178)
 static var COLOR_DOOR := Color8(153, 102, 51)
 static var COLOR_PLAYER := Color8(51, 204, 51)
-static var COLOR_START := Color8(230, 204, 51)
+static var COLOR_START := Color8(238, 238, 230)
+static var COLOR_STAIRS_UP := Color8(238, 238, 230)
+static var COLOR_STAIRS_DOWN := Color8(238, 238, 230)
+static var COLOR_PIT := Color8(32, 28, 36)
+static var COLOR_GOAL := Color8(220, 70, 70)
 static var COLOR_BG := Color8(0, 0, 0)
 
 func render(wiz_map: WizMap, explored_map: ExploredMap, player_state: PlayerState) -> Image:
@@ -50,14 +56,92 @@ func _draw_cell(img: Image, wiz_map: WizMap, explored_map: ExploredMap,
 		_draw_edge_line(img, vx, vy, dir, color)
 
 	var tile: int = wiz_map.cell(cx, cy).tile
-	if tile == TileType.START or tile == TileType.STAIRS_DOWN or tile == TileType.STAIRS_UP:
-		_draw_start_marker(img, vx, vy)
+	_draw_landmark_icon(img, tile, vx, vy)
 
-func _draw_start_marker(img: Image, vx: int, vy: int) -> void:
-	var mx := vx * STRIDE + WALL_PX + 1
+func _draw_landmark_icon(img: Image, tile: int, vx: int, vy: int) -> void:
+	match tile:
+		TileType.START:
+			if not _draw_icon_image(img, vx, vy, STAIRS_UP_ICON_PATH):
+				_draw_stairs_up_fallback(img, vx, vy, COLOR_START)
+		TileType.STAIRS_UP:
+			if not _draw_icon_image(img, vx, vy, STAIRS_UP_ICON_PATH):
+				_draw_stairs_up_fallback(img, vx, vy, COLOR_STAIRS_UP)
+		TileType.STAIRS_DOWN:
+			if not _draw_icon_image(img, vx, vy, STAIRS_DOWN_ICON_PATH):
+				_draw_stairs_down_fallback(img, vx, vy)
+		TileType.GOAL:
+			_draw_icon_pattern(img, vx, vy, [
+				"#.......#",
+				".#.....#.",
+				"..#...#..",
+				"...#.#...",
+				"....#....",
+				"...#.#...",
+				"..#...#..",
+				".#.....#.",
+				"#.......#",
+			], COLOR_GOAL)
+
+func _draw_icon_pattern(img: Image, vx: int, vy: int, pattern: Array[String], color: Color) -> void:
+	var fx := vx * STRIDE + WALL_PX
 	var fy := vy * STRIDE + WALL_PX
 	for dy in range(CELL_PX):
-		img.set_pixel(mx, fy + dy, COLOR_START)
+		for dx in range(CELL_PX):
+			if pattern[dy].substr(dx, 1) == "#":
+				img.set_pixel(fx + dx, fy + dy, color)
+
+func _draw_icon_image(img: Image, vx: int, vy: int, path: String) -> bool:
+	var fx := vx * STRIDE + WALL_PX
+	var fy := vy * STRIDE + WALL_PX
+	var texture := ResourceLoader.load(path) as Texture2D
+	if texture == null:
+		return false
+	var icon := texture.get_image()
+	if icon == null:
+		return false
+	for dy in range(CELL_PX):
+		for dx in range(CELL_PX):
+			var sx := mini(icon.get_width() - 1, int(float(dx) * float(icon.get_width()) / float(CELL_PX)))
+			var sy := mini(icon.get_height() - 1, int(float(dy) * float(icon.get_height()) / float(CELL_PX)))
+			var color := icon.get_pixel(sx, sy)
+			if color.a > 0.0:
+				img.set_pixel(fx + dx, fy + dy, color)
+	return true
+
+func _draw_stairs_up_fallback(img: Image, vx: int, vy: int, color: Color) -> void:
+	_draw_icon_pattern(img, vx, vy, [
+		"........#",
+		".......##",
+		"......###",
+		".....####",
+		"....#####",
+		"...######",
+		"..#######",
+		".########",
+		"#########",
+	], color)
+
+func _draw_stairs_down_fallback(img: Image, vx: int, vy: int) -> void:
+	var fx := vx * STRIDE + WALL_PX
+	var fy := vy * STRIDE + WALL_PX
+	var pattern: Array[String] = [
+		"SSSSSSSSS",
+		"S#######S",
+		"S#.....#S",
+		"S###...#S",
+		"S..#...#S",
+		"S..###.#S",
+		"S....#.#S",
+		"S....###S",
+		"SSSSSSSSS",
+	]
+	for dy in range(CELL_PX):
+		for dx in range(CELL_PX):
+			var marker := pattern[dy].substr(dx, 1)
+			if marker == "#":
+				img.set_pixel(fx + dx, fy + dy, COLOR_STAIRS_DOWN)
+			elif marker == "S":
+				img.set_pixel(fx + dx, fy + dy, COLOR_PIT)
 
 func _edge_color(edge: int, cx: int, cy: int, dir: int, explored_map: ExploredMap) -> Color:
 	if edge == EdgeType.WALL:
@@ -76,29 +160,33 @@ func _draw_edge_line(img: Image, vx: int, vy: int, dir: int, color: Color) -> vo
 
 	match dir:
 		Direction.NORTH:
-			var ey := fy - WALL_PX
-			if ey < 0:
-				return
-			for dx in range(CELL_PX):
-				img.set_pixel(fx + dx, ey, color)
+			for wy in range(WALL_PX):
+				var ey := fy - WALL_PX + wy
+				if ey < 0:
+					continue
+				for dx in range(CELL_PX):
+					img.set_pixel(fx + dx, ey, color)
 		Direction.SOUTH:
-			var ey := fy + CELL_PX
-			if ey >= IMAGE_SIZE:
-				return
-			for dx in range(CELL_PX):
-				img.set_pixel(fx + dx, ey, color)
+			for wy in range(WALL_PX):
+				var ey := fy + CELL_PX + wy
+				if ey >= IMAGE_SIZE:
+					continue
+				for dx in range(CELL_PX):
+					img.set_pixel(fx + dx, ey, color)
 		Direction.WEST:
-			var ex := fx - WALL_PX
-			if ex < 0:
-				return
-			for dy in range(CELL_PX):
-				img.set_pixel(ex, fy + dy, color)
+			for wx in range(WALL_PX):
+				var ex := fx - WALL_PX + wx
+				if ex < 0:
+					continue
+				for dy in range(CELL_PX):
+					img.set_pixel(ex, fy + dy, color)
 		Direction.EAST:
-			var ex := fx + CELL_PX
-			if ex >= IMAGE_SIZE:
-				return
-			for dy in range(CELL_PX):
-				img.set_pixel(ex, fy + dy, color)
+			for wx in range(WALL_PX):
+				var ex := fx + CELL_PX + wx
+				if ex >= IMAGE_SIZE:
+					continue
+				for dy in range(CELL_PX):
+					img.set_pixel(ex, fy + dy, color)
 
 func _fill_corners(img: Image) -> void:
 	for cy in range(VIEW_SIZE + 1):
@@ -109,14 +197,24 @@ func _fill_corners(img: Image) -> void:
 				continue
 			var color := _corner_color_from_neighbors(img, px, py)
 			if color != COLOR_BG:
-				img.set_pixel(px, py, color)
+				for dy in range(WALL_PX):
+					for dx in range(WALL_PX):
+						var x := px + dx
+						var y := py + dy
+						if x < IMAGE_SIZE and y < IMAGE_SIZE:
+							img.set_pixel(x, y, color)
 
 func _corner_color_from_neighbors(img: Image, px: int, py: int) -> Color:
 	var has_wall := false
 	var has_door := false
 	var has_floor := false
 	var non_bg_count := 0
-	var offsets: Array[Vector2i] = [Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
+	var offsets: Array[Vector2i] = []
+	for i in range(WALL_PX):
+		offsets.append(Vector2i(-1, i))
+		offsets.append(Vector2i(WALL_PX, i))
+		offsets.append(Vector2i(i, -1))
+		offsets.append(Vector2i(i, WALL_PX))
 	for ofs in offsets:
 		var nx: int = px + ofs.x
 		var ny: int = py + ofs.y

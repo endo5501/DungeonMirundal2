@@ -4,11 +4,11 @@
 ## Requirements
 
 ### Requirement: MinimapRenderer creates a line-based Image centered on the player
-MinimapRenderer (RefCounted) SHALL generate an Image representing a VIEW_RADIUS (3) cell area around the player (7x7 cells). Each cell SHALL occupy a CELL_PX (3) pixel floor area with WALL_PX (1) pixel gaps between cells for wall lines. The Image size SHALL be STRIDE * VIEW_SIZE + WALL_PX = 29 x 29 pixels. The player SHALL always be centered.
+MinimapRenderer (RefCounted) SHALL generate an Image representing a VIEW_RADIUS (3) cell area around the player (7x7 cells). Each cell SHALL occupy a CELL_PX (9) pixel floor area with WALL_PX (3) pixel gaps between cells for wall lines and high-resolution landmark icons. The Image size SHALL be STRIDE * VIEW_SIZE + WALL_PX = 87 x 87 pixels. The player SHALL always be centered.
 
-#### Scenario: Image size is fixed at 29x29
+#### Scenario: Image size is fixed at 87x87
 - **WHEN** render(wiz_map, explored_map, player_state) is called
-- **THEN** the returned Image SHALL have width 29 and height 29
+- **THEN** the returned Image SHALL have width 87 and height 87
 
 #### Scenario: Unexplored cell within view is not drawn
 - **WHEN** a cell within the 7x7 view is NOT in explored_map
@@ -16,22 +16,22 @@ MinimapRenderer (RefCounted) SHALL generate an Image representing a VIEW_RADIUS 
 
 #### Scenario: Explored cell floor area is drawn
 - **WHEN** a cell within the 7x7 view IS in explored_map
-- **THEN** the 3x3 floor area pixels SHALL be floor color
+- **THEN** the 9x9 floor area pixels SHALL be floor color
 
 #### Scenario: Cell outside map bounds renders as background
 - **WHEN** player is at position (0, 0) and cells to the north/west are outside map bounds
 - **THEN** those pixels SHALL be background color
 
 ### Requirement: MinimapRenderer draws walls and doors as lines
-MinimapRenderer SHALL draw wall and door edges as 1-pixel-wide lines spanning the cell width (CELL_PX pixels). Lines SHALL NOT extend to corner pixels. An OPEN edge between two explored cells SHALL be drawn as floor color to connect passages.
+MinimapRenderer SHALL draw wall and door edges as WALL_PX-wide lines spanning the cell width (CELL_PX pixels). Lines SHALL NOT extend to corner pixels. An OPEN edge between two explored cells SHALL be drawn as floor color to connect passages.
 
 #### Scenario: WALL edge renders as wall-colored line
 - **WHEN** an explored cell within the view has a WALL edge on NORTH
-- **THEN** a 3px horizontal line in wall color SHALL be drawn at the north gap
+- **THEN** a 9px horizontal line in wall color SHALL be drawn at the north gap
 
 #### Scenario: DOOR edge renders as door-colored line
 - **WHEN** an explored cell within the view has a DOOR edge on EAST
-- **THEN** a 3px vertical line in door color SHALL be drawn at the east gap
+- **THEN** a 9px vertical line in door color SHALL be drawn at the east gap
 
 #### Scenario: OPEN edge between explored cells renders as floor-colored line
 - **WHEN** two adjacent explored cells have an OPEN edge between them
@@ -50,7 +50,7 @@ MinimapRenderer SHALL draw the player marker at the center cell floor area. The 
 
 #### Scenario: Player floor area is marked
 - **WHEN** render is called
-- **THEN** the center cell floor pixels (14, 14) SHALL be player color
+- **THEN** the center cell floor pixels SHALL be player color
 
 #### Scenario: Player direction indicator for NORTH
 - **WHEN** player is facing NORTH
@@ -60,26 +60,34 @@ MinimapRenderer SHALL draw the player marker at the center cell floor area. The 
 - **WHEN** player is facing EAST
 - **THEN** the east gap pixels of the center cell SHALL be player color
 
-### Requirement: MinimapRenderer draws a marker on the START tile
+### Requirement: MinimapRenderer draws generated stair icons
 
-MinimapRenderer SHALL inspect the `tile` type of each explored cell within the 7x7 view and, when the tile is `TileType.START`, overlay a small marker on top of the already-drawn floor area. The marker SHALL use a color distinct from both `COLOR_FLOOR` and `COLOR_PLAYER`, SHALL occupy at most the 3x3 floor pixel area of that cell, and SHALL NOT extend into the wall-gap pixels. The floor color underneath the marker SHALL continue to be drawn normally (the marker overlays, not replaces, the base floor color). Unexplored START cells SHALL NOT draw the marker.
+MinimapRenderer SHALL inspect the `tile` type of each explored cell within the 7x7 view and overlay a tile-specific icon on top of the already-drawn floor area for `TileType.START`, `TileType.STAIRS_UP`, `TileType.STAIRS_DOWN`, and `TileType.GOAL`. `START` and `STAIRS_UP` SHALL use the same generated upward-stair icon based on `tmp/kaidan.jpeg` reference B. `STAIRS_DOWN` SHALL use a generated descending-stairwell icon based on reference 10, with white/light-gray steps, visible step lines, and dark wall/shadow pixels rather than cyan or blue. Each icon SHALL occupy only the 9x9 floor pixel area of that cell and SHALL NOT extend into wall-gap pixels. The floor color underneath the icon SHALL continue to be drawn normally. Unexplored landmark cells SHALL NOT draw icons.
 
-#### Scenario: Explored START tile within view shows marker
+#### Scenario: Explored START tile within view shows ordinary upward stair icon
 - **WHEN** an explored cell within the 7x7 view has `tile == TileType.START`
-- **THEN** the floor area of that cell SHALL contain marker-color pixels in addition to the floor color
+- **THEN** the floor area of that cell SHALL contain the same upward stair icon shape used for `TileType.STAIRS_UP`
 
-#### Scenario: Marker color is distinct from floor and player
-- **WHEN** the START marker is drawn
-- **THEN** the marker color SHALL NOT equal `COLOR_FLOOR` and SHALL NOT equal `COLOR_PLAYER`
+#### Scenario: Explored STAIRS_UP tile within view shows upward stair icon
+- **WHEN** an explored cell within the 7x7 view has `tile == TileType.STAIRS_UP`
+- **THEN** the floor area of that cell SHALL contain multiple visible stair step pixels distinct from `COLOR_FLOOR`, `COLOR_PLAYER`, and the STAIRS_DOWN icon shape
 
-#### Scenario: Marker stays within the 3x3 floor area
-- **WHEN** the START marker is drawn on a cell at view-grid (vx, vy)
-- **THEN** every marker pixel SHALL be inside the 3x3 floor rectangle starting at `(vx * STRIDE + WALL_PX, vy * STRIDE + WALL_PX)`, and no wall-gap pixel SHALL be overwritten
+#### Scenario: Explored STAIRS_DOWN tile within view shows downward stair icon
+- **WHEN** an explored cell within the 7x7 view has `tile == TileType.STAIRS_DOWN`
+- **THEN** the floor area of that cell SHALL contain a dark opening/shadow area and multiple visible stair step pixels distinct from `COLOR_FLOOR`, `COLOR_PLAYER`, and the STAIRS_UP icon shape
 
-#### Scenario: Unexplored START tile does not draw marker
-- **WHEN** a START cell within the 7x7 view is NOT in explored_map
-- **THEN** the floor area pixels SHALL remain background color and no marker SHALL be drawn
+#### Scenario: Explored GOAL tile within view shows goal icon
+- **WHEN** an explored cell within the 7x7 view has `tile == TileType.GOAL`
+- **THEN** the floor area of that cell SHALL contain GOAL icon pixels distinct from `COLOR_FLOOR` and `COLOR_PLAYER`
 
-#### Scenario: START tile directly under the player still shows player marker
-- **WHEN** the player stands on the START tile (center cell of the view)
-- **THEN** the player floor color and direction indicator SHALL take precedence over the START marker on the center cell floor area
+#### Scenario: Landmark icons stay within the 9x9 floor area
+- **WHEN** a landmark icon is drawn on a cell at view-grid (vx, vy)
+- **THEN** every icon pixel SHALL be inside the 9x9 floor rectangle starting at `(vx * STRIDE + WALL_PX, vy * STRIDE + WALL_PX)`, and no wall-gap pixel SHALL be overwritten
+
+#### Scenario: Unexplored landmark tile does not draw icon
+- **WHEN** a `START`, `STAIRS_UP`, `STAIRS_DOWN`, or `GOAL` cell within the 7x7 view is NOT in explored_map
+- **THEN** the floor area pixels SHALL remain background color and no landmark icon SHALL be drawn
+
+#### Scenario: Player on landmark tile still shows player marker
+- **WHEN** the player stands on any landmark tile at the center cell of the view
+- **THEN** the player floor color and direction indicator SHALL take precedence over the landmark icon on the center cell floor area
