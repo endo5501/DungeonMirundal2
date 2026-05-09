@@ -126,3 +126,31 @@ Godot 4 の stretch mode には `viewport` と `canvas_items` がある。
 
 - パーティパネル `PANEL_HEIGHT` の bump 倍率は 1.33× (224) で十分か、それともフォント側に合わせて 1.5× (252) にすべきか? → 暫定で 1.33× を採用するが、テストプレイで判断する
 - 既存 spec の `PartyMemberPanel uses an enlarged font size for body text` 要件は「body font size SHALL be less than 20」と書かれており、bump 後 (21) は要件に違反する → spec 側を「less than 25」等に緩めるか、定数定義として明示する形式に変更する。delta spec の中で明確化する
+
+## Update from visual review pass (2026-05-09)
+
+ユーザー目視確認の結果、以下を追加実施した:
+
+- `PartyMemberPanel` のポートレート領域が縦に伸ばし足りなかった (HP/MP bar が portrait の中に重なる + bar の下に大きな空白) ため、`PANEL_HEIGHT` 224→240, `PORTRAIT_HEIGHT` 138→174 に拡張
+- 戦闘メニューの行 (`CursorMenuRow.create` 第3引数として渡される font_size) は `add_theme_font_size_override` 経由のフォント bump とは別パスだったため、当初 bump から漏れていた。`combat_command_menu` / `combat_target_selector` で 16→24, `combat_spell_selector` / `combat_item_selector` で 14→21 に追加 bump
+
+## Update from simplify review pass (2026-05-09)
+
+D5 の決定 ("re-triggering SHALL use the existing `_refresh_all()` path") を撤回し、`_notification(NOTIFICATION_RESIZED)` は SubViewport を直接 `UPDATE_ONCE` にするだけに変更した。
+
+理由:
+
+- `_refresh_all()` は `_explored_map.mark_visible()` を呼んでおり、リサイズ時にこれが走るのは意味的に間違い (リサイズは探索行為ではない)。現状はべき等で実害がないが、将来 `mark_visible` がシグナルを emit するようになった場合に偽陽性のイベントが流れる
+- `_refresh_all()` は ImmediateMesh を再構築・minimap を再描画するが、リサイズ時に player は移動していないため既存メッシュ・カメラ・minimap は有効のまま。SubViewport の framebuffer を再アームすれば既存ジオメトリが新しいサイズで再描画される
+- `NOTIFICATION_RESIZED` は親 Control の layout pass 中に複数回発火しうる。最小実装にすることでこの redundant な発火コストも最小化される
+
+ガード条件は `_wiz_map == null` (ダンジョン未 setup) から `_sub_viewport == null` (`_ready()` 未実行) に変更。`_ready()` 後 `setup()` 前の状態で発火しても SubViewport を空のまま再アームするだけで安全。
+
+## Refactor: shared constants introduced in simplify pass
+
+simplify pass の副産物として、以下の定数を導入した (spec で外部観測される挙動には影響なし):
+
+- `CombatWindowStyle.TITLE_FONT_SIZE` (24), `BODY_FONT_SIZE` (21), `ROW_FONT_SIZE` (24), `HINT_FONT_SIZE` (18) — 戦闘 UI 6 ファイルに散在していた font_size リテラルを集約
+- `PartyMemberPanel.BAR_HEIGHT` (12), `BAR_GAP` (4), `BAR_LEFT` (32), `BAR_WIDTH` (88) — `get_hp_bar_rect` / `get_mp_bar_rect` のハードコード Rect2 を `get_portrait_rect()` 由来の計算に変換し、PORTRAIT_HEIGHT 変更が bar 位置に追従するようにした
+
+これらは spec で外部から観測すべき制約ではなく、内部実装の整理。次回スケール変更時の触る箇所を最小化する効果がある。

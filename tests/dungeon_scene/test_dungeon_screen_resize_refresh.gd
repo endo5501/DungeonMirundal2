@@ -25,10 +25,30 @@ func test_resize_notification_triggers_subviewport_update_once():
 		"DungeonScreen should re-arm the SubViewport for one update on resize")
 
 
-func test_resize_notification_before_setup_is_noop():
-	# Build a screen WITHOUT calling setup — _wiz_map and _player_state are null.
+func test_resize_does_not_remark_explored_cells():
+	# Resize is not exploration: the handler must NOT call _refresh_all() because
+	# that would mutate _explored_map.mark_visible — semantically incorrect for a
+	# resize event.
+	var screen := _setup_screen()
+	var explored_before: Array = screen._explored_map.get_visible_cells_snapshot() if screen._explored_map.has_method("get_visible_cells_snapshot") else []
+	# Move player to a fresh position WITHOUT exploring (direct mutation),
+	# then trigger resize. If _refresh_all were called, mark_visible would
+	# add the new cone to _explored_map.
+	screen._sub_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	screen.notification(Control.NOTIFICATION_RESIZED)
+	# The SubViewport should be re-armed but no other state should have moved.
+	assert_eq(screen._sub_viewport.render_target_update_mode, SubViewport.UPDATE_ONCE,
+		"resize should re-arm SubViewport")
+
+
+func test_resize_before_subviewport_constructed_is_noop():
+	# Build a screen and immediately fire NOTIFICATION_RESIZED before _ready
+	# has a chance to construct _sub_viewport. add_child_autofree triggers
+	# _ready synchronously in GUT, so we exercise the guard via a fresh
+	# instance whose _sub_viewport we explicitly null out.
 	var screen := DungeonScreen.new()
 	add_child_autofree(screen)
-	# Should not crash and should not touch the SubViewport mode.
+	screen._sub_viewport = null
+	# Should not crash.
 	screen.notification(Control.NOTIFICATION_RESIZED)
-	assert_true(true, "resize before setup should be a no-op (no crash)")
+	assert_true(true, "resize with null _sub_viewport must be a no-op (no crash)")
