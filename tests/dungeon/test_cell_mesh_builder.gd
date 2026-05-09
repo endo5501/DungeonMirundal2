@@ -82,52 +82,106 @@ func test_all_four_walls_default():
 	var wall_faces = faces.filter(func(f): return f.type.begins_with("wall_"))
 	assert_eq(wall_faces.size(), 4, "4 walls when all edges WALL")
 
-# --- START tile stairs-up mesh ---
+# --- Landmark tile meshes ---
 
-func test_start_tile_generates_stairs_up_faces():
-	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	cell.tile = TileType.START
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
-	assert_true(stairs_faces.size() > 0, "START cell should generate stairs_up_* faces")
+func _faces_with_prefix(faces: Array, prefix: String) -> Array:
+	return faces.filter(func(f): return f.type.begins_with(prefix))
 
-func test_floor_tile_has_no_stairs_faces():
-	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	# default tile is FLOOR
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
-	assert_eq(stairs_faces.size(), 0, "non-START cell should not generate stairs faces")
+func _assert_floor_and_ceiling_present(faces: Array, message_prefix: String) -> void:
+	var floor_faces = faces.filter(func(f): return f.type == "floor")
+	var ceiling_faces = faces.filter(func(f): return f.type == "ceiling")
+	assert_eq(floor_faces.size(), 1, "%s floor face" % message_prefix)
+	assert_eq(ceiling_faces.size(), 1, "%s ceiling face" % message_prefix)
 
-func test_start_tile_stairs_vertices_within_cell_volume():
-	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	cell.tile = TileType.START
-	var grid := Vector2i(3, 2)
-	var faces = builder.build_faces(cell, grid)
+func _assert_landmark_vertices_within_cell(faces: Array, prefixes: Array,
+		grid: Vector2i, message_prefix: String) -> void:
 	var x0 := grid.x * CELL_SIZE
 	var z0 := grid.y * CELL_SIZE
 	var x1 := x0 + CELL_SIZE
 	var z1 := z0 + CELL_SIZE
 	var ceiling_height := CellMeshBuilder.CELL_HEIGHT
-	var stairs_faces = faces.filter(func(f): return f.type.begins_with("stairs_up_"))
-	assert_true(stairs_faces.size() > 0, "preconditions: stairs faces exist")
-	for f in stairs_faces:
+	var landmark_faces: Array = []
+	for prefix in prefixes:
+		landmark_faces.append_array(_faces_with_prefix(faces, prefix))
+	assert_true(landmark_faces.size() > 0, "%s preconditions: landmark faces exist" % message_prefix)
+	for f in landmark_faces:
 		for v in f.vertices:
 			assert_true(v.x >= x0 - 0.01 and v.x <= x1 + 0.01,
-				"stairs vertex x (%f) within [%f, %f]" % [v.x, x0, x1])
+				"%s vertex x (%f) within [%f, %f]" % [message_prefix, v.x, x0, x1])
 			assert_true(v.z >= z0 - 0.01 and v.z <= z1 + 0.01,
-				"stairs vertex z (%f) within [%f, %f]" % [v.z, z0, z1])
-			assert_true(v.y >= -0.01 and v.y < ceiling_height + 0.01,
-				"stairs vertex y (%f) within [0, %f)" % [v.y, ceiling_height])
+				"%s vertex z (%f) within [%f, %f]" % [message_prefix, v.z, z0, z1])
+			assert_true(v.y >= -0.01 and v.y <= ceiling_height + 0.01,
+				"%s vertex y (%f) within [0, %f]" % [message_prefix, v.y, ceiling_height])
 
-func test_start_tile_still_has_floor_and_ceiling():
+func test_start_tile_generates_normal_upward_stair_faces_without_return_landmark():
 	var builder = CellMeshBuilder.new()
 	var cell = Cell.new()
 	cell.tile = TileType.START
 	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var floor_faces = faces.filter(func(f): return f.type == "floor")
-	var ceiling_faces = faces.filter(func(f): return f.type == "ceiling")
-	assert_eq(floor_faces.size(), 1, "floor face still generated on START tile")
-	assert_eq(ceiling_faces.size(), 1, "ceiling face still generated on START tile")
+	var return_faces = _faces_with_prefix(faces, "return_")
+	var stairs_up_faces = _faces_with_prefix(faces, "stairs_up_")
+	var stairs_down_faces = _faces_with_prefix(faces, "stairs_down_")
+	assert_eq(return_faces.size(), 0, "START cell should not generate special return_* faces")
+	assert_true(stairs_up_faces.size() > 0, "START cell should generate normal stairs_up_* faces")
+	assert_eq(stairs_down_faces.size(), 0, "START cell should not generate stairs_down_* faces")
+
+func test_stairs_up_tile_generates_upward_stair_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.STAIRS_UP
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var stairs_faces = _faces_with_prefix(faces, "stairs_up_")
+	assert_true(stairs_faces.size() > 0, "STAIRS_UP cell should generate stairs_up_* faces")
+	_assert_floor_and_ceiling_present(faces, "STAIRS_UP")
+
+func test_stairs_down_tile_generates_pit_and_descending_stair_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.STAIRS_DOWN
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var pit_faces = _faces_with_prefix(faces, "pit_")
+	var stairs_faces = _faces_with_prefix(faces, "stairs_down_")
+	assert_true(pit_faces.size() > 0, "STAIRS_DOWN cell should generate pit_* faces")
+	assert_true(stairs_faces.size() > 0, "STAIRS_DOWN cell should generate stairs_down_* faces")
+
+func test_goal_tile_generates_altar_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	cell.tile = TileType.GOAL
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var altar_faces = _faces_with_prefix(faces, "altar_")
+	assert_true(altar_faces.size() > 0, "GOAL cell should generate altar_* faces")
+
+func test_floor_tile_has_no_landmark_faces():
+	var builder = CellMeshBuilder.new()
+	var cell = Cell.new()
+	# default tile is FLOOR
+	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	assert_eq(_faces_with_prefix(faces, "return_").size(), 0, "FLOOR cell should not generate return faces")
+	assert_eq(_faces_with_prefix(faces, "stairs_up_").size(), 0, "FLOOR cell should not generate stairs_up faces")
+	assert_eq(_faces_with_prefix(faces, "stairs_down_").size(), 0, "FLOOR cell should not generate stairs_down faces")
+	assert_eq(_faces_with_prefix(faces, "pit_").size(), 0, "FLOOR cell should not generate pit faces")
+	assert_eq(_faces_with_prefix(faces, "altar_").size(), 0, "FLOOR cell should not generate altar faces")
+
+func test_landmark_vertices_within_cell_volume():
+	var builder = CellMeshBuilder.new()
+	var grid := Vector2i(3, 2)
+	var cases := [
+		{"tile": TileType.START, "prefixes": ["stairs_up_"], "message": "START"},
+		{"tile": TileType.STAIRS_UP, "prefixes": ["stairs_up_"], "message": "STAIRS_UP"},
+		{"tile": TileType.STAIRS_DOWN, "prefixes": ["pit_", "stairs_down_"], "message": "STAIRS_DOWN"},
+		{"tile": TileType.GOAL, "prefixes": ["altar_"], "message": "GOAL"},
+	]
+	for case in cases:
+		var cell = Cell.new()
+		cell.tile = case["tile"]
+		var faces = builder.build_faces(cell, grid)
+		_assert_landmark_vertices_within_cell(faces, case["prefixes"], grid, case["message"])
+
+func test_landmark_tiles_still_have_floor_and_ceiling():
+	var builder = CellMeshBuilder.new()
+	for tile in [TileType.START, TileType.STAIRS_UP, TileType.STAIRS_DOWN, TileType.GOAL]:
+		var cell = Cell.new()
+		cell.tile = tile
+		var faces = builder.build_faces(cell, Vector2i(0, 0))
+		_assert_floor_and_ceiling_present(faces, "tile %d" % tile)

@@ -45,28 +45,40 @@ FullMapRenderer SHALL render floor area, wall edges, and door edges ONLY for cel
 - **WHEN** an explored cell has an OPEN edge toward an unexplored cell
 - **THEN** the gap pixels SHALL NOT be floor color (the unexplored side is hidden)
 
-### Requirement: FullMapRenderer marks START and GOAL tiles distinctly
-FullMapRenderer SHALL overlay a START marker on explored cells whose `tile == TileType.START` and a GOAL marker on explored cells whose `tile == TileType.GOAL`. The two marker colors SHALL be distinct from each other, from floor color, and from player color. Markers SHALL stay within the floor area of their respective cells (SHALL NOT overwrite wall-gap pixels). Unexplored START or GOAL cells SHALL NOT render any marker.
+### Requirement: FullMapRenderer draws generated stair icons
+FullMapRenderer SHALL overlay tile-specific icons on explored cells whose `tile` is `TileType.START`, `TileType.STAIRS_UP`, `TileType.STAIRS_DOWN`, or `TileType.GOAL`. `START` and `STAIRS_UP` SHALL use the same generated upward-stair icon based on `tmp/kaidan.jpeg` reference B. `STAIRS_DOWN` SHALL use a generated descending-stairwell icon based on reference 10, with white/light-gray steps, visible step lines, and dark wall/shadow pixels rather than cyan or blue. Icons SHALL stay within the floor area of their respective cells and SHALL NOT overwrite wall-gap pixels. Unexplored landmark cells SHALL NOT render any icon. Icons SHALL render legibly at the minimum supported cell size and may include additional detail when `floor_px` is larger.
 
-#### Scenario: Explored START tile shows START marker
+#### Scenario: Explored START tile shows ordinary upward stair icon
 - **WHEN** an explored cell has `tile == TileType.START`
-- **THEN** the floor area of that cell SHALL contain START-marker-colored pixels in addition to the floor color
+- **THEN** the floor area of that cell SHALL contain the same upward stair icon shape used for `TileType.STAIRS_UP`
 
-#### Scenario: Explored GOAL tile shows GOAL marker
+#### Scenario: Explored STAIRS_UP tile shows upward stair icon
+- **WHEN** an explored cell has `tile == TileType.STAIRS_UP`
+- **THEN** the floor area of that cell SHALL contain multiple visible stair step pixels distinct from floor, player, and the STAIRS_DOWN icon shape
+
+#### Scenario: Explored STAIRS_DOWN tile shows downward stair icon
+- **WHEN** an explored cell has `tile == TileType.STAIRS_DOWN`
+- **THEN** the floor area of that cell SHALL contain a dark opening/shadow area and multiple visible stair step pixels distinct from floor, player, and the STAIRS_UP icon shape
+
+#### Scenario: Explored GOAL tile shows altar or goal icon
 - **WHEN** an explored cell has `tile == TileType.GOAL`
-- **THEN** the floor area of that cell SHALL contain GOAL-marker-colored pixels in addition to the floor color
+- **THEN** the floor area of that cell SHALL contain GOAL icon pixels distinct from floor and player colors
 
-#### Scenario: START and GOAL markers use different colors
-- **WHEN** both a START and a GOAL marker are drawn in the same Image
-- **THEN** the START marker color SHALL NOT equal the GOAL marker color, and neither SHALL equal the floor or player color
+#### Scenario: Landmark icons use distinct identities
+- **WHEN** START, STAIRS_UP, STAIRS_DOWN, and GOAL icons are drawn in the same Image
+- **THEN** START and STAIRS_UP SHALL match each other, and STAIRS_DOWN and GOAL SHALL be distinguishable by color and/or shape
 
-#### Scenario: Unexplored START tile does not draw marker
-- **WHEN** a cell with `tile == TileType.START` is NOT in `explored_map`
-- **THEN** no marker SHALL be drawn at that cell location and the cell area SHALL remain background color
+#### Scenario: Unexplored landmark tile does not draw icon
+- **WHEN** a cell with `tile == TileType.START`, `TileType.STAIRS_UP`, `TileType.STAIRS_DOWN`, or `TileType.GOAL` is NOT in `explored_map`
+- **THEN** no icon SHALL be drawn at that cell location and the cell area SHALL remain background color
 
-#### Scenario: Markers stay within the cell floor area
-- **WHEN** a START or GOAL marker is drawn at grid (cx, cy)
-- **THEN** every marker pixel SHALL be inside the `cell_px x cell_px` floor rectangle for that cell, and no wall-gap pixel SHALL be overwritten
+#### Scenario: Landmark icons stay within the cell floor area
+- **WHEN** a landmark icon is drawn at grid (cx, cy)
+- **THEN** every icon pixel SHALL be inside the floor rectangle for that cell, and no wall-gap pixel SHALL be overwritten
+
+#### Scenario: Player on landmark tile takes precedence over landmark icon
+- **WHEN** the player is standing on a cell with `tile == TileType.START`, `TileType.STAIRS_UP`, `TileType.STAIRS_DOWN`, or `TileType.GOAL`
+- **THEN** the player floor color and direction indicator SHALL be visible over the landmark icon
 
 ### Requirement: FullMapRenderer draws the player at the actual grid position
 FullMapRenderer SHALL render the player marker at the cell corresponding to `player_state.position` (NOT centered in the Image). The player marker SHALL be a player-colored fill of the floor area, and the player's facing direction SHALL be indicated by filling the gap pixels on the facing side of that cell with player color.
@@ -83,9 +95,9 @@ FullMapRenderer SHALL render the player marker at the cell corresponding to `pla
 - **WHEN** the player is at (5, 5) facing EAST
 - **THEN** the east gap pixels of cell (5, 5) SHALL be player color
 
-#### Scenario: Player on START tile takes precedence over START marker
+#### Scenario: Player on START tile takes precedence over START icon
 - **WHEN** the player is standing on a cell with `tile == TileType.START`
-- **THEN** the player floor color and direction indicator SHALL be visible (the START marker MAY be covered)
+- **THEN** the player floor color and direction indicator SHALL be visible over the START icon
 
 #### Scenario: Player cell is always considered explored for rendering
 - **WHEN** `render(...)` is called with the player at a position

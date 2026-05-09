@@ -82,24 +82,38 @@ The rendering system SHALL visually distinguish between WALL edges, DOOR edges, 
 - **WHEN** a cell has an OPEN edge facing the player
 - **THEN** no surface SHALL be rendered on that edge
 
-### Requirement: CellMeshBuilder renders START tile with stairs-up geometry
+### Requirement: CellMeshBuilder renders landmark stair geometry
 
-CellMeshBuilder SHALL inspect the `tile` type of the given cell and, when it is `TileType.START`, generate additional mesh faces forming a simple upward-facing staircase placed on top of the floor quad. The staircase SHALL be centered horizontally within the 2.0 x 2.0 cell footprint, composed of 2 or 3 rectangular steps ascending in a consistent direction, and SHALL NOT exceed the cell ceiling height (Y < CELL_HEIGHT). The existing floor and ceiling faces SHALL continue to be generated unchanged. Cells whose `tile` is not `START` SHALL NOT receive any staircase faces.
+CellMeshBuilder SHALL inspect the `tile` type of the given cell and, when it is a landmark tile, generate additional mesh faces that visually distinguish the landmark while preserving the usual wall, floor, and ceiling faces. `TileType.START` SHALL generate the same ordinary upward stair geometry as `TileType.STAIRS_UP`. `TileType.STAIRS_UP` SHALL generate upward stair geometry. `TileType.STAIRS_DOWN` SHALL generate a floor opening with a dark pit and descending stair geometry. `TileType.GOAL` SHALL generate a destination altar or stone marker. Cells whose `tile` is `TileType.FLOOR` SHALL NOT receive landmark faces. All landmark vertices SHALL remain within the owning 2.0 x 2.0 cell footprint and within the vertical cell volume from floor to below or at `CELL_HEIGHT`.
 
-#### Scenario: START tile generates staircase faces
+#### Scenario: START tile generates ordinary upward stair faces
 - **WHEN** CellMeshBuilder is given a cell whose `tile` is `TileType.START`
-- **THEN** the returned faces SHALL include at least one additional face type identifiable as the staircase (e.g. `stairs_up_*`) in addition to the usual floor/ceiling/wall faces
+- **THEN** the returned faces SHALL include additional face types identifiable as upward stairs
+- **AND** the returned faces SHALL NOT include return landmark or stair-down face types
 
-#### Scenario: Non-START tile does not generate staircase faces
+#### Scenario: STAIRS_UP tile generates upward stair faces
+- **WHEN** CellMeshBuilder is given a cell whose `tile` is `TileType.STAIRS_UP`
+- **THEN** the returned faces SHALL include additional face types identifiable as upward stairs
+
+#### Scenario: STAIRS_DOWN tile generates pit and descending stair faces
+- **WHEN** CellMeshBuilder is given a cell whose `tile` is `TileType.STAIRS_DOWN`
+- **THEN** the returned faces SHALL include additional face types identifiable as a downward opening or pit
+- **AND** the returned faces SHALL include additional face types identifiable as descending stairs
+
+#### Scenario: GOAL tile generates altar faces
+- **WHEN** CellMeshBuilder is given a cell whose `tile` is `TileType.GOAL`
+- **THEN** the returned faces SHALL include additional face types identifiable as a goal altar or stone marker
+
+#### Scenario: FLOOR tile does not generate landmark faces
 - **WHEN** CellMeshBuilder is given a cell whose `tile` is `TileType.FLOOR`
-- **THEN** the returned faces SHALL NOT include any staircase face
+- **THEN** the returned faces SHALL NOT include any landmark, stair, pit, or altar face
 
-#### Scenario: Staircase stays within the cell volume
-- **WHEN** CellMeshBuilder generates staircase faces for a START cell at grid (3, 2)
-- **THEN** every staircase vertex SHALL satisfy `x0 <= x <= x1`, `z0 <= z <= z1`, and `0 <= y < CELL_HEIGHT` where `x0/x1/z0/z1` are the cell's horizontal bounds
+#### Scenario: Landmark geometry stays within the cell volume
+- **WHEN** CellMeshBuilder generates landmark faces for any of `START`, `STAIRS_UP`, `STAIRS_DOWN`, or `GOAL` at grid (3, 2)
+- **THEN** every landmark vertex SHALL satisfy `x0 <= x <= x1`, `z0 <= z <= z1`, and `0 <= y <= CELL_HEIGHT` where `x0/x1/z0/z1` are the cell's horizontal bounds
 
-#### Scenario: Floor and ceiling still generated on START tile
-- **WHEN** CellMeshBuilder is given a START cell
+#### Scenario: Floor and ceiling still generated on landmark tiles
+- **WHEN** CellMeshBuilder is given any of `START`, `STAIRS_UP`, `STAIRS_DOWN`, or `GOAL`
 - **THEN** the returned faces SHALL still include the floor and ceiling faces at Y=0 and Y=CELL_HEIGHT respectively
 
 ### Requirement: Dungeon scene provides a camera-attached torch light

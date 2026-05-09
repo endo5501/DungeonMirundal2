@@ -9,3 +9,6 @@ tmp/
 
 # Git worktrees
 .worktrees/
+
+# superpowers
+/.superpowers
