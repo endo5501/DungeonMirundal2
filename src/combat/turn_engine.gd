@@ -77,6 +77,12 @@ func submit_command(party_index: int, command) -> void:
 	_pending_commands[party_index] = command
 
 
+func withdraw_command(party_index: int) -> void:
+	if state != State.COMMAND_INPUT:
+		return
+	_pending_commands.erase(party_index)
+
+
 func are_party_commands_complete() -> bool:
 	for i in range(party.size()):
 		var actor: CombatActor = party[i]
