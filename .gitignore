@@ -12,3 +12,6 @@ tmp/
 
 # superpowers
 /.superpowers
+
+# build directory
+/build

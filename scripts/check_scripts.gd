@@ -15,6 +15,7 @@ extends SceneTree
 const DIRS_TO_CHECK: Array[String] = [
 	"res://src",
 	"res://tests",
+	"res://tools",
 ]
 
 
