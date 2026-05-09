@@ -100,6 +100,10 @@ godot --headless -s addons/gut/gut_cmdln.gd
 
 Godotエディタのプロジェクト > エクスポートから、対象プラットフォームのプリセットを追加してエクスポートします。
 
+> **エクスポートプリセット作成時の注意**: 開発者専用ツールである `tools/` 配下と GUT のテスト群 `tests/` 配下はリリースビルドに含めないでください。各プリセットの `Resources` タブの `Filters to exclude non-resource files/folders from export` (= `exclude_filter`) に `tools/*, tests/*` を追加してください。
+>
+> **Dev Console (開発者向けセーブ編集ツール)**: `godot --path . res://tools/dev_console/main.tscn` で起動。詳細は `tools/dev_console/README.md` を参照。
+
 ```bash
 # コマンドラインでのデバッグエクスポート (プリセット設定済みの場合)
 godot --headless --export-debug "Windows Desktop" build/DungeonMirundal2.exe
