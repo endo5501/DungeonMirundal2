@@ -351,7 +351,7 @@ func test_monster_panel_uses_enemy_title_and_separate_list_window():
 func test_monster_dummy_visuals_are_lower_and_baseline_aligned():
 	var panel := CombatMonsterPanel.new()
 	add_child_autofree(panel)
-	panel.size = Vector2(900, 500)
+	panel.size = Vector2(1000, 600)
 	panel.refresh(_make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m)), {&"slime": 3})
 	var rects: Array = panel.get_dummy_visual_rects()
 	assert_eq(rects.size(), 3)
@@ -365,22 +365,22 @@ func test_monster_dummy_visuals_are_lower_and_baseline_aligned():
 func test_monster_visual_slots_are_enlarged_for_art_readability():
 	var panel := CombatMonsterPanel.new()
 	add_child_autofree(panel)
-	panel.size = Vector2(900, 500)
+	panel.size = Vector2(1000, 600)
 	panel.refresh(_make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m)), {&"slime": 3})
 	var rects: Array = panel.get_dummy_visual_rects()
 	assert_eq(rects.size(), 3)
-	assert_eq((rects[0] as Rect2).size, Vector2(180, 144),
-		"enemy visual slots should be roughly 1.5x the previous 120x96 size")
+	assert_eq((rects[0] as Rect2).size, Vector2(270, 216),
+		"enemy visual slots should be roughly 1.5x the previous 180x144 size after design canvas bump")
 
 
 func test_monster_dummy_visuals_reflow_when_panel_size_changes_with_same_monsters():
 	var panel := CombatMonsterPanel.new()
 	add_child_autofree(panel)
 	var combatants := _make_monster_party({&"slime": 3}).members.map(func(m): return MonsterCombatant.new(m))
-	panel.size = Vector2(900, 500)
+	panel.size = Vector2(1000, 600)
 	panel.refresh(combatants, {&"slime": 3})
 	var before_rects: Array = panel.get_dummy_visual_rects()
-	panel.size = Vector2(450, 500)
+	panel.size = Vector2(500, 600)
 	panel.refresh(combatants, {&"slime": 3})
 	var after_rects: Array = panel.get_dummy_visual_rects()
 	assert_ne(after_rects[0], before_rects[0],

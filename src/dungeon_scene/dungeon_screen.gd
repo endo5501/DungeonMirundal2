@@ -96,6 +96,17 @@ func _refresh_all() -> void:
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	_minimap_display.refresh()
 
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_RESIZED:
+		return
+	# Re-arm the SubViewport for a one-shot redraw so the dungeon mesh is
+	# re-rendered into the new viewport size. Guard for the pre-setup state
+	# (notification can fire while the parent lays us out before setup()).
+	if _wiz_map == null or _player_state == null:
+		return
+	_refresh_all()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_state == null or _wiz_map == null:
 		return
@@ -223,7 +234,7 @@ func show_status_tick(character_name: String, status_id: StringName, amount: int
 	var label := Label.new()
 	var display_name := StatusRepoLocator.resolve(null).get_display_name(status_id)
 	label.text = "%s は %s で %d ダメージ" % [character_name, display_name, amount]
-	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_status_toast_container.add_child(label)
