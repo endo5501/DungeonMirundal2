@@ -346,6 +346,41 @@ func _advance_to_next_actor() -> void:
 	_prompt_next_actor()
 
 
+# Public: invoked by CombatInputRouter when ui_cancel arrives during
+# COMMAND_MENU. Steps back to the most recent prior LIVING PartyCombatant
+# in Guild order, withdrawing that actor's pending command. Safe no-op
+# outside COMMAND_MENU or when no prior living actor exists.
+func request_undo_actor() -> void:
+	if _current_phase != Phase.COMMAND_MENU:
+		return
+	if _turn_engine == null:
+		return
+	var prev := _find_previous_living_actor_index()
+	if prev < 0:
+		return
+	_turn_engine.withdraw_command(prev)
+	_current_actor_index = prev
+	if _target_selector != null:
+		_target_selector.hide_selector()
+	if _spell_selector != null:
+		_spell_selector.hide_selector()
+	if _item_use_flow != null:
+		_item_use_flow.visible = false
+	if _item_use_panel != null:
+		_item_use_panel.visible = false
+	_command_menu.show_for(_turn_engine.party[prev])
+
+
+func _find_previous_living_actor_index() -> int:
+	var idx := _current_actor_index - 1
+	while idx >= 0:
+		var actor: CombatActor = _turn_engine.party[idx]
+		if actor != null and actor.is_alive():
+			return idx
+		idx -= 1
+	return -1
+
+
 func _resolve_turn_now() -> void:
 	_current_phase = Phase.RESOLVING
 	_command_menu.hide_menu()
@@ -511,6 +546,7 @@ func _panels_dict() -> Dictionary:
 		"item_selector": null,
 		"spell_selector": _spell_selector,
 		"result_panel": _result_panel,
+		"overlay": self,
 	}
 
 

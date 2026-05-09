@@ -24,16 +24,16 @@
 
 ## 3. CombatOverlay.request_undo_actor (step-back) (TDD)
 
-- [ ] 3.1 Write GUT test (overlay-level): with party `[A,B,C]` all alive, simulate `submit_command(A,...)` then advance to B's COMMAND_MENU, call `request_undo_actor()` → `_current_actor_index == A_idx`, A's pending command removed, `_command_menu.show_for(A)` invoked, phase still `COMMAND_MENU`
-- [ ] 3.2 Write GUT test: triple `request_undo_actor()` from D walks back D→C→B→A withdrawing each
-- [ ] 3.3 Write GUT test: dead-skip backward — party `[A,B(dead),C,D]`, two `request_undo_actor()` calls from D land on A (skipping B), with C and A pending commands withdrawn at each step
-- [ ] 3.4 Write GUT test: `request_undo_actor()` while on the first living member is a no-op (`_pending_commands` unchanged, `_current_actor_index` unchanged, phase unchanged)
-- [ ] 3.5 Write GUT test: when called outside `Phase.COMMAND_MENU`, `request_undo_actor()` is a safe no-op
-- [ ] 3.6 Write GUT test: step-back hides any visible sub-panel (`target_selector`, `spell_selector`, `item_use_flow`) before re-showing the prior actor's command menu
-- [ ] 3.7 Run tests, confirm they fail (red)
-- [ ] 3.8 Implement `request_undo_actor()` and a private `_step_back_to_previous_living_actor()` helper in `src/dungeon_scene/combat_overlay.gd`. Build the `panels` Dictionary passed to `CombatInputRouter.route` to include the `overlay` key (`self`). Mirror the forward dead-skip loop in reverse.
-- [ ] 3.9 Run tests, confirm they pass (green)
-- [ ] 3.10 Commit: `Add CombatOverlay.request_undo_actor for inter-actor command undo`
+- [x] 3.1 Write GUT test (overlay-level): with party `[A,B,C]` all alive, simulate `submit_command(A,...)` then advance to B's COMMAND_MENU, call `request_undo_actor()` → `_current_actor_index == A_idx`, A's pending command removed, `_command_menu.show_for(A)` invoked, phase still `COMMAND_MENU`
+- [x] 3.2 Write GUT test: triple `request_undo_actor()` from D walks back D→C→B→A withdrawing each
+- [x] 3.3 Write GUT test: dead-skip backward — party `[A,B(dead),C,D]`, two `request_undo_actor()` calls from D land on A (skipping B), with C and A pending commands withdrawn at each step
+- [x] 3.4 Write GUT test: `request_undo_actor()` while on the first living member is a no-op (`_pending_commands` unchanged, `_current_actor_index` unchanged, phase unchanged)
+- [x] 3.5 Write GUT test: when called outside `Phase.COMMAND_MENU`, `request_undo_actor()` is a safe no-op
+- [x] 3.6 Write GUT test: step-back hides any visible sub-panel (`target_selector`, `spell_selector`, `item_use_flow`) before re-showing the prior actor's command menu
+- [x] 3.7 Run tests, confirm they fail (red)
+- [x] 3.8 Implement `request_undo_actor()` and a private `_step_back_to_previous_living_actor()` helper in `src/dungeon_scene/combat_overlay.gd`. Build the `panels` Dictionary passed to `CombatInputRouter.route` to include the `overlay` key (`self`). Mirror the forward dead-skip loop in reverse.
+- [x] 3.9 Run tests, confirm they pass (green)
+- [x] 3.10 Commit: `Add CombatOverlay.request_undo_actor for inter-actor command undo`
 
 ## 4. CombatOverlay TARGET_SELECT cancel handling (TDD)
 
