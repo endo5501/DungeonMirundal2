@@ -11,16 +11,16 @@
 
 ## 2. CombatInputRouter routing for cancel (TDD)
 
-- [ ] 2.1 Write GUT test: `route(ui_cancel, Phase.COMMAND_MENU, panels)` calls `panels.overlay.request_undo_actor()` exactly once and returns `true`
-- [ ] 2.2 Write GUT test: `route(ui_cancel, Phase.COMMAND_MENU, panels)` with `panels.overlay == null` returns `false` and does not raise
-- [ ] 2.3 Write GUT test: `route(ui_down, Phase.COMMAND_MENU, panels)` still calls `command_menu.move_down()` and does not call `overlay.request_undo_actor`
-- [ ] 2.4 Write GUT test: `route(ui_cancel, Phase.TARGET_SELECT, panels)` calls `panels.target_selector.request_cancel()` exactly once and returns `true`
-- [ ] 2.5 Write GUT test: `route(ui_up, Phase.TARGET_SELECT, panels)` still calls `target_selector.move_up()` (regression guard)
-- [ ] 2.6 Write GUT test: `route(ui_cancel, Phase.SPELL_TARGET, panels)` still calls `target_selector.request_cancel()` (regression guard)
-- [ ] 2.7 Run tests, confirm they fail (red)
-- [ ] 2.8 Update `src/combat/combat_input_router.gd`: add `panels.overlay` handling for COMMAND_MENU + ui_cancel, switch TARGET_SELECT to `_route_to_panel_cancellable`
-- [ ] 2.9 Run tests, confirm they pass (green)
-- [ ] 2.10 Commit: `Route ui_cancel to overlay undo and target cancel in CombatInputRouter`
+- [x] 2.1 Write GUT test: `route(ui_cancel, Phase.COMMAND_MENU, panels)` calls `panels.overlay.request_undo_actor()` exactly once and returns `true`
+- [x] 2.2 Write GUT test: `route(ui_cancel, Phase.COMMAND_MENU, panels)` with `panels.overlay == null` returns `false` and does not raise
+- [x] 2.3 Write GUT test: `route(ui_down, Phase.COMMAND_MENU, panels)` still calls `command_menu.move_down()` and does not call `overlay.request_undo_actor`
+- [x] 2.4 Write GUT test: `route(ui_cancel, Phase.TARGET_SELECT, panels)` calls `panels.target_selector.request_cancel()` exactly once and returns `true`
+- [x] 2.5 Write GUT test: `route(ui_up, Phase.TARGET_SELECT, panels)` still calls `target_selector.move_up()` (regression guard)
+- [x] 2.6 Write GUT test: `route(ui_cancel, Phase.SPELL_TARGET, panels)` still calls `target_selector.request_cancel()` (regression guard)
+- [x] 2.7 Run tests, confirm they fail (red)
+- [x] 2.8 Update `src/combat/combat_input_router.gd`: add `panels.overlay` handling for COMMAND_MENU + ui_cancel, switch TARGET_SELECT to `_route_to_panel_cancellable`
+- [x] 2.9 Run tests, confirm they pass (green)
+- [x] 2.10 Commit: `Route ui_cancel to overlay undo and target cancel in CombatInputRouter`
 
 ## 3. CombatOverlay.request_undo_actor (step-back) (TDD)
 
