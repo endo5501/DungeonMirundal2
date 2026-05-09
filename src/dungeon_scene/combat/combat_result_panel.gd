@@ -23,17 +23,17 @@ func _build_ui() -> void:
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)
 	_title_label = Label.new()
-	_title_label.add_theme_font_size_override("font_size", 22)
+	_title_label.add_theme_font_size_override("font_size", 33)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(_title_label)
 	_body_label = Label.new()
-	_body_label.add_theme_font_size_override("font_size", 16)
+	_body_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(_body_label)
 	_hint_label = Label.new()
 	_hint_label.text = "[Enter] 次へ"
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint_label.add_theme_font_size_override("font_size", 14)
+	_hint_label.add_theme_font_size_override("font_size", CombatWindowStyle.BODY_FONT_SIZE)
 	vbox.add_child(_hint_label)
 
 

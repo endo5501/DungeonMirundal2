@@ -26,12 +26,12 @@ func _build_ui() -> void:
 	panel.add_child(vbox)
 	_title_label = Label.new()
 	_title_label.text = "アイテム:"
-	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	vbox.add_child(_title_label)
 	_options_vbox = VBoxContainer.new()
 	vbox.add_child(_options_vbox)
 	_message_label = Label.new()
-	_message_label.add_theme_font_size_override("font_size", 12)
+	_message_label.add_theme_font_size_override("font_size", CombatWindowStyle.HINT_FONT_SIZE)
 	_message_label.add_theme_color_override("font_color", Color(0.9, 0.7, 0.4))
 	_message_label.visible = false
 	vbox.add_child(_message_label)
@@ -123,7 +123,7 @@ func _rebuild_rows() -> void:
 		var text: String = inst.item.item_name
 		if not entry.usable:
 			text = "%s  (%s)" % [text, entry.reason]
-		var row := CursorMenuRow.create(_options_vbox, text, 14)
+		var row := CursorMenuRow.create(_options_vbox, text, CombatWindowStyle.BODY_FONT_SIZE)
 		if not entry.usable:
 			row.set_disabled(true)
 		_rows.append(row)

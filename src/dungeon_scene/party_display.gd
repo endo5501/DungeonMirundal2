@@ -1,16 +1,16 @@
 class_name PartyDisplay
 extends Control
 
-const MARGIN := 8
+const MARGIN := 11
 const FRONT_LABEL := "FRONT"
 const BACK_LABEL := "BACK"
-const LABEL_FONT_SIZE := 20
-const LABEL_AREA_HEIGHT := 26
+const LABEL_FONT_SIZE := 30
+const LABEL_AREA_HEIGHT := 35
 const LABEL_COLOR := Color(0.95, 0.95, 0.95, 1.0)
-const LABEL_OUTLINE_SIZE := 3
+const LABEL_OUTLINE_SIZE := 4
 const LABEL_OUTLINE_COLOR := Color(0, 0, 0, 0.85)
-const LABEL_BOX_WIDTH := 200.0
-const WINDOW_PADDING := 8.0
+const LABEL_BOX_WIDTH := 266.0
+const WINDOW_PADDING := 11.0
 const WINDOW_BG_COLOR := Color(0.04, 0.04, 0.05, 0.62)
 
 const HUD_HEIGHT := LABEL_AREA_HEIGHT + PartyMemberPanel.PANEL_HEIGHT + 4

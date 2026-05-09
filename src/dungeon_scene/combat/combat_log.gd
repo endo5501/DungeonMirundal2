@@ -41,10 +41,10 @@ func _build_ui() -> void:
 	panel.add_child(vbox)
 	_title_label = Label.new()
 	_title_label.text = TITLE_TEXT
-	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	vbox.add_child(_title_label)
 	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", 14)
+	_label.add_theme_font_size_override("font_size", CombatWindowStyle.BODY_FONT_SIZE)
 	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_label.size_flags_vertical = Control.SIZE_FILL

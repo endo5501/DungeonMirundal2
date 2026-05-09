@@ -1,13 +1,13 @@
 class_name PartyMemberPanel
 extends Control
 
-const PANEL_WIDTH := 180
-const PANEL_HEIGHT := 168
-const PORTRAIT_WIDTH := 128
-const PORTRAIT_HEIGHT := 104
+const PANEL_WIDTH := 240
+const PANEL_HEIGHT := 240
+const PORTRAIT_WIDTH := 170
+const PORTRAIT_HEIGHT := 174
 const ICON_SIZE := PORTRAIT_WIDTH
-const FONT_SIZE := 14
-const BADGE_FONT_SIZE := 12
+const FONT_SIZE := 21
+const BADGE_FONT_SIZE := 18
 const BG_COLOR := Color(0.15, 0.15, 0.2, 0.7)
 const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
@@ -37,9 +37,9 @@ const STATUS_LABELS: Dictionary = {
 	&"confusion": "C",
 	&"silence":   "Si",
 }
-const STATUS_ICON_SIZE := 16
-const STATUS_ICON_GAP := 2
-const STATUS_ICON_FONT_SIZE := 12
+const STATUS_ICON_SIZE := 21
+const STATUS_ICON_GAP := 3
+const STATUS_ICON_FONT_SIZE := 18
 const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
 const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
 
@@ -385,12 +385,20 @@ func get_name_badge_rect() -> Rect2:
 	return Rect2(portrait.position.x + 4.0, portrait.position.y + portrait.size.y - 20.0, portrait.size.x - 8.0, 18.0)
 
 
+const BAR_HEIGHT := 12
+const BAR_GAP := 4
+const BAR_LEFT := 32
+const BAR_WIDTH := 88
+
+
 func get_hp_bar_rect() -> Rect2:
-	return Rect2(32, 112, 88, 12)
+	var portrait := get_portrait_rect()
+	return Rect2(BAR_LEFT, portrait.position.y + portrait.size.y + BAR_GAP, BAR_WIDTH, BAR_HEIGHT)
 
 
 func get_mp_bar_rect() -> Rect2:
-	return Rect2(32, 134, 88, 12)
+	var hp := get_hp_bar_rect()
+	return Rect2(hp.position.x, hp.position.y + hp.size.y + BAR_GAP, hp.size.x, hp.size.y)
 
 
 func get_icon_row_origin() -> Vector2:

@@ -3,7 +3,7 @@ extends GutTest
 # Tests force a known width via _layout_panels(width) so layout assertions
 # work without depending on parent-driven anchor resolution.
 
-const TEST_WIDTH := 1280.0
+const TEST_WIDTH := 1600.0
 
 
 func _make_display(width: float = TEST_WIDTH) -> PartyDisplay:
@@ -79,3 +79,14 @@ func test_no_color_rect_background_child():
 	for child in d.get_children():
 		assert_false(child is ColorRect,
 			"PartyDisplay should not have ColorRect children (no global background bar)")
+
+
+func test_six_panels_fit_within_1600_design_canvas_with_positive_center_gap():
+	# Spec: under the 1600-wide design canvas the rightmost FRONT right edge
+	# must remain strictly less than the leftmost BACK left edge.
+	var d := _make_display(1600.0)
+	var front_right: float = d._front_panels[2].position.x + float(PartyMemberPanel.PANEL_WIDTH)
+	var back_left: float = d._back_panels[0].position.x
+	assert_true(back_left > front_right,
+		"6 panels must fit in 1600 with a positive center gap; front_right=%f back_left=%f gap=%f" %
+			[front_right, back_left, back_left - front_right])

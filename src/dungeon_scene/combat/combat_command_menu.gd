@@ -47,7 +47,7 @@ func _build_ui() -> void:
 	var vbox := VBoxContainer.new()
 	panel.add_child(vbox)
 	_title_label = Label.new()
-	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	vbox.add_child(_title_label)
 	_options_vbox = VBoxContainer.new()
 	vbox.add_child(_options_vbox)
@@ -164,7 +164,7 @@ func _rebuild_rows() -> void:
 		child.queue_free()
 	var labels := get_options()
 	for i in range(_option_ids.size()):
-		_rows.append(CursorMenuRow.create(_options_vbox, labels[i], 16))
+		_rows.append(CursorMenuRow.create(_options_vbox, labels[i], CombatWindowStyle.ROW_FONT_SIZE))
 
 
 func _refresh_rows() -> void:

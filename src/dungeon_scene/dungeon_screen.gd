@@ -96,6 +96,15 @@ func _refresh_all() -> void:
 	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	_minimap_display.refresh()
 
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_RESIZED:
+		return
+	# Notification can fire during parent layout before _ready() creates _sub_viewport.
+	if _sub_viewport == null:
+		return
+	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _player_state == null or _wiz_map == null:
 		return
@@ -223,7 +232,7 @@ func show_status_tick(character_name: String, status_id: StringName, amount: int
 	var label := Label.new()
 	var display_name := StatusRepoLocator.resolve(null).get_display_name(status_id)
 	label.text = "%s は %s で %d ダメージ" % [character_name, display_name, amount]
-	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_status_toast_container.add_child(label)

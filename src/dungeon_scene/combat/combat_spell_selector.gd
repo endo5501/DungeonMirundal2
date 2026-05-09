@@ -27,13 +27,13 @@ func _build_ui() -> void:
 	panel.add_child(vbox)
 	_title_label = Label.new()
 	_title_label.text = "呪文:"
-	_title_label.add_theme_font_size_override("font_size", 16)
+	_title_label.add_theme_font_size_override("font_size", CombatWindowStyle.TITLE_FONT_SIZE)
 	vbox.add_child(_title_label)
 	_options_vbox = VBoxContainer.new()
 	vbox.add_child(_options_vbox)
 	_empty_label = Label.new()
 	_empty_label.text = "  (詠唱できる呪文がありません)"
-	_empty_label.add_theme_font_size_override("font_size", 14)
+	_empty_label.add_theme_font_size_override("font_size", CombatWindowStyle.BODY_FONT_SIZE)
 	_empty_label.visible = false
 	vbox.add_child(_empty_label)
 
@@ -139,7 +139,7 @@ func _rebuild_rows() -> void:
 	for entry in _entries:
 		var spell: SpellData = entry.get("spell")
 		var text := "%s  (MP %d)" % [spell.display_name, spell.mp_cost]
-		var row := CursorMenuRow.create(_options_vbox, text, 14)
+		var row := CursorMenuRow.create(_options_vbox, text, CombatWindowStyle.BODY_FONT_SIZE)
 		if not entry.get("usable", false):
 			row.set_disabled(true)
 		_rows.append(row)

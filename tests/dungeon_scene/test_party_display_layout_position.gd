@@ -5,7 +5,7 @@ extends GutTest
 # even after the previous Tween was killed mid-flight.
 
 
-const TEST_WIDTH := 1280.0
+const TEST_WIDTH := 1600.0
 
 
 func _make_display(width: float = TEST_WIDTH) -> PartyDisplay:
@@ -32,8 +32,8 @@ func test_each_back_panel_layout_position_matches_current_position():
 
 
 func test_layout_position_updates_on_resize():
-	var d := _make_display(1280.0)
-	d._layout_panels(1024.0)
+	var d := _make_display(1600.0)
+	d._layout_panels(1280.0)
 	for i in range(3):
 		var p: PartyMemberPanel = d._back_panels[i]
 		assert_eq(p._layout_position, p.position,
