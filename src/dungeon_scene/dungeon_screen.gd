@@ -99,12 +99,10 @@ func _refresh_all() -> void:
 func _notification(what: int) -> void:
 	if what != NOTIFICATION_RESIZED:
 		return
-	# Re-arm the SubViewport for a one-shot redraw so the dungeon mesh is
-	# re-rendered into the new viewport size. Guard for the pre-setup state
-	# (notification can fire while the parent lays us out before setup()).
-	if _wiz_map == null or _player_state == null:
+	# Notification can fire during parent layout before _ready() creates _sub_viewport.
+	if _sub_viewport == null:
 		return
-	_refresh_all()
+	_sub_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 
 
 func _unhandled_input(event: InputEvent) -> void:
