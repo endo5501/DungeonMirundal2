@@ -4,6 +4,7 @@ extends RefCounted
 const CELL_SIZE := 2.0
 const CELL_HEIGHT := 2.0
 const WALL_THICKNESS := 0.20
+const PILLAR_HALF_WIDTH := 0.125  # 0.25 m square cross-section
 
 class Face:
 	var type: String
@@ -33,6 +34,7 @@ static var STAIRS_COLOR := Color(0.48, 0.42, 0.34, STONE_ALPHA)
 static var ALTAR_CAP_COLOR := Color(0.80, 0.62, 0.25, STONE_ALPHA)
 static var PIT_COLOR := Color(0.04, 0.04, 0.05, STONE_ALPHA)
 static var ALTAR_COLOR := Color(0.55, 0.18, 0.18, STONE_ALPHA)
+static var PILLAR_COLOR := Color(0.45, 0.43, 0.38, STONE_ALPHA)
 
 const STAIRS_COUNT := 4
 const STAIRS_MAX_HEIGHT := CELL_HEIGHT * 0.65
@@ -44,6 +46,7 @@ func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 	var visible_set: Dictionary = {}
 	for c in visible_cells:
 		visible_set[c] = true
+	var seen_corners: Dictionary = {}
 	for grid_pos in visible_cells:
 		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
 		# Floor, ceiling, and landmark geometry are per-cell (no dedup needed).
@@ -61,7 +64,58 @@ func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 				if visible_set.has(neighbor):
 					continue
 			_add_wall_box(faces, grid_pos, dir, edge_type)
+		# Corner pillars: visit each of the 4 corners of this cell, dedup
+		# across cells, and place a pillar where any of the 4 meeting edges
+		# is WALL or DOOR (off-map sides are treated as WALL).
+		var corners: Array[Vector2i] = [
+			grid_pos,
+			Vector2i(grid_pos.x + 1, grid_pos.y),
+			Vector2i(grid_pos.x, grid_pos.y + 1),
+			Vector2i(grid_pos.x + 1, grid_pos.y + 1),
+		]
+		for corner in corners:
+			if seen_corners.has(corner):
+				continue
+			seen_corners[corner] = true
+			if _corner_touches_wall(wiz_map, corner):
+				_add_pillar(faces, corner)
 	return faces
+
+# Returns true if any of the 4 edges meeting at the given corner is WALL or DOOR.
+# Off-map cells contribute WALL edges (boundary), so corners on the map's
+# perimeter always receive a pillar.
+func _corner_touches_wall(wiz_map: WizMap, corner: Vector2i) -> bool:
+	# Edges meeting at corner (i, j) — listed as (cell_pos, dir):
+	# - West side  : SOUTH edge of (i-1, j-1)  ↔ NORTH of (i-1, j)
+	# - East side  : SOUTH edge of (i,   j-1)  ↔ NORTH of (i,   j)
+	# - North side : EAST  edge of (i-1, j-1)  ↔ WEST  of (i,   j-1)
+	# - South side : EAST  edge of (i-1, j  )  ↔ WEST  of (i,   j)
+	var checks: Array = [
+		[Vector2i(corner.x - 1, corner.y - 1), Direction.SOUTH],
+		[Vector2i(corner.x,     corner.y - 1), Direction.SOUTH],
+		[Vector2i(corner.x - 1, corner.y - 1), Direction.EAST],
+		[Vector2i(corner.x - 1, corner.y    ), Direction.EAST],
+	]
+	for c in checks:
+		var pos: Vector2i = c[0]
+		var dir: int = c[1]
+		if not wiz_map.in_bounds(pos.x, pos.y):
+			# Off-map → boundary, treat as WALL
+			return true
+		var edge: int = wiz_map.get_edge(pos.x, pos.y, dir)
+		if edge == EdgeType.WALL or edge == EdgeType.DOOR:
+			return true
+	return false
+
+# Emits a 6-face box pillar at the given corner (i, j) in cell-grid line coords.
+# The pillar is centered at (i*CS, *, j*CS) with a 0.25 m square cross-section.
+func _add_pillar(faces: Array, corner: Vector2i) -> void:
+	var cx := float(corner.x) * CELL_SIZE
+	var cz := float(corner.y) * CELL_SIZE
+	_add_box(faces, "pillar",
+		Vector3(cx - PILLAR_HALF_WIDTH, 0.0, cz - PILLAR_HALF_WIDTH),
+		Vector3(cx + PILLAR_HALF_WIDTH, CELL_HEIGHT, cz + PILLAR_HALF_WIDTH),
+		PILLAR_COLOR)
 
 # Emits a 6-face box for a wall on the given direction of grid_pos.
 # Face naming: <wall|door>_<dir>_<inner|outer|top|bottom|cap_a|cap_b>

@@ -20,17 +20,17 @@
 
 ## 3. Corner pillars
 
-- [ ] 3.1 Add a failing test: a 3x3 region of fully-OPEN cells produces no `pillar_*` faces at the 4 inner corners
-- [ ] 3.2 Add a failing test: corner with at least one WALL or DOOR edge among its 4 meeting edges produces exactly one set of `pillar_*` faces
-- [ ] 3.3 Add a failing test: cross-intersection corner (4 WALL edges meeting) produces exactly one pillar (not four)
-- [ ] 3.4 Add a failing test: pillar dimensions match the spec (0.25 x 2.0 x 0.25, centered at corner)
-- [ ] 3.5 Add a failing test: map boundary corner gets a pillar (treating off-map edges as WALL)
-- [ ] 3.6 Implement corner enumeration helper that yields unique corners (i, j) adjacent to visible cells
-- [ ] 3.7 Implement corner-WALL detection helper that checks the 4 meeting edges (treating off-map as WALL)
-- [ ] 3.8 Implement `_add_pillar(faces, corner)` that emits a 6-face box at the corner using `PILLAR_COLOR`
-- [ ] 3.9 Define `PILLAR_COLOR = Color(0.45, 0.43, 0.38, STONE_ALPHA)` near the existing color constants
-- [ ] 3.10 Wire `build_meshes` to call the corner enumerator and `_add_pillar`
-- [ ] 3.11 Visual confirm pillars only appear at wall-touching corners; commit (feat: place corner pillars at wall-touching grid corners)
+- [x] 3.1 Add a failing test: a 3x3 region of fully-OPEN cells produces no `pillar_*` faces at the 4 inner corners
+- [x] 3.2 Add a failing test: corner with at least one WALL or DOOR edge among its 4 meeting edges produces exactly one set of `pillar_*` faces
+- [x] 3.3 Add a failing test: cross-intersection corner (4 WALL edges meeting) produces exactly one pillar (not four)
+- [x] 3.4 Add a failing test: pillar dimensions match the spec (0.25 x 2.0 x 0.25, centered at corner)
+- [x] 3.5 Add a failing test: map boundary corner gets a pillar (treating off-map edges as WALL)
+- [x] 3.6 Implement corner enumeration helper that yields unique corners (i, j) adjacent to visible cells
+- [x] 3.7 Implement corner-WALL detection helper that checks the 4 meeting edges (treating off-map as WALL)
+- [x] 3.8 Implement `_add_pillar(faces, corner)` that emits a 6-face box at the corner using `PILLAR_COLOR`
+- [x] 3.9 Define `PILLAR_COLOR = Color(0.45, 0.43, 0.38, STONE_ALPHA)` near the existing color constants
+- [x] 3.10 Wire `build_meshes` to call the corner enumerator and `_add_pillar`
+- [x] 3.11 Visual confirm pillars only appear at wall-touching corners; commit (feat: place corner pillars at wall-touching grid corners)
 
 ## 4. Skirting and cornice trim
 

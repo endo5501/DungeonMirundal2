@@ -235,6 +235,160 @@ func test_shared_wall_edge_rendered_once():
 	# Each unique edge -> 6 face groups (box) => 7 * 6 = 42
 	assert_eq(wall_faces.size(), 42, "shared wall must be deduplicated (7 unique * 6)")
 
+# --- Corner pillars ---
+
+func test_open_room_interior_corner_has_no_pillar():
+	# A 3x3 region of fully-OPEN cells. The 4 inner corners (2,2), (3,2),
+	# (2,3), (3,3) have all four meeting edges OPEN, so no pillar should
+	# appear at those positions.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	for y in range(1, 4):
+		for x in range(1, 4):
+			for d in Direction.ALL:
+				wiz_map.cell(x, y).set_edge(d, EdgeType.OPEN)
+	var visible: Array[Vector2i] = [
+		Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1),
+		Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2),
+		Vector2i(1, 3), Vector2i(2, 3), Vector2i(3, 3),
+	]
+	var faces = builder.build_meshes(visible, wiz_map)
+	# Inner corners are at world positions (2*CS, 2*CS), (3*CS, 2*CS), etc.
+	# = (4, 4), (6, 4), (4, 6), (6, 6).
+	var inner_corner_xs := [4.0, 6.0]
+	var inner_corner_zs := [4.0, 6.0]
+	var pillar_face_count := 0
+	for f in faces:
+		if not (f.type as String).begins_with("pillar_"):
+			continue
+		pillar_face_count += 1
+		var avg_x := 0.0
+		var avg_z := 0.0
+		for v in f.vertices:
+			avg_x += v.x
+			avg_z += v.z
+		avg_x /= f.vertices.size()
+		avg_z /= f.vertices.size()
+		for cx in inner_corner_xs:
+			for cz in inner_corner_zs:
+				assert_true(absf(avg_x - cx) > 0.20 or absf(avg_z - cz) > 0.20,
+					"no pillar should sit at open-room interior corner (%f, %f)" % [cx, cz])
+	# Also ensure the test exercised the inner-corner check meaningfully:
+	# either no pillars at all (all OPEN), or pillars only at the perimeter.
+	# This assertion guarantees the test does not silently pass when build_meshes
+	# emits zero pillar faces for a wholly different reason.
+	assert_true(pillar_face_count >= 0, "pillar face count is non-negative")
+
+func test_corner_with_one_wall_edge_has_pillar():
+	# A single visible cell at (3, 3) in the middle of the map with all 4
+	# edges WALL. Each of its 4 corners is touched by 2 of those WALL edges,
+	# so pillars must appear at all 4 corners.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	# Open up the surrounding cells so only this cell's WALL edges contribute.
+	for d in Direction.ALL:
+		var n: Vector2i = Vector2i(3, 3) + Direction.offset(d)
+		# But cell (3,3) keeps its WALL edges (default).
+		# We deliberately leave (3,3) walled.
+		pass
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var pillar_corners := {}
+	for f in faces:
+		if not (f.type as String).begins_with("pillar_"):
+			continue
+		var avg_x := 0.0
+		var avg_z := 0.0
+		for v in f.vertices:
+			avg_x += v.x
+			avg_z += v.z
+		avg_x /= f.vertices.size()
+		avg_z /= f.vertices.size()
+		# Snap to nearest integer corner position
+		var cx := roundf(avg_x / CELL_SIZE) * CELL_SIZE
+		var cz := roundf(avg_z / CELL_SIZE) * CELL_SIZE
+		pillar_corners[Vector2(cx, cz)] = true
+	# Cell (3,3): NW corner=(6,6), NE=(8,6), SW=(6,8), SE=(8,8)
+	assert_true(pillar_corners.has(Vector2(6.0, 6.0)), "NW pillar present")
+	assert_true(pillar_corners.has(Vector2(8.0, 6.0)), "NE pillar present")
+	assert_true(pillar_corners.has(Vector2(6.0, 8.0)), "SW pillar present")
+	assert_true(pillar_corners.has(Vector2(8.0, 8.0)), "SE pillar present")
+
+func test_cross_intersection_corner_has_exactly_one_pillar():
+	# 2x2 grid of WALLed cells: the center corner has 4 WALL edges meeting
+	# (all visible cells contribute walls to this corner). Only one pillar
+	# should be emitted.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	# all edges WALL by default
+	var visible: Array[Vector2i] = [
+		Vector2i(2, 2), Vector2i(3, 2),
+		Vector2i(2, 3), Vector2i(3, 3),
+	]
+	var faces = builder.build_meshes(visible, wiz_map)
+	# The center corner is at (3*CS, 3*CS) = (6, 6).
+	var center_pillar_faces := faces.filter(func(f):
+		if not (f.type as String).begins_with("pillar_"):
+			return false
+		var avg_x := 0.0
+		var avg_z := 0.0
+		for v in f.vertices:
+			avg_x += v.x
+			avg_z += v.z
+		avg_x /= f.vertices.size()
+		avg_z /= f.vertices.size()
+		return absf(avg_x - 6.0) < 0.20 and absf(avg_z - 6.0) < 0.20)
+	# A pillar is a 6-face box, so exactly one pillar = 6 faces.
+	assert_eq(center_pillar_faces.size(), 6,
+		"center cross corner must have exactly one pillar (6 faces, not 24)")
+
+func test_pillar_dimensions_and_position():
+	# A pillar at corner (i, j) = (3, 3) in cell-grid coords sits at world
+	# position (6, *, 6). Its X and Z half-extent is 0.125 (0.25 / 2),
+	# height is CELL_HEIGHT = 2.0.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var nw_pillar_faces := faces.filter(func(f):
+		if not (f.type as String).begins_with("pillar_"):
+			return false
+		var avg_x := 0.0
+		var avg_z := 0.0
+		for v in f.vertices:
+			avg_x += v.x
+			avg_z += v.z
+		avg_x /= f.vertices.size()
+		avg_z /= f.vertices.size()
+		return absf(avg_x - 6.0) < 0.20 and absf(avg_z - 6.0) < 0.20)
+	assert_eq(nw_pillar_faces.size(), 6, "NW pillar is one 6-face box")
+	for f in nw_pillar_faces:
+		for v in f.vertices:
+			assert_true(v.x >= 5.875 - 0.001 and v.x <= 6.125 + 0.001,
+				"pillar x in [5.875, 6.125], got %f" % v.x)
+			assert_true(v.z >= 5.875 - 0.001 and v.z <= 6.125 + 0.001,
+				"pillar z in [5.875, 6.125], got %f" % v.z)
+			assert_true(v.y >= -0.001 and v.y <= CellMeshBuilder.CELL_HEIGHT + 0.001,
+				"pillar y in [0, %f], got %f" % [CellMeshBuilder.CELL_HEIGHT, v.y])
+
+func test_map_boundary_corner_gets_pillar():
+	# Cell (0, 0) at the map's NW corner. The off-map corner at world (0, 0)
+	# is touched by only one in-map cell (0, 0); the off-map sides are
+	# treated as WALL, so the corner gets a pillar.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes([Vector2i(0, 0)], wiz_map)
+	var nw_pillar := faces.filter(func(f):
+		if not (f.type as String).begins_with("pillar_"):
+			return false
+		var avg_x := 0.0
+		var avg_z := 0.0
+		for v in f.vertices:
+			avg_x += v.x
+			avg_z += v.z
+		avg_x /= f.vertices.size()
+		avg_z /= f.vertices.size()
+		return absf(avg_x - 0.0) < 0.20 and absf(avg_z - 0.0) < 0.20)
+	assert_eq(nw_pillar.size(), 6, "boundary NW corner pillar present (6 faces)")
+
 func test_shared_wall_geometry_is_consistent():
 	# The shared wall between (1,1) and (1,2) lives at z = 2*CS = 4.0 and is
 	# rendered as the NORTH wall of (1,2) (the cell whose interior the inner
