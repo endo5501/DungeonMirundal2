@@ -18,16 +18,18 @@ The `original_row` SHALL NOT be mutated during a battle. Row promotion (BACK →
 - **WHEN** test code or legacy production code constructs a `PartyCombatant` without specifying a row
 - **THEN** `original_row` SHALL default to `Row.FRONT`
 
-### Requirement: MonsterCombatant carries an original_row sourced from MonsterData
+### Requirement: MonsterCombatant exposes an original_row sourced from MonsterData
 
-The system SHALL extend `MonsterCombatant` with `original_row: Row`. When the encounter generator spawns a monster instance, the spawner SHALL initialize `original_row` from `monster.data.default_row`.
+The system SHALL expose `MonsterCombatant.original_row: Row` whose value is sourced from `monster.data.default_row` (the implementation MAY store the row as a field initialized at construction OR derive it dynamically from the wrapped data; both are acceptable as long as the observed value matches `monster.data.default_row` while the data is reachable).
 
-The `original_row` SHALL NOT be mutated during a battle.
+When the wrapped `monster` or `monster.data` is `null`, `original_row` SHALL fall back to `Row.FRONT` so engine code can rely on a non-null value.
 
-#### Scenario: MonsterCombatant adopts MonsterData.default_row at spawn
-- **WHEN** the encounter generator spawns a `MonsterCombatant` from a `MonsterData` whose `default_row == Row.BACK`
-- **THEN** the resulting `MonsterCombatant` SHALL have `original_row == Row.BACK`
+`original_row` SHALL reflect the spawn-time value of `MonsterData.default_row` for the duration of a battle. (No code path mutates `MonsterData.default_row` during battle.)
 
-#### Scenario: MonsterCombatant default fallback is FRONT
-- **WHEN** test code constructs a `MonsterCombatant` without specifying a row
-- **THEN** `original_row` SHALL default to `Row.FRONT`
+#### Scenario: MonsterCombatant adopts MonsterData.default_row
+- **WHEN** a `MonsterCombatant` is constructed wrapping a `Monster` whose `MonsterData.default_row == Row.BACK`
+- **THEN** the resulting `MonsterCombatant.original_row` SHALL equal `Row.BACK`
+
+#### Scenario: MonsterCombatant fallback is FRONT when data is missing
+- **WHEN** a `MonsterCombatant` is constructed without a wrapped monster (or with a monster whose `data` is null)
+- **THEN** `original_row` SHALL equal `Row.FRONT`
