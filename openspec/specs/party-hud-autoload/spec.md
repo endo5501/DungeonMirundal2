@@ -1,8 +1,6 @@
 ## Purpose
 ゲーム中のあらゆるシーンで常駐表示されるパーティ HUD を、シーンの寿命に依存しない単一の Autoload として規定する。アクティブパーティの bind、シーン毎の表示/非表示、編成変更への追従、オーバーレイとの共存を扱う。
-
 ## Requirements
-
 ### Requirement: PartyHud is registered as a singleton autoload
 
 The system SHALL register `PartyHud` as a Godot autoload singleton, defined at `src/autoload/party_hud.gd`, registered as `PartyHud` in `project.godot`. `PartyHud` SHALL extend `CanvasLayer` and SHALL own a single `PartyDisplay` instance as a child node throughout the game session.
@@ -96,15 +94,21 @@ The system SHALL register `PartyHud` as a Godot autoload singleton, defined at `
 
 ### Requirement: HUD remains visible during ESC menu and full-map overlays
 
-When the ESC menu overlay or the full-map overlay is opened on top of a screen where the HUD is visible, the HUD SHALL remain visible (its visibility SHALL NOT be toggled by overlay open/close). Overlays MAY visually cover parts of the HUD via Z order without explicit hide.
+When the ESC menu overlay is opened on top of a screen where the HUD is visible, the HUD SHALL remain visible (its visibility SHALL NOT be toggled by ESC menu open/close). The ESC menu MAY visually cover parts of the HUD via Z order without explicit hide.
+
+When the full-map overlay (`FullMapOverlay`) is opened on top of `DungeonScreen`, the HUD SHALL be hidden so that the player can see the entire dungeon map without obstruction. Closing the full-map overlay (via M or ESC) SHALL restore HUD visibility. This hide/restore SHALL be performed by `FullMapOverlay` itself via dependency-injected reference to `PartyHud`, not by `PartyHud.hide_hud()` / `show_hud()` calls from screen-transition code.
 
 #### Scenario: ESC menu does not hide the HUD
 - **WHEN** ESC menu is opened on top of TownScreen or DungeonScreen
 - **THEN** `PartyHud.visible` SHALL remain `true`
 
-#### Scenario: Full-map overlay does not hide the HUD
+#### Scenario: Full-map overlay hides the HUD while open
 - **WHEN** the full-map overlay is opened on top of DungeonScreen
-- **THEN** `PartyHud.visible` SHALL remain `true`
+- **THEN** `PartyHud.visible` SHALL be `false`
+
+#### Scenario: Closing the full-map overlay restores the HUD
+- **WHEN** the full-map overlay is opened and then closed (either via M or ESC)
+- **THEN** `PartyHud.visible` SHALL be `true` after the close
 
 ### Requirement: PartyHud attaches to a TurnEngine to receive combat reaction signals
 
@@ -225,3 +229,4 @@ When no monster panel is attached, monster `actor_died` events SHALL be silently
 #### Scenario: monster die outside buffering applies immediately
 - **WHEN** `attach_monster_panel(mp)` was called, buffering is NOT active, and the engine emits `actor_died(mc)` for a `MonsterCombatant`
 - **THEN** `mp.apply_died(mc)` SHALL be called synchronously
+

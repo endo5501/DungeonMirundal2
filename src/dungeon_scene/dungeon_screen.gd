@@ -79,7 +79,7 @@ func setup(wiz_map: WizMap, player_state: PlayerState, explored_map: ExploredMap
 
 	_minimap_display.setup(wiz_map, _explored_map, player_state)
 
-	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display)
+	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display, PartyHud)
 
 	_refresh_all()
 
@@ -259,5 +259,5 @@ func _switch_to_current_floor() -> void:
 	_explored_map = _dungeon_data.current_explored_map()
 	_dungeon_scene.wiz_map = _wiz_map
 	_minimap_display.setup(_wiz_map, _explored_map, _player_state)
-	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display)
+	_full_map_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_display, PartyHud)
 	_refresh_all()
