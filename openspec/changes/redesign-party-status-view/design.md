@@ -61,13 +61,13 @@ ESC メニュー全体は `EscMenu` (`extends CanvasLayer`, `layer = 10`) とし
 
 ### D6. 呪文の取得・表示
 
-`StatusView` が `_spell_repo: SpellRepository = null` フィールドを持ち、`SpellUseFlow._get_spell_repo()` と同形のヘルパ `_get_spell_repo()` を実装する（テストで差し替え可能なように `set_spell_repo(repo)` 公開メソッドも用意）。各 known_spell ID について `_spell_repo.get(id).display_name` で表示名を取得し、未登録 ID は `String(id)` にフォールバックする（既存 `StatusRepository.get_display_name` のパターンと同等）。
+`StatusView` が `_spell_repo: SpellRepository = null` フィールドを持ち、`SpellUseFlow._get_spell_repo()` と同形のヘルパ `_get_spell_repo()` を実装する（テストで差し替え可能なように `set_spell_repo(repo)` 公開メソッドも用意）。各 known_spell ID について `_spell_repo.find(id).display_name` で表示名を取得し、未登録 ID（`find` が `null` を返す）は `String(id)` にフォールバックする（既存 `StatusRepository.get_display_name` のパターンと同等）。
 
 ソート順: `Character.known_spells` の登録順を尊重する（学習順 ≒ レベル順）。重複ソートは行わない。`known_spells` が空なら `(未習得)` を表示する。
 
 ### D7. 装備の取得・表示
 
-`Equipment.ALL_SLOTS` をスロット順序の単一ソースとして反復する（`esc-menu-overlay` の既存要件と整合）。スロットラベルは現状 `equipment_flow.gd` の `SLOT_LABELS = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]` と同じ並びで、これも将来の保守を考えると共通化の余地はあるが、本変更では同じ定数を `StatusView` 側にも持たせるに留める（過剰なリファクタを避ける）。
+`Equipment.ALL_SLOTS` をスロット順序の単一ソースとして反復する（`esc-menu-overlay` の既存要件と整合）。スロットラベル `["武器", "鎧", "兜", "盾", "籠手", "装身具"]` は `Equipment.SLOT_LABELS` として `Equipment` クラスに集約する（実装後の `/simplify` レビューで決定）。`equipment_flow.gd` も従来の自前定義を捨てて `Equipment.SLOT_LABELS` を参照する。`ALL_SLOTS` と並びが同じ単一ソースになるため、将来スロット追加時に片側だけ更新し忘れる事故を防げる。
 
 各スロットに対し `Character.equipment.get_equipped(slot)` で `ItemInstance` を取得。装備済みの場合は `inst.item.item_name`（`identified` を考慮するか否かは下記）、空なら `(なし)`。
 
@@ -80,6 +80,11 @@ ESC メニュー全体は `EscMenu` (`extends CanvasLayer`, `layer = 10`) とし
 ```gdscript
 func _unhandled_input(event: InputEvent) -> void:
     if not visible:
+        return
+    # Mouse motion fires every frame the cursor moves and never affects
+    # dungeon state, so don't waste cycles dispatching it (added during
+    # /simplify).
+    if event is InputEventMouseMotion:
         return
     handle_input(event)            # 既存の up/down/accept/cancel ハンドリング
     get_viewport().set_input_as_handled()  # 常に消費
