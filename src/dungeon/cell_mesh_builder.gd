@@ -3,6 +3,7 @@ extends RefCounted
 
 const CELL_SIZE := 2.0
 const CELL_HEIGHT := 2.0
+const WALL_THICKNESS := 0.20
 
 class Face:
 	var type: String
@@ -40,12 +41,140 @@ const STAIRS_DEPTH := 0.24
 
 func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 	var faces: Array = []
+	var visible_set: Dictionary = {}
+	for c in visible_cells:
+		visible_set[c] = true
 	for grid_pos in visible_cells:
 		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
+		# Floor, ceiling, and landmark geometry are per-cell (no dedup needed).
 		faces.append_array(build_faces(cell, grid_pos))
+		# Walls (and DOOR placeholders): each shared edge is rendered exactly
+		# once. Rule: a cell always renders its NORTH and WEST edges; it
+		# renders its SOUTH or EAST edges only if the neighboring cell is NOT
+		# in the visible set (so an "outer" cell still draws the wall).
+		for dir in Direction.ALL:
+			var edge_type: int = cell.get_edge(dir)
+			if edge_type == EdgeType.OPEN:
+				continue
+			if dir == Direction.SOUTH or dir == Direction.EAST:
+				var neighbor: Vector2i = grid_pos + Direction.offset(dir)
+				if visible_set.has(neighbor):
+					continue
+			_add_wall_box(faces, grid_pos, dir, edge_type)
 	return faces
 
+# Emits a 6-face box for a wall on the given direction of grid_pos.
+# Face naming: <wall|door>_<dir>_<inner|outer|top|bottom|cap_a|cap_b>
+# where the cap names are east/west for N/S walls (along X axis) and
+# north/south for E/W walls (along Z axis).
+# DOOR edges share the same box geometry but with door_<dir>_* prefix and
+# DOOR_COLOR; this is a Step 2 placeholder until Step 5 introduces the
+# lintel/jamb/panel assembly.
+func _add_wall_box(faces: Array, grid_pos: Vector2i, dir: int, edge_type: int) -> void:
+	var color: Color = WALL_COLOR if edge_type == EdgeType.WALL else DOOR_COLOR
+	var dir_names := ["north", "east", "south", "west"]
+	var dir_name: String = dir_names[dir]
+	var prefix: String = ("wall_" if edge_type == EdgeType.WALL else "door_") + dir_name
+	var t_half := WALL_THICKNESS * 0.5
+	var x0 := grid_pos.x * CELL_SIZE
+	var x1 := x0 + CELL_SIZE
+	var z0 := grid_pos.y * CELL_SIZE
+	var z1 := z0 + CELL_SIZE
+	if dir == Direction.NORTH:
+		# Wall along X at z = z0. Inner face (+Z normal) faces into the cell.
+		_emit_box_along_x(faces, prefix, x0, x1, z0 - t_half, z0 + t_half, true, "east", "west", color)
+	elif dir == Direction.SOUTH:
+		# Wall along X at z = z1. Inner face (-Z normal) faces into the cell.
+		_emit_box_along_x(faces, prefix, x0, x1, z1 - t_half, z1 + t_half, false, "east", "west", color)
+	elif dir == Direction.WEST:
+		# Wall along Z at x = x0. Inner face (+X normal) faces into the cell.
+		_emit_box_along_z(faces, prefix, x0 - t_half, x0 + t_half, z0, z1, true, "north", "south", color)
+	else:  # EAST
+		# Wall along Z at x = x1. Inner face (-X normal) faces into the cell.
+		_emit_box_along_z(faces, prefix, x1 - t_half, x1 + t_half, z0, z1, false, "north", "south", color)
+
+# Helper for walls running along the X axis (NORTH and SOUTH walls).
+# inner_is_max_z=true → inner face is at z=z_max (NORTH wall, faces +Z).
+# inner_is_max_z=false → inner face is at z=z_min (SOUTH wall, faces -Z).
+func _emit_box_along_x(faces: Array, prefix: String, x_min: float, x_max: float,
+		z_min: float, z_max: float, inner_is_max_z: bool,
+		cap_pos_x_name: String, cap_neg_x_name: String, color: Color) -> void:
+	var z_inner := z_max if inner_is_max_z else z_min
+	var z_outer := z_min if inner_is_max_z else z_max
+	var inner_n := Vector3(0, 0, 1.0) if inner_is_max_z else Vector3(0, 0, -1.0)
+	var outer_n := Vector3(0, 0, -1.0) if inner_is_max_z else Vector3(0, 0, 1.0)
+	var inner_verts: Array[Vector3]
+	var outer_verts: Array[Vector3]
+	if inner_is_max_z:
+		inner_verts = [Vector3(x_max, 0.0, z_inner), Vector3(x_min, 0.0, z_inner),
+			Vector3(x_min, CELL_HEIGHT, z_inner), Vector3(x_max, CELL_HEIGHT, z_inner)]
+		outer_verts = [Vector3(x_min, 0.0, z_outer), Vector3(x_max, 0.0, z_outer),
+			Vector3(x_max, CELL_HEIGHT, z_outer), Vector3(x_min, CELL_HEIGHT, z_outer)]
+	else:
+		inner_verts = [Vector3(x_min, 0.0, z_inner), Vector3(x_max, 0.0, z_inner),
+			Vector3(x_max, CELL_HEIGHT, z_inner), Vector3(x_min, CELL_HEIGHT, z_inner)]
+		outer_verts = [Vector3(x_max, 0.0, z_outer), Vector3(x_min, 0.0, z_outer),
+			Vector3(x_min, CELL_HEIGHT, z_outer), Vector3(x_max, CELL_HEIGHT, z_outer)]
+	faces.append(Face.new(prefix + "_inner", inner_verts, inner_n, color))
+	faces.append(Face.new(prefix + "_outer", outer_verts, outer_n, color))
+	var top_verts: Array[Vector3] = [Vector3(x_min, CELL_HEIGHT, z_max), Vector3(x_max, CELL_HEIGHT, z_max),
+		Vector3(x_max, CELL_HEIGHT, z_min), Vector3(x_min, CELL_HEIGHT, z_min)]
+	faces.append(Face.new(prefix + "_top", top_verts, Vector3(0, 1, 0), color))
+	var bottom_verts: Array[Vector3] = [Vector3(x_min, 0.0, z_min), Vector3(x_max, 0.0, z_min),
+		Vector3(x_max, 0.0, z_max), Vector3(x_min, 0.0, z_max)]
+	faces.append(Face.new(prefix + "_bottom", bottom_verts, Vector3(0, -1, 0), color))
+	# +X end cap
+	var cap_pos_x_verts: Array[Vector3] = [Vector3(x_max, 0.0, z_min), Vector3(x_max, 0.0, z_max),
+		Vector3(x_max, CELL_HEIGHT, z_max), Vector3(x_max, CELL_HEIGHT, z_min)]
+	faces.append(Face.new(prefix + "_" + cap_pos_x_name, cap_pos_x_verts, Vector3(1, 0, 0), color))
+	# -X end cap
+	var cap_neg_x_verts: Array[Vector3] = [Vector3(x_min, 0.0, z_max), Vector3(x_min, 0.0, z_min),
+		Vector3(x_min, CELL_HEIGHT, z_min), Vector3(x_min, CELL_HEIGHT, z_max)]
+	faces.append(Face.new(prefix + "_" + cap_neg_x_name, cap_neg_x_verts, Vector3(-1, 0, 0), color))
+
+# Helper for walls running along the Z axis (WEST and EAST walls).
+# inner_is_max_x=true → inner face is at x=x_max (WEST wall, faces +X).
+# inner_is_max_x=false → inner face is at x=x_min (EAST wall, faces -X).
+func _emit_box_along_z(faces: Array, prefix: String, x_min: float, x_max: float,
+		z_min: float, z_max: float, inner_is_max_x: bool,
+		cap_neg_z_name: String, cap_pos_z_name: String, color: Color) -> void:
+	var x_inner := x_max if inner_is_max_x else x_min
+	var x_outer := x_min if inner_is_max_x else x_max
+	var inner_n := Vector3(1.0, 0, 0) if inner_is_max_x else Vector3(-1.0, 0, 0)
+	var outer_n := Vector3(-1.0, 0, 0) if inner_is_max_x else Vector3(1.0, 0, 0)
+	var inner_verts: Array[Vector3]
+	var outer_verts: Array[Vector3]
+	if inner_is_max_x:
+		inner_verts = [Vector3(x_inner, 0.0, z_min), Vector3(x_inner, 0.0, z_max),
+			Vector3(x_inner, CELL_HEIGHT, z_max), Vector3(x_inner, CELL_HEIGHT, z_min)]
+		outer_verts = [Vector3(x_outer, 0.0, z_max), Vector3(x_outer, 0.0, z_min),
+			Vector3(x_outer, CELL_HEIGHT, z_min), Vector3(x_outer, CELL_HEIGHT, z_max)]
+	else:
+		inner_verts = [Vector3(x_inner, 0.0, z_max), Vector3(x_inner, 0.0, z_min),
+			Vector3(x_inner, CELL_HEIGHT, z_min), Vector3(x_inner, CELL_HEIGHT, z_max)]
+		outer_verts = [Vector3(x_outer, 0.0, z_min), Vector3(x_outer, 0.0, z_max),
+			Vector3(x_outer, CELL_HEIGHT, z_max), Vector3(x_outer, CELL_HEIGHT, z_min)]
+	faces.append(Face.new(prefix + "_inner", inner_verts, inner_n, color))
+	faces.append(Face.new(prefix + "_outer", outer_verts, outer_n, color))
+	var top_verts: Array[Vector3] = [Vector3(x_min, CELL_HEIGHT, z_max), Vector3(x_max, CELL_HEIGHT, z_max),
+		Vector3(x_max, CELL_HEIGHT, z_min), Vector3(x_min, CELL_HEIGHT, z_min)]
+	faces.append(Face.new(prefix + "_top", top_verts, Vector3(0, 1, 0), color))
+	var bottom_verts: Array[Vector3] = [Vector3(x_min, 0.0, z_min), Vector3(x_max, 0.0, z_min),
+		Vector3(x_max, 0.0, z_max), Vector3(x_min, 0.0, z_max)]
+	faces.append(Face.new(prefix + "_bottom", bottom_verts, Vector3(0, -1, 0), color))
+	# -Z end cap
+	var cap_neg_z_verts: Array[Vector3] = [Vector3(x_min, 0.0, z_min), Vector3(x_max, 0.0, z_min),
+		Vector3(x_max, CELL_HEIGHT, z_min), Vector3(x_min, CELL_HEIGHT, z_min)]
+	faces.append(Face.new(prefix + "_" + cap_neg_z_name, cap_neg_z_verts, Vector3(0, 0, -1), color))
+	# +Z end cap
+	var cap_pos_z_verts: Array[Vector3] = [Vector3(x_max, 0.0, z_max), Vector3(x_min, 0.0, z_max),
+		Vector3(x_min, CELL_HEIGHT, z_max), Vector3(x_max, CELL_HEIGHT, z_max)]
+	faces.append(Face.new(prefix + "_" + cap_pos_z_name, cap_pos_z_verts, Vector3(0, 0, 1), color))
+
 func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
+	# Per-cell helper: emits floor, ceiling, and landmark geometry only.
+	# Wall geometry is emitted by build_meshes via _add_wall_box, with cross-cell
+	# deduplication.
 	var faces: Array = []
 	var x0 := grid_pos.x * CELL_SIZE
 	var z0 := grid_pos.y * CELL_SIZE
@@ -53,20 +182,6 @@ func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 	var z1 := z0 + CELL_SIZE
 	var y0 := 0.0
 	var y1 := CELL_HEIGHT
-
-	# walls
-	_add_wall_face(faces, cell, Direction.NORTH, "north",
-		[Vector3(x0, y0, z0), Vector3(x1, y0, z0), Vector3(x1, y1, z0), Vector3(x0, y1, z0)],
-		Vector3(0, 0, 1))
-	_add_wall_face(faces, cell, Direction.SOUTH, "south",
-		[Vector3(x1, y0, z1), Vector3(x0, y0, z1), Vector3(x0, y1, z1), Vector3(x1, y1, z1)],
-		Vector3(0, 0, -1))
-	_add_wall_face(faces, cell, Direction.EAST, "east",
-		[Vector3(x1, y0, z0), Vector3(x1, y0, z1), Vector3(x1, y1, z1), Vector3(x1, y1, z0)],
-		Vector3(-1, 0, 0))
-	_add_wall_face(faces, cell, Direction.WEST, "west",
-		[Vector3(x0, y0, z1), Vector3(x0, y0, z0), Vector3(x0, y1, z0), Vector3(x0, y1, z1)],
-		Vector3(1, 0, 0))
 
 	# floor (visible from above, CCW winding when viewed from +Y)
 	var floor_verts: Array[Vector3] = [
@@ -191,10 +306,3 @@ func _add_box(faces: Array, prefix: String, min_corner: Vector3, max_corner: Vec
 		[Vector3(x0, y0, z1), Vector3(x0, y0, z0), Vector3(x0, y1, z0), Vector3(x0, y1, z1)],
 		Vector3(1, 0, 0), color))
 
-func _add_wall_face(faces: Array, cell: Cell, dir: int, dir_name: String,
-		verts: Array[Vector3], normal: Vector3) -> void:
-	var edge := cell.get_edge(dir)
-	if edge == EdgeType.WALL:
-		faces.append(Face.new("wall_" + dir_name, verts, normal, WALL_COLOR))
-	elif edge == EdgeType.DOOR:
-		faces.append(Face.new("door_" + dir_name, verts, normal, DOOR_COLOR))

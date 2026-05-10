@@ -2,29 +2,46 @@ extends GutTest
 
 const CELL_SIZE := 2.0
 
-func test_wall_north_generates_quad():
+func _isolated_visible(wiz_map: WizMap, grid_pos: Vector2i) -> Array[Vector2i]:
+	# Helper: visible_cells with a single isolated cell, used for wall-box tests
+	# where we want to ensure no shared-edge dedup confuses the count.
+	return [grid_pos]
+
+func test_wall_north_generates_box():
 	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	# all edges are WALL by default
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var north_faces = faces.filter(func(f): return f.type == "wall_north")
-	assert_eq(north_faces.size(), 1, "one north wall face")
+	var wiz_map = WizMap.new(8)
+	# all edges are WALL by default for a fresh cell at (0, 0)
+	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(0, 0)), wiz_map)
+	var north_faces = faces.filter(func(f): return f.type.begins_with("wall_north_"))
+	assert_eq(north_faces.size(), 6, "north wall is a 6-face box")
+	var suffixes := []
+	for f in north_faces:
+		var parts: PackedStringArray = (f.type as String).split("_")
+		suffixes.append(parts[-1])
+	assert_true(suffixes.has("inner"), "wall_north_inner present")
+	assert_true(suffixes.has("outer"), "wall_north_outer present")
+	assert_true(suffixes.has("top"), "wall_north_top present")
+	assert_true(suffixes.has("bottom"), "wall_north_bottom present")
+	assert_true(suffixes.has("east"), "wall_north_east present")
+	assert_true(suffixes.has("west"), "wall_north_west present")
 
 func test_open_north_no_wall():
 	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	cell.set_edge(Direction.NORTH, EdgeType.OPEN)
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var north_faces = faces.filter(func(f): return f.type == "wall_north")
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(0, 0).set_edge(Direction.NORTH, EdgeType.OPEN)
+	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(0, 0)), wiz_map)
+	var north_faces = faces.filter(func(f): return f.type.begins_with("wall_north_"))
 	assert_eq(north_faces.size(), 0, "no north wall face when OPEN")
 
-func test_door_generates_door_face():
+func test_door_generates_door_box_temporarily():
+	# Step 2 placeholder: DOOR edges render as wall boxes with door color
+	# until Step 5 replaces them with the lintel/jamb/panel assembly.
 	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	cell.set_edge(Direction.NORTH, EdgeType.DOOR)
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
-	var north_faces = faces.filter(func(f): return f.type == "door_north")
-	assert_eq(north_faces.size(), 1, "door face generated")
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(0, 0).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(0, 0)), wiz_map)
+	var door_faces = faces.filter(func(f): return f.type.begins_with("door_north_"))
+	assert_eq(door_faces.size(), 6, "door box has 6 face groups")
 
 func test_floor_always_generated():
 	var builder = CellMeshBuilder.new()
@@ -42,22 +59,27 @@ func test_ceiling_always_generated():
 
 func test_wall_vertices_at_correct_position():
 	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	var faces = builder.build_faces(cell, Vector2i(3, 2))
-	var north_faces = faces.filter(func(f): return f.type == "wall_north")
-	assert_eq(north_faces.size(), 1)
-	var verts: Array[Vector3] = north_faces[0].vertices
-	# north wall at z = grid_y * CELL_SIZE = 2 * 2.0 = 4.0
-	# x from grid_x * CELL_SIZE to (grid_x + 1) * CELL_SIZE = 6.0 to 8.0
-	for v in verts:
-		assert_almost_eq(v.z, 4.0, 0.01, "north wall z = 4.0")
-	var min_x = verts[0].x
-	var max_x = verts[0].x
-	for v in verts:
-		min_x = minf(min_x, v.x)
-		max_x = maxf(max_x, v.x)
-	assert_almost_eq(min_x, 6.0, 0.01, "wall min_x")
-	assert_almost_eq(max_x, 8.0, 0.01, "wall max_x")
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(3, 2)), wiz_map)
+	var north_faces = faces.filter(func(f): return f.type.begins_with("wall_north_"))
+	assert_eq(north_faces.size(), 6, "north wall box has 6 face groups")
+	# Wall box at z ∈ [3.9, 4.1], x ∈ [6.0, 8.0], y ∈ [0, 2]
+	# Inner face (at z = 4.10) faces into the cell at gy=2
+	var inner_faces = north_faces.filter(func(f): return (f.type as String).ends_with("_inner"))
+	assert_eq(inner_faces.size(), 1, "exactly one inner face")
+	for v in inner_faces[0].vertices:
+		assert_almost_eq(v.z, 4.10, 0.01, "inner face z = gy*2 + T/2 = 4.10")
+	var outer_faces = north_faces.filter(func(f): return (f.type as String).ends_with("_outer"))
+	assert_eq(outer_faces.size(), 1, "exactly one outer face")
+	for v in outer_faces[0].vertices:
+		assert_almost_eq(v.z, 3.90, 0.01, "outer face z = gy*2 - T/2 = 3.90")
+	# All wall vertices should be within the X span of the cell
+	for f in north_faces:
+		for v in f.vertices:
+			assert_true(v.x >= 6.0 - 0.01 and v.x <= 8.0 + 0.01,
+				"wall x in [6.0, 8.0], got %f" % v.x)
+			assert_true(v.y >= 0.0 - 0.01 and v.y <= 2.0 + 0.01,
+				"wall y in [0, 2], got %f" % v.y)
 
 func test_floor_vertices_at_y_zero():
 	var builder = CellMeshBuilder.new()
@@ -77,10 +99,11 @@ func test_ceiling_vertices_at_y_two():
 
 func test_all_four_walls_default():
 	var builder = CellMeshBuilder.new()
-	var cell = Cell.new()
-	var faces = builder.build_faces(cell, Vector2i(0, 0))
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(0, 0)), wiz_map)
 	var wall_faces = faces.filter(func(f): return f.type.begins_with("wall_"))
-	assert_eq(wall_faces.size(), 4, "4 walls when all edges WALL")
+	# 4 wall boxes * 6 face groups = 24
+	assert_eq(wall_faces.size(), 24, "4 wall boxes * 6 faces = 24")
 
 # --- Landmark tile meshes ---
 
@@ -197,3 +220,40 @@ func test_build_meshes_returns_floor_and_ceiling_per_visible_cell():
 	var ceiling_faces = faces.filter(func(f): return f.type == "ceiling")
 	assert_eq(floor_faces.size(), 3, "one floor per visible cell")
 	assert_eq(ceiling_faces.size(), 3, "one ceiling per visible cell")
+
+func test_shared_wall_edge_rendered_once():
+	# Two visible cells stacked vertically; the SOUTH edge of (1,1) is the same
+	# physical wall as the NORTH edge of (1,2). With dedup, one wall box (6
+	# face groups) should be produced for that shared edge.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	# all edges are WALL by default
+	var visible: Array[Vector2i] = [Vector2i(1, 1), Vector2i(1, 2)]
+	var faces = builder.build_meshes(visible, wiz_map)
+	var wall_faces = faces.filter(func(f): return f.type.begins_with("wall_"))
+	# 2 cells * 4 edges = 8, minus 1 shared edge = 7 unique edges
+	# Each unique edge -> 6 face groups (box) => 7 * 6 = 42
+	assert_eq(wall_faces.size(), 42, "shared wall must be deduplicated (7 unique * 6)")
+
+func test_shared_wall_geometry_is_consistent():
+	# The shared wall between (1,1) and (1,2) lives at z = 2*CS = 4.0 and is
+	# rendered as the NORTH wall of (1,2) (the cell whose interior the inner
+	# face faces into). After dedup we expect exactly one wall_north_* box
+	# (6 faces) whose vertices stay within z ∈ [3.9, 4.1]. Adjacent walls'
+	# end caps may share the z=4.0 line; we exclude those by also requiring
+	# the wall_north_ name prefix.
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var visible: Array[Vector2i] = [Vector2i(1, 1), Vector2i(1, 2)]
+	var faces = builder.build_meshes(visible, wiz_map)
+	var shared_wall_faces = faces.filter(func(f):
+		if not (f.type as String).begins_with("wall_north_"):
+			return false
+		var max_z := -INF
+		var min_z := INF
+		for v in f.vertices:
+			max_z = maxf(max_z, v.z)
+			min_z = minf(min_z, v.z)
+		return min_z >= 3.89 and max_z <= 4.11)
+	assert_eq(shared_wall_faces.size(), 6,
+		"shared wall produces exactly one 6-face box, not two")

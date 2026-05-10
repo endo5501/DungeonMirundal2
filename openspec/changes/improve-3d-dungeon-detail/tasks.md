@@ -9,14 +9,14 @@
 
 ## 2. Edge deduplication and thick wall boxes
 
-- [ ] 2.1 Add a failing test: shared WALL edge between two visible cells produces exactly one set of `wall_*_*` faces (not two)
-- [ ] 2.2 Add a failing test: WALL edge generates a 6-face box (`wall_<dir>_inner`, `wall_<dir>_outer`, `wall_<dir>_top`, `wall_<dir>_bottom`, `wall_<dir>_east`, `wall_<dir>_west`) with thickness T=0.20 centered on the edge
-- [ ] 2.3 Update `test_wall_north_generates_quad`, `test_wall_vertices_at_correct_position`, `test_all_four_walls_default` to reflect the new box face structure (use the inner face as the canonical "the wall is here" assertion)
-- [ ] 2.4 Implement edge enumeration helper that yields unique (cell, direction) pairs from the visible_cells set
-- [ ] 2.5 Implement `_add_wall_box(faces, cell_pos, dir, edge_type)` that emits the 6 faces for a wall box of thickness T=0.20
-- [ ] 2.6 Wire `build_meshes` to call the edge enumerator and `_add_wall_box` for WALL edges (DOOR temporarily uses the same box, replaced in section 5)
+- [x] 2.1 Add a failing test: shared WALL edge between two visible cells produces exactly one set of `wall_*_*` faces (not two)
+- [x] 2.2 Add a failing test: WALL edge generates a 6-face box (`wall_<dir>_inner`, `wall_<dir>_outer`, `wall_<dir>_top`, `wall_<dir>_bottom`, `wall_<dir>_east`, `wall_<dir>_west`) with thickness T=0.20 centered on the edge
+- [x] 2.3 Update `test_wall_north_generates_quad`, `test_wall_vertices_at_correct_position`, `test_all_four_walls_default` to reflect the new box face structure (use the inner face as the canonical "the wall is here" assertion)
+- [x] 2.4 Implement edge enumeration helper that yields unique (cell, direction) pairs from the visible_cells set
+- [x] 2.5 Implement `_add_wall_box(faces, cell_pos, dir, edge_type)` that emits the 6 faces for a wall box of thickness T=0.20
+- [x] 2.6 Wire `build_meshes` to call the edge enumerator and `_add_wall_box` for WALL edges (DOOR temporarily uses the same box, replaced in section 5)
 - [ ] 2.7 Run the project locally and visually confirm walls have visible thickness at corners; capture before/after screenshot
-- [ ] 2.8 Commit (feat: render dungeon walls as thick boxes with edge deduplication)
+- [x] 2.8 Commit (feat: render dungeon walls as thick boxes with edge deduplication)
 
 ## 3. Corner pillars
 
