@@ -102,6 +102,7 @@ func test_mage_has_initial_mp():
 
 func test_to_party_member_data():
 	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	_mage_job.id = &"mage"
 	var ch := Character.create("Alice", _human, _mage_job, allocation)
 	var pmd := ch.to_party_member_data()
 	assert_eq(pmd.member_name, "Alice")
@@ -110,6 +111,43 @@ func test_to_party_member_data():
 	assert_eq(pmd.max_hp, ch.max_hp)
 	assert_eq(pmd.current_mp, ch.current_mp)
 	assert_eq(pmd.max_mp, ch.max_mp)
+	assert_eq(pmd.get("job_id"), &"mage")
+
+
+func test_to_party_member_data_job_id_falls_back_to_resource_path():
+	var legacy_job := JobData.new()
+	legacy_job.job_name = "Fighter"
+	legacy_job.base_hp = 10
+	legacy_job.take_over_path("res://data/jobs/fighter.tres")
+	var allocation := {&"STR": 5, &"INT": 0, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
+	var ch := Character.create("Alice", _human, legacy_job, allocation)
+	var pmd := ch.to_party_member_data()
+	assert_eq(pmd.get("job_id"), &"fighter")
+
+
+func test_to_party_member_data_job_id_falls_back_to_job_name():
+	var legacy_job := JobData.new()
+	legacy_job.job_name = "Mage"
+	legacy_job.base_hp = 4
+	legacy_job.mage_school = true
+	legacy_job.base_mp = 5
+	legacy_job.required_int = 11
+	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}
+	var ch := Character.create("Alice", _human, legacy_job, allocation)
+	var pmd := ch.to_party_member_data()
+	assert_eq(pmd.get("job_id"), &"mage")
+
+
+func test_to_party_member_data_missing_job_has_empty_job_id():
+	var ch := Character.new()
+	ch.character_name = "NoJob"
+	ch.level = 1
+	ch.current_hp = 1
+	ch.max_hp = 1
+	ch.current_mp = 0
+	ch.max_mp = 0
+	var pmd := ch.to_party_member_data()
+	assert_eq(pmd.get("job_id"), &"")
 
 func test_mage_creation_succeeds_with_sufficient_int():
 	var allocation := {&"STR": 0, &"INT": 3, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 2}

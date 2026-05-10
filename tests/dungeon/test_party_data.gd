@@ -11,6 +11,11 @@ func test_party_member_data_fields():
 	assert_eq(m.current_mp, 30)
 	assert_eq(m.max_mp, 45)
 
+
+func test_party_member_data_job_id_is_optional():
+	var m := PartyMemberData.new("Warrior", 5, 120, 150, 30, 45)
+	assert_eq(m.get("job_id"), &"")
+
 # --- PartyData ---
 
 func test_party_with_full_rows():
