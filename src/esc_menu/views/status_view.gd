@@ -147,6 +147,10 @@ func refresh_detail() -> void:
 	_refresh_detail_pane()
 
 
+func get_right_scroll_for_test() -> ScrollContainer:
+	return _right_scroll
+
+
 # --- internal ---
 
 func _ensure_ui_built() -> void:
@@ -156,18 +160,24 @@ func _ensure_ui_built() -> void:
 
 
 func _build_ui() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# StatusView is a plain Control so its descendants must be anchored to
+	# its rect, otherwise an inner Container only sizes itself to the sum
+	# of its children's minimums and any expand-fill child gets zero width.
+	custom_minimum_size = Vector2(560, 320)
 
 	_root_hbox = HBoxContainer.new()
+	_root_hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root_hbox.add_theme_constant_override("separation", 12)
 	add_child(_root_hbox)
 
 	_left_pane = VBoxContainer.new()
 	_left_pane.custom_minimum_size = Vector2(180, 0)
+	_left_pane.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_left_pane.add_theme_constant_override("separation", 2)
 	_root_hbox.add_child(_left_pane)
 
 	_right_scroll = ScrollContainer.new()
+	_right_scroll.custom_minimum_size = Vector2(360, 0)
 	_right_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_right_scroll.focus_mode = Control.FOCUS_NONE
@@ -181,6 +191,7 @@ func _build_ui() -> void:
 	_empty_label = Label.new()
 	_empty_label.text = EMPTY_PARTY_MESSAGE
 	_empty_label.add_theme_font_size_override("font_size", 16)
+	_empty_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_empty_label.visible = false
 	add_child(_empty_label)
 

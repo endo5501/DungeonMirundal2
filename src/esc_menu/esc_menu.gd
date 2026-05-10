@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	var status_holder := TitledView.build("ステータス", 4)
 	_status_view = StatusView.new()
 	_status_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_status_view.custom_minimum_size = Vector2(420, 280)
+	_status_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_status_view.back_requested.connect(_on_status_view_back)
 	status_holder.add_child(_status_view)
 	root_vbox.add_child(status_holder)

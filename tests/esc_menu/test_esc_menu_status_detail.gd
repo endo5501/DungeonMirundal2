@@ -50,6 +50,28 @@ func _open_view_for(ch: Character) -> StatusView:
 	return menu.get_status_view()
 
 
+# --- layout: right pane must have nonzero width ---
+
+
+func test_right_pane_has_nonzero_size_after_setup():
+	# Regression: StatusView's HBoxContainer was anchored to the parent
+	# rect, so the right ScrollContainer (size_flags = EXPAND_FILL with
+	# no minimum) collapsed to zero width and the detail labels were
+	# invisible — only the left member list was rendered.
+	var ch := _make_character("Hero")
+	var view := _open_view_for(ch)
+	# Force a layout pass.
+	view.size = Vector2(640, 360)
+	await get_tree().process_frame
+
+	var scroll: ScrollContainer = view.get_right_scroll_for_test()
+	assert_not_null(scroll)
+	assert_gt(scroll.size.x, 0.0,
+		"Right pane (ScrollContainer) must have positive width")
+	assert_gt(scroll.size.y, 0.0,
+		"Right pane (ScrollContainer) must have positive height")
+
+
 # --- portrait ---
 
 
