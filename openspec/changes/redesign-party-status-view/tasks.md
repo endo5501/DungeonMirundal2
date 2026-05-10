@@ -8,10 +8,10 @@
 
 ## 2. StatusView の骨格作成 (TDD)
 
-- [ ] 2.1 Red: `tests/esc_menu/test_esc_menu_status.gd` の既存テスト (`test_status_view_shows_party_members`、`test_status_view_shows_empty_message_when_no_party`、状態行関連 3 件) を、新仕様（`StatusView` 経由でメンバーリストと詳細パネルを検証）の API に合わせて書き換える。検証メソッドとして仮の `StatusView.get_member_count() -> int`、`StatusView.get_selected_character() -> Character`、`StatusView.get_status_line_text() -> String` の使用を前提とする。テストは赤で失敗することを確認してコミットする。
-- [ ] 2.2 Green: `src/esc_menu/views/status_view.gd` を新規作成 (`class_name StatusView extends Control`、`signal back_requested`)。`setup(party: Array[Character])` を公開し、空パーティ時に「パーティが編成されていません」のメッセージを表示する。`HBoxContainer` で左ペイン（`CursorMenu` ベースのメンバーリスト VBoxContainer）と右ペイン（`ScrollContainer` を内包する詳細 VBoxContainer）の枠を構築する。
-- [ ] 2.3 Green: `_get_party_in_order()` ヘルパで `front 0..2 → back 0..2` の順に編成済みメンバーだけを `Array[Character]` として返す内部実装を追加する。
-- [ ] 2.4 既存テストの状態行表示（"状態: 通常"、"状態: 毒"、"状態: 毒, 石化"）が新 view 上で緑になることを確認しコミットする。
+- [x] 2.1 Red: `tests/esc_menu/test_esc_menu_status.gd` の既存テスト (`test_status_view_shows_party_members`、`test_status_view_shows_empty_message_when_no_party`、状態行関連 3 件) を、新仕様（`StatusView` 経由でメンバーリストと詳細パネルを検証）の API に合わせて書き換える。検証メソッドとして仮の `StatusView.get_member_count() -> int`、`StatusView.get_selected_character() -> Character`、`StatusView.get_status_line_text() -> String` の使用を前提とする。テストは赤で失敗することを確認してコミットする。
+- [x] 2.2 Green: `src/esc_menu/views/status_view.gd` を新規作成 (`class_name StatusView extends Control`、`signal back_requested`)。`setup(party: Array[Character])` を公開し、空パーティ時に「パーティが編成されていません」のメッセージを表示する。`HBoxContainer` で左ペイン（`CursorMenu` ベースのメンバーリスト VBoxContainer）と右ペイン（`ScrollContainer` を内包する詳細 VBoxContainer）の枠を構築する。
+- [x] 2.3 Green: `_get_party_in_order()` ヘルパで `front 0..2 → back 0..2` の順に編成済みメンバーだけを `Array[Character]` として返す内部実装を追加する。`EscMenu` 側にも `_get_party_in_order()` をペアで実装し、null ギャップを保ったまま StatusView に渡す（StatusView 側で null を除去しつつ元スロット index を保持）。
+- [x] 2.4 既存テストの状態行表示（"状態: 通常"、"状態: 毒"、"状態: 毒, 石化"）が新 view 上で緑になることを確認しコミットする。Step 5.1-5.3 の旧コード削除と委譲もこの段階で同時に実施した（独立コミットにする利点が薄かったため）。
 
 ## 3. StatusView 詳細パネル各項目の実装 (TDD)
 
@@ -32,9 +32,9 @@
 
 ## 5. EscMenu からの委譲・旧コード削除
 
-- [ ] 5.1 `src/esc_menu/esc_menu.gd` の `_status_container`、`_refresh_status_view()`、`_build_character_entry()`、`_build_status_line()` を削除する。
-- [ ] 5.2 `EscMenu._build_ui()` で `StatusView` を子 Control として `add_child` し、`back_requested` を `_on_status_view_back` に接続する。`_on_status_view_back` は `_switch_view(View.PARTY_MENU)` を呼ぶ。
-- [ ] 5.3 `EscMenu._switch_view()` の `View.STATUS` 分岐を、`_status_view.setup(_get_guild_party_members())` を呼ぶ形に書き換える。`_status_view.visible = (view == View.STATUS)` を visibility 一覧に追加し、その他の view でも `_status_view.visible = false` になることを確認する。
+- [x] 5.1 `src/esc_menu/esc_menu.gd` の `_status_container`、`_refresh_status_view()`、`_build_character_entry()`、`_build_status_line()` を削除する。（Step 2 と同時に実施）
+- [x] 5.2 `EscMenu._build_ui()` で `StatusView` を子 Control として `add_child` し、`back_requested` を `_on_status_view_back` に接続する。`_on_status_view_back` は `_switch_view(View.PARTY_MENU)` を呼ぶ。
+- [x] 5.3 `EscMenu._switch_view()` の `View.STATUS` 分岐を、`_status_view.setup(_get_party_in_order())` を呼ぶ形に書き換える。`_status_view.visible = (view == View.STATUS)` を visibility 一覧に追加し、その他の view でも `_status_view.visible = false` になることを確認する。
 - [ ] 5.4 `EscMenu.handle_input` の `View.STATUS` 分岐は不要（`StatusView` が `_unhandled_input` で自身処理）になるため、必要に応じて整理する。`go_back` の `View.STATUS` 分岐は維持しても害はないが、`back_requested` 経由が主経路となる。
 - [ ] 5.5 既存テスト一式 (`test_esc_menu.gd`、`test_esc_menu_integration.gd` 等) が引き続き緑であることを確認しコミットする。
 

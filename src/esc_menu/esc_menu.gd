@@ -32,7 +32,8 @@ var _overlay: ColorRect
 var _panel: PanelContainer
 var _main_menu_container: VBoxContainer
 var _party_menu_container: VBoxContainer
-var _status_container: VBoxContainer
+var _status_view: StatusView
+var _status_holder: VBoxContainer
 var _quit_dialog: ConfirmDialog
 
 var _main_menu_rows: Array[CursorMenuRow] = []
@@ -82,8 +83,15 @@ func _build_ui() -> void:
 	_build_menu_rows(_party_menu, _party_menu_rows, _party_menu_container)
 	root_vbox.add_child(_party_menu_container)
 
-	_status_container = TitledView.build("ステータス", 4)
-	root_vbox.add_child(_status_container)
+	var status_holder := TitledView.build("ステータス", 4)
+	_status_view = StatusView.new()
+	_status_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_status_view.custom_minimum_size = Vector2(420, 280)
+	_status_view.back_requested.connect(_on_status_view_back)
+	status_holder.add_child(_status_view)
+	root_vbox.add_child(status_holder)
+	# Track the holder so _switch_view can toggle the entire titled section.
+	_status_holder = status_holder
 
 	_item_use_flow = ItemUseFlow.new()
 	_item_use_flow.flow_completed.connect(_on_item_use_flow_completed)
@@ -190,7 +198,8 @@ func _switch_view(view: View) -> void:
 	_current_view = view
 	_main_menu_container.visible = (view == View.MAIN_MENU)
 	_party_menu_container.visible = (view == View.PARTY_MENU)
-	_status_container.visible = (view == View.STATUS)
+	_status_holder.visible = (view == View.STATUS)
+	_status_view.visible = (view == View.STATUS)
 	_item_use_flow.visible = (view == View.ITEMS_FLOW)
 	_equipment_flow.visible = (view == View.EQUIPMENT_FLOW)
 	if _spell_use_flow != null:
@@ -206,7 +215,7 @@ func _switch_view(view: View) -> void:
 		View.QUIT_DIALOG:
 			_quit_dialog.setup(QUIT_MESSAGE, ConfirmDialog.DEFAULT_NO_INDEX)
 		View.STATUS:
-			_refresh_status_view()
+			_status_view.setup(_get_party_in_order())
 		View.ITEMS_FLOW:
 			_item_use_flow.setup(make_item_use_context(), _get_inventory(), _get_guild_members())
 		View.EQUIPMENT_FLOW:
@@ -299,69 +308,25 @@ func _compute_party_menu_disabled() -> Array[int]:
 	return disabled
 
 
-func _refresh_status_view() -> void:
-	TitledView.clear_extras(_status_container)
+func get_status_view() -> StatusView:
+	return _status_view
 
-	var guild: Guild = GameState.guild if GameState != null else null
-	if guild == null or not guild.has_party_members():
-		var empty := Label.new()
-		empty.text = "パーティが編成されていません"
-		empty.add_theme_font_size_override("font_size", 16)
-		_status_container.add_child(empty)
-		return
 
+func _on_status_view_back() -> void:
+	_switch_view(View.PARTY_MENU)
+
+
+func _get_party_in_order() -> Array[Character]:
+	# Front row 0..2 then back row 0..2; preserves null gaps so StatusView
+	# can map index → original slot when labelling rows.
+	var out: Array[Character] = []
+	if GameState == null or GameState.guild == null:
+		return out
+	var guild: Guild = GameState.guild
 	for row in range(2):
 		for pos in range(3):
-			var ch: Character = guild.get_character_at(row, pos)
-			if ch == null:
-				continue
-			var entry := _build_character_entry(ch)
-			_status_container.add_child(entry)
-
-func _build_character_entry(ch: Character) -> VBoxContainer:
-	var entry := VBoxContainer.new()
-	entry.add_theme_constant_override("separation", 2)
-
-	var separator := HSeparator.new()
-	entry.add_child(separator)
-
-	var name_label := Label.new()
-	name_label.text = "%s  %s / %s  Lv.%d" % [ch.character_name, ch.race.race_name, ch.job.job_name, ch.level]
-	name_label.add_theme_font_size_override("font_size", 18)
-	entry.add_child(name_label)
-
-	var hp_mp := Label.new()
-	hp_mp.text = "  HP: %d/%d  MP: %d/%d" % [ch.current_hp, ch.max_hp, ch.current_mp, ch.max_mp]
-	hp_mp.add_theme_font_size_override("font_size", 16)
-	entry.add_child(hp_mp)
-
-	var stats := ch.base_stats
-	var stat_parts: Array[String] = []
-	for key in Character.STAT_KEYS:
-		stat_parts.append("%s:%d" % [key, stats.get(key, 0)])
-	var stats_label := Label.new()
-	stats_label.text = "  " + " ".join(stat_parts)
-	stats_label.add_theme_font_size_override("font_size", 14)
-	stats_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-	entry.add_child(stats_label)
-
-	var status_line := Label.new()
-	status_line.text = _build_status_line(ch)
-	status_line.add_theme_font_size_override("font_size", 14)
-	status_line.add_theme_color_override("font_color", Color(0.85, 0.85, 0.6))
-	entry.add_child(status_line)
-
-	return entry
-
-
-func _build_status_line(ch: Character) -> String:
-	if ch == null or ch.persistent_statuses.is_empty():
-		return "状態: 通常"
-	var repo := StatusRepoLocator.resolve(null)
-	var names: Array[String] = []
-	for sid in ch.persistent_statuses:
-		names.append(repo.get_display_name(sid))
-	return "状態: " + ", ".join(names)
+			out.append(guild.get_character_at(row, pos))
+	return out
 
 
 func _get_guild_members() -> Array[Character]:
