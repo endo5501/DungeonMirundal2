@@ -5,6 +5,8 @@ const CELL_SIZE := 2.0
 const CELL_HEIGHT := 2.0
 const WALL_THICKNESS := 0.20
 const PILLAR_HALF_WIDTH := 0.125  # 0.25 m square cross-section
+const TRIM_HEIGHT := 0.08
+const TRIM_PROJECTION := 0.04
 
 class Face:
 	var type: String
@@ -59,6 +61,10 @@ func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 			var edge_type: int = cell.get_edge(dir)
 			if edge_type == EdgeType.OPEN:
 				continue
+			# Trim is per-cell (each cell renders its own interior side).
+			_add_skirting(faces, grid_pos, dir)
+			_add_cornice(faces, grid_pos, dir)
+			# Wall geometry is deduplicated across cells.
 			if dir == Direction.SOUTH or dir == Direction.EAST:
 				var neighbor: Vector2i = grid_pos + Direction.offset(dir)
 				if visible_set.has(neighbor):
@@ -106,6 +112,42 @@ func _corner_touches_wall(wiz_map: WizMap, corner: Vector2i) -> bool:
 		if edge == EdgeType.WALL or edge == EdgeType.DOOR:
 			return true
 	return false
+
+# Skirting (floor / wall joint) and cornice (ceiling / wall joint) trim.
+# A thin box on the cell-interior side of the wall, height TRIM_HEIGHT and
+# projecting TRIM_PROJECTION from the wall surface into the cell.
+func _add_skirting(faces: Array, grid_pos: Vector2i, dir: int) -> void:
+	var dir_names := ["north", "east", "south", "west"]
+	_add_trim_box(faces, "skirting_" + dir_names[dir], grid_pos, dir, 0.0, TRIM_HEIGHT)
+
+func _add_cornice(faces: Array, grid_pos: Vector2i, dir: int) -> void:
+	var dir_names := ["north", "east", "south", "west"]
+	_add_trim_box(faces, "cornice_" + dir_names[dir], grid_pos, dir,
+		CELL_HEIGHT - TRIM_HEIGHT, CELL_HEIGHT)
+
+func _add_trim_box(faces: Array, prefix: String, grid_pos: Vector2i, dir: int,
+		y_min: float, y_max: float) -> void:
+	var x0 := grid_pos.x * CELL_SIZE
+	var x1 := x0 + CELL_SIZE
+	var z0 := grid_pos.y * CELL_SIZE
+	var z1 := z0 + CELL_SIZE
+	var t_half := WALL_THICKNESS * 0.5
+	var min_corner: Vector3
+	var max_corner: Vector3
+	match dir:
+		Direction.NORTH:
+			min_corner = Vector3(x0, y_min, z0 + t_half)
+			max_corner = Vector3(x1, y_max, z0 + t_half + TRIM_PROJECTION)
+		Direction.SOUTH:
+			min_corner = Vector3(x0, y_min, z1 - t_half - TRIM_PROJECTION)
+			max_corner = Vector3(x1, y_max, z1 - t_half)
+		Direction.WEST:
+			min_corner = Vector3(x0 + t_half, y_min, z0)
+			max_corner = Vector3(x0 + t_half + TRIM_PROJECTION, y_max, z1)
+		Direction.EAST:
+			min_corner = Vector3(x1 - t_half - TRIM_PROJECTION, y_min, z0)
+			max_corner = Vector3(x1 - t_half, y_max, z1)
+	_add_box(faces, prefix, min_corner, max_corner, WALL_COLOR)
 
 # Emits a 6-face box pillar at the given corner (i, j) in cell-grid line coords.
 # The pillar is centered at (i*CS, *, j*CS) with a 0.25 m square cross-section.

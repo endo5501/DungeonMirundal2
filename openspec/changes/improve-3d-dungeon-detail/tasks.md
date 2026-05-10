@@ -34,13 +34,13 @@
 
 ## 4. Skirting and cornice trim
 
-- [ ] 4.1 Add a failing test: WALL edge produces `skirting_<dir>_*` faces with `0 ≤ y ≤ 0.08`
-- [ ] 4.2 Add a failing test: WALL edge produces `cornice_<dir>_*` faces with `1.92 ≤ y ≤ 2.0`
-- [ ] 4.3 Add a failing test: OPEN edge produces no `skirting_*` or `cornice_*` faces
-- [ ] 4.4 Add a failing test: DOOR edge produces `skirting_*` and `cornice_*` faces
-- [ ] 4.5 Implement `_add_skirting(faces, cell_pos, dir)` and `_add_cornice(faces, cell_pos, dir)` that emit thin boxes (height 0.08, projection 0.04 from wall surface, length CELL_SIZE)
-- [ ] 4.6 Wire `build_meshes` to emit trim per cell-side for each WALL/DOOR edge (note: trim is NOT deduplicated; one per visible cell side)
-- [ ] 4.7 Visual confirm trim is visible at floor and ceiling joints; commit (feat: add skirting and cornice trim along walls)
+- [x] 4.1 Add a failing test: WALL edge produces `skirting_<dir>_*` faces with `0 ≤ y ≤ 0.08`
+- [x] 4.2 Add a failing test: WALL edge produces `cornice_<dir>_*` faces with `1.92 ≤ y ≤ 2.0`
+- [x] 4.3 Add a failing test: OPEN edge produces no `skirting_*` or `cornice_*` faces
+- [x] 4.4 Add a failing test: DOOR edge produces `skirting_*` and `cornice_*` faces
+- [x] 4.5 Implement `_add_skirting(faces, cell_pos, dir)` and `_add_cornice(faces, cell_pos, dir)` that emit thin boxes (height 0.08, projection 0.04 from wall surface, length CELL_SIZE)
+- [x] 4.6 Wire `build_meshes` to emit trim per cell-side for each WALL/DOOR edge (note: trim is NOT deduplicated; one per visible cell side)
+- [x] 4.7 Visual confirm trim is visible at floor and ceiling joints; commit (feat: add skirting and cornice trim along walls)
 
 ## 5. Door frame and recessed panel
 

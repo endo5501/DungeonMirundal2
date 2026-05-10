@@ -389,6 +389,50 @@ func test_map_boundary_corner_gets_pillar():
 		return absf(avg_x - 0.0) < 0.20 and absf(avg_z - 0.0) < 0.20)
 	assert_eq(nw_pillar.size(), 6, "boundary NW corner pillar present (6 faces)")
 
+# --- Skirting and cornice trim ---
+
+func test_wall_edge_produces_skirting_at_floor():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var skirting_faces = faces.filter(func(f): return (f.type as String).begins_with("skirting_north_"))
+	assert_true(skirting_faces.size() > 0, "skirting_north_* faces emitted for NORTH WALL")
+	for f in skirting_faces:
+		for v in f.vertices:
+			assert_true(v.y >= -0.001 and v.y <= 0.08 + 0.001,
+				"skirting y in [0, 0.08], got %f" % v.y)
+
+func test_wall_edge_produces_cornice_at_ceiling():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var cornice_faces = faces.filter(func(f): return (f.type as String).begins_with("cornice_north_"))
+	assert_true(cornice_faces.size() > 0, "cornice_north_* faces emitted for NORTH WALL")
+	for f in cornice_faces:
+		for v in f.vertices:
+			assert_true(v.y >= 1.92 - 0.001 and v.y <= 2.0 + 0.001,
+				"cornice y in [1.92, 2.0], got %f" % v.y)
+
+func test_open_edge_has_no_trim():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(3, 3).set_edge(Direction.NORTH, EdgeType.OPEN)
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var skirting_n = faces.filter(func(f): return (f.type as String).begins_with("skirting_north_"))
+	var cornice_n = faces.filter(func(f): return (f.type as String).begins_with("cornice_north_"))
+	assert_eq(skirting_n.size(), 0, "no skirting on OPEN edge")
+	assert_eq(cornice_n.size(), 0, "no cornice on OPEN edge")
+
+func test_door_edge_produces_trim():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(3, 3).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes([Vector2i(3, 3)], wiz_map)
+	var skirting_n = faces.filter(func(f): return (f.type as String).begins_with("skirting_north_"))
+	var cornice_n = faces.filter(func(f): return (f.type as String).begins_with("cornice_north_"))
+	assert_true(skirting_n.size() > 0, "skirting present for DOOR")
+	assert_true(cornice_n.size() > 0, "cornice present for DOOR")
+
 func test_shared_wall_geometry_is_consistent():
 	# The shared wall between (1,1) and (1,2) lives at z = 2*CS = 4.0 and is
 	# rendered as the NORTH wall of (1,2) (the cell whose interior the inner
