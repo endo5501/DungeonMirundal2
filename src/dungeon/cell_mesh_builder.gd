@@ -10,6 +10,7 @@ const TRIM_PROJECTION := 0.04
 const DOOR_LINTEL_HEIGHT := 0.20
 const DOOR_JAMB_WIDTH := 0.18
 const DOOR_PANEL_THICKNESS := 0.04
+const WALL_HALF_THICKNESS := WALL_THICKNESS * 0.5
 
 class Face:
 	var type: String
@@ -124,24 +125,21 @@ func _corner_touches_wall(wiz_map: WizMap, corner: Vector2i) -> bool:
 # its front face flush with the wall axis (so it appears recessed by ~0.10
 # from the cell-interior wall surface).
 func _add_door_assembly(faces: Array, grid_pos: Vector2i, dir: int) -> void:
-	var dir_names := ["north", "east", "south", "west"]
-	var dir_name: String = dir_names[dir]
+	var dir_name: String = Direction.name_of(dir)
 	var lintel_prefix := "door_lintel_" + dir_name
 	var jamb_left_prefix := "door_jamb_left_" + dir_name
 	var jamb_right_prefix := "door_jamb_right_" + dir_name
 	var panel_prefix := "door_panel_" + dir_name
-	var t_half := WALL_THICKNESS * 0.5
 	var x0 := grid_pos.x * CELL_SIZE
 	var x1 := x0 + CELL_SIZE
 	var z0 := grid_pos.y * CELL_SIZE
 	var z1 := z0 + CELL_SIZE
 	var lintel_y_bottom := CELL_HEIGHT - DOOR_LINTEL_HEIGHT
-	var panel_t_half := DOOR_PANEL_THICKNESS * 0.5
 	if dir == Direction.NORTH or dir == Direction.SOUTH:
 		# Wall along X axis. Edge axis is X.
 		var z_axis := z0 if dir == Direction.NORTH else z1
-		var z_outer := z_axis - t_half
-		var z_inner := z_axis + t_half
+		var z_outer := z_axis - WALL_HALF_THICKNESS
+		var z_inner := z_axis + WALL_HALF_THICKNESS
 		# Lintel: full edge width, top of opening, full wall thickness
 		_add_box(faces, lintel_prefix,
 			Vector3(x0, lintel_y_bottom, z_outer),
@@ -173,8 +171,8 @@ func _add_door_assembly(faces: Array, grid_pos: Vector2i, dir: int) -> void:
 	else:
 		# WEST or EAST: wall along Z axis. Edge axis is Z. Jamb subdivides Z.
 		var x_axis := x0 if dir == Direction.WEST else x1
-		var x_outer := x_axis - t_half
-		var x_inner := x_axis + t_half
+		var x_outer := x_axis - WALL_HALF_THICKNESS
+		var x_inner := x_axis + WALL_HALF_THICKNESS
 		# Lintel: full edge length along Z, top of opening, full wall thickness
 		_add_box(faces, lintel_prefix,
 			Vector3(x_outer, lintel_y_bottom, z0),
@@ -207,12 +205,10 @@ func _add_door_assembly(faces: Array, grid_pos: Vector2i, dir: int) -> void:
 # A thin box on the cell-interior side of the wall, height TRIM_HEIGHT and
 # projecting TRIM_PROJECTION from the wall surface into the cell.
 func _add_skirting(faces: Array, grid_pos: Vector2i, dir: int) -> void:
-	var dir_names := ["north", "east", "south", "west"]
-	_add_trim_box(faces, "skirting_" + dir_names[dir], grid_pos, dir, 0.0, TRIM_HEIGHT)
+	_add_trim_box(faces, "skirting_" + Direction.name_of(dir), grid_pos, dir, 0.0, TRIM_HEIGHT)
 
 func _add_cornice(faces: Array, grid_pos: Vector2i, dir: int) -> void:
-	var dir_names := ["north", "east", "south", "west"]
-	_add_trim_box(faces, "cornice_" + dir_names[dir], grid_pos, dir,
+	_add_trim_box(faces, "cornice_" + Direction.name_of(dir), grid_pos, dir,
 		CELL_HEIGHT - TRIM_HEIGHT, CELL_HEIGHT)
 
 func _add_trim_box(faces: Array, prefix: String, grid_pos: Vector2i, dir: int,
@@ -221,22 +217,21 @@ func _add_trim_box(faces: Array, prefix: String, grid_pos: Vector2i, dir: int,
 	var x1 := x0 + CELL_SIZE
 	var z0 := grid_pos.y * CELL_SIZE
 	var z1 := z0 + CELL_SIZE
-	var t_half := WALL_THICKNESS * 0.5
 	var min_corner: Vector3
 	var max_corner: Vector3
 	match dir:
 		Direction.NORTH:
-			min_corner = Vector3(x0, y_min, z0 + t_half)
-			max_corner = Vector3(x1, y_max, z0 + t_half + TRIM_PROJECTION)
+			min_corner = Vector3(x0, y_min, z0 + WALL_HALF_THICKNESS)
+			max_corner = Vector3(x1, y_max, z0 + WALL_HALF_THICKNESS + TRIM_PROJECTION)
 		Direction.SOUTH:
-			min_corner = Vector3(x0, y_min, z1 - t_half - TRIM_PROJECTION)
-			max_corner = Vector3(x1, y_max, z1 - t_half)
+			min_corner = Vector3(x0, y_min, z1 - WALL_HALF_THICKNESS - TRIM_PROJECTION)
+			max_corner = Vector3(x1, y_max, z1 - WALL_HALF_THICKNESS)
 		Direction.WEST:
-			min_corner = Vector3(x0 + t_half, y_min, z0)
-			max_corner = Vector3(x0 + t_half + TRIM_PROJECTION, y_max, z1)
+			min_corner = Vector3(x0 + WALL_HALF_THICKNESS, y_min, z0)
+			max_corner = Vector3(x0 + WALL_HALF_THICKNESS + TRIM_PROJECTION, y_max, z1)
 		Direction.EAST:
-			min_corner = Vector3(x1 - t_half - TRIM_PROJECTION, y_min, z0)
-			max_corner = Vector3(x1 - t_half, y_max, z1)
+			min_corner = Vector3(x1 - WALL_HALF_THICKNESS - TRIM_PROJECTION, y_min, z0)
+			max_corner = Vector3(x1 - WALL_HALF_THICKNESS, y_max, z1)
 	_add_box(faces, prefix, min_corner, max_corner, WALL_COLOR)
 
 # Emits a 6-face box pillar at the given corner (i, j) in cell-grid line coords.
@@ -255,26 +250,23 @@ func _add_pillar(faces: Array, corner: Vector2i) -> void:
 # north/south for E/W walls (along Z axis).
 func _add_wall_box(faces: Array, grid_pos: Vector2i, dir: int, edge_type: int) -> void:
 	var color: Color = WALL_COLOR if edge_type == EdgeType.WALL else DOOR_COLOR
-	var dir_names := ["north", "east", "south", "west"]
-	var dir_name: String = dir_names[dir]
-	var prefix: String = ("wall_" if edge_type == EdgeType.WALL else "door_") + dir_name
-	var t_half := WALL_THICKNESS * 0.5
+	var prefix: String = ("wall_" if edge_type == EdgeType.WALL else "door_") + Direction.name_of(dir)
 	var x0 := grid_pos.x * CELL_SIZE
 	var x1 := x0 + CELL_SIZE
 	var z0 := grid_pos.y * CELL_SIZE
 	var z1 := z0 + CELL_SIZE
 	if dir == Direction.NORTH:
 		# Wall along X at z = z0. Inner face (+Z normal) faces into the cell.
-		_emit_box_along_x(faces, prefix, x0, x1, z0 - t_half, z0 + t_half, true, "east", "west", color)
+		_emit_box_along_x(faces, prefix, x0, x1, z0 - WALL_HALF_THICKNESS, z0 + WALL_HALF_THICKNESS, true, "east", "west", color)
 	elif dir == Direction.SOUTH:
 		# Wall along X at z = z1. Inner face (-Z normal) faces into the cell.
-		_emit_box_along_x(faces, prefix, x0, x1, z1 - t_half, z1 + t_half, false, "east", "west", color)
+		_emit_box_along_x(faces, prefix, x0, x1, z1 - WALL_HALF_THICKNESS, z1 + WALL_HALF_THICKNESS, false, "east", "west", color)
 	elif dir == Direction.WEST:
 		# Wall along Z at x = x0. Inner face (+X normal) faces into the cell.
-		_emit_box_along_z(faces, prefix, x0 - t_half, x0 + t_half, z0, z1, true, "north", "south", color)
+		_emit_box_along_z(faces, prefix, x0 - WALL_HALF_THICKNESS, x0 + WALL_HALF_THICKNESS, z0, z1, true, "north", "south", color)
 	else:  # EAST
 		# Wall along Z at x = x1. Inner face (-X normal) faces into the cell.
-		_emit_box_along_z(faces, prefix, x1 - t_half, x1 + t_half, z0, z1, false, "north", "south", color)
+		_emit_box_along_z(faces, prefix, x1 - WALL_HALF_THICKNESS, x1 + WALL_HALF_THICKNESS, z0, z1, false, "north", "south", color)
 
 # Helper for walls running along the X axis (NORTH and SOUTH walls).
 # inner_is_max_z=true → inner face is at z=z_max (NORTH wall, faces +Z).
