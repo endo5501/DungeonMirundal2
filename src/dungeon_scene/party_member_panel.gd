@@ -1,13 +1,14 @@
 class_name PartyMemberPanel
 extends Control
 
-const PANEL_WIDTH := 240
+const PANEL_WIDTH := 174
 const PANEL_HEIGHT := 240
 const PORTRAIT_WIDTH := 170
 const PORTRAIT_HEIGHT := 174
 const ICON_SIZE := PORTRAIT_WIDTH
 const FONT_SIZE := 21
-const BADGE_FONT_SIZE := 18
+const BAR_FONT_SIZE := 14
+const BADGE_FONT_SIZE := 14
 const BG_COLOR := Color(0.15, 0.15, 0.2, 0.7)
 const ICON_BG_COLOR := Color(0.3, 0.3, 0.35)
 const FRAME_COLOR := Color(0.72, 0.58, 0.28, 0.95)
@@ -48,9 +49,9 @@ const STATUS_LABELS: Dictionary = {
 	&"confusion": "C",
 	&"silence":   "Si",
 }
-const STATUS_ICON_SIZE := 21
+const STATUS_ICON_SIZE := 17
 const STATUS_ICON_GAP := 3
-const STATUS_ICON_FONT_SIZE := 18
+const STATUS_ICON_FONT_SIZE := 14
 const STATUS_ICON_LABEL_COLOR := Color(1, 1, 1, 1)
 const DIM_OVERLAY_COLOR := Color(0, 0, 0, 0.55)
 
@@ -409,7 +410,7 @@ func get_job_portrait_texture(job_id: StringName) -> Texture2D:
 
 func get_level_badge_rect() -> Rect2:
 	var portrait := get_portrait_rect()
-	return Rect2(portrait.position.x + portrait.size.x - 34.0, portrait.position.y + 2.0, 32.0, 18.0)
+	return Rect2(portrait.position.x + portrait.size.x - 50.0, portrait.position.y + 2.0, 48.0, 18.0)
 
 
 func get_name_badge_rect() -> Rect2:
@@ -419,8 +420,8 @@ func get_name_badge_rect() -> Rect2:
 
 const BAR_HEIGHT := 12
 const BAR_GAP := 4
-const BAR_LEFT := 32
-const BAR_WIDTH := 88
+const BAR_LEFT := 30
+const BAR_WIDTH := 76
 
 
 func get_hp_bar_rect() -> Rect2:
@@ -505,8 +506,11 @@ func _draw_name(font: Font, data: PartyMemberData) -> void:
 
 
 func _draw_stat_bar(font: Font, label: String, current_value: int, max_value: int, bar_rect: Rect2, color: Color) -> void:
-	draw_string(font, Vector2(7, bar_rect.position.y + FONT_SIZE - 1.0), label,
-		HORIZONTAL_ALIGNMENT_LEFT, 24.0, FONT_SIZE, color)
+	var baseline_y: float = bar_rect.position.y + float(BAR_FONT_SIZE) - 1.0
+	var label_x: float = 4.0
+	var label_width: float = float(BAR_LEFT) - label_x - 2.0
+	draw_string(font, Vector2(label_x, baseline_y), label,
+		HORIZONTAL_ALIGNMENT_LEFT, label_width, BAR_FONT_SIZE, color)
 	draw_rect(bar_rect.grow(1.0), BAR_OUTLINE_COLOR)
 	draw_rect(bar_rect, BAR_BG_COLOR)
 	var fill := bar_rect
@@ -514,8 +518,10 @@ func _draw_stat_bar(font: Font, label: String, current_value: int, max_value: in
 	if fill.size.x > 0.0:
 		draw_rect(fill, color)
 	var value_text := "%d / %d" % [current_value, max_value]
-	draw_string(font, Vector2(124, bar_rect.position.y + FONT_SIZE - 1.0), value_text,
-		HORIZONTAL_ALIGNMENT_RIGHT, PANEL_WIDTH - 130, FONT_SIZE, TEXT_COLOR)
+	var value_x: float = bar_rect.position.x + bar_rect.size.x + 2.0
+	var value_width: float = float(PANEL_WIDTH) - value_x - 4.0
+	draw_string(font, Vector2(value_x, baseline_y), value_text,
+		HORIZONTAL_ALIGNMENT_RIGHT, value_width, BAR_FONT_SIZE, TEXT_COLOR)
 
 
 # Returns the number of icons drawn so adjacent rows can offset their x.
