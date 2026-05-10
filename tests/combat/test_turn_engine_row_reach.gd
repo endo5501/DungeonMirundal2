@@ -76,7 +76,7 @@ class _StubMonsterActor extends MonsterCombatant:
 	var _max: int
 
 	func _init(p_name: String, p_attack: int, p_defense: int, p_agility: int, p_hp: int, p_row: int = Row.FRONT, p_attack_range: int = WeaponRange.MELEE) -> void:
-		super(_StubMonsterActor.make_monster(p_name, p_attack, p_defense, p_agility, p_hp, p_row, p_attack_range), p_row)
+		super(_StubMonsterActor.make_monster(p_name, p_attack, p_defense, p_agility, p_hp, p_row, p_attack_range))
 		actor_name = p_name
 		_attack = p_attack
 		_defense = p_defense

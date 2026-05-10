@@ -586,10 +586,7 @@ func _pick_living_party(rng: RandomNumberGenerator) -> CombatActor:
 	return alive[rng.randi_range(0, alive.size() - 1)]
 
 
-# Reach-aware target picker for monster AI. Filters living party to only those
-# the attacker can reach given attacker row + weapon range. Used in place of
-# _pick_living_party for attack target selection. Returns null when the
-# reachable subset is empty (caller decides whether to wait or skip).
+# Returns null when nothing is reachable; caller decides wait vs skip.
 func _pick_living_party_reachable(attacker: CombatActor, rng: RandomNumberGenerator) -> CombatActor:
 	var alive_reachable: Array = []
 	for a in party:
@@ -600,9 +597,6 @@ func _pick_living_party_reachable(attacker: CombatActor, rng: RandomNumberGenera
 	return alive_reachable[rng.randi_range(0, alive_reachable.size() - 1)]
 
 
-# True if any party member is alive (used to distinguish "wait because nothing
-# is reachable" from "skip because party is wiped"; the engine should not wait
-# if the battle has effectively ended).
 func _any_party_alive() -> bool:
 	for a in party:
 		if a != null and a.is_alive():
@@ -610,18 +604,15 @@ func _any_party_alive() -> bool:
 	return false
 
 
-# Returns the effective row for `actor`, taking same-side promotion into
-# account. A BACK-row actor whose entire same-side FRONT row is dead is
-# treated as effective FRONT (so MELEE attackers can reach them and so they
-# become reachable as MELEE attackers themselves).
+# BACK-row actors promote to effective FRONT once their entire same-side
+# FRONT is dead — this is the rule that makes MELEE BACK attackers eventually
+# act and that makes BACK targets reachable to MELEE attackers in the wipe.
 func effective_row(actor: CombatActor) -> int:
 	if actor == null:
 		return Row.FRONT
-	var orig := _original_row_of(actor)
-	if orig == Row.FRONT:
+	if _original_row_of(actor) == Row.FRONT:
 		return Row.FRONT
-	# BACK: promote to FRONT only when no living FRONT teammate exists.
-	var side := _side_of(actor)
+	var side: Array = party if _is_party_member(actor) else monsters
 	for peer in side:
 		if peer == null or peer == actor:
 			continue
@@ -630,22 +621,15 @@ func effective_row(actor: CombatActor) -> int:
 	return Row.FRONT
 
 
-# Reachability: RANGED always reaches, MELEE requires both attacker and target
-# to be effective FRONT. effective_row is recomputed per call to honor
-# mid-turn promotion.
+# Recomputed per call to honor mid-turn FRONT-row promotion.
 func can_reach(attacker: CombatActor, target: CombatActor) -> bool:
 	if attacker == null or target == null:
 		return false
-	var wr := _weapon_range_of(attacker)
-	if wr == WeaponRange.RANGED:
+	if _weapon_range_of(attacker) == WeaponRange.RANGED:
 		return true
 	return effective_row(attacker) == Row.FRONT and effective_row(target) == Row.FRONT
 
 
-# Resolves attacker's weapon range. Party members go through their
-# EquipmentProvider; monsters expose attack_range on MonsterData. Anything
-# else (test stubs, malformed actors) falls back to MELEE so engine code
-# can rely on a non-null answer.
 func _weapon_range_of(actor: CombatActor) -> int:
 	if actor is PartyCombatant:
 		var pc := actor as PartyCombatant
@@ -666,12 +650,6 @@ func _original_row_of(actor: CombatActor) -> int:
 	if actor is MonsterCombatant:
 		return (actor as MonsterCombatant).original_row
 	return Row.FRONT
-
-
-func _side_of(actor: CombatActor) -> Array:
-	if party.has(actor):
-		return party
-	return monsters
 
 
 func _pick_living_same_side_as(original: CombatActor, attacker: CombatActor) -> CombatActor:

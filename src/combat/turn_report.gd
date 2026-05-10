@@ -204,8 +204,6 @@ func add_cast_silenced(caster: CombatActor, spell_id: StringName) -> void:
 	})
 
 
-# --- add-row-based-combat: row-based reach action types ---
-
 func add_wait(actor: CombatActor) -> void:
 	actions.append({
 		"type": "wait",

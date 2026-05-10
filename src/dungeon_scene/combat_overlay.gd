@@ -191,15 +191,6 @@ func _prompt_next_actor() -> void:
 		_target_selector.hide_selector()
 
 
-func _has_any_reachable_monster(attacker: CombatActor) -> bool:
-	if _turn_engine == null:
-		return false
-	for m in _turn_engine.monsters:
-		if m != null and m.is_alive() and _turn_engine.can_reach(attacker, m):
-			return true
-	return false
-
-
 func _reachable_flags_for(attacker: CombatActor) -> Array:
 	var flags: Array = []
 	if _turn_engine == null:
@@ -208,6 +199,13 @@ func _reachable_flags_for(attacker: CombatActor) -> Array:
 		if m != null and m.is_alive():
 			flags.append(_turn_engine.can_reach(attacker, m))
 	return flags
+
+
+func _has_any_reachable_monster(attacker: CombatActor) -> bool:
+	for f in _reachable_flags_for(attacker):
+		if f:
+			return true
+	return false
 
 
 func _handle_command_choice(option_index: int) -> void:
@@ -574,8 +572,9 @@ func _build_party_combatants() -> Array:
 	var combatants: Array = []
 	if _guild == null:
 		return combatants
+	# Index order is the Guild contract: 0 == FRONT, 1 == BACK
+	# (see Guild.get_party_characters). Combat depends on this.
 	var rows: Array[Array] = _guild.get_party_characters()
-	# rows[0] = front_row characters (or null), rows[1] = back_row characters
 	for row_idx in range(rows.size()):
 		var row_value: int = Row.FRONT if row_idx == 0 else Row.BACK
 		for ch: Variant in rows[row_idx]:

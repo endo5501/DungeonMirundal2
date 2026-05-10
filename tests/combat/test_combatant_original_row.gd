@@ -69,12 +69,15 @@ func test_monster_combatant_default_row_when_no_data():
 	assert_eq(mc.original_row, Row.FRONT)
 
 
-func test_monster_combatant_can_override_row_explicitly():
-	# Explicit p_row argument overrides MonsterData.default_row (used by
-	# encounter generators that have already decided the row at spawn time).
+func test_monster_combatant_row_tracks_data_default_row():
+	# Row is read live from MonsterData.default_row; mutating the data flips
+	# the combatant's effective row so encounter generators / tests can pick a
+	# row by configuring data instead of overriding the constructor.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	var data := _make_monster_data(Row.FRONT, WeaponRange.MELEE)
 	var m := Monster.new(data, rng)
-	var mc := MonsterCombatant.new(m, Row.BACK)
+	var mc := MonsterCombatant.new(m)
+	assert_eq(mc.original_row, Row.FRONT)
+	data.default_row = Row.BACK
 	assert_eq(mc.original_row, Row.BACK)
