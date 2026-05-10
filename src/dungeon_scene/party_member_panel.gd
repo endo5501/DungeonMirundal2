@@ -18,17 +18,6 @@ const BAR_BG_COLOR := Color(0.04, 0.04, 0.05, 0.9)
 const BAR_OUTLINE_COLOR := Color(0.0, 0.0, 0.0, 0.85)
 const TEXT_COLOR := Color(0.95, 0.95, 0.95, 1.0)
 const BADGE_BG_COLOR := Color(0.05, 0.05, 0.06, 0.9)
-const JOB_PORTRAIT_PATHS: Dictionary = {
-	&"fighter": "res://assets/images/portraits/jobs/fighter.png",
-	&"mage": "res://assets/images/portraits/jobs/mage.png",
-	&"priest": "res://assets/images/portraits/jobs/priest.png",
-	&"thief": "res://assets/images/portraits/jobs/thief.png",
-	&"bishop": "res://assets/images/portraits/jobs/bishop.png",
-	&"samurai": "res://assets/images/portraits/jobs/samurai.png",
-	&"lord": "res://assets/images/portraits/jobs/lord.png",
-	&"ninja": "res://assets/images/portraits/jobs/ninja.png",
-}
-static var _job_portrait_texture_cache: Dictionary = {}
 
 # Colors per persistent-party-display design.md §D5.
 const STATUS_COLORS: Dictionary = {
@@ -387,27 +376,6 @@ func get_portrait_rect() -> Rect2:
 	return Rect2((float(PANEL_WIDTH) - float(PORTRAIT_WIDTH)) * 0.5, 6.0, PORTRAIT_WIDTH, PORTRAIT_HEIGHT)
 
 
-func get_job_portrait_path(job_id: StringName) -> String:
-	return JOB_PORTRAIT_PATHS.get(job_id, "")
-
-
-func get_job_portrait_texture(job_id: StringName) -> Texture2D:
-	if _job_portrait_texture_cache.has(job_id):
-		return _job_portrait_texture_cache[job_id]
-	var path := get_job_portrait_path(job_id)
-	if path == "" or not ResourceLoader.exists(path):
-		return null
-	var source_texture := load(path) as Texture2D
-	if source_texture == null:
-		return null
-	var image := source_texture.get_image()
-	if image == null:
-		return source_texture
-	var texture := ImageTexture.create_from_image(image)
-	_job_portrait_texture_cache[job_id] = texture
-	return texture
-
-
 func get_level_badge_rect() -> Rect2:
 	var portrait := get_portrait_rect()
 	return Rect2(portrait.position.x + portrait.size.x - 50.0, portrait.position.y + 2.0, 48.0, 18.0)
@@ -487,7 +455,7 @@ func _draw() -> void:
 func _draw_portrait(font: Font, data: PartyMemberData) -> void:
 	var portrait := get_portrait_rect()
 	draw_rect(portrait, ICON_BG_COLOR)
-	var texture := get_job_portrait_texture(data.job_id)
+	var texture := JobPortrait.texture_for(data.job_id)
 	if texture != null:
 		draw_texture_rect(texture, portrait, false)
 	else:

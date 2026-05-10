@@ -5,7 +5,6 @@ signal flow_completed
 
 enum SubView { CHARACTER, SLOT, CANDIDATE }
 
-const SLOT_LABELS: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
 
 var _sub_view: int = SubView.CHARACTER
 var _party: Array[Character] = []
@@ -220,14 +219,14 @@ func _refresh_slot() -> void:
 	var ch := _get_selected_character()
 	if ch == null:
 		return
-	for i in range(SLOT_LABELS.size()):
+	for i in range(Equipment.SLOT_LABELS.size()):
 		var slot_value := Equipment.ALL_SLOTS[i]
 		var equipped := ch.equipment.get_equipped(slot_value)
 		var equipped_name := "なし"
 		if equipped != null and equipped.item != null:
 			equipped_name = equipped.item.item_name
 		var row := CursorMenuRow.create(_slot_container,
-			"%s: %s" % [SLOT_LABELS[i], equipped_name], 16)
+			"%s: %s" % [Equipment.SLOT_LABELS[i], equipped_name], 16)
 		row.set_selected(i == _slot_index)
 
 

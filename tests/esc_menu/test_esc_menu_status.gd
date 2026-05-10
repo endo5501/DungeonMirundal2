@@ -1,9 +1,11 @@
 extends GutTest
 
-const GameStateScript = preload("res://src/game_state.gd")
+# Verifies the StatusView (split-pane: cursor list on the left, character
+# detail on the right) used inside the ESC menu's PARTY > STATUS sub-flow.
 
 var _human: RaceData
 var _fighter_job: JobData
+
 
 func before_each():
 	_human = RaceData.new()
@@ -28,88 +30,69 @@ func before_each():
 	_fighter_job.required_agi = 0
 	_fighter_job.required_luc = 0
 
+
 func _make_character(char_name: String) -> Character:
 	var allocation := {&"STR": 5, &"INT": 5, &"PIE": 0, &"VIT": 0, &"AGI": 0, &"LUC": 0}
 	return Character.create(char_name, _human, _fighter_job, allocation)
 
-func test_status_view_shows_party_members():
-	# Setup GameState with party
-	GameState.new_game()
-	var ch := _make_character("Hero")
-	GameState.guild.register(ch)
-	GameState.guild.assign_to_party(ch, 0, 0)
 
+func _open_status_with_party(members: Array) -> StatusView:
+	# members: Array[Character], slot order: front 0..2, back 0..2
+	GameState.new_game()
+	for i in range(min(members.size(), 6)):
+		var ch: Character = members[i]
+		if ch == null:
+			continue
+		GameState.guild.register(ch)
+		var row := 0 if i < 3 else 1
+		var pos := i if i < 3 else (i - 3)
+		GameState.guild.assign_to_party(ch, row, pos)
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
 	menu.select_current_item()  # → status
+	return menu.get_status_view()
 
-	# Status container should have title + spacer + 1 character entry
-	var status_container := menu._status_container
-	assert_true(status_container.get_child_count() > 2, "Should have character entries")
+
+func test_status_view_shows_party_members():
+	var ch := _make_character("Hero")
+	var view := _open_status_with_party([ch])
+	assert_eq(view.get_member_count(), 1)
+	assert_eq(view.get_selected_character(), ch)
+
 
 func test_status_view_shows_empty_message_when_no_party():
 	GameState.new_game()
-
 	var menu := EscMenu.new()
 	add_child_autofree(menu)
 	menu.show_menu()
 	menu.select_current_item()  # → party menu
 	menu.select_current_item()  # → status
-
-	# Status container: title + spacer + empty message
-	var status_container := menu._status_container
-	assert_eq(status_container.get_child_count(), 3)
-	var last_child := status_container.get_child(2) as Label
-	assert_eq(last_child.text, "パーティが編成されていません")
+	var view := menu.get_status_view()
+	assert_eq(view.get_member_count(), 0)
+	assert_true(view.is_empty_message_visible(),
+		"Empty pane should show 'パーティが編成されていません'")
 
 
-# --- add-status-poison-and-petrify: persistent_statuses status line ---
-
-func _find_status_line(node: Node) -> String:
-	# Walk descendants and return the first Label whose text starts with "状態:".
-	if node is Label:
-		var text: String = (node as Label).text
-		if text.begins_with("状態:"):
-			return text
-	for child in node.get_children():
-		var found := _find_status_line(child)
-		if found != "":
-			return found
-	return ""
-
-
-func _open_status_view_for(ch: Character) -> EscMenu:
-	GameState.new_game()
-	GameState.guild.register(ch)
-	GameState.guild.assign_to_party(ch, 0, 0)
-	var menu := EscMenu.new()
-	add_child_autofree(menu)
-	menu.show_menu()
-	menu.select_current_item()  # → party menu
-	menu.select_current_item()  # → status
-	return menu
+# --- persistent_statuses status line on the detail pane ---
 
 
 func test_clean_character_status_line_says_normal():
 	var ch := _make_character("Clean")
-	var menu := _open_status_view_for(ch)
-	var line := _find_status_line(menu._status_container)
-	assert_eq(line, "状態: 通常")
+	var view := _open_status_with_party([ch])
+	assert_eq(view.get_status_line_text(), "状態: 通常")
 
 
 func test_poisoned_character_shows_status_name():
 	var ch := _make_character("Toxic")
 	ch.persistent_statuses = [&"poison"]
-	var menu := _open_status_view_for(ch)
-	var line := _find_status_line(menu._status_container)
-	assert_eq(line, "状態: 毒")
+	var view := _open_status_with_party([ch])
+	assert_eq(view.get_status_line_text(), "状態: 毒")
 
 
 func test_multi_status_character_shows_comma_separated():
 	var ch := _make_character("Doomed")
 	ch.persistent_statuses = [&"poison", &"petrify"]
-	var menu := _open_status_view_for(ch)
-	var line := _find_status_line(menu._status_container)
-	assert_eq(line, "状態: 毒, 石化")
+	var view := _open_status_with_party([ch])
+	assert_eq(view.get_status_line_text(), "状態: 毒, 石化")
