@@ -15,7 +15,7 @@
 - [x] 2.4 Implement edge enumeration helper that yields unique (cell, direction) pairs from the visible_cells set
 - [x] 2.5 Implement `_add_wall_box(faces, cell_pos, dir, edge_type)` that emits the 6 faces for a wall box of thickness T=0.20
 - [x] 2.6 Wire `build_meshes` to call the edge enumerator and `_add_wall_box` for WALL edges (DOOR temporarily uses the same box, replaced in section 5)
-- [ ] 2.7 Run the project locally and visually confirm walls have visible thickness at corners; capture before/after screenshot
+- [x] 2.7 Run the project locally and visually confirm walls have visible thickness at corners; capture before/after screenshot
 - [x] 2.8 Commit (feat: render dungeon walls as thick boxes with edge deduplication)
 
 ## 3. Corner pillars
@@ -56,7 +56,7 @@
 
 ## 6. Final visual review and cleanup
 
-- [ ] 6.1 Take final screenshots from a corridor, a room corner, and a doorway; compare against tmp/dungeon16.png to confirm the "paper wall" feel is gone (deferred to user — requires interactive Godot launch)
+- [x] 6.1 Take final screenshots from a corridor, a room corner, and a doorway; compare against tmp/dungeon16.png to confirm the "paper wall" feel is gone (confirmed by user)
 - [x] 6.2 Run the full test suite (`tests/dungeon/test_cell_mesh_builder.gd` and any related) and confirm all green (2369/2369 passing)
 - [x] 6.3 Remove any dead helper code left from the refactor (e.g. unused `_add_wall_face` if fully replaced)
 - [x] 6.4 Commit (chore: clean up legacy single-quad wall helpers)
