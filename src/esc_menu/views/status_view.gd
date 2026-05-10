@@ -107,9 +107,36 @@ func get_status_line_text() -> String:
 	return _status_label.text if _status_label != null else ""
 
 
-func handle_input(_event: InputEvent) -> bool:
-	# Wired in Step 4 (cursor navigation).
+func handle_input(event: InputEvent) -> bool:
+	if event.is_action_pressed("ui_up"):
+		_move_cursor(-1)
+		return true
+	if event.is_action_pressed("ui_down"):
+		_move_cursor(1)
+		return true
+	if event.is_action_pressed("ui_cancel"):
+		back_requested.emit()
+		return true
+	if event.is_action_pressed("ui_accept"):
+		# Status view is read-only; consume but do nothing so the parent
+		# EscMenu's handle_input does not interpret accept on this view.
+		return true
 	return false
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if handle_input(event):
+		get_viewport().set_input_as_handled()
+
+
+func _move_cursor(direction: int) -> void:
+	if _menu == null:
+		return
+	_menu.move_cursor(direction)
+	_menu.update_rows(_member_rows)
+	_refresh_detail_pane()
 
 
 func set_spell_repo(repo: SpellRepository) -> void:

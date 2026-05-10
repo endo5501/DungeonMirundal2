@@ -25,10 +25,10 @@
 
 ## 4. カーソル操作と詳細更新 (TDD)
 
-- [ ] 4.1 Red: `tests/esc_menu/test_esc_menu_status_cursor.gd` を新規作成。3 名のパーティで `StatusView` を開いた後、`ui_down` action を発火 → `get_selected_character()` が 2 番目を返す、`ui_up` を発火 → 先頭に戻る、`ui_down` を 2 回 → 末尾に到達、さらに `ui_down` でラップ（CursorMenu 既定）、各カーソル移動後に詳細パネルの名前ラベルが切り替わっている、を検証する。テストは赤で失敗することを確認してコミットする。
-- [ ] 4.2 Green: `StatusView` 内に `CursorMenu` インスタンスを構築し、左ペインに `CursorMenuRow` を配置する。`handle_input(event) -> bool` で `ui_up`/`ui_down` を解釈し、カーソル移動完了時に `_refresh_detail_pane()` を呼んで右ペインを再構築する。`ui_cancel` で `back_requested` シグナルを emit する。`ui_accept` は閲覧専用のため何もしない。
-- [ ] 4.3 Green: `StatusView._unhandled_input` を実装し、`if not visible: return` の後に `handle_input(event)` の戻り値で `set_input_as_handled()` を呼ぶ。
-- [ ] 4.4 すべての cursor テストが緑になることを確認しコミットする。
+- [x] 4.1 Red: `tests/esc_menu/test_esc_menu_status_cursor.gd` を新規作成。3 名のパーティで `StatusView` を開いた後、`ui_down` action を発火 → `get_selected_character()` が 2 番目を返す、`ui_up` を発火 → 先頭に戻る、ラップ動作、各カーソル移動後に詳細パネルの名前が切り替わる、`ui_cancel` で back_requested、`ui_accept` は閲覧専用 no-op、を検証する。
+- [x] 4.2 Green: `StatusView.handle_input` で `ui_up`/`ui_down` を解釈し `_move_cursor(direction)` → カーソル更新後に `_refresh_detail_pane()`。`ui_cancel` で `back_requested.emit()`、`ui_accept` は consume するが何もしない（閲覧専用）。
+- [x] 4.3 Green: `StatusView._unhandled_input` を実装し、`if not visible: return` の後に `handle_input(event)` の戻り値で `set_input_as_handled()` を呼ぶ。
+- [x] 4.4 cursor テスト 6/6 緑を確認しコミット。
 
 ## 5. EscMenu からの委譲・旧コード削除
 
