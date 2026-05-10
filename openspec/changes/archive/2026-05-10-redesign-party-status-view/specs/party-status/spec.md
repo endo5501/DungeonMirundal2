@@ -1,3 +1,17 @@
+## ADDED Requirements
+
+### Requirement: カーソル操作で詳細パネルが切り替わる
+SHALL: 左ペインのカーソルを ↑/↓ で移動すると、移動完了と同フレーム内で右ペインの詳細表示が新たな選択キャラクターのものに更新される。ラップは `CursorMenu` の既定挙動に従う。
+
+#### Scenario: ↓ キーで次のメンバーへ
+- **WHEN** カーソルがリスト先頭メンバー A にあるとき ↓ を押す
+- **THEN** カーソルが次のメンバー B に移動し、右ペインの表示が B のものに切り替わる
+
+#### Scenario: ↑ キーで前のメンバーへ
+- **WHEN** カーソルがメンバー B にあるとき ↑ を押す
+- **THEN** カーソルが前のメンバー A に戻り、右ペインの表示が A のものに切り替わる
+
+
 ## MODIFIED Requirements
 
 ### Requirement: パーティメンバー一覧の表示
@@ -54,17 +68,6 @@ SHALL: 右ペインはカーソルが当たっているキャラクターの詳�
 - **WHEN** カーソルが当たっているキャラクターの `known_spells` が空配列である
 - **THEN** 習得呪文セクションには「(未習得)」が表示される
 
-### Requirement: カーソル操作で詳細パネルが切り替わる
-SHALL: 左ペインのカーソルを ↑/↓ で移動すると、移動完了と同フレーム内で右ペインの詳細表示が新たな選択キャラクターのものに更新される。ラップは `CursorMenu` の既定挙動に従う。
-
-#### Scenario: ↓ キーで次のメンバーへ
-- **WHEN** カーソルがリスト先頭メンバー A にあるとき ↓ を押す
-- **THEN** カーソルが次のメンバー B に移動し、右ペインの表示が B のものに切り替わる
-
-#### Scenario: ↑ キーで前のメンバーへ
-- **WHEN** カーソルがメンバー B にあるとき ↑ を押す
-- **THEN** カーソルが前のメンバー A に戻り、右ペインの表示が A のものに切り替わる
-
 ### Requirement: ステータス画面からの戻る操作
 SHALL: パーティステータス画面で `ui_cancel` action（ESC キーなど）を行うとパーティメニューに戻る。`ui_accept` action は本画面では何も行わない（閲覧専用）。
 
@@ -76,23 +79,3 @@ SHALL: パーティステータス画面で `ui_cancel` action（ESC キーな�
 - **WHEN** パーティステータス画面で `ui_accept` action を発火する
 - **THEN** 画面遷移は発生せず、カーソル位置と表示内容も変わらない
 
-### Requirement: EscMenuStatus shows a status line per character
-
-`EscMenuStatus` (the character detail panel under the ESC menu's status sub-flow) SHALL render a one-line summary of the currently selected character's `persistent_statuses` in the right pane. The format SHALL be:
-
-- When `persistent_statuses` is empty: `"状態: 通常"`
-- Otherwise: `"状態: " + names.join(", ")` where each `name` is the StatusData's `display_name` (or `String(status_id)` when the lookup fails).
-
-The line SHALL be rendered in the standard status-detail font/style and SHALL be visible without additional navigation.
-
-#### Scenario: Clean character shows 通常
-- **WHEN** the ESC menu status panel cursor is on a character with empty `persistent_statuses`
-- **THEN** a label SHALL render reading "状態: 通常"
-
-#### Scenario: Single-status character shows its display name
-- **WHEN** the cursor is on a character whose `persistent_statuses == [&"poison"]`
-- **THEN** a label SHALL render reading "状態: 毒"
-
-#### Scenario: Multi-status character shows comma-separated names
-- **WHEN** the cursor is on a character whose `persistent_statuses == [&"poison", &"petrify"]`
-- **THEN** a label SHALL render reading "状態: 毒, 石化"
