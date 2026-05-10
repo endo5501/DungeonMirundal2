@@ -6,6 +6,7 @@ var _explored_map: ExploredMap
 var _player_state: PlayerState
 var _dungeon_data: DungeonData
 var _minimap_stub: Control
+var _party_hud_stub: CanvasLayer
 
 
 func _make_overlay(dungeon_name: String = "テストダンジョン",
@@ -31,9 +32,12 @@ func _make_overlay(dungeon_name: String = "テストダンジョン",
 	_minimap_stub = Control.new()
 	_minimap_stub.visible = true
 	add_child_autofree(_minimap_stub)
+	_party_hud_stub = CanvasLayer.new()
+	_party_hud_stub.visible = true
+	add_child_autofree(_party_hud_stub)
 	_overlay = FullMapOverlay.new()
 	add_child_autofree(_overlay)
-	_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_stub)
+	_overlay.setup(_wiz_map, _explored_map, _player_state, _dungeon_data, _minimap_stub, _party_hud_stub)
 	return _overlay
 
 
@@ -176,3 +180,28 @@ func test_close_via_esc_restores_minimap():
 	overlay.open()
 	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
 	assert_true(_minimap_stub.visible)
+
+
+# --- Party HUD visibility coupling ---
+
+func test_open_hides_party_hud():
+	var overlay = _make_overlay()
+	_party_hud_stub.visible = true
+	overlay.open()
+	assert_false(_party_hud_stub.visible)
+
+
+func test_close_restores_party_hud():
+	var overlay = _make_overlay()
+	_party_hud_stub.visible = true
+	overlay.open()
+	overlay.close()
+	assert_true(_party_hud_stub.visible)
+
+
+func test_close_via_esc_restores_party_hud():
+	var overlay = _make_overlay()
+	_party_hud_stub.visible = true
+	overlay.open()
+	overlay._unhandled_input(TestHelpers.make_action_event(&"ui_cancel"))
+	assert_true(_party_hud_stub.visible)
