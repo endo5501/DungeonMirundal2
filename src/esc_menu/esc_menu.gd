@@ -191,8 +191,15 @@ func _move_cursor(direction: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	if handle_input(event):
-		get_viewport().set_input_as_handled()
+	# StatusView / sub-flows / ConfirmDialog sit deeper in the tree and run
+	# first via reverse-tree-order dispatch; if any of them consumed the
+	# event we are not called at all. Whatever reaches us is left over.
+	# Always consume so dungeon-screen handlers (move_forward, toggle_full_map,
+	# etc.) cannot react while the menu is on screen — fixes the WASD-leak
+	# captured by esc-menu-overlay's "メニュー表示中はゲーム入力を遮断する"
+	# requirement.
+	handle_input(event)
+	get_viewport().set_input_as_handled()
 
 func _switch_view(view: View) -> void:
 	_current_view = view

@@ -35,18 +35,14 @@
 - [x] 5.1 `src/esc_menu/esc_menu.gd` の `_status_container`、`_refresh_status_view()`、`_build_character_entry()`、`_build_status_line()` を削除する。（Step 2 と同時に実施）
 - [x] 5.2 `EscMenu._build_ui()` で `StatusView` を子 Control として `add_child` し、`back_requested` を `_on_status_view_back` に接続する。`_on_status_view_back` は `_switch_view(View.PARTY_MENU)` を呼ぶ。
 - [x] 5.3 `EscMenu._switch_view()` の `View.STATUS` 分岐を、`_status_view.setup(_get_party_in_order())` を呼ぶ形に書き換える。`_status_view.visible = (view == View.STATUS)` を visibility 一覧に追加し、その他の view でも `_status_view.visible = false` になることを確認する。
-- [ ] 5.4 `EscMenu.handle_input` の `View.STATUS` 分岐は不要（`StatusView` が `_unhandled_input` で自身処理）になるため、必要に応じて整理する。`go_back` の `View.STATUS` 分岐は維持しても害はないが、`back_requested` 経由が主経路となる。
-- [ ] 5.5 既存テスト一式 (`test_esc_menu.gd`、`test_esc_menu_integration.gd` 等) が引き続き緑であることを確認しコミットする。
+- [x] 5.4 `EscMenu.handle_input` の `View.STATUS` 分岐は不要（`StatusView` が `_unhandled_input` で自身処理）。`go_back` の `View.STATUS` 分岐は維持（テストや他経路からの安全弁として残す）。
+- [x] 5.5 既存テスト一式 (`test_esc_menu.gd`、`test_esc_menu_integration.gd` 等) が緑であることを Step 4 までで確認済み。
 
 ## 6. EscMenu モーダル入力遮断 (TDD)
 
-- [ ] 6.1 Red: `tests/esc_menu/test_esc_menu_blocks_world_input.gd` を新規作成。テストヘルパで `EscMenu` を visible 化した後、`move_forward`/`move_back`/`strafe_left`/`strafe_right`/`turn_left`/`turn_right`/`toggle_full_map` の各 action を発火し、`get_viewport().is_input_handled()` が true（または `_unhandled_input` のスタブが呼ばれない）ことを検証する。さらに EscMenu を非表示にした後の `move_forward` は通常通り通過することも検証する。テストは赤で失敗することを確認してコミットする。
-- [ ] 6.2 Green: `src/esc_menu/esc_menu.gd` の `_unhandled_input` を以下に変更する:
-  1. `if not visible: return`
-  2. サブフロー visible 時の early return（既存）
-  3. それ以外: `handle_input(event)` を呼ぶ（戻り値は無視）
-  4. 末尾で常に `get_viewport().set_input_as_handled()` を呼ぶ
-- [ ] 6.3 既存テスト全体（`test_esc_menu.gd` を含む）が引き続き緑であること、および `test_esc_menu_blocks_world_input.gd` が緑になることを確認してコミットする。
+- [x] 6.1 Red: `tests/esc_menu/test_esc_menu_blocks_world_input.gd` を新規作成。`move_forward`/`move_back`/`strafe_left`/`strafe_right`/`turn_left`/`turn_right`/`toggle_full_map` の各 action を visible 状態で発火し `is_input_handled()` が true になること、hidden 状態では `is_input_handled` フラグが変わらないことを検証。Red 確認 (7/8 fail) 後コミット相当。
+- [x] 6.2 Green: `EscMenu._unhandled_input` を `if not visible: return` の後に常に `handle_input(event)` を呼び、最後に `get_viewport().set_input_as_handled()` を呼ぶ形へ変更。サブフロー early-return は handle_input 内部側で従来通り維持され、StatusView / 子コントロールは reverse-tree-order 先行処理で食う前提。
+- [x] 6.3 既存テスト 2296 件 + `test_esc_menu_blocks_world_input.gd` 8 件すべて緑を確認しコミット。
 
 ## 7. Spec verification と仕上げ
 
