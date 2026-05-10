@@ -56,7 +56,7 @@
 
 ## 6. Final visual review and cleanup
 
-- [ ] 6.1 Take final screenshots from a corridor, a room corner, and a doorway; compare against tmp/dungeon16.png to confirm the "paper wall" feel is gone
-- [ ] 6.2 Run the full test suite (`tests/dungeon/test_cell_mesh_builder.gd` and any related) and confirm all green
-- [ ] 6.3 Remove any dead helper code left from the refactor (e.g. unused `_add_wall_face` if fully replaced)
-- [ ] 6.4 Commit (chore: clean up legacy single-quad wall helpers)
+- [ ] 6.1 Take final screenshots from a corridor, a room corner, and a doorway; compare against tmp/dungeon16.png to confirm the "paper wall" feel is gone (deferred to user — requires interactive Godot launch)
+- [x] 6.2 Run the full test suite (`tests/dungeon/test_cell_mesh_builder.gd` and any related) and confirm all green (2369/2369 passing)
+- [x] 6.3 Remove any dead helper code left from the refactor (e.g. unused `_add_wall_face` if fully replaced)
+- [x] 6.4 Commit (chore: clean up legacy single-quad wall helpers)

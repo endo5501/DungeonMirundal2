@@ -56,7 +56,7 @@ func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
 		# Floor, ceiling, and landmark geometry are per-cell (no dedup needed).
 		faces.append_array(build_faces(cell, grid_pos))
-		# Walls (and DOOR placeholders): each shared edge is rendered exactly
+		# Walls and door assemblies: each shared edge is rendered exactly
 		# once. Rule: a cell always renders its NORTH and WEST edges; it
 		# renders its SOUTH or EAST edges only if the neighboring cell is NOT
 		# in the visible set (so an "outer" cell still draws the wall).
@@ -250,12 +250,9 @@ func _add_pillar(faces: Array, corner: Vector2i) -> void:
 		PILLAR_COLOR)
 
 # Emits a 6-face box for a wall on the given direction of grid_pos.
-# Face naming: <wall|door>_<dir>_<inner|outer|top|bottom|cap_a|cap_b>
+# Face naming: wall_<dir>_<inner|outer|top|bottom|cap_a|cap_b>
 # where the cap names are east/west for N/S walls (along X axis) and
 # north/south for E/W walls (along Z axis).
-# DOOR edges share the same box geometry but with door_<dir>_* prefix and
-# DOOR_COLOR; this is a Step 2 placeholder until Step 5 introduces the
-# lintel/jamb/panel assembly.
 func _add_wall_box(faces: Array, grid_pos: Vector2i, dir: int, edge_type: int) -> void:
 	var color: Color = WALL_COLOR if edge_type == EdgeType.WALL else DOOR_COLOR
 	var dir_names := ["north", "east", "south", "west"]
