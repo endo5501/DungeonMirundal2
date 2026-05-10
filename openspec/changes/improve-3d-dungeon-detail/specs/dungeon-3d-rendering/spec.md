@@ -118,9 +118,9 @@ The door assembly SHALL be deduplicated like a regular wall (one assembly per sh
 - **THEN** the returned faces SHALL include face types matching `door_lintel_*`, `door_jamb_left_*`, `door_jamb_right_*`, and `door_panel_*` for that edge
 - **AND** SHALL NOT include the legacy single `door_north` face type
 
-#### Scenario: Door panel is recessed from the wall axis
+#### Scenario: Door panel is recessed from the wall surface
 - **WHEN** a DOOR is generated on the NORTH edge of cell at grid (3, 2)
-- **THEN** the door panel front face vertices SHALL satisfy `z ≈ gy*2 + 0.10` (recessed 0.10 toward the cell interior from the wall center axis at z = 4.0)
+- **THEN** the door panel front face vertices SHALL satisfy `z ≈ gy*2` (the panel front sits on the wall center axis at z = 4.0, recessed 0.10 from the cell-interior wall surface at z = gy*2 + T/2 = 4.10)
 
 #### Scenario: Lintel sits at the top of the opening
 - **WHEN** a DOOR is generated on any edge
