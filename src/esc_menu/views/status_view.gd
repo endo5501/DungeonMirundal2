@@ -7,7 +7,7 @@ const EMPTY_PARTY_MESSAGE := "パーティが編成されていません"
 const STATUS_LINE_NORMAL := "状態: 通常"
 const SPELL_NONE := "(未習得)"
 const EQUIPMENT_NONE := "(なし)"
-const PORTRAIT_SIZE := Vector2(96, 96)
+const PORTRAIT_SIZE := Vector2(140, 140)
 # Indexed by Equipment.ALL_SLOTS order
 # (WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY).
 const SLOT_LABELS_JP: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
@@ -163,7 +163,7 @@ func _build_ui() -> void:
 	# StatusView is a plain Control so its descendants must be anchored to
 	# its rect, otherwise an inner Container only sizes itself to the sum
 	# of its children's minimums and any expand-fill child gets zero width.
-	custom_minimum_size = Vector2(560, 320)
+	custom_minimum_size = Vector2(900, 560)
 
 	_root_hbox = HBoxContainer.new()
 	_root_hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -171,13 +171,13 @@ func _build_ui() -> void:
 	add_child(_root_hbox)
 
 	_left_pane = VBoxContainer.new()
-	_left_pane.custom_minimum_size = Vector2(180, 0)
+	_left_pane.custom_minimum_size = Vector2(220, 0)
 	_left_pane.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_left_pane.add_theme_constant_override("separation", 2)
+	_left_pane.add_theme_constant_override("separation", 4)
 	_root_hbox.add_child(_left_pane)
 
 	_right_scroll = ScrollContainer.new()
-	_right_scroll.custom_minimum_size = Vector2(360, 0)
+	_right_scroll.custom_minimum_size = Vector2(640, 0)
 	_right_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_right_scroll.focus_mode = Control.FOCUS_NONE
@@ -210,7 +210,7 @@ func _rebuild() -> void:
 
 	_menu = CursorMenu.new(_member_labels())
 	for i in range(_members.size()):
-		_member_rows.append(CursorMenuRow.create(_left_pane, _menu.items[i], 18))
+		_member_rows.append(CursorMenuRow.create(_left_pane, _menu.items[i], 20))
 	_menu.update_rows(_member_rows)
 
 	_refresh_detail_pane()
@@ -240,30 +240,30 @@ func _refresh_detail_pane() -> void:
 
 	_header_label = Label.new()
 	_header_label.text = _format_header(ch)
-	_header_label.add_theme_font_size_override("font_size", 18)
+	_header_label.add_theme_font_size_override("font_size", 22)
 	header_vbox.add_child(_header_label)
 
 	_status_label = Label.new()
 	_status_label.text = _format_status_line(ch)
-	_status_label.add_theme_font_size_override("font_size", 14)
+	_status_label.add_theme_font_size_override("font_size", 16)
 	_status_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.6))
 	header_vbox.add_child(_status_label)
 
-	_hp_label = _add_text_label("HP: %d/%d" % [ch.current_hp, ch.max_hp], 16)
-	_mp_label = _add_text_label("MP: %d/%d" % [ch.current_mp, ch.max_mp], 16)
-	_exp_label = _add_text_label(_format_exp(ch), 14)
-	_stats_label = _add_text_label(_format_stats(ch), 14)
+	_hp_label = _add_text_label("HP: %d/%d" % [ch.current_hp, ch.max_hp], 18)
+	_mp_label = _add_text_label("MP: %d/%d" % [ch.current_mp, ch.max_mp], 18)
+	_exp_label = _add_text_label(_format_exp(ch), 16)
+	_stats_label = _add_text_label(_format_stats(ch), 16)
 
 	_add_section_separator("装備")
 	_equipment_labels.clear()
 	for slot_index in range(Equipment.ALL_SLOTS.size()):
 		var line := _format_equipment_line(ch, slot_index)
-		_equipment_labels.append(_add_text_label(line, 14))
+		_equipment_labels.append(_add_text_label(line, 16))
 
 	_add_section_separator("じゅもん")
 	_spell_labels.clear()
 	for line in _format_spell_lines(ch):
-		_spell_labels.append(_add_text_label(line, 14))
+		_spell_labels.append(_add_text_label(line, 16))
 
 
 func _add_text_label(text: String, font_size: int) -> Label:
@@ -279,7 +279,7 @@ func _add_section_separator(title: String) -> void:
 	_right_pane.add_child(sep)
 	var head := Label.new()
 	head.text = title
-	head.add_theme_font_size_override("font_size", 14)
+	head.add_theme_font_size_override("font_size", 16)
 	head.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
 	_right_pane.add_child(head)
 
