@@ -3,6 +3,7 @@ extends Node3D
 
 const EYE_HEIGHT := 1.0
 const DUNGEON_SHADER := preload("res://src/dungeon_scene/dungeon_wall.gdshader")
+const QUAD_TRIANGLE_INDICES := [0, 1, 2, 0, 2, 3]
 
 var _camera: Camera3D
 var _mesh_instance: MeshInstance3D
@@ -66,14 +67,12 @@ func _rebuild_mesh(visible_cells: Array[Vector2i]) -> void:
 	_mesh.clear_surfaces()
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	for grid_pos in visible_cells:
-		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
-		var faces := _cell_mesh_builder.build_faces(cell, grid_pos)
-		for face in faces:
-			var f: CellMeshBuilder.Face = face
-			for vi in [0, 1, 2, 0, 2, 3]:
-				_mesh.surface_set_normal(f.normal)
-				_mesh.surface_set_color(f.color)
-				_mesh.surface_add_vertex(f.vertices[vi])
+	var faces: Array = _cell_mesh_builder.build_meshes(visible_cells, wiz_map)
+	for face in faces:
+		var f: CellMeshBuilder.Face = face
+		for vi in QUAD_TRIANGLE_INDICES:
+			_mesh.surface_set_normal(f.normal)
+			_mesh.surface_set_color(f.color)
+			_mesh.surface_add_vertex(f.vertices[vi])
 
 	_mesh.surface_end()

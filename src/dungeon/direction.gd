@@ -4,9 +4,13 @@ extends RefCounted
 enum { NORTH, EAST, SOUTH, WEST }
 
 const ALL := [NORTH, EAST, SOUTH, WEST]
+const NAMES := ["north", "east", "south", "west"]
 
 const _DX := [0, 1, 0, -1]
 const _DY := [-1, 0, 1, 0]
+
+static func name_of(dir: int) -> String:
+	return NAMES[dir]
 
 static func dx(dir: int) -> int:
 	return _DX[dir]
