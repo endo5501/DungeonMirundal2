@@ -11,6 +11,16 @@ func _init(p_monster: Monster) -> void:
 		actor_name = monster.data.monster_name
 
 
+# Row is sourced from MonsterData so the data is the single source of truth.
+# Tests / encounter generators that need a non-default row should set it on
+# MonsterData (or use a temp data instance) before constructing the combatant.
+var original_row: int:
+	get:
+		if monster != null and monster.data != null:
+			return monster.data.default_row
+		return Row.FRONT
+
+
 func _read_current_hp() -> int:
 	if monster == null:
 		return 0

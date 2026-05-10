@@ -1,6 +1,8 @@
 class_name EncounterManager
 extends RefCounted
 
+const ROW_CAP: int = 5
+
 var _repository: MonsterRepository
 var _cooldown_steps: int
 var _table: EncounterTableData
@@ -61,11 +63,26 @@ func _pick_weighted_entry(rng: RandomNumberGenerator) -> EncounterEntry:
 func _populate_party(party: MonsterParty, pattern: EncounterPattern, rng: RandomNumberGenerator) -> void:
 	if pattern == null:
 		return
+	# Track per-row spawn counts so we can truncate when either bucket would
+	# exceed ROW_CAP. Earlier groups have spawn priority over later ones.
+	var spawned_per_row: Dictionary = {Row.FRONT: 0, Row.BACK: 0}
 	for group in pattern.groups:
 		var source := _repository.find(group.monster_id)
 		if source == null:
 			push_warning("EncounterManager: monster_id %s not found in repository" % group.monster_id)
 			continue
 		var count := group.roll_count(rng)
+		var row: int = source.default_row
+		var bucket: int = spawned_per_row.get(row, 0)
+		var dropped := 0
 		for i in range(count):
+			if bucket >= ROW_CAP:
+				dropped += 1
+				continue
 			party.add(Monster.new(source, rng))
+			bucket += 1
+		spawned_per_row[row] = bucket
+		if dropped > 0:
+			var row_name: String = "FRONT" if row == Row.FRONT else "BACK"
+			push_warning("EncounterManager: %d %s instance(s) dropped from %s row (cap %d)"
+				% [dropped, group.monster_id, row_name, ROW_CAP])

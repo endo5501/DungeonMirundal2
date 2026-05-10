@@ -54,7 +54,8 @@ func get_party_data() -> PartyData:
 
 func get_party_characters() -> Array[Array]:
 	# Returns [front_row, back_row] where each inner Array holds 3 entries
-	# (Character or null). The inner Array stays untyped so null is allowed.
+	# (Character or null). Index order is load-bearing: combat reads it as
+	# 0 == FRONT, 1 == BACK to assign each PartyCombatant.original_row.
 	return [_front_row.duplicate(), _back_row.duplicate()]
 
 func get_character_at(row: int, position: int) -> Character:

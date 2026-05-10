@@ -185,9 +185,27 @@ func _prompt_next_actor() -> void:
 		_resolve_turn_now()
 		return
 	_current_phase = Phase.COMMAND_MENU
-	_command_menu.show_for(_turn_engine.party[_current_actor_index])
+	var actor: CombatActor = _turn_engine.party[_current_actor_index]
+	_command_menu.show_for(actor, _has_any_reachable_monster(actor))
 	if _target_selector != null:
 		_target_selector.hide_selector()
+
+
+func _reachable_flags_for(attacker: CombatActor) -> Array:
+	var flags: Array = []
+	if _turn_engine == null:
+		return flags
+	for m in _turn_engine.monsters:
+		if m != null and m.is_alive():
+			flags.append(_turn_engine.can_reach(attacker, m))
+	return flags
+
+
+func _has_any_reachable_monster(attacker: CombatActor) -> bool:
+	for f in _reachable_flags_for(attacker):
+		if f:
+			return true
+	return false
 
 
 func _handle_command_choice(option_index: int) -> void:
@@ -195,7 +213,8 @@ func _handle_command_choice(option_index: int) -> void:
 		_OPT_ATTACK:
 			_current_phase = Phase.TARGET_SELECT
 			_command_menu.hide_menu()
-			_target_selector.show_with(_turn_engine.monsters)
+			var attacker: CombatActor = _turn_engine.party[_current_actor_index]
+			_target_selector.show_with(_turn_engine.monsters, _reachable_flags_for(attacker))
 		_OPT_DEFEND:
 			_turn_engine.submit_command(_current_actor_index, DefendCommand.new())
 			_advance_to_next_actor()
@@ -243,14 +262,16 @@ func _on_spell_selector_cancelled() -> void:
 		_spell_selector.hide_selector()
 	_pending_cast_spell = null
 	_current_phase = Phase.COMMAND_MENU
-	_command_menu.show_for(_turn_engine.party[_current_actor_index])
+	var actor_sc: CombatActor = _turn_engine.party[_current_actor_index]
+	_command_menu.show_for(actor_sc, _has_any_reachable_monster(actor_sc))
 
 
 func _on_target_selector_cancelled() -> void:
 	if _current_phase == Phase.TARGET_SELECT:
 		_target_selector.hide_selector()
 		_current_phase = Phase.COMMAND_MENU
-		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		var actor_re: CombatActor = _turn_engine.party[_current_actor_index]
+		_command_menu.show_for(actor_re, _has_any_reachable_monster(actor_re))
 		return
 	if _current_phase != Phase.SPELL_TARGET:
 		return
@@ -258,7 +279,8 @@ func _on_target_selector_cancelled() -> void:
 	if _pending_cast_spell == null:
 		# Defensive: revert to CommandMenu if we somehow lost the spell.
 		_current_phase = Phase.COMMAND_MENU
-		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		var actor_re: CombatActor = _turn_engine.party[_current_actor_index]
+		_command_menu.show_for(actor_re, _has_any_reachable_monster(actor_re))
 		return
 	var school: StringName = _pending_cast_spell.school
 	_pending_cast_spell = null
@@ -309,7 +331,8 @@ func _on_item_use_flow_completed(message: String) -> void:
 		_item_use_panel.visible = false
 	if message == "":
 		_current_phase = Phase.COMMAND_MENU
-		_command_menu.show_for(_turn_engine.party[_current_actor_index])
+		var actor_re: CombatActor = _turn_engine.party[_current_actor_index]
+		_command_menu.show_for(actor_re, _has_any_reachable_monster(actor_re))
 		return
 
 
@@ -359,7 +382,8 @@ func request_undo_actor() -> void:
 	_turn_engine.withdraw_command(prev)
 	_current_actor_index = prev
 	_hide_all_subpanels()
-	_command_menu.show_for(_turn_engine.party[prev])
+	var actor: CombatActor = _turn_engine.party[prev]
+	_command_menu.show_for(actor, _has_any_reachable_monster(actor))
 
 
 func _find_previous_living_actor_index() -> int:
@@ -548,12 +572,14 @@ func _build_party_combatants() -> Array:
 	var combatants: Array = []
 	if _guild == null:
 		return combatants
+	# Index order is the Guild contract: 0 == FRONT, 1 == BACK
+	# (see Guild.get_party_characters). Combat depends on this.
 	var rows: Array[Array] = _guild.get_party_characters()
-	for row in rows:
-		# row contents are Character | null.
-		for ch: Variant in row:
+	for row_idx in range(rows.size()):
+		var row_value: int = Row.FRONT if row_idx == 0 else Row.BACK
+		for ch: Variant in rows[row_idx]:
 			if ch != null:
-				combatants.append(PartyCombatant.new(ch as Character, _equipment_provider))
+				combatants.append(PartyCombatant.new(ch as Character, _equipment_provider, row_value))
 	return combatants
 
 

@@ -20,3 +20,5 @@ resists = {
 &"poison": 0.30,
 &"blind": 1.0,
 }
+default_row = 1
+attack_range = 1

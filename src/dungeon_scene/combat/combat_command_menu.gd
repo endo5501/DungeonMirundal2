@@ -24,6 +24,7 @@ const OPTION_LABELS: Dictionary = {
 signal command_selected(option_id: int)
 
 const SILENCED_SUFFIX := " (沈黙中)"
+const UNREACHABLE_SUFFIX := " (届かない)"
 
 var _rows: Array[CursorMenuRow] = []
 var _option_ids: Array[int] = []
@@ -31,6 +32,7 @@ var _title_label: Label
 var _options_vbox: VBoxContainer
 var _selected_index: int = 0
 var _current_actor: CombatActor
+var _attack_reachable: bool = true
 
 
 func _ready() -> void:
@@ -53,8 +55,9 @@ func _build_ui() -> void:
 	vbox.add_child(_options_vbox)
 
 
-func show_for(actor: CombatActor) -> void:
+func show_for(actor: CombatActor, attack_reachable: bool = true) -> void:
 	_current_actor = actor
+	_attack_reachable = attack_reachable
 	_option_ids = _build_option_ids_for(actor)
 	_selected_index = 0
 	visible = true
@@ -101,7 +104,12 @@ func confirm_current() -> void:
 func is_row_disabled(index: int) -> bool:
 	if index < 0 or index >= _option_ids.size() or _current_actor == null:
 		return false
-	return _is_cast_option(_option_ids[index]) and _current_actor.has_silence_flag()
+	var id := _option_ids[index]
+	if _is_cast_option(id) and _current_actor.has_silence_flag():
+		return true
+	if id == OPT_ATTACK and not _attack_reachable:
+		return true
+	return false
 
 
 static func _is_cast_option(option_id: int) -> bool:
@@ -115,6 +123,8 @@ func get_options() -> Array[String]:
 		var base := String(OPTION_LABELS.get(id, ""))
 		if is_row_disabled(i) and _is_cast_option(id):
 			labels.append(base + SILENCED_SUFFIX)
+		elif id == OPT_ATTACK and not _attack_reachable:
+			labels.append(base + UNREACHABLE_SUFFIX)
 		else:
 			labels.append(base)
 	return labels

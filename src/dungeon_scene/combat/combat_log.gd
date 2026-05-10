@@ -160,6 +160,13 @@ func _format_action(action: Dictionary) -> String:
 		"cast_silenced":
 			var caster_s: String = action.get("caster_name", "")
 			return "%s は呪文を唱えようとしたが声が出ない" % caster_s
+		"wait":
+			var actor_w2: String = action.get("actor_name", "")
+			return "%s は様子を見ている" % actor_w2
+		"attack_unreachable":
+			var attacker_u: String = action.get("attacker_name", "")
+			var target_u: String = action.get("target_name", "")
+			return "%s の攻撃は %s に届かなかった" % [attacker_u, target_u]
 		"stat_mod":
 			var target_m: String = action.get("target_name", "")
 			var stat_label := _stat_display_label(action.get("stat", &""))

@@ -44,3 +44,7 @@ func get_agility(character: Character) -> int:
 	if character == null:
 		return 0
 	return int(character.base_stats.get(&"AGI", 0))
+
+
+func get_weapon_range(_character: Character) -> int:
+	return WeaponRange.MELEE

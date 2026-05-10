@@ -223,10 +223,16 @@ func _resolve_turn_inner(rng: RandomNumberGenerator) -> TurnReport:
 					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
-			var target: CombatActor = _pick_living_party(rng)
+			# Reach-aware target selection. Empty reachable set + party still
+			# alive → MELEE attacker waits; party fully wiped → fall through
+			# to natural skip (no action).
+			var target: CombatActor = _pick_living_party_reachable(actor, rng)
 			if target != null:
 				actor_action_started.emit(actor, &"attack")
 				_resolve_attack(actor, target, rng, report)
+			elif _any_party_alive() and _weapon_range_of(actor) == WeaponRange.MELEE:
+				actor_action_started.emit(actor, &"wait")
+				report.add_wait(actor)
 		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
 			break
@@ -383,6 +389,13 @@ func _resolve_attack(
 		retargeted_from = effective_target.actor_name if effective_target != null else ""
 		effective_target = _pick_living_same_side_as(target, attacker)
 	if effective_target == null:
+		return
+	# Defense-in-depth reach gate. UI is expected to prevent unreachable
+	# attacks, but a direct API call (e.g. dev console, scripted test) could
+	# bypass it. confusion_swap targets are exempt — confusion is allowed to
+	# pick anyone, that's the point of it.
+	if not confusion_swap and not can_reach(attacker, effective_target):
+		report.add_attack_unreachable(attacker, effective_target)
 		return
 	var result := DamageCalculator.calculate(attacker, effective_target, rng)
 	if not result.hit:
@@ -571,6 +584,72 @@ func _pick_living_party(rng: RandomNumberGenerator) -> CombatActor:
 	if alive.is_empty():
 		return null
 	return alive[rng.randi_range(0, alive.size() - 1)]
+
+
+# Returns null when nothing is reachable; caller decides wait vs skip.
+func _pick_living_party_reachable(attacker: CombatActor, rng: RandomNumberGenerator) -> CombatActor:
+	var alive_reachable: Array = []
+	for a in party:
+		if a != null and a.is_alive() and can_reach(attacker, a):
+			alive_reachable.append(a)
+	if alive_reachable.is_empty():
+		return null
+	return alive_reachable[rng.randi_range(0, alive_reachable.size() - 1)]
+
+
+func _any_party_alive() -> bool:
+	for a in party:
+		if a != null and a.is_alive():
+			return true
+	return false
+
+
+# BACK-row actors promote to effective FRONT once their entire same-side
+# FRONT is dead — this is the rule that makes MELEE BACK attackers eventually
+# act and that makes BACK targets reachable to MELEE attackers in the wipe.
+func effective_row(actor: CombatActor) -> int:
+	if actor == null:
+		return Row.FRONT
+	if _original_row_of(actor) == Row.FRONT:
+		return Row.FRONT
+	var side: Array = party if _is_party_member(actor) else monsters
+	for peer in side:
+		if peer == null or peer == actor:
+			continue
+		if _original_row_of(peer) == Row.FRONT and peer.is_alive():
+			return Row.BACK
+	return Row.FRONT
+
+
+# Recomputed per call to honor mid-turn FRONT-row promotion.
+func can_reach(attacker: CombatActor, target: CombatActor) -> bool:
+	if attacker == null or target == null:
+		return false
+	if _weapon_range_of(attacker) == WeaponRange.RANGED:
+		return true
+	return effective_row(attacker) == Row.FRONT and effective_row(target) == Row.FRONT
+
+
+func _weapon_range_of(actor: CombatActor) -> int:
+	if actor is PartyCombatant:
+		var pc := actor as PartyCombatant
+		if pc.equipment_provider != null:
+			return pc.equipment_provider.get_weapon_range(pc.character)
+		return WeaponRange.MELEE
+	if actor is MonsterCombatant:
+		var mc := actor as MonsterCombatant
+		if mc.monster != null and mc.monster.data != null:
+			return mc.monster.data.attack_range
+		return WeaponRange.MELEE
+	return WeaponRange.MELEE
+
+
+func _original_row_of(actor: CombatActor) -> int:
+	if actor is PartyCombatant:
+		return (actor as PartyCombatant).original_row
+	if actor is MonsterCombatant:
+		return (actor as MonsterCombatant).original_row
+	return Row.FRONT
 
 
 func _pick_living_same_side_as(original: CombatActor, attacker: CombatActor) -> CombatActor:

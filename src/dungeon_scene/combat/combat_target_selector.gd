@@ -9,6 +9,7 @@ var _options_vbox: VBoxContainer
 var _rows: Array[CursorMenuRow] = []
 var _selected_index: int = 0
 var _targets: Array = []  # Array[CombatActor] of cursor entries
+var _reachable: Array = []  # Parallel Array[bool]; true = selectable, false = grayed
 
 
 func _ready() -> void:
@@ -33,13 +34,23 @@ func _build_ui() -> void:
 
 
 # Default mode (used by AttackCommand): cursor over each living monster individually.
-func show_with(monsters: Array) -> void:
+# `reachable_flags` (optional) is a parallel array of booleans matching the
+# living-monster filter. Non-reachable rows render disabled and Enter is a
+# no-op. When omitted/empty, every living monster is selectable (legacy).
+func show_with(monsters: Array, reachable_flags: Array = []) -> void:
 	_ensure_ready()
 	_targets.clear()
+	_reachable.clear()
+	var idx := 0
 	for m in monsters:
 		if m != null and m.is_alive():
 			_targets.append(m)
-	_selected_index = 0
+			if reachable_flags.size() > idx:
+				_reachable.append(bool(reachable_flags[idx]))
+			else:
+				_reachable.append(true)
+			idx += 1
+	_selected_index = _first_reachable_index()
 	visible = true
 	_rebuild_rows()
 	_refresh_rows()
@@ -49,14 +60,18 @@ func show_with(monsters: Array) -> void:
 # `ALLY_ALL`, no prompt is shown — the selector stays hidden and immediately
 # emits a single confirmation; the receiver's CastCommand should pass `null`
 # as `target` and the engine will fan out to all living party members.
+# Spell target selection deliberately ignores reach restrictions — magic
+# remains unbounded by row in this change.
 func show_for_spell(spell: SpellData, party: Array, monsters: Array) -> void:
 	_ensure_ready()
 	_targets.clear()
+	_reachable.clear()
 	match spell.target_type:
 		SpellData.TargetType.ENEMY_ONE:
 			for m in monsters:
 				if m != null and m.is_alive():
 					_targets.append(m)
+					_reachable.append(true)
 		SpellData.TargetType.ENEMY_GROUP:
 			# One representative living monster per species id.
 			var seen: Dictionary = {}
@@ -68,10 +83,12 @@ func show_for_spell(spell: SpellData, party: Array, monsters: Array) -> void:
 					continue
 				seen[sid] = true
 				_targets.append(m)
+				_reachable.append(true)
 		SpellData.TargetType.ALLY_ONE:
 			for p in party:
 				if p != null and p.is_alive():
 					_targets.append(p)
+					_reachable.append(true)
 		SpellData.TargetType.ALLY_ALL:
 			# No interactive prompt; immediately confirm with a null target.
 			visible = false
@@ -104,7 +121,22 @@ func move_down() -> void:
 func confirm_current() -> void:
 	if _targets.is_empty():
 		return
+	if not is_row_reachable(_selected_index):
+		return
 	target_selected.emit(_targets[_selected_index])
+
+
+func is_row_reachable(index: int) -> bool:
+	if index < 0 or index >= _reachable.size():
+		return true
+	return bool(_reachable[index])
+
+
+func _first_reachable_index() -> int:
+	for i in range(_reachable.size()):
+		if _reachable[i]:
+			return i
+	return 0
 
 
 # Hook for the input router: emits `cancelled` so the CombatOverlay can revert
@@ -115,6 +147,8 @@ func request_cancel() -> void:
 
 func select_at(index: int) -> void:
 	if index < 0 or index >= _targets.size():
+		return
+	if not is_row_reachable(index):
 		return
 	_selected_index = index
 	target_selected.emit(_targets[_selected_index])
@@ -145,3 +179,4 @@ func _rebuild_rows() -> void:
 func _refresh_rows() -> void:
 	for i in range(_rows.size()):
 		_rows[i].set_selected(i == _selected_index)
+		_rows[i].set_disabled(not is_row_reachable(i))

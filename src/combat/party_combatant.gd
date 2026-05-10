@@ -3,12 +3,14 @@ extends CombatActor
 
 var character: Character
 var equipment_provider: EquipmentProvider
+var original_row: int = Row.FRONT
 
 
-func _init(p_character: Character, p_provider: EquipmentProvider) -> void:
+func _init(p_character: Character, p_provider: EquipmentProvider, p_row: int = Row.FRONT) -> void:
 	super()
 	character = p_character
 	equipment_provider = p_provider
+	original_row = p_row
 	if character != null:
 		actor_name = character.character_name
 		# Seed persistent statuses from the wrapped Character into our StatusTrack

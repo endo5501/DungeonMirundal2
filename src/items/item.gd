@@ -17,6 +17,7 @@ enum EquipSlot { NONE, WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY }
 @export var effect: ItemEffect = null
 @export var context_conditions: Array[ContextCondition] = []
 @export var target_conditions: Array[TargetCondition] = []
+@export var weapon_data: WeaponData = null
 
 
 func is_consumable() -> bool:
