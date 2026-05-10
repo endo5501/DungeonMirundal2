@@ -301,11 +301,11 @@ func to_party_member_data() -> PartyMemberData:
 		max_hp,
 		current_mp,
 		max_mp,
-		_resolve_job_id_for_display()
+		resolve_job_id_for_display()
 	)
 
 
-func _resolve_job_id_for_display() -> StringName:
+func resolve_job_id_for_display() -> StringName:
 	if job == null:
 		return &""
 	if job.id != &"":

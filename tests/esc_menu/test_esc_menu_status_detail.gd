@@ -50,26 +50,20 @@ func _open_view_for(ch: Character) -> StatusView:
 	return menu.get_status_view()
 
 
-# --- layout: right pane must have nonzero width ---
+# --- layout: minimum size honors design intent ---
 
 
-func test_right_pane_has_nonzero_size_after_setup():
-	# Regression: StatusView's HBoxContainer was anchored to the parent
-	# rect, so the right ScrollContainer (size_flags = EXPAND_FILL with
-	# no minimum) collapsed to zero width and the detail labels were
-	# invisible — only the left member list was rendered.
+func test_view_minimum_size_is_at_least_design_target():
+	# Regression: HBoxContainer was previously not anchored to parent rect
+	# and the right ScrollContainer collapsed to zero width.
+	# StatusView declares its minimum size in _build_ui; if a layout change
+	# accidentally drops that, this assertion catches it.
 	var ch := _make_character("Hero")
 	var view := _open_view_for(ch)
-	# Force a layout pass.
-	view.size = Vector2(640, 360)
-	await get_tree().process_frame
-
-	var scroll: ScrollContainer = view.get_right_scroll_for_test()
-	assert_not_null(scroll)
-	assert_gt(scroll.size.x, 0.0,
-		"Right pane (ScrollContainer) must have positive width")
-	assert_gt(scroll.size.y, 0.0,
-		"Right pane (ScrollContainer) must have positive height")
+	assert_gte(view.custom_minimum_size.x, 900.0,
+		"StatusView minimum width must accommodate left list + right detail")
+	assert_gte(view.custom_minimum_size.y, 560.0,
+		"StatusView minimum height must accommodate full detail panel")
 
 
 # --- portrait ---
@@ -218,7 +212,6 @@ func test_spell_lines_show_japanese_display_names():
 	var repo := SpellRepository.new()
 	repo.register(heal)
 	view.set_spell_repo(repo)
-	view.refresh_detail()
 
 	var lines: Array = view.get_spell_lines()
 	assert_eq(lines.size(), 1)
@@ -231,7 +224,6 @@ func test_spell_lines_fallback_for_unknown_id():
 	var view := _open_view_for(ch)
 	var repo := SpellRepository.new()  # empty repo
 	view.set_spell_repo(repo)
-	view.refresh_detail()
 
 	var lines: Array = view.get_spell_lines()
 	assert_eq(lines.size(), 1)

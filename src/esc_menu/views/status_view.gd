@@ -7,10 +7,9 @@ const EMPTY_PARTY_MESSAGE := "パーティが編成されていません"
 const STATUS_LINE_NORMAL := "状態: 通常"
 const SPELL_NONE := "(未習得)"
 const EQUIPMENT_NONE := "(なし)"
+const SECTION_TITLE_EQUIPMENT := "装備"
+const SECTION_TITLE_SPELLS := "じゅもん"
 const PORTRAIT_SIZE := Vector2(140, 140)
-# Indexed by Equipment.ALL_SLOTS order
-# (WEAPON, ARMOR, HELMET, SHIELD, GAUNTLET, ACCESSORY).
-const SLOT_LABELS_JP: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
 
 var _members: Array[Character] = []
 var _slot_indices: Array[int] = []
@@ -24,7 +23,8 @@ var _right_pane: VBoxContainer
 var _empty_label: Label
 var _member_rows: Array[CursorMenuRow] = []
 
-# Right-pane labels held as fields for direct read-back from tests.
+# Right-pane labels are built once in _build_ui and updated in place by
+# _apply_character so cursor moves don't churn nodes.
 var _portrait_rect: TextureRect
 var _header_label: Label
 var _hp_label: Label
@@ -32,6 +32,7 @@ var _mp_label: Label
 var _exp_label: Label
 var _stats_label: Label
 var _equipment_labels: Array[Label] = []
+var _spell_container: VBoxContainer
 var _spell_labels: Array[Label] = []
 var _status_label: Label
 
@@ -43,10 +44,12 @@ func _ready() -> void:
 func setup(party: Array[Character]) -> void:
 	_members = _filter_non_null(party)
 	_ensure_ui_built()
-	_rebuild()
+	_rebuild_left_pane()
+	_apply_character(get_selected_character())
+	_update_pane_visibility()
 
 
-# --- public test API ---
+# --- public API ---
 
 func get_member_count() -> int:
 	return _members.size()
@@ -99,7 +102,8 @@ func get_equipment_lines() -> Array[String]:
 func get_spell_lines() -> Array[String]:
 	var out: Array[String] = []
 	for label in _spell_labels:
-		out.append(label.text)
+		if label.visible:
+			out.append(label.text)
 	return out
 
 
@@ -118,8 +122,7 @@ func handle_input(event: InputEvent) -> bool:
 		back_requested.emit()
 		return true
 	if event.is_action_pressed("ui_accept"):
-		# Status view is read-only; consume but do nothing so the parent
-		# EscMenu's handle_input does not interpret accept on this view.
+		# Read-only view; consume so the parent EscMenu doesn't re-interpret.
 		return true
 	return false
 
@@ -131,24 +134,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _move_cursor(direction: int) -> void:
-	if _menu == null:
-		return
-	_menu.move_cursor(direction)
-	_menu.update_rows(_member_rows)
-	_refresh_detail_pane()
-
-
 func set_spell_repo(repo: SpellRepository) -> void:
 	_spell_repo = repo
-
-
-func refresh_detail() -> void:
-	_refresh_detail_pane()
-
-
-func get_right_scroll_for_test() -> ScrollContainer:
-	return _right_scroll
+	if _root_hbox != null:
+		_apply_character(get_selected_character())
 
 
 # --- internal ---
@@ -160,9 +149,6 @@ func _ensure_ui_built() -> void:
 
 
 func _build_ui() -> void:
-	# StatusView is a plain Control so its descendants must be anchored to
-	# its rect, otherwise an inner Container only sizes itself to the sum
-	# of its children's minimums and any expand-fill child gets zero width.
 	custom_minimum_size = Vector2(900, 560)
 
 	_root_hbox = HBoxContainer.new()
@@ -188,6 +174,8 @@ func _build_ui() -> void:
 	_right_pane.add_theme_constant_override("separation", 4)
 	_right_scroll.add_child(_right_pane)
 
+	_build_detail_skeleton()
+
 	_empty_label = Label.new()
 	_empty_label.text = EMPTY_PARTY_MESSAGE
 	_empty_label.add_theme_font_size_override("font_size", 16)
@@ -196,33 +184,7 @@ func _build_ui() -> void:
 	add_child(_empty_label)
 
 
-func _rebuild() -> void:
-	_clear_left_pane()
-	_clear_right_pane()
-
-	if _members.is_empty():
-		_empty_label.visible = true
-		_root_hbox.visible = false
-		return
-
-	_empty_label.visible = false
-	_root_hbox.visible = true
-
-	_menu = CursorMenu.new(_member_labels())
-	for i in range(_members.size()):
-		_member_rows.append(CursorMenuRow.create(_left_pane, _menu.items[i], 20))
-	_menu.update_rows(_member_rows)
-
-	_refresh_detail_pane()
-
-
-func _refresh_detail_pane() -> void:
-	_clear_right_pane()
-	var ch := get_selected_character()
-	if ch == null:
-		return
-
-	# Header row: portrait on the left, name/race/job/level stacked on right.
+func _build_detail_skeleton() -> void:
 	var header_row := HBoxContainer.new()
 	header_row.add_theme_constant_override("separation", 8)
 	_right_pane.add_child(header_row)
@@ -231,64 +193,106 @@ func _refresh_detail_pane() -> void:
 	_portrait_rect.custom_minimum_size = PORTRAIT_SIZE
 	_portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_portrait_rect.texture = _resolve_portrait_texture(ch)
 	header_row.add_child(_portrait_rect)
 
 	var header_vbox := VBoxContainer.new()
 	header_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_row.add_child(header_vbox)
 
-	_header_label = Label.new()
-	_header_label.text = _format_header(ch)
-	_header_label.add_theme_font_size_override("font_size", 22)
+	_header_label = _make_label("", 22)
 	header_vbox.add_child(_header_label)
 
-	_status_label = Label.new()
-	_status_label.text = _format_status_line(ch)
-	_status_label.add_theme_font_size_override("font_size", 16)
-	_status_label.add_theme_color_override("font_color", Color(0.85, 0.85, 0.6))
+	_status_label = _make_label("", 16, Color(0.85, 0.85, 0.6))
 	header_vbox.add_child(_status_label)
 
-	_hp_label = _add_text_label("HP: %d/%d" % [ch.current_hp, ch.max_hp], 18)
-	_mp_label = _add_text_label("MP: %d/%d" % [ch.current_mp, ch.max_mp], 18)
-	_exp_label = _add_text_label(_format_exp(ch), 16)
-	_stats_label = _add_text_label(_format_stats(ch), 16)
+	_hp_label = _add_text_label("", 18)
+	_mp_label = _add_text_label("", 18)
+	_exp_label = _add_text_label("", 16)
+	_stats_label = _add_text_label("", 16)
 
-	_add_section_separator("装備")
+	_add_section_separator(SECTION_TITLE_EQUIPMENT)
 	_equipment_labels.clear()
-	for slot_index in range(Equipment.ALL_SLOTS.size()):
-		var line := _format_equipment_line(ch, slot_index)
-		_equipment_labels.append(_add_text_label(line, 16))
+	for _i in range(Equipment.ALL_SLOTS.size()):
+		_equipment_labels.append(_add_text_label("", 16))
 
-	_add_section_separator("じゅもん")
-	_spell_labels.clear()
-	for line in _format_spell_lines(ch):
-		_spell_labels.append(_add_text_label(line, 16))
+	_add_section_separator(SECTION_TITLE_SPELLS)
+	_spell_container = VBoxContainer.new()
+	_spell_container.add_theme_constant_override("separation", 2)
+	_right_pane.add_child(_spell_container)
 
 
-func _add_text_label(text: String, font_size: int) -> Label:
+func _make_label(text: String, font_size: int, color: Color = Color(1, 1, 1, 1)) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", font_size)
+	if color != Color(1, 1, 1, 1):
+		label.add_theme_color_override("font_color", color)
+	return label
+
+
+func _add_text_label(text: String, font_size: int) -> Label:
+	var label := _make_label(text, font_size)
 	_right_pane.add_child(label)
 	return label
 
 
 func _add_section_separator(title: String) -> void:
-	var sep := HSeparator.new()
-	_right_pane.add_child(sep)
-	var head := Label.new()
-	head.text = title
-	head.add_theme_font_size_override("font_size", 16)
-	head.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
+	_right_pane.add_child(HSeparator.new())
+	var head := _make_label(title, 16, Color(0.7, 0.85, 1.0))
 	_right_pane.add_child(head)
 
 
-func _resolve_portrait_texture(ch: Character) -> Texture2D:
+func _rebuild_left_pane() -> void:
+	for row in _member_rows:
+		row.queue_free()
+	_member_rows.clear()
+	_menu = null
+
+	if _members.is_empty():
+		return
+
+	_menu = CursorMenu.new(_member_labels())
+	for i in range(_members.size()):
+		_member_rows.append(CursorMenuRow.create(_left_pane, _menu.items[i], 20))
+	_menu.update_rows(_member_rows)
+
+
+func _apply_character(ch: Character) -> void:
 	if ch == null:
-		return null
-	var data := ch.to_party_member_data()
-	return JobPortrait.texture_for(data.job_id)
+		return
+	_portrait_rect.texture = JobPortrait.texture_for(ch.resolve_job_id_for_display())
+	_header_label.text = _format_header(ch)
+	_status_label.text = _format_status_line(ch)
+	_hp_label.text = "HP: %d/%d" % [ch.current_hp, ch.max_hp]
+	_mp_label.text = "MP: %d/%d" % [ch.current_mp, ch.max_mp]
+	_exp_label.text = _format_exp(ch)
+	_stats_label.text = _format_stats(ch)
+	for i in range(Equipment.ALL_SLOTS.size()):
+		_equipment_labels[i].text = _format_equipment_line(ch, i)
+	_apply_spell_lines(ch)
+
+
+func _apply_spell_lines(ch: Character) -> void:
+	var lines := _format_spell_lines(ch)
+	while _spell_labels.size() < lines.size():
+		var label := _make_label("", 16)
+		_spell_container.add_child(label)
+		_spell_labels.append(label)
+	for i in range(_spell_labels.size()):
+		if i < lines.size():
+			_spell_labels[i].text = lines[i]
+			_spell_labels[i].visible = true
+		else:
+			_spell_labels[i].visible = false
+
+
+func _update_pane_visibility() -> void:
+	if _members.is_empty():
+		_root_hbox.visible = false
+		_empty_label.visible = true
+	else:
+		_root_hbox.visible = true
+		_empty_label.visible = false
 
 
 func _format_header(ch: Character) -> String:
@@ -326,7 +330,7 @@ func _format_stats(ch: Character) -> String:
 
 func _format_equipment_line(ch: Character, slot_index: int) -> String:
 	var slot: int = Equipment.ALL_SLOTS[slot_index]
-	var label: String = SLOT_LABELS_JP[slot_index]
+	var label: String = Equipment.SLOT_LABELS[slot_index]
 	var inst: ItemInstance = ch.equipment.get_equipped(slot)
 	if inst == null or inst.item == null:
 		return "%s: %s" % [label, EQUIPMENT_NONE]
@@ -368,25 +372,12 @@ func _filter_non_null(party: Array[Character]) -> Array[Character]:
 	return out
 
 
-func _clear_left_pane() -> void:
-	for row in _member_rows:
-		row.queue_free()
-	_member_rows.clear()
-	_menu = null
-
-
-func _clear_right_pane() -> void:
-	for child in _right_pane.get_children():
-		child.queue_free()
-	_portrait_rect = null
-	_header_label = null
-	_hp_label = null
-	_mp_label = null
-	_exp_label = null
-	_stats_label = null
-	_equipment_labels.clear()
-	_spell_labels.clear()
-	_status_label = null
+func _move_cursor(direction: int) -> void:
+	if _menu == null:
+		return
+	_menu.move_cursor(direction)
+	_menu.update_rows(_member_rows)
+	_apply_character(get_selected_character())
 
 
 func _get_spell_repo() -> SpellRepository:

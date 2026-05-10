@@ -21,6 +21,10 @@ const ALL_SLOTS: Array[int] = [
 	Item.EquipSlot.ACCESSORY,
 ]
 
+# Display labels in the same order as ALL_SLOTS. Single source of truth
+# for ESC menu screens (StatusView, EquipmentFlow).
+const SLOT_LABELS: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]
+
 
 static func _slot_matches(item: Item, slot: int) -> bool:
 	return slot != Item.EquipSlot.NONE and item.equip_slot == slot

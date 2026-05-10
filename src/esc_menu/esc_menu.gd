@@ -33,7 +33,6 @@ var _panel: PanelContainer
 var _main_menu_container: VBoxContainer
 var _party_menu_container: VBoxContainer
 var _status_view: StatusView
-var _status_holder: VBoxContainer
 var _quit_dialog: ConfirmDialog
 
 var _main_menu_rows: Array[CursorMenuRow] = []
@@ -83,15 +82,11 @@ func _build_ui() -> void:
 	_build_menu_rows(_party_menu, _party_menu_rows, _party_menu_container)
 	root_vbox.add_child(_party_menu_container)
 
-	var status_holder := TitledView.build("ステータス", 4)
 	_status_view = StatusView.new()
 	_status_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_status_view.back_requested.connect(_on_status_view_back)
-	status_holder.add_child(_status_view)
-	root_vbox.add_child(status_holder)
-	# Track the holder so _switch_view can toggle the entire titled section.
-	_status_holder = status_holder
+	root_vbox.add_child(_status_view)
 
 	_item_use_flow = ItemUseFlow.new()
 	_item_use_flow.flow_completed.connect(_on_item_use_flow_completed)
@@ -149,6 +144,9 @@ func select_current_item() -> void:
 			_handle_party_menu_select()
 
 func go_back() -> void:
+	# Through normal input dispatch, ui_cancel on View.STATUS is consumed
+	# by StatusView (back_requested → _on_status_view_back). The STATUS
+	# case here covers direct callers that don't go through dispatch.
 	match _current_view:
 		View.MAIN_MENU:
 			hide_menu()
@@ -191,13 +189,14 @@ func _move_cursor(direction: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	# StatusView / sub-flows / ConfirmDialog sit deeper in the tree and run
-	# first via reverse-tree-order dispatch; if any of them consumed the
-	# event we are not called at all. Whatever reaches us is left over.
-	# Always consume so dungeon-screen handlers (move_forward, toggle_full_map,
-	# etc.) cannot react while the menu is on screen — fixes the WASD-leak
-	# captured by esc-menu-overlay's "メニュー表示中はゲーム入力を遮断する"
-	# requirement.
+	# Mouse motion fires every frame the cursor moves and never affects
+	# dungeon state, so don't waste cycles dispatching it.
+	if event is InputEventMouseMotion:
+		return
+	# Whatever reaches us was not consumed by deeper Controls (StatusView,
+	# sub-flows, ConfirmDialog). Always consume so dungeon-screen handlers
+	# cannot react to move_forward / toggle_full_map / etc. while the menu
+	# is on screen.
 	handle_input(event)
 	get_viewport().set_input_as_handled()
 
@@ -205,7 +204,6 @@ func _switch_view(view: View) -> void:
 	_current_view = view
 	_main_menu_container.visible = (view == View.MAIN_MENU)
 	_party_menu_container.visible = (view == View.PARTY_MENU)
-	_status_holder.visible = (view == View.STATUS)
 	_status_view.visible = (view == View.STATUS)
 	_item_use_flow.visible = (view == View.ITEMS_FLOW)
 	_equipment_flow.visible = (view == View.EQUIPMENT_FLOW)
