@@ -185,3 +185,15 @@ func test_landmark_tiles_still_have_floor_and_ceiling():
 		cell.tile = tile
 		var faces = builder.build_faces(cell, Vector2i(0, 0))
 		_assert_floor_and_ceiling_present(faces, "tile %d" % tile)
+
+# --- build_meshes (per-batch) ---
+
+func test_build_meshes_returns_floor_and_ceiling_per_visible_cell():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	var visible: Array[Vector2i] = [Vector2i(1, 1), Vector2i(1, 2), Vector2i(2, 1)]
+	var faces = builder.build_meshes(visible, wiz_map)
+	var floor_faces = faces.filter(func(f): return f.type == "floor")
+	var ceiling_faces = faces.filter(func(f): return f.type == "ceiling")
+	assert_eq(floor_faces.size(), 3, "one floor per visible cell")
+	assert_eq(ceiling_faces.size(), 3, "one ceiling per visible cell")

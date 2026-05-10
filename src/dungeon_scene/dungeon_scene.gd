@@ -66,14 +66,12 @@ func _rebuild_mesh(visible_cells: Array[Vector2i]) -> void:
 	_mesh.clear_surfaces()
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	for grid_pos in visible_cells:
-		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
-		var faces := _cell_mesh_builder.build_faces(cell, grid_pos)
-		for face in faces:
-			var f: CellMeshBuilder.Face = face
-			for vi in [0, 1, 2, 0, 2, 3]:
-				_mesh.surface_set_normal(f.normal)
-				_mesh.surface_set_color(f.color)
-				_mesh.surface_add_vertex(f.vertices[vi])
+	var faces: Array = _cell_mesh_builder.build_meshes(visible_cells, wiz_map)
+	for face in faces:
+		var f: CellMeshBuilder.Face = face
+		for vi in [0, 1, 2, 0, 2, 3]:
+			_mesh.surface_set_normal(f.normal)
+			_mesh.surface_set_color(f.color)
+			_mesh.surface_add_vertex(f.vertices[vi])
 
 	_mesh.surface_end()

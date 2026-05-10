@@ -38,6 +38,13 @@ const STAIRS_MAX_HEIGHT := CELL_HEIGHT * 0.65
 const STAIRS_WIDTH_MARGIN := 0.45
 const STAIRS_DEPTH := 0.24
 
+func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
+	var faces: Array = []
+	for grid_pos in visible_cells:
+		var cell := wiz_map.cell(grid_pos.x, grid_pos.y)
+		faces.append_array(build_faces(cell, grid_pos))
+	return faces
+
 func build_faces(cell: Cell, grid_pos: Vector2i) -> Array:
 	var faces: Array = []
 	var x0 := grid_pos.x * CELL_SIZE
