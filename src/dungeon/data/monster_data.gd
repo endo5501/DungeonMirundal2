@@ -13,6 +13,8 @@ extends Resource
 @export var gold_max: int = 0
 @export var battle_texture: Texture2D
 @export var resists: Dictionary = {}  # StringName -> float in [0, 1]
+@export_enum("FRONT", "BACK") var default_row: int = Row.FRONT
+@export_enum("MELEE", "RANGED") var attack_range: int = WeaponRange.MELEE
 
 
 func is_valid() -> bool:

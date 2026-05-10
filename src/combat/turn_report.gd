@@ -202,3 +202,20 @@ func add_cast_silenced(caster: CombatActor, spell_id: StringName) -> void:
 		"caster_name": caster.actor_name if caster != null else "",
 		"spell_id": spell_id,
 	})
+
+
+# --- add-row-based-combat: row-based reach action types ---
+
+func add_wait(actor: CombatActor) -> void:
+	actions.append({
+		"type": "wait",
+		"actor_name": actor.actor_name if actor != null else "",
+	})
+
+
+func add_attack_unreachable(attacker: CombatActor, target: CombatActor) -> void:
+	actions.append({
+		"type": "attack_unreachable",
+		"attacker_name": attacker.actor_name if attacker != null else "",
+		"target_name": target.actor_name if target != null else "",
+	})

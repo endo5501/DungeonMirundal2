@@ -12,6 +12,11 @@ const LIST_FONT_SIZE := 27
 const DESIRED_VISUAL_SIZE := Vector2(270, 216)
 const MIN_VISUAL_SCALE := 0.45
 const VISUAL_GAP := 42.0
+# Row-based depth: BACK monsters draw smaller and higher than FRONT to evoke
+# perspective. The vertical separation is computed as a fraction of FRONT
+# visual height so the gap scales with the panel.
+const BACK_SCALE_FACTOR := 0.85
+const BACK_VERTICAL_LIFT_RATIO := 0.55
 
 var _title_label: Label
 var _label: Label
@@ -152,40 +157,99 @@ func _build_ui() -> void:
 	_sync_label_layout()
 
 
-func _build_dummy_visual_rects(living_count: int) -> Array[Rect2]:
+# Computes layout rects for one row (FRONT or BACK). FRONT row anchors at the
+# existing baseline near the bottom of the visual area. BACK row floats above
+# at BACK_SCALE_FACTOR with a vertical lift relative to FRONT visual height.
+# Up to 5 monsters per row fit; the per-row scale shrinks if needed to avoid
+# horizontal clipping.
+func _build_row_rects(count: int, row: int, front_visual_size: Vector2) -> Array[Rect2]:
 	var rects: Array[Rect2] = []
-	if living_count <= 0:
+	if count <= 0:
 		return rects
-	var count: int = min(living_count, 6)
+	var capped: int = mini(count, 5)
 	var visual_area := get_enemy_visual_area_rect()
-	var gaps_width := float(max(count - 1, 0)) * VISUAL_GAP
-	var scale := 1.0
-	var desired_total_width := float(count) * DESIRED_VISUAL_SIZE.x + gaps_width
+	var row_scale_factor: float = 1.0 if row == Row.FRONT else BACK_SCALE_FACTOR
+	var desired_size: Vector2 = DESIRED_VISUAL_SIZE * row_scale_factor
+	var gaps_width: float = float(max(capped - 1, 0)) * VISUAL_GAP
+	var fit_scale := 1.0
+	var desired_total_width: float = float(capped) * desired_size.x + gaps_width
 	if desired_total_width > visual_area.size.x:
-		scale = max(MIN_VISUAL_SCALE, (visual_area.size.x - gaps_width) / (float(count) * DESIRED_VISUAL_SIZE.x))
-	var visual_size := DESIRED_VISUAL_SIZE * scale
-	var total_width := float(count) * visual_size.x + gaps_width
-	var start_x: float = visual_area.position.x + max(12.0, (visual_area.size.x - total_width) * 0.5)
-	var base_y: float = visual_area.position.y + max(0.0, visual_area.size.y - visual_size.y - 36.0)
-	for i in range(count):
-		var x := start_x + float(i) * (visual_size.x + VISUAL_GAP)
+		fit_scale = max(MIN_VISUAL_SCALE, (visual_area.size.x - gaps_width) / (float(capped) * desired_size.x))
+	var visual_size: Vector2 = desired_size * fit_scale
+	var total_width: float = float(capped) * visual_size.x + gaps_width
+	# Center if there's slack; otherwise pin to visual_area's left edge so the
+	# layout never overflows the right bound (visual_area is the hard limit).
+	var slack: float = visual_area.size.x - total_width
+	var start_x: float = visual_area.position.x
+	if slack > 24.0:
+		start_x += max(12.0, slack * 0.5)
+	elif slack > 0.0:
+		start_x += slack * 0.5
+	# FRONT baseline keeps the existing geometry. BACK lifts above it.
+	var front_base_y: float = visual_area.position.y + max(0.0, visual_area.size.y - front_visual_size.y - 36.0)
+	var base_y: float
+	if row == Row.FRONT:
+		base_y = front_base_y
+	else:
+		base_y = front_base_y - front_visual_size.y * BACK_VERTICAL_LIFT_RATIO
+	for i in range(capped):
+		var x: float = start_x + float(i) * (visual_size.x + VISUAL_GAP)
 		rects.append(Rect2(Vector2(x, base_y), visual_size))
 	return rects
 
 
+# Legacy single-row helper retained for tests that still reference it
+# (test surface). Returns a flat FRONT-row layout for the supplied count.
+func _build_dummy_visual_rects(living_count: int) -> Array[Rect2]:
+	return _build_row_rects(living_count, Row.FRONT, DESIRED_VISUAL_SIZE)
+
+
 func _build_monster_visual_entries(living_monsters: Array) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	var rects := _build_dummy_visual_rects(living_monsters.size())
-	for i in range(rects.size()):
-		var mc = living_monsters[i]
-		var texture: Texture2D = null
-		if mc != null and mc.monster != null and mc.monster.data != null:
-			texture = mc.monster.data.battle_texture
+	# Partition by original_row so each row gets its own layout pass.
+	var front_list: Array = []
+	var back_list: Array = []
+	for mc in living_monsters:
+		if mc == null:
+			continue
+		var row: int = Row.FRONT
+		if mc is MonsterCombatant:
+			row = mc.original_row
+		if row == Row.BACK:
+			back_list.append(mc)
+		else:
+			front_list.append(mc)
+	# FRONT visual size drives both rows' baselines so layout stays anchored
+	# even when the FRONT row is empty.
+	var front_visual_size: Vector2 = DESIRED_VISUAL_SIZE
+	var front_rects := _build_row_rects(front_list.size(), Row.FRONT, front_visual_size)
+	var back_rects := _build_row_rects(back_list.size(), Row.BACK, front_visual_size)
+	# Append BACK first so FRONT entries draw later (z_index 0 vs -1 also
+	# enforces depth, but ordering ensures correctness for clients that don't
+	# honor z_index).
+	for i in range(back_rects.size()):
+		var mc = back_list[i]
 		entries.append({
-			"rect": rects[i],
-			"texture": texture,
+			"rect": back_rects[i],
+			"texture": _texture_of(mc),
+			"row": Row.BACK,
+			"z_index": -1,
+		})
+	for i in range(front_rects.size()):
+		var mc = front_list[i]
+		entries.append({
+			"rect": front_rects[i],
+			"texture": _texture_of(mc),
+			"row": Row.FRONT,
+			"z_index": 0,
 		})
 	return entries
+
+
+func _texture_of(mc) -> Texture2D:
+	if mc == null or mc.monster == null or mc.monster.data == null:
+		return null
+	return mc.monster.data.battle_texture
 
 
 func _collect_dummy_visual_rects(entries: Array[Dictionary]) -> Array[Rect2]:

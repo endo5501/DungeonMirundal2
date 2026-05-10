@@ -2,13 +2,23 @@ class_name MonsterCombatant
 extends CombatActor
 
 var monster: Monster
+var original_row: int = Row.FRONT
 
 
-func _init(p_monster: Monster) -> void:
+func _init(p_monster: Monster, p_row: int = -1) -> void:
 	super()
 	monster = p_monster
 	if monster != null and monster.data != null:
 		actor_name = monster.data.monster_name
+	# Default p_row=-1 means "use MonsterData.default_row if available, else FRONT".
+	# Explicit FRONT/BACK overrides the data-driven default (used by tests and
+	# encounter generators that already decided the row).
+	if p_row >= 0:
+		original_row = p_row
+	elif monster != null and monster.data != null:
+		original_row = monster.data.default_row
+	else:
+		original_row = Row.FRONT
 
 
 func _read_current_hp() -> int:

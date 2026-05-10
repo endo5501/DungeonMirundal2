@@ -29,6 +29,15 @@ func get_agility(character: Character) -> int:
 	return total
 
 
+func get_weapon_range(character: Character) -> int:
+	if character == null or character.equipment == null:
+		return WeaponRange.MELEE
+	var weapon: ItemInstance = character.equipment.get_equipped(Item.EquipSlot.WEAPON)
+	if weapon == null or weapon.item == null or weapon.item.weapon_data == null:
+		return WeaponRange.MELEE
+	return weapon.item.weapon_data.weapon_range
+
+
 func _equipped(character: Character) -> Array[ItemInstance]:
 	if character.equipment == null:
 		return []
