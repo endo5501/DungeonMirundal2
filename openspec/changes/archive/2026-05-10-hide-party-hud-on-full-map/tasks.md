@@ -23,12 +23,12 @@
 
 - [x] 4.1 GUT を実行: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gtest=res://tests/dungeon/test_full_map_overlay.gd -gexit` で全テスト緑を確認 (2257 tests passing)
 - [x] 4.2 プロジェクト全体のテストスイートを実行し、リグレッション無しを確認 (-gtest が全スイートを走らせ全 pass)
-- [ ] 4.3 手動検証: ダンジョン進入 → M キーでフルマップを開く → パーティ HUD が消えること、フルマップが遮られず見えること
-- [ ] 4.4 手動検証: M キー / ESC キーでフルマップを閉じる → パーティ HUD が復帰すること
-- [ ] 4.5 手動検証: 既存 minimap 表示制御 (フルマップ開閉時に minimap が消える/戻る) のリグレッション無しを確認
+- [x] 4.3 手動検証: ダンジョン進入 → M キーでフルマップを開く → パーティ HUD が消えること、フルマップが遮られず見えること
+- [x] 4.4 手動検証: M キー / ESC キーでフルマップを閉じる → パーティ HUD が復帰すること
+- [x] 4.5 手動検証: 既存 minimap 表示制御 (フルマップ開閉時に minimap が消える/戻る) のリグレッション無しを確認
 
 ## 5. コミット & 仕上げ
 
-- [ ] 5.1 修正内容を `git status` / `git diff` で確認
-- [ ] 5.2 全変更を English commit message でコミット
-- [ ] 5.3 OpenSpec change の archive (`/opsx:archive` または `openspec archive`) は `/opsx:verify` で整合性確認後に実施
+- [x] 5.1 修正内容を `git status` / `git diff` で確認
+- [x] 5.2 全変更を English commit message でコミット (red: 240dfce, green: d6b10c5)
+- [x] 5.3 OpenSpec change の archive (`/opsx:archive` または `openspec archive`) は `/opsx:verify` で整合性確認後に実施
