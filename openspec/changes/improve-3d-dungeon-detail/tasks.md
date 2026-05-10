@@ -44,15 +44,15 @@
 
 ## 5. Door frame and recessed panel
 
-- [ ] 5.1 Add a failing test: DOOR edge generates `door_lintel_*`, `door_jamb_left_*`, `door_jamb_right_*`, and `door_panel_*` face groups
-- [ ] 5.2 Add a failing test: door panel is recessed 0.10 from the wall center axis
-- [ ] 5.3 Add a failing test: lintel sits at `1.80 ≤ y ≤ 2.00`
-- [ ] 5.4 Add a failing test: left jamb width is 0.18 along the edge axis, right jamb is 0.18
-- [ ] 5.5 Add a failing test: shared DOOR edge between two visible cells produces exactly one assembly
-- [ ] 5.6 Update `test_door_generates_door_face` to assert the new assembly faces (replace the single `door_north` expectation)
-- [ ] 5.7 Implement `_add_door_assembly(faces, cell_pos, dir)` that emits lintel + 2 jambs + panel boxes with stone color for frame and door color for panel
-- [ ] 5.8 Replace the WALL-box-for-DOOR fallback from section 2 with the door assembly call
-- [ ] 5.9 Visual confirm doors render with frame and recessed panel; commit (feat: render doors as frame plus recessed panel assembly)
+- [x] 5.1 Add a failing test: DOOR edge generates `door_lintel_*`, `door_jamb_left_*`, `door_jamb_right_*`, and `door_panel_*` face groups
+- [x] 5.2 Add a failing test: door panel is recessed 0.10 from the wall center axis
+- [x] 5.3 Add a failing test: lintel sits at `1.80 ≤ y ≤ 2.00`
+- [x] 5.4 Add a failing test: left jamb width is 0.18 along the edge axis, right jamb is 0.18
+- [x] 5.5 Add a failing test: shared DOOR edge between two visible cells produces exactly one assembly
+- [x] 5.6 Update `test_door_generates_door_face` to assert the new assembly faces (replace the single `door_north` expectation)
+- [x] 5.7 Implement `_add_door_assembly(faces, cell_pos, dir)` that emits lintel + 2 jambs + panel boxes with stone color for frame and door color for panel
+- [x] 5.8 Replace the WALL-box-for-DOOR fallback from section 2 with the door assembly call
+- [x] 5.9 Visual confirm doors render with frame and recessed panel; commit (feat: render doors as frame plus recessed panel assembly)
 
 ## 6. Final visual review and cleanup
 

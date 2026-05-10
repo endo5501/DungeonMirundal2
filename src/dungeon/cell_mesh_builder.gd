@@ -7,6 +7,9 @@ const WALL_THICKNESS := 0.20
 const PILLAR_HALF_WIDTH := 0.125  # 0.25 m square cross-section
 const TRIM_HEIGHT := 0.08
 const TRIM_PROJECTION := 0.04
+const DOOR_LINTEL_HEIGHT := 0.20
+const DOOR_JAMB_WIDTH := 0.18
+const DOOR_PANEL_THICKNESS := 0.04
 
 class Face:
 	var type: String
@@ -69,7 +72,10 @@ func build_meshes(visible_cells: Array[Vector2i], wiz_map: WizMap) -> Array:
 				var neighbor: Vector2i = grid_pos + Direction.offset(dir)
 				if visible_set.has(neighbor):
 					continue
-			_add_wall_box(faces, grid_pos, dir, edge_type)
+			if edge_type == EdgeType.DOOR:
+				_add_door_assembly(faces, grid_pos, dir)
+			else:
+				_add_wall_box(faces, grid_pos, dir, edge_type)
 		# Corner pillars: visit each of the 4 corners of this cell, dedup
 		# across cells, and place a pillar where any of the 4 meeting edges
 		# is WALL or DOOR (off-map sides are treated as WALL).
@@ -112,6 +118,90 @@ func _corner_touches_wall(wiz_map: WizMap, corner: Vector2i) -> bool:
 		if edge == EdgeType.WALL or edge == EdgeType.DOOR:
 			return true
 	return false
+
+# DOOR edge geometry: stone lintel + 2 stone jambs framing a recessed wood
+# panel. The panel sits on the cell-interior side of the wall axis, with
+# its front face flush with the wall axis (so it appears recessed by ~0.10
+# from the cell-interior wall surface).
+func _add_door_assembly(faces: Array, grid_pos: Vector2i, dir: int) -> void:
+	var dir_names := ["north", "east", "south", "west"]
+	var dir_name: String = dir_names[dir]
+	var lintel_prefix := "door_lintel_" + dir_name
+	var jamb_left_prefix := "door_jamb_left_" + dir_name
+	var jamb_right_prefix := "door_jamb_right_" + dir_name
+	var panel_prefix := "door_panel_" + dir_name
+	var t_half := WALL_THICKNESS * 0.5
+	var x0 := grid_pos.x * CELL_SIZE
+	var x1 := x0 + CELL_SIZE
+	var z0 := grid_pos.y * CELL_SIZE
+	var z1 := z0 + CELL_SIZE
+	var lintel_y_bottom := CELL_HEIGHT - DOOR_LINTEL_HEIGHT
+	var panel_t_half := DOOR_PANEL_THICKNESS * 0.5
+	if dir == Direction.NORTH or dir == Direction.SOUTH:
+		# Wall along X axis. Edge axis is X.
+		var z_axis := z0 if dir == Direction.NORTH else z1
+		var z_outer := z_axis - t_half
+		var z_inner := z_axis + t_half
+		# Lintel: full edge width, top of opening, full wall thickness
+		_add_box(faces, lintel_prefix,
+			Vector3(x0, lintel_y_bottom, z_outer),
+			Vector3(x1, CELL_HEIGHT, z_inner), WALL_COLOR)
+		# Left jamb (at x0 end)
+		_add_box(faces, jamb_left_prefix,
+			Vector3(x0, 0.0, z_outer),
+			Vector3(x0 + DOOR_JAMB_WIDTH, lintel_y_bottom, z_inner), WALL_COLOR)
+		# Right jamb (at x1 end)
+		_add_box(faces, jamb_right_prefix,
+			Vector3(x1 - DOOR_JAMB_WIDTH, 0.0, z_outer),
+			Vector3(x1, lintel_y_bottom, z_inner), WALL_COLOR)
+		# Panel: thin, recessed. Center on wall axis in z, place on cell-interior
+		# half so its front face stays well below the wall inner face.
+		var panel_z_min: float
+		var panel_z_max: float
+		if dir == Direction.NORTH:
+			# Cell interior is +Z; recess panel toward -Z (back of opening).
+			panel_z_max = z_axis  # at wall axis (recessed 0.10 from inner face at z_inner)
+			panel_z_min = z_axis - DOOR_PANEL_THICKNESS
+		else:
+			# SOUTH: cell interior is -Z; recess panel toward +Z.
+			panel_z_min = z_axis  # at wall axis
+			panel_z_max = z_axis + DOOR_PANEL_THICKNESS
+		_add_box(faces, panel_prefix,
+			Vector3(x0 + DOOR_JAMB_WIDTH, 0.0, panel_z_min),
+			Vector3(x1 - DOOR_JAMB_WIDTH, lintel_y_bottom, panel_z_max),
+			DOOR_COLOR)
+	else:
+		# WEST or EAST: wall along Z axis. Edge axis is Z. Jamb subdivides Z.
+		var x_axis := x0 if dir == Direction.WEST else x1
+		var x_outer := x_axis - t_half
+		var x_inner := x_axis + t_half
+		# Lintel: full edge length along Z, top of opening, full wall thickness
+		_add_box(faces, lintel_prefix,
+			Vector3(x_outer, lintel_y_bottom, z0),
+			Vector3(x_inner, CELL_HEIGHT, z1), WALL_COLOR)
+		# Left jamb (at z0 end). "left" is named for symmetry; geometric placement
+		# matters more than label.
+		_add_box(faces, jamb_left_prefix,
+			Vector3(x_outer, 0.0, z0),
+			Vector3(x_inner, lintel_y_bottom, z0 + DOOR_JAMB_WIDTH), WALL_COLOR)
+		# Right jamb (at z1 end)
+		_add_box(faces, jamb_right_prefix,
+			Vector3(x_outer, 0.0, z1 - DOOR_JAMB_WIDTH),
+			Vector3(x_inner, lintel_y_bottom, z1), WALL_COLOR)
+		# Panel
+		var panel_x_min: float
+		var panel_x_max: float
+		if dir == Direction.WEST:
+			# Cell interior is +X; recess panel toward -X.
+			panel_x_max = x_axis
+			panel_x_min = x_axis - DOOR_PANEL_THICKNESS
+		else:
+			panel_x_min = x_axis
+			panel_x_max = x_axis + DOOR_PANEL_THICKNESS
+		_add_box(faces, panel_prefix,
+			Vector3(panel_x_min, 0.0, z0 + DOOR_JAMB_WIDTH),
+			Vector3(panel_x_max, lintel_y_bottom, z1 - DOOR_JAMB_WIDTH),
+			DOOR_COLOR)
 
 # Skirting (floor / wall joint) and cornice (ceiling / wall joint) trim.
 # A thin box on the cell-interior side of the wall, height TRIM_HEIGHT and

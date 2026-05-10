@@ -33,15 +33,91 @@ func test_open_north_no_wall():
 	var north_faces = faces.filter(func(f): return f.type.begins_with("wall_north_"))
 	assert_eq(north_faces.size(), 0, "no north wall face when OPEN")
 
-func test_door_generates_door_box_temporarily():
-	# Step 2 placeholder: DOOR edges render as wall boxes with door color
-	# until Step 5 replaces them with the lintel/jamb/panel assembly.
+func test_door_generates_assembly():
 	var builder = CellMeshBuilder.new()
 	var wiz_map = WizMap.new(8)
-	wiz_map.cell(0, 0).set_edge(Direction.NORTH, EdgeType.DOOR)
-	var faces = builder.build_meshes(_isolated_visible(wiz_map, Vector2i(0, 0)), wiz_map)
-	var door_faces = faces.filter(func(f): return f.type.begins_with("door_north_"))
-	assert_eq(door_faces.size(), 6, "door box has 6 face groups")
+	wiz_map.cell(3, 2).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes([Vector2i(3, 2)], wiz_map)
+	var lintel = faces.filter(func(f): return (f.type as String).begins_with("door_lintel_"))
+	var jamb_l = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_left_"))
+	var jamb_r = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_right_"))
+	var panel = faces.filter(func(f): return (f.type as String).begins_with("door_panel_"))
+	assert_true(lintel.size() > 0, "door_lintel_* present")
+	assert_true(jamb_l.size() > 0, "door_jamb_left_* present")
+	assert_true(jamb_r.size() > 0, "door_jamb_right_* present")
+	assert_true(panel.size() > 0, "door_panel_* present")
+	# No leftover legacy door box from Step 2
+	var door_legacy = faces.filter(func(f): return (f.type as String).begins_with("door_north_"))
+	assert_eq(door_legacy.size(), 0, "no legacy door_north_* (replaced by assembly)")
+
+func test_door_panel_recessed_from_wall_inner_face():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(3, 2).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes([Vector2i(3, 2)], wiz_map)
+	var panel = faces.filter(func(f): return (f.type as String).begins_with("door_panel_"))
+	assert_true(panel.size() > 0, "door panel must exist before checking recess")
+	# NORTH wall inner face for cell (3, 2) is at z = 2*2 + 0.10 = 4.10
+	# Panel front face must be visibly recessed (at least 0.05) from there.
+	var max_panel_z := -INF
+	for f in panel:
+		for v in f.vertices:
+			max_panel_z = maxf(max_panel_z, v.z)
+	assert_true(max_panel_z < 4.10 - 0.05,
+		"door panel front recessed at least 0.05 from wall inner face (4.10), got max z = %f" % max_panel_z)
+
+func test_door_lintel_sits_at_top():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(3, 2).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes([Vector2i(3, 2)], wiz_map)
+	var lintel = faces.filter(func(f): return (f.type as String).begins_with("door_lintel_"))
+	for f in lintel:
+		for v in f.vertices:
+			assert_true(v.y >= 1.80 - 0.001 and v.y <= 2.00 + 0.001,
+				"lintel y in [1.80, 2.00], got %f" % v.y)
+
+func test_door_jamb_widths_along_edge_axis():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.cell(3, 2).set_edge(Direction.NORTH, EdgeType.DOOR)
+	var faces = builder.build_meshes([Vector2i(3, 2)], wiz_map)
+	# NORTH wall of (3, 2): x ∈ [6.0, 8.0]
+	var jamb_l = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_left_"))
+	var jamb_r = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_right_"))
+	var min_x_l := INF
+	var max_x_l := -INF
+	for f in jamb_l:
+		for v in f.vertices:
+			min_x_l = minf(min_x_l, v.x)
+			max_x_l = maxf(max_x_l, v.x)
+	var min_x_r := INF
+	var max_x_r := -INF
+	for f in jamb_r:
+		for v in f.vertices:
+			min_x_r = minf(min_x_r, v.x)
+			max_x_r = maxf(max_x_r, v.x)
+	assert_almost_eq(min_x_l, 6.0, 0.01, "left jamb starts at x=6.0")
+	assert_almost_eq(max_x_l, 6.18, 0.01, "left jamb ends at x=6.18 (width 0.18)")
+	assert_almost_eq(min_x_r, 7.82, 0.01, "right jamb starts at x=7.82")
+	assert_almost_eq(max_x_r, 8.0, 0.01, "right jamb ends at x=8.0 (width 0.18)")
+
+func test_shared_door_edge_assembly_deduplicated():
+	var builder = CellMeshBuilder.new()
+	var wiz_map = WizMap.new(8)
+	wiz_map.set_edge(1, 1, Direction.SOUTH, EdgeType.DOOR)
+	var visible: Array[Vector2i] = [Vector2i(1, 1), Vector2i(1, 2)]
+	var faces = builder.build_meshes(visible, wiz_map)
+	# The shared DOOR edge at z = 4.0 should produce ONE assembly: lintel,
+	# left jamb, right jamb, panel — each as one 6-face box.
+	var lintel = faces.filter(func(f): return (f.type as String).begins_with("door_lintel_"))
+	var jamb_l = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_left_"))
+	var jamb_r = faces.filter(func(f): return (f.type as String).begins_with("door_jamb_right_"))
+	var panel = faces.filter(func(f): return (f.type as String).begins_with("door_panel_"))
+	assert_eq(lintel.size(), 6, "one lintel box (6 faces) for shared door")
+	assert_eq(jamb_l.size(), 6, "one left jamb box (6 faces) for shared door")
+	assert_eq(jamb_r.size(), 6, "one right jamb box (6 faces) for shared door")
+	assert_eq(panel.size(), 6, "one panel box (6 faces) for shared door")
 
 func test_floor_always_generated():
 	var builder = CellMeshBuilder.new()
