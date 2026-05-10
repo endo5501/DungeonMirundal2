@@ -9,20 +9,20 @@
 
 ## 2. 本体実装 (TDD green)
 
-- [ ] 2.1 `src/dungeon_scene/full_map_overlay.gd` にフィールド `var _party_hud_layer: CanvasLayer` を追加 (`_minimap_display` の隣)
-- [ ] 2.2 `setup()` シグネチャに `party_hud_layer: CanvasLayer = null` を末尾追加し、関数内で `_party_hud_layer = party_hud_layer` を代入
-- [ ] 2.3 `open()` の `_minimap_display.visible = false` の直後に `_party_hud_layer` の null チェック付き `visible = false` を追加
-- [ ] 2.4 `close()` の `_minimap_display.visible = true` の直後に `_party_hud_layer` の null チェック付き `visible = true` を追加
+- [x] 2.1 `src/dungeon_scene/full_map_overlay.gd` にフィールド `var _party_hud_layer: CanvasLayer` を追加 (`_minimap_display` の隣)
+- [x] 2.2 `setup()` シグネチャに `party_hud_layer: CanvasLayer = null` を末尾追加し、関数内で `_party_hud_layer = party_hud_layer` を代入
+- [x] 2.3 `open()` の `_minimap_display.visible = false` の直後に `_party_hud_layer` の null チェック付き `visible = false` を追加
+- [x] 2.4 `close()` の `_minimap_display.visible = true` の直後に `_party_hud_layer` の null チェック付き `visible = true` を追加
 
 ## 3. 配線
 
-- [ ] 3.1 `src/dungeon_scene/dungeon_screen.gd:82` の `_full_map_overlay.setup(...)` 呼び出しに `PartyHud` を末尾引数として追加
-- [ ] 3.2 `src/dungeon_scene/dungeon_screen.gd:262` の `_full_map_overlay.setup(...)` 呼び出しに `PartyHud` を末尾引数として追加
+- [x] 3.1 `src/dungeon_scene/dungeon_screen.gd:82` の `_full_map_overlay.setup(...)` 呼び出しに `PartyHud` を末尾引数として追加
+- [x] 3.2 `src/dungeon_scene/dungeon_screen.gd:262` の `_full_map_overlay.setup(...)` 呼び出しに `PartyHud` を末尾引数として追加
 
 ## 4. 検証
 
-- [ ] 4.1 GUT を実行: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gtest=res://tests/dungeon/test_full_map_overlay.gd -gexit` で全テスト緑を確認
-- [ ] 4.2 プロジェクト全体のテストスイートを実行し、リグレッション無しを確認
+- [x] 4.1 GUT を実行: `godot --headless --path . -s addons/gut/gut_cmdln.gd -gtest=res://tests/dungeon/test_full_map_overlay.gd -gexit` で全テスト緑を確認 (2257 tests passing)
+- [x] 4.2 プロジェクト全体のテストスイートを実行し、リグレッション無しを確認 (-gtest が全スイートを走らせ全 pass)
 - [ ] 4.3 手動検証: ダンジョン進入 → M キーでフルマップを開く → パーティ HUD が消えること、フルマップが遮られず見えること
 - [ ] 4.4 手動検証: M キー / ESC キーでフルマップを閉じる → パーティ HUD が復帰すること
 - [ ] 4.5 手動検証: 既存 minimap 表示制御 (フルマップ開閉時に minimap が消える/戻る) のリグレッション無しを確認

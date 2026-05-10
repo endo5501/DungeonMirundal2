@@ -15,6 +15,7 @@ var _explored_map: ExploredMap
 var _player_state: PlayerState
 var _dungeon_data: DungeonData
 var _minimap_display: Control
+var _party_hud_layer: CanvasLayer
 
 var _renderer: FullMapRenderer
 var _bg_panel: ColorRect
@@ -81,12 +82,14 @@ func _ready() -> void:
 
 
 func setup(wiz_map: WizMap, explored_map: ExploredMap, player_state: PlayerState,
-		dungeon_data: DungeonData, minimap_display: Control) -> void:
+		dungeon_data: DungeonData, minimap_display: Control,
+		party_hud_layer: CanvasLayer = null) -> void:
 	_wiz_map = wiz_map
 	_explored_map = explored_map
 	_player_state = player_state
 	_dungeon_data = dungeon_data
 	_minimap_display = minimap_display
+	_party_hud_layer = party_hud_layer
 
 
 func open() -> void:
@@ -96,12 +99,16 @@ func open() -> void:
 	_refresh()
 	if _minimap_display != null:
 		_minimap_display.visible = false
+	if _party_hud_layer != null:
+		_party_hud_layer.visible = false
 
 
 func close() -> void:
 	visible = false
 	if _minimap_display != null:
 		_minimap_display.visible = true
+	if _party_hud_layer != null:
+		_party_hud_layer.visible = true
 
 
 func is_open() -> bool:
