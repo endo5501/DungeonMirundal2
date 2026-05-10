@@ -23,15 +23,15 @@
 - [x] 2.8 同ファイル: HP/MP ラベル描画の `Vector2(7, ...)` x 座標と box 幅 `24.0` も `BAR_LEFT - 余白` に整合 (例: x=4, width=BAR_LEFT-6=20)
 - [x] 2.9 GUT 実行 → 1 章で red だったテストが green、既存テストも全て green であることを確認 (2254/2254 passed, exit 0)
 
-## 3. Visual verification (ユーザ操作が必要 — Claude からは実行不能)
+## 3. Visual verification (ユーザ目視で完了)
 
-- [ ] 3.1 Godot エディタでプロジェクトを起動し、ダンジョン画面 (encounter なし) を表示
-- [ ] 3.2 スクリーンショットを取得し `tmp/dungeon14_after.png` 等として保存、`tmp/dungeon14.png` (修正前) と比較
-- [ ] 3.3 4 つの破綻 (LV 見切れ / HP MP ラベル見切れ / HP MP 数値の上下被り / バー右の死んだ余白) が全て解消していることを目視確認
-- [ ] 3.4 戦闘画面に遷移して party HUD が崩れていないこと、status / stat-modifier アイコンが正常配置であること、shake/flash/lift/die アニメーションが従来通り動くことを確認
+- [x] 3.1 Godot エディタでプロジェクトを起動し、ダンジョン画面 (encounter なし) を表示
+- [x] 3.2 スクリーンショットを取得し `tmp/dungeon15.png` として保存、`tmp/dungeon14.png` (修正前) と比較
+- [x] 3.3 4 つの破綻 (LV 見切れ / HP MP ラベル見切れ / HP MP 数値の上下被り / バー右の死んだ余白) が全て解消していることを目視確認 (1 周目で MP ラベルが残ったため `BAR_LEFT=30 / BAR_WIDTH=76` で再調整、stat-modifier アイコンも `STATUS_ICON_SIZE=17 / FONT_SIZE=14` に縮小して 2 周目で OK)
+- [x] 3.4 戦闘画面に遷移して party HUD が崩れていないこと、status / stat-modifier アイコンが正常配置であること、shake/flash/lift/die アニメーションが従来通り動くことを確認
 
 ## 4. Spec sync & cleanup
 
 - [x] 4.1 `openspec validate tweak-party-hud-layout` を実行し、proposal/design/specs/tasks 全てのバリデーション通過を確認 (valid)
-- [ ] 4.2 (任意) スクリーンショット差分を含むコミットメッセージで TDD 完了を記録
-- [ ] 4.3 `/opsx:archive tweak-party-hud-layout` を実行する準備が整ったことを確認 (実際の archive はユーザ判断)
+- [x] 4.2 (任意) スクリーンショット差分を含むコミットメッセージで TDD 完了を記録 (commit 05cf0bc)
+- [x] 4.3 `/opsx:archive tweak-party-hud-layout` を実行する準備が整ったことを確認 (実際の archive はユーザ判断)
