@@ -15,13 +15,13 @@
 
 ## 3. StatusView 詳細パネル各項目の実装 (TDD)
 
-- [ ] 3.1 Red: `tests/esc_menu/test_esc_menu_status_detail.gd` を新規作成。以下のシナリオで失敗するテストを書く: ポートレイト Texture が `JobPortrait.get_texture()` と一致、HP/MP の表示文字列が "HP: 28/35"、"MP: 0/0" 形式、Lv.1 で `accumulated_exp=100`、`exp_to_reach_level(2)=1000` のとき "EXP: 100 / 1000" 表示、最大レベル時 "EXP: <値> (MAX)" 表示、6 ステータス値表示、装備 6 スロットの並びとラベル（武器/鎧/兜/盾/籠手/装身具）、装備済みアイテムの `item_name` 表示、未装備時 "(なし)"、未鑑定アイテムの `unidentified_name` 表示、`known_spells = []` 時 "(未習得)" 表示、`known_spells` ありかつ `SpellRepository` で解決できる ID で日本語表示名が表示される、未登録 ID でフォールバックが起きる。テストは赤で失敗することを確認してコミットする。
-- [ ] 3.2 Green: `StatusView` に `_build_detail_pane(ch: Character)` を実装する。ポートレイトは `TextureRect` で `JobPortrait.texture_for(ch.to_party_member_data().job_id)` を表示（null フォールバックは透明矩形）。名前/種族/職/Lv をヘッダ行に、HP/MP、EXP、ステータス、装備、呪文、状態を順に Label 群で配置する。
-- [ ] 3.3 Green: 経験値計算は `_format_exp(ch)` ヘルパで `level >= job.exp_table.size() + 1` のとき MAX を返し、それ以外は `"EXP: %d / %d" % [accumulated_exp, job.exp_to_reach_level(level + 1)]` を返す。
-- [ ] 3.4 Green: 装備描画は `Equipment.ALL_SLOTS` を反復し、`Equipment.SLOT_KEYS` を介して日本語ラベルへマップ（新規 `SLOT_LABELS_JP: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]` を `StatusView` 内定数として宣言）。装備済みアイテム表示は `inst.item.item_name if inst.identified else inst.item.unidentified_name`、未装備は `(なし)`。
-- [ ] 3.5 Green: 呪文描画は `_get_spell_repo()` ヘルパ（`SpellUseFlow._get_spell_repo()` と同様のパターン）で SpellRepository を lazy-load する。`set_spell_repo(repo)` 公開メソッドでテストから差し替え可能にする。各 known_spell について `repo.get(id).display_name` を取得、未登録なら `String(id)` にフォールバック。空配列なら "(未習得)"。
-- [ ] 3.6 Green: 状態行描画は既存 `StatusRepoLocator.resolve(null).get_display_name()` を使い、空なら "状態: 通常"、それ以外なら "状態: " + ", ".join(names)。
-- [ ] 3.7 すべての detail テストが緑になることを確認しコミットする。
+- [x] 3.1 Red: `tests/esc_menu/test_esc_menu_status_detail.gd` を新規作成。以下のシナリオで失敗するテストを書く: ポートレイト Texture が `JobPortrait.get_texture()` と一致、HP/MP の表示文字列が "HP: 28/35"、"MP: 0/0" 形式、Lv.1 で `accumulated_exp=100`、`exp_to_reach_level(2)=1000` のとき "EXP: 100 / 1000" 表示、最大レベル時 "EXP: <値> (MAX)" 表示、6 ステータス値表示、装備 6 スロットの並びとラベル（武器/鎧/兜/盾/籠手/装身具）、装備済みアイテムの `item_name` 表示、未装備時 "(なし)"、未鑑定アイテムの `unidentified_name` 表示、`known_spells = []` 時 "(未習得)" 表示、`known_spells` ありかつ `SpellRepository` で解決できる ID で日本語表示名が表示される、未登録 ID でフォールバックが起きる。テストは赤で失敗することを確認してコミットする。
+- [x] 3.2 Green: `StatusView` に `_refresh_detail_pane()` を実装。ポートレイトは `TextureRect` で `JobPortrait.texture_for(ch.to_party_member_data().job_id)`、名前/種族/職/Lv をヘッダ行に、HP/MP、EXP、ステータス、装備、呪文、状態を順に Label 群で配置。
+- [x] 3.3 Green: 経験値計算は `_format_exp(ch)` で `level >= exp_table.size() + 1` のとき MAX、それ以外は `"EXP: %d / %d" % [accumulated_exp, job.exp_to_reach_level(level + 1)]`。
+- [x] 3.4 Green: 装備描画は `Equipment.ALL_SLOTS` を反復、`SLOT_LABELS_JP: Array[String] = ["武器", "鎧", "兜", "盾", "籠手", "装身具"]` を `StatusView` 内定数として宣言。装備済みは `item_name`/未鑑定は `unidentified_name`、未装備は `(なし)`。
+- [x] 3.5 Green: 呪文描画は `_get_spell_repo()` ヘルパ（`SpellUseFlow` と同様のパターン）で SpellRepository を lazy-load。`set_spell_repo(repo)` 公開メソッドで差し替え可能。`SpellRepository.find(id)` で `display_name` を取得、未登録なら `String(id)` にフォールバック。空配列なら `(未習得)`。
+- [x] 3.6 Green: 状態行は `StatusRepoLocator.resolve(null).get_display_name()` を使い、空なら `"状態: 通常"`、それ以外は `"状態: " + ", ".join(names)`。
+- [x] 3.7 detail テスト 12 件すべて緑を確認しコミット。
 
 ## 4. カーソル操作と詳細更新 (TDD)
 
