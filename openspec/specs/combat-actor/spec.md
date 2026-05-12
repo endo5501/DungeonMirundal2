@@ -86,7 +86,7 @@ The system SHALL provide a `PartyCombatant` (extends CombatActor) that holds a r
 
 ### Requirement: MonsterCombatant wraps a Monster and its MonsterData
 
-The system SHALL provide a `MonsterCombatant` (extends CombatActor) that holds a reference to a `Monster` and SHALL source derived stats from the underlying `MonsterData`. In v1, monsters SHALL NOT cast spells; their MP fields SHALL be zero and `spend_mp` SHALL always return `false` for any positive amount.
+The system SHALL provide a `MonsterCombatant` (extends CombatActor) that holds a reference to a `Monster` and SHALL source derived stats from the underlying `MonsterData`. Monsters MAY cast spells when the underlying `Monster` has `max_mp > 0` and `MonsterData.known_spells` is non-empty; their MP fields and `spend_mp` SHALL behave identically to other `CombatActor` subclasses.
 
 #### Scenario: HP proxies to Monster instance
 - **WHEN** `take_damage(3)` is called on a MonsterCombatant whose Monster has `current_hp = 10`
@@ -100,13 +100,29 @@ The system SHALL provide a `MonsterCombatant` (extends CombatActor) that holds a
 - **WHEN** a MonsterCombatant wraps a Monster whose `MonsterData.monster_name` is `"スライム"`
 - **THEN** `actor_name` SHALL equal `"スライム"`
 
-#### Scenario: MonsterCombatant has zero MP in v1
-- **WHEN** a MonsterCombatant is instantiated
-- **THEN** `current_mp` and `max_mp` SHALL both be `0`
+#### Scenario: MonsterCombatant MP proxies to the wrapped Monster
+- **WHEN** a `MonsterCombatant` wraps a `Monster` with rolled `max_mp = 8` and `current_mp = 8`
+- **THEN** `max_mp` SHALL equal `8` AND `current_mp` SHALL equal `8`
 
-#### Scenario: MonsterCombatant.spend_mp rejects positive amounts
-- **WHEN** `spend_mp(1)` is called on a MonsterCombatant
-- **THEN** the call SHALL return `false`
+#### Scenario: MonsterCombatant with zero-MP data still has zero MP
+- **WHEN** a `MonsterCombatant` wraps a `Monster` whose `MonsterData` has `max_mp_min = 0` and `max_mp_max = 0`
+- **THEN** `max_mp` SHALL equal `0` AND `current_mp` SHALL equal `0`
+
+#### Scenario: MonsterCombatant.spend_mp follows the standard contract
+- **WHEN** `spend_mp(2)` is called on a `MonsterCombatant` whose wrapped Monster has `current_mp = 5`
+- **THEN** the call SHALL return `true` AND the wrapped Monster's `current_mp` SHALL become `3`
+
+#### Scenario: MonsterCombatant.spend_mp rejects insufficient MP
+- **WHEN** `spend_mp(3)` is called on a `MonsterCombatant` whose wrapped Monster has `current_mp = 2`
+- **THEN** the call SHALL return `false` AND `current_mp` SHALL remain `2`
+
+#### Scenario: MonsterCombatant.spend_mp with zero amount returns true and is a no-op
+- **WHEN** `spend_mp(0)` is called on a `MonsterCombatant`
+- **THEN** the call SHALL return `true` AND `current_mp` SHALL remain unchanged
+
+#### Scenario: MP write propagates to the wrapped Monster
+- **WHEN** `spend_mp(2)` is called on a `MonsterCombatant` whose Monster has `current_mp = 5`
+- **THEN** the wrapped `Monster.current_mp` SHALL become `3` (the MonsterCombatant SHALL NOT cache MP independently of the Monster)
 
 ### Requirement: CombatActor exposes hit/evasion modifier totals and a blind hook
 
