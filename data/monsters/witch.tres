@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/images/monsters/witch.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+monster_id = &"witch"
+monster_name = "Witch"
+max_hp_min = 12
+max_hp_max = 22
+max_mp_min = 6
+max_mp_max = 12
+attack = 5
+defense = 3
+agility = 9
+experience = 80
+gold_min = 30
+gold_max = 90
+battle_texture = ExtResource("2")
+resists = {
+&"sleep": 0.30,
+}
+known_spells = Array[StringName]([&"fire", &"frost", &"katino"])
+default_row = 1
+attack_range = 1

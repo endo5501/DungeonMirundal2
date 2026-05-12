@@ -38,24 +38,34 @@ func _read_max_hp() -> int:
 	return monster.max_hp
 
 
-# v1 monsters do not have MP; max_mp is always 0 and writes are ignored.
 func _read_current_mp() -> int:
-	return 0
+	if monster == null:
+		return 0
+	return monster.current_mp
 
 
-func _write_current_mp(_value: int) -> void:
-	pass
+func _write_current_mp(value: int) -> void:
+	if monster != null:
+		monster.current_mp = value
 
 
 func _read_max_mp() -> int:
-	return 0
+	if monster == null:
+		return 0
+	return monster.max_mp
 
 
-# v1 monsters cannot cast: any positive spend is rejected.
-func spend_mp(amount: int) -> bool:
-	if amount <= 0:
-		return true
-	return false
+func get_data() -> MonsterData:
+	if monster == null:
+		return null
+	return monster.data
+
+
+func get_known_spells() -> Array[StringName]:
+	var data := get_data()
+	if data == null:
+		return []
+	return data.known_spells
 
 
 func get_species_id() -> StringName:

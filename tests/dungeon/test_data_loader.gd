@@ -74,10 +74,12 @@ func test_loaded_fighter_has_no_requirements():
 	assert_eq(fighter.required_luc, 0)
 
 
-func test_load_all_monsters_returns_6():
+func test_load_all_monsters_returns_12():
 	var monsters := _loader.load_all_monsters()
-	# slime / goblin / bat (initial) + skeleton / ghost / dragon (add-status-confusion-blind-paralysis)
-	assert_eq(monsters.size(), 6)
+	# slime / goblin / bat (initial) + skeleton / ghost / dragon
+	# (add-status-confusion-blind-paralysis) + witch / dark_priest / imp /
+	# lich / goblin_shaman / wraith (add-monster-magic)
+	assert_eq(monsters.size(), 12)
 
 
 func test_load_all_monsters_contains_expected_ids():

@@ -279,3 +279,77 @@ func test_loaded_dragon_resists_multiple_mind_affecting_statuses():
 	assert_gt(float(d.resists.get(&"sleep", 0.0)), 0.0)
 	assert_gt(float(d.resists.get(&"paralysis", 0.0)), 0.0)
 	assert_gt(float(d.resists.get(&"confusion", 0.0)), 0.0)
+
+
+# --- add-monster-magic: MP range + known_spells fields ---
+
+func test_monster_data_has_mp_fields_with_zero_defaults():
+	var md := MonsterData.new()
+	assert_eq(md.max_mp_min, 0)
+	assert_eq(md.max_mp_max, 0)
+
+
+func test_monster_data_has_known_spells_field_with_empty_default():
+	var md := MonsterData.new()
+	assert_typeof(md.known_spells, TYPE_ARRAY)
+	assert_eq(md.known_spells.size(), 0)
+
+
+func test_monster_data_mp_fields_are_writable():
+	var md := MonsterData.new()
+	md.max_mp_min = 4
+	md.max_mp_max = 10
+	assert_eq(md.max_mp_min, 4)
+	assert_eq(md.max_mp_max, 10)
+
+
+func test_monster_data_known_spells_is_writable():
+	var md := MonsterData.new()
+	md.known_spells = [&"fire", &"frost"] as Array[StringName]
+	assert_eq(md.known_spells.size(), 2)
+	assert_eq(md.known_spells[0], &"fire")
+
+
+func test_is_valid_accepts_valid_mp_range():
+	_slime.max_mp_min = 4
+	_slime.max_mp_max = 10
+	assert_true(_slime.is_valid())
+
+
+func test_is_valid_accepts_zero_mp_range():
+	_slime.max_mp_min = 0
+	_slime.max_mp_max = 0
+	assert_true(_slime.is_valid())
+
+
+func test_is_valid_rejects_negative_mp_min():
+	_slime.max_mp_min = -1
+	_slime.max_mp_max = 4
+	assert_false(_slime.is_valid())
+
+
+func test_is_valid_rejects_mp_min_greater_than_max():
+	_slime.max_mp_min = 10
+	_slime.max_mp_max = 4
+	assert_false(_slime.is_valid())
+
+
+func test_existing_slime_tres_loads_with_zero_mp_and_empty_spells():
+	var loaded := ResourceLoader.load("res://data/monsters/slime.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.max_mp_min, 0)
+	assert_eq(loaded.max_mp_max, 0)
+	assert_eq(loaded.known_spells.size(), 0)
+
+
+func test_existing_six_monsters_load_with_zero_mp_and_empty_spells():
+	var ids := [&"slime", &"goblin", &"bat", &"skeleton", &"ghost", &"dragon"]
+	for id in ids:
+		var monster := _find_monster(id)
+		assert_not_null(monster, "monster %s should load" % String(id))
+		assert_eq(monster.max_mp_min, 0,
+			"existing monster %s should have max_mp_min == 0" % String(id))
+		assert_eq(monster.max_mp_max, 0,
+			"existing monster %s should have max_mp_max == 0" % String(id))
+		assert_eq(monster.known_spells.size(), 0,
+			"existing monster %s should have empty known_spells" % String(id))

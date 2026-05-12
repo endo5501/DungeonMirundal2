@@ -96,9 +96,16 @@ func test_is_alive_becomes_false_when_hp_depleted():
 	assert_false(mc.is_alive())
 
 
-# --- add-magic-system: MP is always zero in v1 ---
+# --- add-monster-magic: MP proxies to wrapped Monster ---
 
-func test_monster_combatant_has_zero_mp_fields():
+func _make_monster_data_with_mp(id: StringName, mp_min: int, mp_max: int) -> MonsterData:
+	var data := _make_monster_data(id, String(id), 3, 2, 4)
+	data.max_mp_min = mp_min
+	data.max_mp_max = mp_max
+	return data
+
+
+func test_monster_combatant_zero_mp_data_yields_zero_mp():
 	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
 	var m := Monster.new(data, _make_rng())
 	var mc := MonsterCombatant.new(m)
@@ -106,15 +113,48 @@ func test_monster_combatant_has_zero_mp_fields():
 	assert_eq(mc.max_mp, 0)
 
 
-func test_monster_spend_mp_rejects_positive_amount():
+func test_monster_combatant_zero_mp_rejects_positive_spend():
 	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
 	var m := Monster.new(data, _make_rng())
 	var mc := MonsterCombatant.new(m)
 	assert_false(mc.spend_mp(1))
 
 
-func test_monster_spend_mp_zero_returns_true():
+func test_monster_combatant_spend_mp_zero_returns_true():
 	var data := _make_monster_data(&"slime", "Slime", 3, 2, 4)
 	var m := Monster.new(data, _make_rng())
 	var mc := MonsterCombatant.new(m)
 	assert_true(mc.spend_mp(0))
+
+
+func test_monster_combatant_max_mp_reads_monster_max_mp():
+	var data := _make_monster_data_with_mp(&"witch", 8, 8)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_eq(mc.max_mp, 8)
+	assert_eq(mc.current_mp, 8)
+
+
+func test_monster_combatant_spend_mp_succeeds_when_sufficient():
+	var data := _make_monster_data_with_mp(&"witch", 5, 5)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_true(mc.spend_mp(2))
+	assert_eq(mc.current_mp, 3)
+	assert_eq(m.current_mp, 3)
+
+
+func test_monster_combatant_spend_mp_fails_when_insufficient():
+	var data := _make_monster_data_with_mp(&"witch", 2, 2)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	assert_false(mc.spend_mp(3))
+	assert_eq(mc.current_mp, 2)
+
+
+func test_monster_combatant_mp_write_propagates_to_monster():
+	var data := _make_monster_data_with_mp(&"witch", 6, 6)
+	var m := Monster.new(data, _make_rng())
+	var mc := MonsterCombatant.new(m)
+	mc.current_mp = 4
+	assert_eq(m.current_mp, 4)

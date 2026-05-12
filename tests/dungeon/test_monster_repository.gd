@@ -78,3 +78,95 @@ func test_loads_from_data_directory():
 	assert_not_null(_repo.find(&"slime"))
 	assert_not_null(_repo.find(&"goblin"))
 	assert_not_null(_repo.find(&"bat"))
+
+
+# --- add-monster-magic: new spell-casting monsters ---
+
+func test_loads_new_spell_casting_monsters():
+	var loader := DataLoader.new()
+	_repo.register_all(loader.load_all_monsters())
+	var new_ids := [&"witch", &"dark_priest", &"imp", &"lich", &"goblin_shaman", &"wraith"]
+	for id in new_ids:
+		var monster: MonsterData = _repo.find(id)
+		assert_not_null(monster, "monster %s should load" % String(id))
+		assert_gt(monster.known_spells.size(), 0,
+			"monster %s should have at least one known spell" % String(id))
+
+
+func test_witch_has_expected_spells_and_row():
+	var loaded := ResourceLoader.load("res://data/monsters/witch.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.BACK)
+	assert_eq(loaded.attack_range, WeaponRange.RANGED)
+	assert_true(loaded.known_spells.has(&"fire"))
+	assert_true(loaded.known_spells.has(&"frost"))
+	assert_true(loaded.known_spells.has(&"katino"))
+
+
+func test_dark_priest_has_expected_spells_and_resists():
+	var loaded := ResourceLoader.load("res://data/monsters/dark_priest.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.BACK)
+	assert_eq(loaded.attack_range, WeaponRange.MELEE)
+	assert_true(loaded.known_spells.has(&"heal"))
+	assert_true(loaded.known_spells.has(&"holy"))
+	assert_true(loaded.known_spells.has(&"badi"))
+	assert_almost_eq(float(loaded.resists.get(&"poison", 0.0)), 1.0, 0.001)
+	assert_almost_eq(float(loaded.resists.get(&"sleep", 0.0)), 1.0, 0.001)
+
+
+func test_imp_has_expected_setup():
+	var loaded := ResourceLoader.load("res://data/monsters/imp.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.FRONT)
+	assert_eq(loaded.attack_range, WeaponRange.MELEE)
+	assert_true(loaded.known_spells.has(&"dazil"))
+	assert_true(loaded.known_spells.has(&"poison_dart"))
+
+
+func test_lich_has_expected_setup():
+	var loaded := ResourceLoader.load("res://data/monsters/lich.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.BACK)
+	assert_eq(loaded.attack_range, WeaponRange.RANGED)
+	assert_true(loaded.known_spells.has(&"flame"))
+	assert_true(loaded.known_spells.has(&"blizzard"))
+	assert_true(loaded.known_spells.has(&"madalto"))
+	assert_almost_eq(float(loaded.resists.get(&"poison", 0.0)), 1.0, 0.001)
+
+
+func test_goblin_shaman_has_expected_setup():
+	var loaded := ResourceLoader.load("res://data/monsters/goblin_shaman.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.BACK)
+	assert_eq(loaded.attack_range, WeaponRange.MELEE)
+	assert_true(loaded.known_spells.has(&"heal"))
+	assert_true(loaded.known_spells.has(&"manifo"))
+
+
+func test_wraith_has_expected_setup():
+	var loaded := ResourceLoader.load("res://data/monsters/wraith.tres") as MonsterData
+	assert_not_null(loaded)
+	assert_eq(loaded.default_row, Row.BACK)
+	assert_eq(loaded.attack_range, WeaponRange.RANGED)
+	assert_true(loaded.known_spells.has(&"poison_dart"))
+	assert_true(loaded.known_spells.has(&"dazil"))
+	assert_almost_eq(float(loaded.resists.get(&"blind", 0.0)), 1.0, 0.001)
+
+
+func test_new_monsters_mp_supports_cheapest_known_spell():
+	var loader := DataLoader.new()
+	var spell_repo := loader.load_spell_repository()
+	_repo.register_all(loader.load_all_monsters())
+	var new_ids := [&"witch", &"dark_priest", &"imp", &"lich", &"goblin_shaman", &"wraith"]
+	for id in new_ids:
+		var monster: MonsterData = _repo.find(id)
+		assert_not_null(monster)
+		var cheapest: int = 999
+		for spell_id in monster.known_spells:
+			var spell: SpellData = spell_repo.find(spell_id)
+			if spell != null and spell.mp_cost < cheapest:
+				cheapest = spell.mp_cost
+		assert_gte(monster.max_mp_min, cheapest,
+			"monster %s max_mp_min (%d) should cover cheapest known spell mp_cost (%d)"
+				% [String(id), monster.max_mp_min, cheapest])
