@@ -34,13 +34,14 @@ The system SHALL provide a `MonsterAiContext` (RefCounted) DTO with the followin
 - `party: Array` — array of `PartyCombatant` (the engine's `party` array reference).
 - `monsters: Array` — array of `MonsterCombatant` (the engine's `monsters` array reference).
 - `spell_repo: SpellRepository` — for resolving `known_spells` ids to `SpellData`.
-- `status_repo: StatusRepository` — for resolving status references used in AI heuristics (e.g., detecting whether an ally is afflicted by a curable status).
 - `turn_engine: TurnEngine` — used by AI for `can_reach(...)` queries and side-membership tests. (The AI SHALL NOT mutate engine state through this reference.)
+
+Status-effect checks (silence, target affliction) SHALL be performed through `CombatActor` methods (`has_silence_flag()`, `statuses.has(sid)`), so no `StatusRepository` reference is required on the context.
 
 `MonsterAiContext` SHALL be constructed once per turn (or per AI call) by `TurnEngine` and passed by reference. No defensive copy is required since the AI SHALL NOT mutate any field.
 
 #### Scenario: MonsterAiContext exposes required fields
-- **WHEN** a `MonsterAiContext` is constructed with `party`, `monsters`, `spell_repo`, `status_repo`, `turn_engine`
+- **WHEN** a `MonsterAiContext` is constructed with `party`, `monsters`, `spell_repo`, `turn_engine`
 - **THEN** every field SHALL be readable
 
 ### Requirement: MonsterAi selects an attack when no spell candidate exists

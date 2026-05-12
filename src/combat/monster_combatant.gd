@@ -55,6 +55,19 @@ func _read_max_mp() -> int:
 	return monster.max_mp
 
 
+func get_data() -> MonsterData:
+	if monster == null:
+		return null
+	return monster.data
+
+
+func get_known_spells() -> Array[StringName]:
+	var data := get_data()
+	if data == null:
+		return []
+	return data.known_spells
+
+
 func get_species_id() -> StringName:
 	if monster == null or monster.data == null:
 		return &""

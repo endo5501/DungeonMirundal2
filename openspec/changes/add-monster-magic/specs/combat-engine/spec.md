@@ -8,7 +8,7 @@ The system SHALL invoke `MonsterAi.choose(monster, ctx, rng)` for every acting `
 - `CastCommand`: resolve via the existing `_resolve_cast` path with the same silence / no-target / no-MP guards used for party casts.
 - `null`: behave as the existing "wait" path when `attack_range == MELEE` and at least one party member remains alive (emit `actor_action_started(monster, &"wait")` and append a `wait` report entry); otherwise (no party alive) skip the action.
 
-`TurnEngine` SHALL construct a `MonsterAiContext` once per turn (or once per monster turn — both are acceptable) and pass it to `MonsterAi.choose`. The context SHALL expose `party`, `monsters`, `spell_repo`, `status_repo`, and a reference to the engine itself (for `can_reach` queries). Monster AI SHALL NOT mutate engine state through this reference.
+`TurnEngine` SHALL construct a `MonsterAiContext` once per turn (or once per monster turn — both are acceptable) and pass it to `MonsterAi.choose`. The context SHALL expose `party`, `monsters`, `spell_repo`, and a reference to the engine itself (for `can_reach` queries). Monster AI SHALL NOT mutate engine state through this reference.
 
 The deterministic-tiebreak property SHALL be preserved: identical RNG seed and identical battle state SHALL produce identical command selection.
 

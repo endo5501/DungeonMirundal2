@@ -224,8 +224,7 @@ func _resolve_turn_inner(rng: RandomNumberGenerator) -> TurnReport:
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
 			if actor is MonsterCombatant:
-				# MonsterAi picks AttackCommand / CastCommand / null (wait/skip).
-				var ai_ctx := MonsterAiContext.new(party, monsters, get_spell_repo(), get_status_repo(), self)
+				var ai_ctx := MonsterAiContext.new(party, monsters, get_spell_repo(), self)
 				var ai_cmd: RefCounted = MonsterAi.choose(actor as MonsterCombatant, ai_ctx, rng)
 				if ai_cmd is CastCommand:
 					actor_action_started.emit(actor, &"cast")
