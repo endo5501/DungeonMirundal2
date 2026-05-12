@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/images/monsters/imp.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+monster_id = &"imp"
+monster_name = "Imp"
+max_hp_min = 8
+max_hp_max = 16
+max_mp_min = 4
+max_mp_max = 8
+attack = 4
+defense = 2
+agility = 11
+experience = 50
+gold_min = 15
+gold_max = 50
+battle_texture = ExtResource("2")
+resists = {}
+known_spells = Array[StringName]([&"dazil", &"poison_dart"])
+default_row = 0
+attack_range = 0

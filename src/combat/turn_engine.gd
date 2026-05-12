@@ -223,16 +223,36 @@ func _resolve_turn_inner(rng: RandomNumberGenerator) -> TurnReport:
 					actor_action_started.emit(actor, &"attack")
 					_resolve_attack(actor, random_target, rng, report, true)
 				continue
-			# Reach-aware target selection. Empty reachable set + party still
-			# alive → MELEE attacker waits; party fully wiped → fall through
-			# to natural skip (no action).
-			var target: CombatActor = _pick_living_party_reachable(actor, rng)
-			if target != null:
-				actor_action_started.emit(actor, &"attack")
-				_resolve_attack(actor, target, rng, report)
-			elif _any_party_alive() and _weapon_range_of(actor) == WeaponRange.MELEE:
-				actor_action_started.emit(actor, &"wait")
-				report.add_wait(actor)
+			if actor is MonsterCombatant:
+				# MonsterAi picks AttackCommand / CastCommand / null (wait/skip).
+				var ai_ctx := MonsterAiContext.new(party, monsters, get_spell_repo(), get_status_repo(), self)
+				var ai_cmd: RefCounted = MonsterAi.choose(actor as MonsterCombatant, ai_ctx, rng)
+				if ai_cmd is CastCommand:
+					actor_action_started.emit(actor, &"cast")
+					if actor.has_silence_flag():
+						report.add_cast_silenced(actor, (ai_cmd as CastCommand).spell_id)
+						continue
+					_resolve_cast(actor, ai_cmd as CastCommand, rng, report)
+				elif ai_cmd is AttackCommand:
+					var target: CombatActor = (ai_cmd as AttackCommand).target
+					if target != null:
+						actor_action_started.emit(actor, &"attack")
+						_resolve_attack(actor, target, rng, report)
+				else:
+					# null → wait (MELEE attacker still alive party) or skip (no party alive)
+					if _any_party_alive() and _weapon_range_of(actor) == WeaponRange.MELEE:
+						actor_action_started.emit(actor, &"wait")
+						report.add_wait(actor)
+			else:
+				# Non-MonsterCombatant combatants (test stubs, custom actors) fall
+				# back to the simple reachable-target attack policy.
+				var target: CombatActor = _pick_living_party_reachable(actor, rng)
+				if target != null:
+					actor_action_started.emit(actor, &"attack")
+					_resolve_attack(actor, target, rng, report)
+				elif _any_party_alive() and _weapon_range_of(actor) == WeaponRange.MELEE:
+					actor_action_started.emit(actor, &"wait")
+					report.add_wait(actor)
 		# Stop processing later actors as soon as either side is wiped.
 		if _all_monsters_dead() or _all_party_dead():
 			break
@@ -492,6 +512,12 @@ func _resolve_cast(caster: CombatActor, cmd: CastCommand, rng: RandomNumberGener
 
 func _resolve_cast_targets(caster: CombatActor, cmd: CastCommand, spell: SpellData) -> Dictionary:
 	var result: Dictionary = {"targets": [], "retargeted_from": ""}
+	# ENEMY_*/ALLY_* are interpreted relative to the caster's side: enemies are
+	# the opposing pool, allies are the caster's own pool. This lets a single
+	# SpellData (e.g. fire.tres) be cast by either side.
+	var caster_is_party := _is_party_member(caster)
+	var enemy_pool: Array = monsters if caster_is_party else party
+	var ally_pool: Array = party if caster_is_party else monsters
 	match spell.target_type:
 		SpellData.TargetType.ENEMY_ONE:
 			var enemy: CombatActor = cmd.target as CombatActor
@@ -499,14 +525,14 @@ func _resolve_cast_targets(caster: CombatActor, cmd: CastCommand, spell: SpellDa
 				result["targets"] = [enemy]
 			else:
 				var original_name := enemy.actor_name if enemy != null else ""
-				var fallback := _pick_alive_replacement(enemy, monsters)
+				var fallback := _pick_alive_replacement(enemy, enemy_pool)
 				if fallback != null:
 					result["targets"] = [fallback]
 					result["retargeted_from"] = original_name
 		SpellData.TargetType.ENEMY_GROUP:
 			var species_id := _species_id_of(cmd.target)
 			var collected: Array = []
-			for m in monsters:
+			for m in enemy_pool:
 				if m == null or not m.is_alive():
 					continue
 				if species_id == &"" or _species_id_of(m) == species_id:
@@ -518,16 +544,16 @@ func _resolve_cast_targets(caster: CombatActor, cmd: CastCommand, spell: SpellDa
 				result["targets"] = [ally]
 			else:
 				var original_name := ally.actor_name if ally != null else ""
-				var fallback := _pick_alive_replacement(ally, party)
+				var fallback := _pick_alive_replacement(ally, ally_pool)
 				if fallback != null:
 					result["targets"] = [fallback]
 					result["retargeted_from"] = original_name
 		SpellData.TargetType.ALLY_ALL:
-			var party_targets: Array = []
-			for p in party:
+			var ally_targets: Array = []
+			for p in ally_pool:
 				if p != null and p.is_alive():
-					party_targets.append(p)
-			result["targets"] = party_targets
+					ally_targets.append(p)
+			result["targets"] = ally_targets
 	return result
 
 

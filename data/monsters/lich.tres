@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/images/monsters/lich.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+monster_id = &"lich"
+monster_name = "Lich"
+max_hp_min = 35
+max_hp_max = 55
+max_mp_min = 14
+max_mp_max = 22
+attack = 10
+defense = 7
+agility = 10
+experience = 220
+gold_min = 180
+gold_max = 400
+battle_texture = ExtResource("2")
+resists = {
+&"poison": 1.0,
+&"sleep": 1.0,
+&"paralysis": 0.50,
+}
+known_spells = Array[StringName]([&"flame", &"blizzard", &"madalto"])
+default_row = 1
+attack_range = 1
