@@ -3,41 +3,25 @@ extends GutTest
 const TEST_SEED: int = 12345
 
 
-func _make_monster_data(id: StringName, name: String) -> MonsterData:
+func _make_monster_data(id: StringName, name: String, tier: int = 1) -> MonsterData:
 	var data := MonsterData.new()
 	data.monster_id = id
 	data.monster_name = name
 	data.max_hp_min = 5
 	data.max_hp_max = 5
+	data.tier = tier
 	return data
-
-
-func _make_group(id: StringName, min_count: int, max_count: int) -> MonsterGroupSpec:
-	var spec := MonsterGroupSpec.new()
-	spec.monster_id = id
-	spec.count_min = min_count
-	spec.count_max = max_count
-	return spec
-
-
-func _make_pattern(groups: Array[MonsterGroupSpec]) -> EncounterPattern:
-	var pattern := EncounterPattern.new()
-	pattern.groups = groups
-	return pattern
-
-
-func _make_entry(pattern: EncounterPattern, weight: int) -> EncounterEntry:
-	var entry := EncounterEntry.new()
-	entry.pattern = pattern
-	entry.weight = weight
-	return entry
 
 
 func _make_always_trigger_table() -> EncounterTableData:
 	var table := EncounterTableData.new()
 	table.floor = 1
 	table.probability_per_step = 1.0  # always triggers
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 2)]), 1)]
+	table.tier_weights = {1: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 2
+	table.count_per_species_max = 2
 	return table
 
 
@@ -45,14 +29,18 @@ func _make_never_trigger_table() -> EncounterTableData:
 	var table := EncounterTableData.new()
 	table.floor = 1
 	table.probability_per_step = 0.0  # never triggers
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 2)]), 1)]
+	table.tier_weights = {1: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 2
+	table.count_per_species_max = 2
 	return table
 
 
 func _make_repository() -> MonsterRepository:
 	var repo := MonsterRepository.new()
-	repo.register(_make_monster_data(&"slime", "Slime"))
-	repo.register(_make_monster_data(&"goblin", "Goblin"))
+	repo.register(_make_monster_data(&"slime", "Slime", 1))
+	repo.register(_make_monster_data(&"goblin", "Goblin", 2))
 	return repo
 
 
@@ -256,7 +244,11 @@ func _make_table_for_floor(floor: int) -> EncounterTableData:
 	var table := EncounterTableData.new()
 	table.floor = floor
 	table.probability_per_step = 1.0
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 2)]), 1)]
+	table.tier_weights = {1: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 2
+	table.count_per_species_max = 2
 	return table
 
 func test_set_tables_by_floor_uses_floor_1_when_floor_is_1():

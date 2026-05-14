@@ -4,13 +4,14 @@
 
 [resource]
 script = ExtResource("1_table")
-floor = 1
-probability_per_step = 0.10
+floor = 4
+probability_per_step = 0.13
 tier_weights = {
-1: 6,
-2: 1,
+1: 1,
+2: 4,
+3: 3,
 }
 species_count_min = 1
-species_count_max = 1
+species_count_max = 2
 count_per_species_min = 2
 count_per_species_max = 4

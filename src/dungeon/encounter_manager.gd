@@ -38,51 +38,66 @@ func notify_encounter_occurred() -> void:
 
 func generate(rng: RandomNumberGenerator) -> MonsterParty:
 	var party := MonsterParty.new()
-	if _table == null or _table.entries.is_empty():
+	if _table == null:
 		return party
-	var entry := _pick_weighted_entry(rng)
-	if entry == null:
+	var tier_weights := _table.normalized_tier_weights()
+	if tier_weights.is_empty():
 		return party
-	_populate_party(party, entry.pattern, rng)
+	var n_species: int = rng.randi_range(_table.species_count_min, _table.species_count_max)
+	# Track per-row spawn counts so we can truncate when either bucket would
+	# exceed ROW_CAP. Earlier species slots have spawn priority over later ones.
+	var spawned_per_row: Dictionary = {Row.FRONT: 0, Row.BACK: 0}
+	for i in range(n_species):
+		var tier: int = _pick_tier_weighted(tier_weights, rng)
+		if tier == -1:
+			continue
+		var candidates := _repository.find_by_tier(tier)
+		if candidates.is_empty():
+			push_warning("EncounterManager: no monsters registered for tier %d; skipping slot" % tier)
+			continue
+		var monster_data: MonsterData = candidates[rng.randi() % candidates.size()]
+		var count: int = rng.randi_range(_table.count_per_species_min, _table.count_per_species_max)
+		_spawn_with_truncation(party, monster_data, count, spawned_per_row, rng)
 	return party
 
 
-func _pick_weighted_entry(rng: RandomNumberGenerator) -> EncounterEntry:
-	var total := _table.total_weight()
+func _pick_tier_weighted(tier_weights: Dictionary, rng: RandomNumberGenerator) -> int:
+	var total := 0
+	for w in tier_weights.values():
+		total += int(w)
 	if total <= 0:
-		return null
+		return -1
 	var roll := rng.randi_range(1, total)
 	var cumulative := 0
-	for entry in _table.entries:
-		cumulative += entry.weight
+	# Iterate over int keys in sorted order so behavior is deterministic across
+	# any caller-supplied dictionary insertion order.
+	var sorted_keys := tier_weights.keys()
+	sorted_keys.sort()
+	for key in sorted_keys:
+		cumulative += int(tier_weights[key])
 		if roll <= cumulative:
-			return entry
-	return null
+			return int(key)
+	return -1
 
 
-func _populate_party(party: MonsterParty, pattern: EncounterPattern, rng: RandomNumberGenerator) -> void:
-	if pattern == null:
-		return
-	# Track per-row spawn counts so we can truncate when either bucket would
-	# exceed ROW_CAP. Earlier groups have spawn priority over later ones.
-	var spawned_per_row: Dictionary = {Row.FRONT: 0, Row.BACK: 0}
-	for group in pattern.groups:
-		var source := _repository.find(group.monster_id)
-		if source == null:
-			push_warning("EncounterManager: monster_id %s not found in repository" % group.monster_id)
+func _spawn_with_truncation(
+		party: MonsterParty,
+		source: MonsterData,
+		count: int,
+		spawned_per_row: Dictionary,
+		rng: RandomNumberGenerator,
+) -> void:
+	var row: int = source.default_row
+	var bucket: int = spawned_per_row.get(row, 0)
+	var dropped := 0
+	for i in range(count):
+		if bucket >= ROW_CAP:
+			dropped += 1
 			continue
-		var count := group.roll_count(rng)
-		var row: int = source.default_row
-		var bucket: int = spawned_per_row.get(row, 0)
-		var dropped := 0
-		for i in range(count):
-			if bucket >= ROW_CAP:
-				dropped += 1
-				continue
-			party.add(Monster.new(source, rng))
-			bucket += 1
-		spawned_per_row[row] = bucket
-		if dropped > 0:
-			var row_name: String = "FRONT" if row == Row.FRONT else "BACK"
-			push_warning("EncounterManager: %d %s instance(s) dropped from %s row (cap %d)"
-				% [dropped, group.monster_id, row_name, ROW_CAP])
+		party.add(Monster.new(source, rng))
+		bucket += 1
+	spawned_per_row[row] = bucket
+	if dropped > 0:
+		var row_name: String = "FRONT" if row == Row.FRONT else "BACK"
+		push_warning("EncounterManager: %d %s instance(s) dropped from %s row (cap %d)"
+			% [dropped, source.monster_id, row_name, ROW_CAP])
