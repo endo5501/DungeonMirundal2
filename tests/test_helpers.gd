@@ -87,3 +87,49 @@ static func make_neighbor_to_start_fixture(start: Vector2i, dir: int) -> WizMap:
 	wm.set_edge(neighbor.x, neighbor.y, dir, EdgeType.OPEN)
 	wm.cell(start.x, start.y).tile = TileType.START
 	return wm
+
+
+static func make_monster_data(
+	id: StringName,
+	name: String = "",
+	tier: int = 1,
+	hp_min: int = 5,
+	hp_max: int = 5,
+	default_row: int = Row.FRONT,
+	attack_range: int = WeaponRange.MELEE,
+) -> MonsterData:
+	var data := MonsterData.new()
+	data.monster_id = id
+	data.monster_name = name if name != "" else String(id)
+	data.max_hp_min = hp_min
+	data.max_hp_max = hp_max
+	data.attack = 1
+	data.defense = 1
+	data.agility = 1
+	data.experience = 1
+	data.gold_min = 0
+	data.gold_max = 0
+	data.default_row = default_row
+	data.attack_range = attack_range
+	data.tier = tier
+	return data
+
+
+static func make_encounter_table(
+	floor: int = 1,
+	probability_per_step: float = 0.1,
+	tier_weights: Dictionary = {1: 1},
+	species_count_min: int = 1,
+	species_count_max: int = 1,
+	count_per_species_min: int = 1,
+	count_per_species_max: int = 1,
+) -> EncounterTableData:
+	var table := EncounterTableData.new()
+	table.floor = floor
+	table.probability_per_step = probability_per_step
+	table.tier_weights = tier_weights
+	table.species_count_min = species_count_min
+	table.species_count_max = species_count_max
+	table.count_per_species_min = count_per_species_min
+	table.count_per_species_max = count_per_species_max
+	return table

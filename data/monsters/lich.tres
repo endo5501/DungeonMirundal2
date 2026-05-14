@@ -26,3 +26,4 @@ resists = {
 known_spells = Array[StringName]([&"flame", &"blizzard", &"madalto"])
 default_row = 1
 attack_range = 1
+tier = 5

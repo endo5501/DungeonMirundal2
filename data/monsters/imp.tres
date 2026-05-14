@@ -22,3 +22,4 @@ resists = {}
 known_spells = Array[StringName]([&"dazil", &"poison_dart"])
 default_row = 0
 attack_range = 0
+tier = 3

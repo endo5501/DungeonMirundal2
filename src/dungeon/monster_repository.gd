@@ -23,5 +23,20 @@ func find(monster_id: StringName) -> MonsterData:
 	return _by_id.get(monster_id, null)
 
 
+func all() -> Array[MonsterData]:
+	var results: Array[MonsterData] = []
+	for monster in _by_id.values():
+		results.append(monster)
+	return results
+
+
+func find_by_tier(tier: int) -> Array[MonsterData]:
+	var results: Array[MonsterData] = []
+	for monster in _by_id.values():
+		if monster.tier == tier:
+			results.append(monster)
+	return results
+
+
 func size() -> int:
 	return _by_id.size()

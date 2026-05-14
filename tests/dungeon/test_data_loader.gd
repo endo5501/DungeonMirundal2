@@ -110,44 +110,99 @@ func test_loaded_slime_has_correct_fields():
 	assert_true(slime.is_valid())
 
 
+func test_all_shipped_monsters_have_tier_in_valid_range():
+	var monsters := _loader.load_all_monsters()
+	for m in monsters:
+		assert_gte(m.tier, 1, "monster %s tier should be >= 1" % String(m.monster_id))
+		assert_lte(m.tier, 5, "monster %s tier should be <= 5" % String(m.monster_id))
+
+
+func _find_loaded_monster(id: StringName) -> MonsterData:
+	for m in _loader.load_all_monsters():
+		if m.monster_id == id:
+			return m
+	return null
+
+
+func test_slime_and_bat_are_tier_1():
+	assert_eq(_find_loaded_monster(&"slime").tier, 1)
+	assert_eq(_find_loaded_monster(&"bat").tier, 1)
+
+
+func test_goblin_and_skeleton_are_tier_2():
+	assert_eq(_find_loaded_monster(&"goblin").tier, 2)
+	assert_eq(_find_loaded_monster(&"skeleton").tier, 2)
+
+
+func test_ghost_imp_goblin_shaman_are_tier_3():
+	assert_eq(_find_loaded_monster(&"ghost").tier, 3)
+	assert_eq(_find_loaded_monster(&"imp").tier, 3)
+	assert_eq(_find_loaded_monster(&"goblin_shaman").tier, 3)
+
+
+func test_witch_dark_priest_wraith_are_tier_4():
+	assert_eq(_find_loaded_monster(&"witch").tier, 4)
+	assert_eq(_find_loaded_monster(&"dark_priest").tier, 4)
+	assert_eq(_find_loaded_monster(&"wraith").tier, 4)
+
+
+func test_lich_and_dragon_are_tier_5():
+	assert_eq(_find_loaded_monster(&"lich").tier, 5)
+	assert_eq(_find_loaded_monster(&"dragon").tier, 5)
+
+
+func test_every_tier_has_at_least_one_shipped_monster():
+	var monsters := _loader.load_all_monsters()
+	var tier_counts: Dictionary = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+	for m in monsters:
+		if tier_counts.has(m.tier):
+			tier_counts[m.tier] += 1
+	for tier in [1, 2, 3, 4, 5]:
+		assert_gt(tier_counts[tier], 0, "tier %d should have at least one monster" % tier)
+
+
 func test_load_all_encounter_tables_returns_at_least_one():
 	var tables := _loader.load_all_encounter_tables()
 	assert_gte(tables.size(), 1)
 
 
+func _find_table_for_floor(floor: int) -> EncounterTableData:
+	for t in _loader.load_all_encounter_tables():
+		if t.floor == floor:
+			return t
+	return null
+
+
 func test_loaded_floor_1_table_is_valid():
-	var tables := _loader.load_all_encounter_tables()
-	var floor_1: EncounterTableData
-	for t in tables:
-		if t.floor == 1:
-			floor_1 = t
-			break
+	var floor_1 := _find_table_for_floor(1)
 	assert_not_null(floor_1)
 	assert_true(floor_1.is_valid())
-	assert_gt(floor_1.entries.size(), 0)
+	assert_gt(floor_1.tier_weights.size(), 0)
 	assert_gt(floor_1.probability_per_step, 0.0)
 
 
 func test_loaded_floor_2_table_is_valid():
-	var tables := _loader.load_all_encounter_tables()
-	var floor_2: EncounterTableData
-	for t in tables:
-		if t.floor == 2:
-			floor_2 = t
-			break
+	var floor_2 := _find_table_for_floor(2)
 	assert_not_null(floor_2)
 	assert_true(floor_2.is_valid())
-	assert_gt(floor_2.entries.size(), 0)
+	assert_gt(floor_2.tier_weights.size(), 0)
 	assert_gt(floor_2.probability_per_step, 0.0)
 
 
-func test_load_all_encounter_tables_returns_floor_1_and_2():
+func test_all_floors_1_through_12_have_tables():
 	var tables := _loader.load_all_encounter_tables()
 	var floor_numbers: Array[int] = []
 	for t in tables:
 		floor_numbers.append(t.floor)
-	assert_true(floor_numbers.has(1), "encounter tables include floor 1")
-	assert_true(floor_numbers.has(2), "encounter tables include floor 2")
+	for f in range(1, 13):
+		assert_true(floor_numbers.has(f), "encounter tables include floor %d" % f)
+
+
+func test_all_loaded_encounter_tables_are_valid():
+	var tables := _loader.load_all_encounter_tables()
+	for t in tables:
+		assert_true(t.is_valid(),
+			"encounter table for floor %d should be valid" % t.floor)
 
 
 # --- combat-system: per-level growth and exp_table ---

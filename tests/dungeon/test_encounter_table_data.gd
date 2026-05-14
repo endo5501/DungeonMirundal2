@@ -1,61 +1,8 @@
 extends GutTest
 
 
-func _make_group(id: StringName, min_count: int, max_count: int) -> MonsterGroupSpec:
-	var spec := MonsterGroupSpec.new()
-	spec.monster_id = id
-	spec.count_min = min_count
-	spec.count_max = max_count
-	return spec
-
-
-func _make_pattern(groups: Array[MonsterGroupSpec]) -> EncounterPattern:
-	var pattern := EncounterPattern.new()
-	pattern.groups = groups
-	return pattern
-
-
-func _make_entry(pattern: EncounterPattern, weight: int) -> EncounterEntry:
-	var entry := EncounterEntry.new()
-	entry.pattern = pattern
-	entry.weight = weight
-	return entry
-
-
-# --- EncounterEntry ---
-
-func test_entry_is_resource():
-	var entry := EncounterEntry.new()
-	assert_true(entry is Resource)
-
-
-func test_entry_exposes_pattern_and_weight():
-	var pattern := _make_pattern([_make_group(&"slime", 2, 4)])
-	var entry := _make_entry(pattern, 3)
-	assert_eq(entry.pattern, pattern)
-	assert_eq(entry.weight, 3)
-
-
-func test_entry_is_valid_with_positive_weight():
-	var entry := _make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)
-	assert_true(entry.is_valid())
-
-
-func test_entry_rejects_zero_weight():
-	var entry := _make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 0)
-	assert_false(entry.is_valid())
-
-
-func test_entry_rejects_null_pattern():
-	var entry := EncounterEntry.new()
-	entry.pattern = null
-	entry.weight = 1
-	assert_false(entry.is_valid())
-
-
-func test_entry_rejects_invalid_pattern():
-	var entry := _make_entry(_make_pattern([]), 1)
-	assert_false(entry.is_valid())
+func _make_table(p_floor: int = 1, prob: float = 0.1) -> EncounterTableData:
+	return TestHelpers.make_encounter_table(p_floor, prob, {1: 1}, 1, 1, 1, 1)
 
 
 # --- EncounterTableData ---
@@ -66,69 +13,139 @@ func test_table_is_resource():
 
 
 func test_table_exposes_floor_and_probability():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
+	var table := _make_table()
 	assert_eq(table.floor, 1)
 	assert_eq(table.probability_per_step, 0.1)
 
 
-func test_table_computes_total_weight():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
-	table.entries = [
-		_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 2),
-		_make_entry(_make_pattern([_make_group(&"goblin", 1, 1)]), 1),
-		_make_entry(_make_pattern([_make_group(&"bat", 1, 3)]), 1),
-	]
-	assert_eq(table.total_weight(), 4)
+func test_table_exposes_tier_weights():
+	var table := _make_table()
+	table.tier_weights = {1: 6, 2: 1}
+	assert_eq(table.tier_weights[1], 6)
+	assert_eq(table.tier_weights[2], 1)
 
 
-func test_table_preserves_entry_order():
-	var table := EncounterTableData.new()
-	var first := _make_entry(_make_pattern([_make_group(&"slime", 1, 1)]), 1)
-	var second := _make_entry(_make_pattern([_make_group(&"goblin", 1, 1)]), 1)
-	table.entries = [first, second]
-	assert_eq(table.entries[0], first)
-	assert_eq(table.entries[1], second)
+func test_table_exposes_species_count_range():
+	var table := _make_table()
+	table.species_count_min = 1
+	table.species_count_max = 3
+	assert_eq(table.species_count_min, 1)
+	assert_eq(table.species_count_max, 3)
+
+
+func test_table_exposes_count_per_species_range():
+	var table := _make_table()
+	table.count_per_species_min = 2
+	table.count_per_species_max = 5
+	assert_eq(table.count_per_species_min, 2)
+	assert_eq(table.count_per_species_max, 5)
 
 
 func test_table_is_valid_with_proper_fields():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)]
+	var table := _make_table()
+	table.tier_weights = {1: 6, 2: 1}
+	table.species_count_max = 2
+	table.count_per_species_max = 4
 	assert_true(table.is_valid())
 
 
+func test_table_rejects_empty_tier_weights():
+	var table := _make_table()
+	table.tier_weights = {}
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_all_zero_tier_weights():
+	var table := _make_table()
+	table.tier_weights = {1: 0, 2: 0}
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_negative_weight():
+	var table := _make_table()
+	table.tier_weights = {1: -1}
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_tier_key_above_5():
+	var table := _make_table()
+	table.tier_weights = {6: 1}
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_tier_key_below_1():
+	var table := _make_table()
+	table.tier_weights = {0: 1}
+	assert_false(table.is_valid())
+
+
 func test_table_rejects_probability_out_of_range():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 1.5
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)]
+	var table := _make_table(1, 1.5)
 	assert_false(table.is_valid())
 
 
 func test_table_rejects_negative_probability():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = -0.1
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)]
-	assert_false(table.is_valid())
-
-
-func test_table_rejects_empty_entries():
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
-	table.entries = []
+	var table := _make_table(1, -0.1)
 	assert_false(table.is_valid())
 
 
 func test_table_rejects_invalid_floor():
-	var table := EncounterTableData.new()
-	table.floor = 0
-	table.probability_per_step = 0.1
-	table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)]
+	var table := _make_table(0)
 	assert_false(table.is_valid())
+
+
+func test_table_rejects_inverted_species_count():
+	var table := _make_table()
+	table.species_count_min = 3
+	table.species_count_max = 1
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_zero_species_count_min():
+	var table := _make_table()
+	table.species_count_min = 0
+	table.species_count_max = 1
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_inverted_count_per_species():
+	var table := _make_table()
+	table.count_per_species_min = 5
+	table.count_per_species_max = 2
+	assert_false(table.is_valid())
+
+
+func test_table_rejects_zero_count_per_species_min():
+	var table := _make_table()
+	table.count_per_species_min = 0
+	table.count_per_species_max = 4
+	assert_false(table.is_valid())
+
+
+# --- key normalization (Godot dict serialization may coerce int keys to string) ---
+
+func test_table_normalizes_string_tier_keys():
+	var table := _make_table()
+	# Simulate a .tres save/load that coerced "3" to string key
+	table.tier_weights = {"3": 5}
+	assert_true(table.is_valid())
+	# normalized_tier_weights() returns int keys
+	var normalized := table.normalized_tier_weights()
+	assert_true(normalized.has(3))
+	assert_eq(normalized[3], 5)
+
+
+func test_table_rejects_non_integer_string_tier_keys():
+	var table := _make_table()
+	table.tier_weights = {"abc": 1}
+	assert_false(table.is_valid())
+
+
+func test_normalized_tier_weights_returns_int_keys_for_int_input():
+	var table := _make_table()
+	table.tier_weights = {1: 4, 2: 3}
+	var normalized := table.normalized_tier_weights()
+	assert_true(normalized.has(1))
+	assert_true(normalized.has(2))
+	assert_eq(normalized[1], 4)
+	assert_eq(normalized[2], 3)

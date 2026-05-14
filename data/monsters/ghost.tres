@@ -23,3 +23,4 @@ resists = {
 }
 default_row = 1
 attack_range = 1
+tier = 3

@@ -10,56 +10,10 @@ var _table: EncounterTableData
 
 func before_each():
 	_repo = MonsterRepository.new()
-	_repo.register(_make_monster_data(&"slime", "Slime", 5, 10))
-	_repo.register(_make_monster_data(&"goblin", "Goblin", 8, 12))
-	_repo.register(_make_monster_data(&"bat", "Bat", 3, 6))
-	_table = _make_simple_table()
-
-
-func _make_monster_data(id: StringName, name: String, hp_min: int, hp_max: int) -> MonsterData:
-	var data := MonsterData.new()
-	data.monster_id = id
-	data.monster_name = name
-	data.max_hp_min = hp_min
-	data.max_hp_max = hp_max
-	data.attack = 1
-	data.defense = 1
-	data.agility = 1
-	data.experience = 1
-	return data
-
-
-func _make_group(id: StringName, min_count: int, max_count: int) -> MonsterGroupSpec:
-	var spec := MonsterGroupSpec.new()
-	spec.monster_id = id
-	spec.count_min = min_count
-	spec.count_max = max_count
-	return spec
-
-
-func _make_pattern(groups: Array[MonsterGroupSpec]) -> EncounterPattern:
-	var pattern := EncounterPattern.new()
-	pattern.groups = groups
-	return pattern
-
-
-func _make_entry(pattern: EncounterPattern, weight: int) -> EncounterEntry:
-	var entry := EncounterEntry.new()
-	entry.pattern = pattern
-	entry.weight = weight
-	return entry
-
-
-func _make_simple_table() -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
-	table.entries = [
-		_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1),
-		_make_entry(_make_pattern([_make_group(&"goblin", 1, 2)]), 1),
-		_make_entry(_make_pattern([_make_group(&"bat", 2, 3)]), 1),
-	]
-	return table
+	_repo.register(TestHelpers.make_monster_data(&"slime", "Slime", 1, 5, 10))
+	_repo.register(TestHelpers.make_monster_data(&"goblin", "Goblin", 2, 8, 12))
+	_repo.register(TestHelpers.make_monster_data(&"bat", "Bat", 1, 3, 6))
+	_table = TestHelpers.make_encounter_table(1, 0.1, {1: 2, 2: 1}, 1, 1, 2, 4)
 
 
 func _make_rng(seed_value: int) -> RandomNumberGenerator:
@@ -146,75 +100,134 @@ func test_cooldown_zero_means_no_suppression():
 
 # --- generate ---
 
-func test_generate_produces_party_matching_a_pattern():
-	_table.probability_per_step = 1.0
+func test_generate_returns_empty_party_when_table_null():
 	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
-	manager.set_table(_table)
 	var rng := _make_rng(TEST_SEED)
 	var party := manager.generate(rng)
 	assert_not_null(party)
-	assert_gt(party.size(), 0)
-	# party content must match exactly one pattern (one species only, per our simple table)
-	var counts := party.counts_by_species()
-	assert_eq(counts.size(), 1)
+	assert_eq(party.size(), 0)
 
 
-func test_generate_selects_single_entry_when_only_one():
-	var single_table := EncounterTableData.new()
-	single_table.floor = 1
-	single_table.probability_per_step = 1.0
-	single_table.entries = [_make_entry(_make_pattern([_make_group(&"slime", 2, 4)]), 1)]
+func test_generate_returns_empty_when_tier_weights_empty():
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {}
 	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
-	manager.set_table(single_table)
+	manager.set_table(table)
 	var rng := _make_rng(TEST_SEED)
 	var party := manager.generate(rng)
-	var counts := party.counts_by_species()
-	assert_true(counts.has(&"slime"))
-	assert_between(counts[&"slime"], 2, 4)
+	assert_not_null(party)
+	assert_eq(party.size(), 0)
 
 
-func test_generate_counts_match_pattern_range_over_many_runs():
+func test_generate_picks_monster_from_tier():
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {2: 1}  # only goblin (tier 2) should be picked
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 2
+	table.count_per_species_max = 2
 	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
-	manager.set_table(_table)
+	manager.set_table(table)
+	var rng := _make_rng(TEST_SEED)
+	var party := manager.generate(rng)
+	assert_eq(party.size(), 2)
+	for m in party.members:
+		assert_eq(m.data.monster_id, &"goblin")
+
+
+func test_generate_respects_count_per_species_range():
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {2: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 2
+	table.count_per_species_max = 5
+	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
+	manager.set_table(table)
 	for i in range(30):
 		var rng := _make_rng(TEST_SEED + i)
 		var party := manager.generate(rng)
-		var counts := party.counts_by_species()
-		for id in counts.keys():
-			match id:
-				&"slime": assert_between(counts[id], 2, 4)
-				&"goblin": assert_between(counts[id], 1, 2)
-				&"bat": assert_between(counts[id], 2, 3)
-				_: fail_test("unexpected species %s" % id)
+		assert_between(party.size(), 2, 5)
 
 
-func test_generate_respects_weights_deterministically():
-	# A heavy-weight entry should be selected more often under a fixed seed
-	var weighted := EncounterTableData.new()
-	weighted.floor = 1
-	weighted.probability_per_step = 1.0
-	weighted.entries = [
-		_make_entry(_make_pattern([_make_group(&"slime", 1, 1)]), 10),
-		_make_entry(_make_pattern([_make_group(&"goblin", 1, 1)]), 1),
-	]
+func test_generate_respects_species_count_range():
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {1: 1, 2: 1}
+	table.species_count_min = 2
+	table.species_count_max = 2
+	table.count_per_species_min = 1
+	table.count_per_species_max = 1
 	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
-	manager.set_table(weighted)
-	var slime_count := 0
+	manager.set_table(table)
+	var rng := _make_rng(TEST_SEED)
+	var party := manager.generate(rng)
+	assert_eq(party.size(), 2, "species_count=2 + count_per_species=1 should yield 2 monsters")
+
+
+func test_generate_is_deterministic_for_same_seed():
+	var manager_a := EncounterManager.new(_repo, NO_COOLDOWN)
+	manager_a.set_table(_table)
+	var manager_b := EncounterManager.new(_repo, NO_COOLDOWN)
+	manager_b.set_table(_table)
+	var party_a := manager_a.generate(_make_rng(TEST_SEED))
+	var party_b := manager_b.generate(_make_rng(TEST_SEED))
+	assert_eq(party_a.size(), party_b.size())
+	for i in range(party_a.size()):
+		assert_eq(party_a.members[i].data.monster_id, party_b.members[i].data.monster_id)
+
+
+func test_generate_weights_select_dominant_tier():
+	# Heavy tier 1 weight should make slime/bat dominate over goblin (tier 2)
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {1: 10, 2: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 1
+	table.count_per_species_max = 1
+	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
+	manager.set_table(table)
+	var tier_1_count := 0
 	for i in range(100):
 		var rng := _make_rng(TEST_SEED + i)
 		var party := manager.generate(rng)
-		if party.counts_by_species().has(&"slime"):
-			slime_count += 1
-	# With 10:1 weight, slime should dominate
-	assert_gt(slime_count, 70)
+		if party.size() > 0 and party.members[0].data.tier == 1:
+			tier_1_count += 1
+	assert_gt(tier_1_count, 70, "with 10:1 weight tier 1 should dominate")
 
 
-func test_generate_fails_gracefully_when_monster_id_missing():
-	var empty_repo := MonsterRepository.new()  # no monsters registered
+func test_generate_skips_empty_tier_and_emits_warning():
+	# tier 5 has no candidates; the slot should be skipped, leaving 0 monsters.
+	var table := EncounterTableData.new()
+	table.floor = 1
+	table.probability_per_step = 1.0
+	table.tier_weights = {5: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 3
+	table.count_per_species_max = 3
+	var manager := EncounterManager.new(_repo, NO_COOLDOWN)
+	manager.set_table(table)
+	var rng := _make_rng(TEST_SEED)
+	var party := manager.generate(rng)
+	assert_eq(party.size(), 0)
+	assert_push_warning("no monsters registered for tier 5")
+
+
+func test_generate_handles_empty_repository_gracefully():
+	var empty_repo := MonsterRepository.new()
 	var manager := EncounterManager.new(empty_repo, NO_COOLDOWN)
 	manager.set_table(_table)
 	var rng := _make_rng(TEST_SEED)
 	var party := manager.generate(rng)
-	# returns empty party rather than a malformed one
 	assert_not_null(party)
 	assert_eq(party.size(), 0)

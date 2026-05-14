@@ -17,3 +17,4 @@ gold_min = 5
 gold_max = 15
 battle_texture = ExtResource("2")
 resists = {}
+tier = 2

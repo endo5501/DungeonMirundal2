@@ -25,3 +25,4 @@ resists = {
 known_spells = Array[StringName]([&"heal", &"holy", &"badi"])
 default_row = 1
 attack_range = 0
+tier = 4
