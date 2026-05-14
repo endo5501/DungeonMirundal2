@@ -7,14 +7,14 @@
 
 ## 2. 既存 12 MonsterData .tres に tier 値を明示記入
 
-- [ ] 2.1 `tests/dungeon/test_data_loader.gd` に「全 shipped monster が `1 <= tier <= 5`」「slime/bat=1」「goblin/skeleton=2」「ghost/imp/goblin_shaman=3」「witch/dark_priest/wraith=4」「lich/dragon=5」「各 tier に最低1種存在」のテストを追加 (red)
-- [ ] 2.2 `data/monsters/slime.tres` `bat.tres` に `tier = 1` を追記
-- [ ] 2.3 `data/monsters/goblin.tres` `skeleton.tres` に `tier = 2` を追記
-- [ ] 2.4 `data/monsters/ghost.tres` `imp.tres` `goblin_shaman.tres` に `tier = 3` を追記
-- [ ] 2.5 `data/monsters/witch.tres` `dark_priest.tres` `wraith.tres` に `tier = 4` を追記
-- [ ] 2.6 `data/monsters/lich.tres` `dragon.tres` に `tier = 5` を追記
-- [ ] 2.7 `tests/dungeon/test_data_loader.gd` の全テストが通ることを確認
-- [ ] 2.8 上記をコミット (`feat: assign tier to all shipped monster data`)
+- [x] 2.1 `tests/dungeon/test_data_loader.gd` に「全 shipped monster が `1 <= tier <= 5`」「slime/bat=1」「goblin/skeleton=2」「ghost/imp/goblin_shaman=3」「witch/dark_priest/wraith=4」「lich/dragon=5」「各 tier に最低1種存在」のテストを追加 (red)
+- [x] 2.2 `data/monsters/slime.tres` `bat.tres` に `tier = 1` を追記
+- [x] 2.3 `data/monsters/goblin.tres` `skeleton.tres` に `tier = 2` を追記
+- [x] 2.4 `data/monsters/ghost.tres` `imp.tres` `goblin_shaman.tres` に `tier = 3` を追記
+- [x] 2.5 `data/monsters/witch.tres` `dark_priest.tres` `wraith.tres` に `tier = 4` を追記
+- [x] 2.6 `data/monsters/lich.tres` `dragon.tres` に `tier = 5` を追記
+- [x] 2.7 `tests/dungeon/test_data_loader.gd` の全テストが通ることを確認
+- [x] 2.8 上記をコミット (`feat: assign tier to all shipped monster data`)
 
 ## 3. MonsterRepository に find_by_tier を追加
 

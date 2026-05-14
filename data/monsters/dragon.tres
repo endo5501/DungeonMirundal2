@@ -21,3 +21,4 @@ resists = {
 &"paralysis": 0.30,
 &"confusion": 0.50,
 }
+tier = 5

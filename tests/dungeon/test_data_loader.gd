@@ -110,6 +110,57 @@ func test_loaded_slime_has_correct_fields():
 	assert_true(slime.is_valid())
 
 
+func test_all_shipped_monsters_have_tier_in_valid_range():
+	var monsters := _loader.load_all_monsters()
+	for m in monsters:
+		assert_gte(m.tier, 1, "monster %s tier should be >= 1" % String(m.monster_id))
+		assert_lte(m.tier, 5, "monster %s tier should be <= 5" % String(m.monster_id))
+
+
+func _find_loaded_monster(id: StringName) -> MonsterData:
+	for m in _loader.load_all_monsters():
+		if m.monster_id == id:
+			return m
+	return null
+
+
+func test_slime_and_bat_are_tier_1():
+	assert_eq(_find_loaded_monster(&"slime").tier, 1)
+	assert_eq(_find_loaded_monster(&"bat").tier, 1)
+
+
+func test_goblin_and_skeleton_are_tier_2():
+	assert_eq(_find_loaded_monster(&"goblin").tier, 2)
+	assert_eq(_find_loaded_monster(&"skeleton").tier, 2)
+
+
+func test_ghost_imp_goblin_shaman_are_tier_3():
+	assert_eq(_find_loaded_monster(&"ghost").tier, 3)
+	assert_eq(_find_loaded_monster(&"imp").tier, 3)
+	assert_eq(_find_loaded_monster(&"goblin_shaman").tier, 3)
+
+
+func test_witch_dark_priest_wraith_are_tier_4():
+	assert_eq(_find_loaded_monster(&"witch").tier, 4)
+	assert_eq(_find_loaded_monster(&"dark_priest").tier, 4)
+	assert_eq(_find_loaded_monster(&"wraith").tier, 4)
+
+
+func test_lich_and_dragon_are_tier_5():
+	assert_eq(_find_loaded_monster(&"lich").tier, 5)
+	assert_eq(_find_loaded_monster(&"dragon").tier, 5)
+
+
+func test_every_tier_has_at_least_one_shipped_monster():
+	var monsters := _loader.load_all_monsters()
+	var tier_counts: Dictionary = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+	for m in monsters:
+		if tier_counts.has(m.tier):
+			tier_counts[m.tier] += 1
+	for tier in [1, 2, 3, 4, 5]:
+		assert_gt(tier_counts[tier], 0, "tier %d should have at least one monster" % tier)
+
+
 func test_load_all_encounter_tables_returns_at_least_one():
 	var tables := _loader.load_all_encounter_tables()
 	assert_gte(tables.size(), 1)

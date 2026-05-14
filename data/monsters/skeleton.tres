@@ -21,3 +21,4 @@ resists = {
 &"sleep": 1.0,
 &"paralysis": 0.50,
 }
+tier = 2
