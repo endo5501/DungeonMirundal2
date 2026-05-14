@@ -353,3 +353,46 @@ func test_existing_six_monsters_load_with_zero_mp_and_empty_spells():
 			"existing monster %s should have max_mp_max == 0" % String(id))
 		assert_eq(monster.known_spells.size(), 0,
 			"existing monster %s should have empty known_spells" % String(id))
+
+
+# --- add-monster-tier-encounters: tier field ---
+
+func test_monster_data_has_tier_field_with_default_1():
+	var md := MonsterData.new()
+	assert_eq(md.tier, 1)
+
+
+func test_monster_data_tier_is_writable():
+	var md := MonsterData.new()
+	md.tier = 3
+	assert_eq(md.tier, 3)
+
+
+func test_is_valid_accepts_tier_in_range():
+	_slime.tier = 3
+	assert_true(_slime.is_valid())
+
+
+func test_is_valid_accepts_tier_1():
+	_slime.tier = 1
+	assert_true(_slime.is_valid())
+
+
+func test_is_valid_accepts_tier_5():
+	_slime.tier = 5
+	assert_true(_slime.is_valid())
+
+
+func test_is_valid_rejects_tier_zero():
+	_slime.tier = 0
+	assert_false(_slime.is_valid())
+
+
+func test_is_valid_rejects_tier_above_5():
+	_slime.tier = 6
+	assert_false(_slime.is_valid())
+
+
+func test_is_valid_rejects_negative_tier():
+	_slime.tier = -1
+	assert_false(_slime.is_valid())

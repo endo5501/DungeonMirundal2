@@ -18,6 +18,7 @@ extends Resource
 @export var known_spells: Array[StringName] = []
 @export_enum("FRONT", "BACK") var default_row: int = Row.FRONT
 @export_enum("MELEE", "RANGED") var attack_range: int = WeaponRange.MELEE
+@export var tier: int = 1
 
 
 func is_valid() -> bool:
@@ -34,5 +35,7 @@ func is_valid() -> bool:
 	if gold_min < 0:
 		return false
 	if gold_min > gold_max:
+		return false
+	if tier < 1 or tier > 5:
 		return false
 	return true
