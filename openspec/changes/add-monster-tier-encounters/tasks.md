@@ -90,5 +90,5 @@
 
 ## 11. OpenSpec ドキュメント検証
 
-- [ ] 11.1 `openspec validate add-monster-tier-encounters --strict` を実行して strict 検証パスを確認
+- [x] 11.1 `openspec validate add-monster-tier-encounters --strict` を実行して strict 検証パスを確認
 - [ ] 11.2 全テスト・手動確認パス後、`/opsx:archive` でアーカイブする (実装完了後の作業)
