@@ -2,15 +2,7 @@ extends GutTest
 
 
 func _make_table(p_floor: int = 1, prob: float = 0.1) -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = p_floor
-	table.probability_per_step = prob
-	table.tier_weights = {1: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = 1
-	table.count_per_species_max = 1
-	return table
+	return TestHelpers.make_encounter_table(p_floor, prob, {1: 1}, 1, 1, 1, 1)
 
 
 # --- EncounterTableData ---

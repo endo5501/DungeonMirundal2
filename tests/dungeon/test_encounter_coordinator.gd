@@ -3,44 +3,18 @@ extends GutTest
 const TEST_SEED: int = 12345
 
 
-func _make_monster_data(id: StringName, name: String, tier: int = 1) -> MonsterData:
-	var data := MonsterData.new()
-	data.monster_id = id
-	data.monster_name = name
-	data.max_hp_min = 5
-	data.max_hp_max = 5
-	data.tier = tier
-	return data
-
-
 func _make_always_trigger_table() -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 1.0  # always triggers
-	table.tier_weights = {1: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = 2
-	table.count_per_species_max = 2
-	return table
+	return TestHelpers.make_encounter_table(1, 1.0, {1: 1}, 1, 1, 2, 2)
 
 
 func _make_never_trigger_table() -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.0  # never triggers
-	table.tier_weights = {1: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = 2
-	table.count_per_species_max = 2
-	return table
+	return TestHelpers.make_encounter_table(1, 0.0, {1: 1}, 1, 1, 2, 2)
 
 
 func _make_repository() -> MonsterRepository:
 	var repo := MonsterRepository.new()
-	repo.register(_make_monster_data(&"slime", "Slime", 1))
-	repo.register(_make_monster_data(&"goblin", "Goblin", 2))
+	repo.register(TestHelpers.make_monster_data(&"slime", "Slime", 1))
+	repo.register(TestHelpers.make_monster_data(&"goblin", "Goblin", 2))
 	return repo
 
 
@@ -241,15 +215,7 @@ func test_default_overlay_is_stub_when_none_injected():
 # --- floor-based table selection ---
 
 func _make_table_for_floor(floor: int) -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = floor
-	table.probability_per_step = 1.0
-	table.tier_weights = {1: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = 2
-	table.count_per_species_max = 2
-	return table
+	return TestHelpers.make_encounter_table(floor, 1.0, {1: 1}, 1, 1, 2, 2)
 
 func test_set_tables_by_floor_uses_floor_1_when_floor_is_1():
 	var coord := EncounterCoordinator.new(_make_repository(), _make_rng())

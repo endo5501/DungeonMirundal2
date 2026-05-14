@@ -20,6 +20,9 @@ extends Resource
 @export_enum("MELEE", "RANGED") var attack_range: int = WeaponRange.MELEE
 @export var tier: int = 1
 
+const TIER_MIN := 1
+const TIER_MAX := 5
+
 
 func is_valid() -> bool:
 	if monster_id == &"":
@@ -36,6 +39,6 @@ func is_valid() -> bool:
 		return false
 	if gold_min > gold_max:
 		return false
-	if tier < 1 or tier > 5:
+	if tier < TIER_MIN or tier > TIER_MAX:
 		return false
 	return true

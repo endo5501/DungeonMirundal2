@@ -44,8 +44,6 @@ func generate(rng: RandomNumberGenerator) -> MonsterParty:
 	if tier_weights.is_empty():
 		return party
 	var n_species: int = rng.randi_range(_table.species_count_min, _table.species_count_max)
-	# Track per-row spawn counts so we can truncate when either bucket would
-	# exceed ROW_CAP. Earlier species slots have spawn priority over later ones.
 	var spawned_per_row: Dictionary = {Row.FRONT: 0, Row.BACK: 0}
 	for i in range(n_species):
 		var tier: int = _pick_tier_weighted(tier_weights, rng)
@@ -62,17 +60,17 @@ func generate(rng: RandomNumberGenerator) -> MonsterParty:
 
 
 func _pick_tier_weighted(tier_weights: Dictionary, rng: RandomNumberGenerator) -> int:
+	# Sort keys so the cumulative scan is deterministic regardless of how the
+	# caller built the dictionary.
+	var sorted_keys := tier_weights.keys()
+	sorted_keys.sort()
 	var total := 0
-	for w in tier_weights.values():
-		total += int(w)
+	for k in sorted_keys:
+		total += int(tier_weights[k])
 	if total <= 0:
 		return -1
 	var roll := rng.randi_range(1, total)
 	var cumulative := 0
-	# Iterate over int keys in sorted order so behavior is deterministic across
-	# any caller-supplied dictionary insertion order.
-	var sorted_keys := tier_weights.keys()
-	sorted_keys.sort()
 	for key in sorted_keys:
 		cumulative += int(tier_weights[key])
 		if roll <= cumulative:

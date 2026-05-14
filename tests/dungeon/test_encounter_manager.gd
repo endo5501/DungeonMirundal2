@@ -10,36 +10,10 @@ var _table: EncounterTableData
 
 func before_each():
 	_repo = MonsterRepository.new()
-	_repo.register(_make_monster_data(&"slime", "Slime", 5, 10, 1))
-	_repo.register(_make_monster_data(&"goblin", "Goblin", 8, 12, 2))
-	_repo.register(_make_monster_data(&"bat", "Bat", 3, 6, 1))
-	_table = _make_simple_table()
-
-
-func _make_monster_data(id: StringName, name: String, hp_min: int, hp_max: int, tier: int = 1) -> MonsterData:
-	var data := MonsterData.new()
-	data.monster_id = id
-	data.monster_name = name
-	data.max_hp_min = hp_min
-	data.max_hp_max = hp_max
-	data.attack = 1
-	data.defense = 1
-	data.agility = 1
-	data.experience = 1
-	data.tier = tier
-	return data
-
-
-func _make_simple_table() -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 0.1
-	table.tier_weights = {1: 2, 2: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = 2
-	table.count_per_species_max = 4
-	return table
+	_repo.register(TestHelpers.make_monster_data(&"slime", "Slime", 1, 5, 10))
+	_repo.register(TestHelpers.make_monster_data(&"goblin", "Goblin", 2, 8, 12))
+	_repo.register(TestHelpers.make_monster_data(&"bat", "Bat", 1, 3, 6))
+	_table = TestHelpers.make_encounter_table(1, 0.1, {1: 2, 2: 1}, 1, 1, 2, 4)
 
 
 func _make_rng(seed_value: int) -> RandomNumberGenerator:

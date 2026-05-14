@@ -3,9 +3,9 @@ extends Resource
 
 @export var floor: int = 1
 @export var probability_per_step: float = 0.1
-# tier_weights maps tier (int in [1, 5]) to a positive integer weight.
-# Godot's .tres serialization may coerce int dictionary keys to strings; use
-# normalized_tier_weights() at runtime to get a guaranteed int-keyed copy.
+# Godot's .tres dictionary serialization can coerce integer keys to strings on
+# round-trip; callers must go through normalized_tier_weights() to get a
+# guaranteed int-keyed copy before iteration.
 @export var tier_weights: Dictionary = {}
 @export var species_count_min: int = 1
 @export var species_count_max: int = 2
@@ -29,9 +29,12 @@ func is_valid() -> bool:
 		var tier_int: int = _coerce_to_int(key)
 		if tier_int == -1:
 			return false
-		if tier_int < 1 or tier_int > 5:
+		if tier_int < MonsterData.TIER_MIN or tier_int > MonsterData.TIER_MAX:
 			return false
-		var weight: int = int(tier_weights[key])
+		var weight_value: Variant = tier_weights[key]
+		if typeof(weight_value) != TYPE_INT:
+			return false
+		var weight: int = int(weight_value)
 		if weight < 0:
 			return false
 		if weight > 0:
@@ -40,8 +43,6 @@ func is_valid() -> bool:
 
 
 func normalized_tier_weights() -> Dictionary:
-	# Returns a copy of tier_weights with all keys coerced to int. Skips entries
-	# whose key cannot be parsed as an integer.
 	var result: Dictionary = {}
 	for key in tier_weights.keys():
 		var tier_int: int = _coerce_to_int(key)
@@ -52,7 +53,6 @@ func normalized_tier_weights() -> Dictionary:
 
 
 func _coerce_to_int(key: Variant) -> int:
-	# Returns -1 if the key cannot be parsed as an integer.
 	if typeof(key) == TYPE_INT:
 		return int(key)
 	if typeof(key) == TYPE_STRING or typeof(key) == TYPE_STRING_NAME:

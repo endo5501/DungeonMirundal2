@@ -2,21 +2,7 @@ extends GutTest
 
 
 func _make_data(id: StringName, row: int, tier: int = 1, attack_range: int = WeaponRange.MELEE) -> MonsterData:
-	var data := MonsterData.new()
-	data.monster_id = id
-	data.monster_name = String(id)
-	data.max_hp_min = 5
-	data.max_hp_max = 5
-	data.attack = 1
-	data.defense = 1
-	data.agility = 1
-	data.experience = 1
-	data.gold_min = 0
-	data.gold_max = 0
-	data.default_row = row
-	data.attack_range = attack_range
-	data.tier = tier
-	return data
+	return TestHelpers.make_monster_data(id, "", tier, 5, 5, row, attack_range)
 
 
 func _make_repository(entries: Array) -> MonsterRepository:
@@ -27,15 +13,7 @@ func _make_repository(entries: Array) -> MonsterRepository:
 
 
 func _make_table_for_tier(tier: int, count_min: int, count_max: int) -> EncounterTableData:
-	var table := EncounterTableData.new()
-	table.floor = 1
-	table.probability_per_step = 1.0
-	table.tier_weights = {tier: 1}
-	table.species_count_min = 1
-	table.species_count_max = 1
-	table.count_per_species_min = count_min
-	table.count_per_species_max = count_max
-	return table
+	return TestHelpers.make_encounter_table(1, 1.0, {tier: 1}, 1, 1, count_min, count_max)
 
 
 func _generate(manager: EncounterManager, table: EncounterTableData) -> MonsterParty:

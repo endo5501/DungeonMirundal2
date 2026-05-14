@@ -83,10 +83,10 @@
 
 ## 10. 手動動作確認
 
-- [ ] 10.1 Godot エディタでプロジェクトを起動 → エラー無くロードできることを確認
-- [ ] 10.2 SMALL ダンジョン (2〜4階) を新規作成 → 各階を歩き回り tier 1〜2 のモンスター (slime/bat/goblin/skeleton) が出現することを確認
-- [ ] 10.3 LARGE ダンジョン (8〜12階) を新規作成 → 深部で tier 4〜5 のモンスター (witch/dark_priest/wraith/lich/dragon) が出現することを確認
-- [ ] 10.4 push_warning が想定外で出ていないか、出力ログを確認 (空 tier hit や row truncation overflow が起きていないか)
+- [x] 10.1 Godot エディタでプロジェクトを起動 → エラー無くロードできることを確認
+- [x] 10.2 SMALL ダンジョン (2〜4階) を新規作成 → 各階を歩き回り tier 1〜2 のモンスター (slime/bat/goblin/skeleton) が出現することを確認
+- [x] 10.3 LARGE ダンジョン (8〜12階) を新規作成 → 深部で tier 4〜5 のモンスター (witch/dark_priest/wraith/lich/dragon) が出現することを確認
+- [x] 10.4 push_warning が想定外で出ていないか、出力ログを確認 (空 tier hit や row truncation overflow が起きていないか)
 
 ## 11. OpenSpec ドキュメント検証
 
