@@ -80,6 +80,73 @@ func test_loads_from_data_directory():
 	assert_not_null(_repo.find(&"bat"))
 
 
+# --- add-monster-tier-encounters: find_by_tier ---
+
+func test_find_by_tier_returns_array_of_matching_monsters():
+	_slime.tier = 1
+	_goblin.tier = 2
+	var skeleton := MonsterData.new()
+	skeleton.monster_id = &"skeleton"
+	skeleton.monster_name = "Skeleton"
+	skeleton.max_hp_min = 10
+	skeleton.max_hp_max = 16
+	skeleton.tier = 2
+	_repo.register_all([_slime, _goblin, skeleton])
+
+	var tier_2 := _repo.find_by_tier(2)
+	assert_eq(tier_2.size(), 2)
+	var ids: Array[StringName] = []
+	for m in tier_2:
+		ids.append(m.monster_id)
+	assert_true(ids.has(&"goblin"))
+	assert_true(ids.has(&"skeleton"))
+
+
+func test_find_by_tier_returns_empty_for_unmatched_tier():
+	_slime.tier = 1
+	_repo.register(_slime)
+	var result := _repo.find_by_tier(99)
+	assert_typeof(result, TYPE_ARRAY)
+	assert_eq(result.size(), 0)
+
+
+func test_find_by_tier_never_returns_null():
+	# Even on an empty repository, find_by_tier should return an empty array (not null).
+	var result := _repo.find_by_tier(3)
+	assert_not_null(result)
+	assert_eq(result.size(), 0)
+
+
+func test_find_by_tier_is_deterministic_across_calls():
+	_slime.tier = 3
+	_goblin.tier = 3
+	var bat := MonsterData.new()
+	bat.monster_id = &"bat"
+	bat.monster_name = "Bat"
+	bat.max_hp_min = 3
+	bat.max_hp_max = 6
+	bat.tier = 3
+	_repo.register_all([_slime, _goblin, bat])
+
+	var first := _repo.find_by_tier(3)
+	var second := _repo.find_by_tier(3)
+	assert_eq(first.size(), second.size())
+	for i in first.size():
+		assert_eq(first[i].monster_id, second[i].monster_id,
+			"find_by_tier should return monsters in the same order each call")
+
+
+func test_find_by_tier_with_loaded_data_returns_tier_2_monsters():
+	var loader := DataLoader.new()
+	_repo.register_all(loader.load_all_monsters())
+	var tier_2 := _repo.find_by_tier(2)
+	var ids: Array[StringName] = []
+	for m in tier_2:
+		ids.append(m.monster_id)
+	assert_true(ids.has(&"goblin"), "tier 2 should contain goblin")
+	assert_true(ids.has(&"skeleton"), "tier 2 should contain skeleton")
+
+
 # --- add-monster-magic: new spell-casting monsters ---
 
 func test_loads_new_spell_casting_monsters():

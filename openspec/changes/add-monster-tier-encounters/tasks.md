@@ -18,10 +18,10 @@
 
 ## 3. MonsterRepository に find_by_tier を追加
 
-- [ ] 3.1 `tests/dungeon/test_monster_repository.gd` に「`find_by_tier(2)` が goblin/skeleton を含む」「`find_by_tier(99)` が空配列を返す (not null)」「同じ呼び出しが同じ順序を返す (deterministic)」のテストを追加 (red)
-- [ ] 3.2 `src/dungeon/monster_repository.gd` に `find_by_tier(tier: int) -> Array[MonsterData]` を実装 (green)
-- [ ] 3.3 `tests/dungeon/test_monster_repository.gd` の全テストが通ることを確認
-- [ ] 3.4 上記をコミット (`feat: add MonsterRepository.find_by_tier`)
+- [x] 3.1 `tests/dungeon/test_monster_repository.gd` に「`find_by_tier(2)` が goblin/skeleton を含む」「`find_by_tier(99)` が空配列を返す (not null)」「同じ呼び出しが同じ順序を返す (deterministic)」のテストを追加 (red)
+- [x] 3.2 `src/dungeon/monster_repository.gd` に `find_by_tier(tier: int) -> Array[MonsterData]` を実装 (green)
+- [x] 3.3 `tests/dungeon/test_monster_repository.gd` の全テストが通ることを確認
+- [x] 3.4 上記をコミット (`feat: add MonsterRepository.find_by_tier`)
 
 ## 4. EncounterTableData を新スキーマへ刷新
 

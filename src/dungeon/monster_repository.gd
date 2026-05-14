@@ -23,5 +23,17 @@ func find(monster_id: StringName) -> MonsterData:
 	return _by_id.get(monster_id, null)
 
 
+func find_by_tier(tier: int) -> Array[MonsterData]:
+	# Deterministic iteration: Godot Dictionary preserves insertion order, so
+	# callers seeded with the same RNG against the same repository state get
+	# reproducible encounter generation.
+	var results: Array[MonsterData] = []
+	for id in _by_id.keys():
+		var monster: MonsterData = _by_id[id]
+		if monster.tier == tier:
+			results.append(monster)
+	return results
+
+
 func size() -> int:
 	return _by_id.size()
