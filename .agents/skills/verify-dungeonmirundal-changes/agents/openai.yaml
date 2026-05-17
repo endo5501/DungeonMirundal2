@@ -1,0 +1,4 @@
+interface:
+  display_name: "DungeonMirundal Verification"
+  short_description: "Repo-specific validation workflow"
+  default_prompt: "Use $verify-dungeonmirundal-changes to choose and run the correct verification path for this DungeonMirundal2 change."
