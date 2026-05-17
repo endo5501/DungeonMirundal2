@@ -243,6 +243,11 @@ func _find_monster(id: StringName) -> MonsterData:
 	return null
 
 
+func _monster_art_bytes(id: StringName) -> PackedByteArray:
+	var path := "res://assets/images/monsters/%s.png" % String(id)
+	return FileAccess.get_file_as_bytes(path)
+
+
 func test_loaded_slime_is_fully_poison_immune():
 	var slime := _find_monster(&"slime")
 	assert_not_null(slime)
@@ -396,3 +401,33 @@ func test_is_valid_rejects_tier_above_5():
 func test_is_valid_rejects_negative_tier():
 	_slime.tier = -1
 	assert_false(_slime.is_valid())
+
+
+# --- replace-placeholder-monster-art: regression checks ---
+
+func test_spellcasting_monster_art_files_exist_at_stable_paths():
+	var ids := [&"dark_priest", &"goblin_shaman", &"imp", &"lich", &"witch", &"wraith"]
+	for id in ids:
+		var path := "res://assets/images/monsters/%s.png" % String(id)
+		assert_true(ResourceLoader.exists(path),
+			"replacement monster art should exist at %s" % path)
+
+
+func test_spellcasting_monster_art_is_not_identical_to_slime():
+	var slime_bytes := _monster_art_bytes(&"slime")
+	assert_gt(slime_bytes.size(), 0, "slime art should be readable for duplicate detection")
+	var ids := [&"dark_priest", &"goblin_shaman", &"imp", &"lich", &"witch", &"wraith"]
+	for id in ids:
+		var art_bytes := _monster_art_bytes(id)
+		assert_gt(art_bytes.size(), 0, "monster %s art should be readable" % String(id))
+		assert_ne(art_bytes, slime_bytes,
+			"monster %s art should not be identical to slime placeholder content" % String(id))
+
+
+func test_spellcasting_monsters_still_resolve_non_null_battle_textures():
+	var ids := [&"dark_priest", &"goblin_shaman", &"imp", &"lich", &"witch", &"wraith"]
+	for id in ids:
+		var monster := _find_monster(id)
+		assert_not_null(monster, "monster %s should load" % String(id))
+		assert_not_null(monster.battle_texture,
+			"monster %s should resolve a non-null battle texture" % String(id))
