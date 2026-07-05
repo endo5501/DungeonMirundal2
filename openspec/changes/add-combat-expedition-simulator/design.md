@@ -103,7 +103,7 @@ ExpeditionRunner.run(config: ExpeditionConfig, rng) -> ExpeditionResult
 }
 ```
 
-- `encounters.mode` は `"table"`(floor 指定)または `"fixed"`(`patterns: [{"species": {"goblin": 3}}, ...]` をループ)
+- `encounters.mode` は `"table"`(floor 指定)または `"fixed"`(`patterns: [{"goblin": 3}, {"slime": 2}, ...]` — species→count のフラット辞書の配列をループ)
 - 装備は当面 `InitialEquipment`(職の初期装備)を自動適用。個別指定は将来拡張
 - キャラクター生成: レベル 1 で `Character.create` 相当を行い、目標レベルまで既存のレベルアップ処理(経験値付与)を通す。これにより HP/MP 成長と `spell_progression` 由来の `known_spells` が本番と同一経路で決まる
 - 代替案: .tres プリセット → エディタ必須になるため不採用。GDScript 直書き → 掃引に不向き
@@ -117,10 +117,10 @@ run i の RNG シードは `hash(master_seed, i)` で導出し、run 単位で�
 **per-battle 記録**(CSV 1 行 = 1 run × 1 battle、long format):
 
 ```
-run,battle,floor_or_pattern,turns,party_hp_pct,party_mp_pct,deaths_cum,outcome
+run,battle,encounter,turns,hp_pct_before_heal,party_hp_pct,party_mp_pct,deaths_cum,outcome
 ```
 
-`party_hp_pct` / `party_mp_pct` は戦闘間回復**後**のパーティ合計割合。加えて回復前の値も `hp_pct_before_heal` として持つ(回復呪文の寄与が見える)。
+`party_hp_pct` / `party_mp_pct` は戦闘間回復**後**のパーティ合計割合(0..1 の float、小数3桁)。`hp_pct_before_heal` は回復前の値(回復呪文の寄与が見える)。`encounter` は EncounterSource.describe() のラベル(例: `floor_3`)。
 
 **コンソールサマリ**(N runs 集計):
 
