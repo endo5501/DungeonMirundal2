@@ -1,0 +1,18 @@
+{
+  "runs": 20,
+  "master_seed": 12345,
+  "max_battles": 50,
+  "csv_path": "tmp/simulation/sample_result.csv",
+  "party": [
+    {"name": "Fritz", "race": "human", "job": "fighter", "level": 3, "row": "front"},
+    {"name": "Gerd",  "race": "dwarf", "job": "fighter", "level": 3, "row": "front"},
+    {"name": "Pia",   "race": "human", "job": "priest",  "level": 3, "row": "back"},
+    {"name": "Milo",  "race": "elf",   "job": "mage",    "level": 3, "row": "back"}
+  ],
+  "ai": {
+    "heal_hp_threshold": 0.6,
+    "attack_magic_min_enemies": 2,
+    "attack_magic_min_tier": 0
+  },
+  "encounters": {"mode": "table", "floor": 3}
+}
