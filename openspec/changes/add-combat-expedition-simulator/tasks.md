@@ -28,9 +28,9 @@ TDD で進める: 各グループはテスト作成 → 失敗確認 → コミ�
 
 ## 5. 遠征ループ (ExpeditionRunner)
 
-- [ ] 5.1 `tests/simulation/test_expedition_runner.gd` を作成(WIPED で停止、max_battles で停止、STALLED 打ち切り、HP/MP の戦闘間持ち越し、経験値付与とレベルアップ反映、同一シードで同一結果)。失敗を確認してコミット
-- [ ] 5.2 `src/simulation/expedition_result.gd`(per-battle 記録と end cause)を実装
-- [ ] 5.3 `src/simulation/expedition_runner.gd` を実装(PartyAi → submit_command → resolve_turn ループ、BattleResolver.resolve_rewards、BetweenBattleHealer 呼び出し)しテストをパスさせてコミット
+- [x] 5.1 `tests/simulation/test_expedition_runner.gd` を作成(WIPED で停止、max_battles で停止、STALLED 打ち切り、HP/MP の戦闘間持ち越し、経験値付与とレベルアップ反映、同一シードで同一結果)。失敗を確認してコミット
+- [x] 5.2 `src/simulation/expedition_result.gd`(per-battle 記録と end cause)を実装
+- [x] 5.3 `src/simulation/expedition_runner.gd` を実装(PartyAi → submit_command → resolve_turn ループ、BattleResolver.resolve_rewards、BetweenBattleHealer 呼び出し)しテストをパスさせてコミット
 
 ## 6. 集計とレポート (simulation-report)
 
