@@ -180,8 +180,8 @@ func test_priest_without_mp_falls_through_to_attack():
 
 func test_heal_choice_minimizes_overheal_small_deficit():
 	var priest := _combatant(_make_character("P1", "Priest", 30, 20, [&"heal", &"heala"]))
-	var ally := _combatant(_make_character("F1", "Fighter", 30))
-	ally.current_hp = 22  # missing 8; heal expects 8, heala expects 30
+	var ally := _combatant(_make_character("F1", "Fighter", 15))
+	ally.current_hp = 7  # 47% (below threshold), missing 8; heal expects 8, heala expects 30
 	var monsters := _make_monsters(1)
 	var ctx := _make_ctx([priest, ally], monsters, _default_repo())
 	var cmd = PartyAi.choose(priest, ctx, PartyAiConfig.new(), _make_rng())
