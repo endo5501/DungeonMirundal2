@@ -78,12 +78,21 @@ func _make_ctx(party: Array, monsters: Array, repo: SpellRepository = null) -> P
 	return PartyAiContext.new(party, monsters, repo, engine)
 
 
+func _build_status_spell(id: StringName, target_type: int, mp_cost: int) -> SpellData:
+	var effect := StatusInflictSpellEffect.new()
+	effect.status_id = &"sleep"
+	effect.chance = 1.0
+	return MonsterTestFactory.build_spell(id, target_type, mp_cost, effect)
+
+
 func _default_repo() -> SpellRepository:
 	return MonsterTestFactory.make_repo([
 		MonsterTestFactory.build_heal_spell(&"heal", 8, 2),
 		MonsterTestFactory.build_heal_spell(&"heala", 30, 5),
 		MonsterTestFactory.build_damage_spell(&"fire", SpellData.TargetType.ENEMY_ONE, 2),
 		MonsterTestFactory.build_damage_spell(&"flame", SpellData.TargetType.ENEMY_GROUP, 4),
+		_build_status_spell(&"sleepy", SpellData.TargetType.ENEMY_GROUP, 2),
+		_build_status_spell(&"stun", SpellData.TargetType.ENEMY_ONE, 2),
 	])
 
 
@@ -121,12 +130,18 @@ func test_no_reachable_enemy_returns_defend():
 
 func test_choose_does_not_mutate_state():
 	var fighter := _combatant(_make_character("F1", "Fighter"))
+	var mage := _combatant(_make_character("M1", "Mage", 30, 10, [&"fire", &"flame"]))
 	var monsters := _make_monsters(2)
-	var ctx := _make_ctx([fighter], monsters, _default_repo())
-	PartyAi.choose(fighter, ctx, PartyAiConfig.new(), _make_rng())
-	assert_eq(fighter.current_hp, fighter.max_hp)
-	assert_eq(monsters[0].current_hp, monsters[0].max_hp)
-	assert_eq(monsters[1].current_hp, monsters[1].max_hp)
+	var ctx := _make_ctx([fighter, mage], monsters, _default_repo())
+	var config := PartyAiConfig.new()
+	var cmd_a = PartyAi.choose(fighter, ctx, config, _make_rng())
+	var cmd_b = PartyAi.choose(mage, ctx, config, _make_rng())
+	assert_true(cmd_a is AttackCommand, "fighter should pick a physical attack")
+	assert_true(cmd_b is CastCommand, "mage should pick a cast against 2 enemies")
+	for actor in [fighter, mage, monsters[0], monsters[1]]:
+		assert_eq(actor.current_hp, actor.max_hp)
+		assert_eq(actor.current_mp, actor.max_mp)
+		assert_eq(actor.statuses.active_ids().size(), 0, "no statuses should be applied")
 
 
 # --- Priest healing ---
@@ -188,6 +203,33 @@ func test_heal_choice_minimizes_overheal_small_deficit():
 	assert_true(cmd is CastCommand, "expected CastCommand")
 	if cmd is CastCommand:
 		assert_eq((cmd as CastCommand).spell_id, &"heal")
+
+
+func test_priest_heals_ally_at_exact_threshold():
+	# Spec: heal at or below the threshold. 18/30 is exactly 0.6.
+	var priest := _combatant(_make_character("P1", "Priest", 30, 10, [&"heal"]))
+	var ally := _combatant(_make_character("F1", "Fighter", 30))
+	ally.current_hp = 18  # exactly 60% with default threshold 0.6
+	var monsters := _make_monsters(1)
+	var ctx := _make_ctx([priest, ally], monsters, _default_repo())
+	var cmd = PartyAi.choose(priest, ctx, PartyAiConfig.new(), _make_rng())
+	assert_true(cmd is CastCommand, "expected heal at exact threshold boundary")
+	if cmd is CastCommand:
+		assert_eq((cmd as CastCommand).spell_id, &"heal")
+		assert_eq((cmd as CastCommand).target, ally)
+
+
+func test_priest_heals_self_when_lowest():
+	var priest := _combatant(_make_character("P1", "Priest", 30, 10, [&"heal"]))
+	priest.current_hp = 9  # 30%, only wounded ally is the priest itself
+	var ally := _combatant(_make_character("F1", "Fighter", 30))
+	var monsters := _make_monsters(1)
+	var ctx := _make_ctx([priest, ally], monsters, _default_repo())
+	var cmd = PartyAi.choose(priest, ctx, PartyAiConfig.new(), _make_rng())
+	assert_true(cmd is CastCommand, "expected self-heal CastCommand")
+	if cmd is CastCommand:
+		assert_eq((cmd as CastCommand).spell_id, &"heal")
+		assert_eq((cmd as CastCommand).target, priest)
 
 
 func test_heal_choice_uses_largest_when_none_sufficient():
@@ -271,7 +313,40 @@ func test_mage_uses_single_target_spell_against_one_enemy():
 		assert_eq((cmd as CastCommand).target, monsters[0])
 
 
-func test_mage_group_spell_targets_only_living_enemies():
+func test_mage_skips_status_spell_listed_before_group_damage_spell():
+	# F1: attack magic must only consider damage spells. The status-effect
+	# group spell "sleepy" is known FIRST, mirroring production data where
+	# katino precedes damage group spells.
+	var mage := _combatant(_make_character("M1", "Mage", 30, 10, [&"sleepy", &"flame"]))
+	var monsters := _make_monsters(3)
+	var ctx := _make_ctx([mage], monsters, _default_repo())
+	var cmd = PartyAi.choose(mage, ctx, PartyAiConfig.new(), _make_rng())
+	assert_true(cmd is CastCommand, "expected CastCommand")
+	if cmd is CastCommand:
+		assert_eq((cmd as CastCommand).spell_id, &"flame", "must pick the damage spell, not the status spell")
+
+
+func test_mage_skips_status_spell_listed_before_single_damage_spell():
+	var mage := _combatant(_make_character("M1", "Mage", 30, 10, [&"stun", &"fire"]))
+	var monsters := _make_monsters(1, 4)
+	var config := PartyAiConfig.new()
+	config.attack_magic_min_tier = 3
+	var ctx := _make_ctx([mage], monsters, _default_repo())
+	var cmd = PartyAi.choose(mage, ctx, config, _make_rng())
+	assert_true(cmd is CastCommand, "expected CastCommand")
+	if cmd is CastCommand:
+		assert_eq((cmd as CastCommand).spell_id, &"fire", "must pick the damage spell, not the status spell")
+
+
+func test_mage_with_only_status_spells_attacks_physically():
+	var mage := _combatant(_make_character("M1", "Mage", 30, 10, [&"sleepy", &"stun"]))
+	var monsters := _make_monsters(3)
+	var ctx := _make_ctx([mage], monsters, _default_repo())
+	var cmd = PartyAi.choose(mage, ctx, PartyAiConfig.new(), _make_rng())
+	assert_true(cmd is AttackCommand, "no damage spell known -> physical attack")
+
+
+func test_dead_enemies_do_not_count_toward_min_enemies():
 	var mage := _combatant(_make_character("M1", "Mage", 30, 10, [&"fire"]))
 	var monsters := _make_monsters(3)
 	monsters[0].current_hp = 0
