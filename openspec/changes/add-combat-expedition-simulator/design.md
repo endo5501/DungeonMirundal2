@@ -146,5 +146,5 @@ end cause: WIPED 84% / MAX_BATTLES 16% / STALLED 0%
 
 ## Open Questions
 
-- 戦闘外回復の適用 API の正確な形(`spell_use_flow.gd` の内部経路をどこまで再利用できるか)は実装着手時に確認する
+- ~~戦闘外回復の適用 API の正確な形~~ → 解決済み。`spell_use_flow.gd` の `_apply_cast_and_show_result()` は (1) `Scope.OUTSIDE_OK` と MP を検査、(2) `caster.current_mp = maxi(current_mp - spell.mp_cost, 0)` で Character から直接 MP を控除、(3) caster / target を `PartyCombatant.new(character, DummyEquipmentProvider.new())` でラップ、(4) `spell.effect.apply(caster_pc, targets, SpellRng)` を呼ぶ。`HealSpellEffect.apply` が `spell_rng.roll(-spread, spread)` で回復量をロールし(最低 1)、`mini(max_hp, before + heal)` で上限キャップして `current_hp` に書き戻す(PartyCombatant 経由で Character に伝播)。Character 専用の回復 API は存在しない。`BetweenBattleHealer` はこの経路をそのまま再現している
 - `attack_magic_min_tier` の tier は `MonsterData.tier` を参照するが、固定パターンモードで tier 未設定のカスタム編成をどう扱うか(既定 0 で常に敵数条件のみ、で開始)
