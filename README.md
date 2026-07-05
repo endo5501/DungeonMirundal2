@@ -94,6 +94,74 @@ godot --headless -s addons/gut/gut_cmdln.gd
 2. 下部パネルの「GUT」タブをクリック
 3. 「Run All」で全テスト実行
 
+## 戦闘遠征シミュレータ (バランス調整用)
+
+パーティ構成・エンカウント供給・AI ノブを JSON で設定してヘッドレスで連戦を回し、「何戦・何ターン耐えられるか」と HP/MP の減衰カーブを再現性のある形で測定するツールです。実際の戦闘コード (`TurnEngine` / `BattleResolver` 等) をそのまま利用者として呼ぶため、本番と同じルールで戦闘が解決されます。
+
+### 実行方法
+
+```bash
+godot --headless -s src/simulation/expedition_cli.gd -- --config=docs/simulation/sample_expedition_config.json
+```
+
+オプション (いずれも config の値を上書き):
+
+- `--csv=<path>` — CSV 出力先
+- `--runs=<int>` — 遠征の反復回数
+- `--seed=<int>` — master_seed
+
+終了コード: `0` = 成功 / `1` = config・実行時エラー / `2` = コマンドライン引数エラー。
+
+同一 config・同一 seed なら CSV はバイト単位で一致します (run i の乱数シードは `hash(str(master_seed) + ":" + str(i))` で導出)。
+
+### 設定ファイル
+
+サンプル: `docs/simulation/sample_expedition_config.json` (テーブルモード) / `docs/simulation/sample_expedition_fixed.json` (固定パターンモード)
+
+```jsonc
+{
+  "runs": 20,               // 遠征の反復回数
+  "master_seed": 12345,     // 乱数の親シード (再現性の起点)
+  "max_battles": 50,        // 1 遠征あたりの戦闘数上限
+  "csv_path": "tmp/simulation/sample_result.csv",
+  "party": [                // name / race / job / level / row (front|back)。
+    {"name": "Fritz", "race": "human", "job": "fighter", "level": 3, "row": "front"}
+    // "stats": {"STR": 12, ...} で基礎ステータスを個別指定可能 (省略時は職の要求値ベース)
+  ],
+  "ai": {
+    "heal_hp_threshold": 0.6,       // HP 割合がこの値以下の味方がいたら僧侶系は回復を優先
+    "attack_magic_min_enemies": 2,  // 生存敵がこの数以上なら魔法使い系は攻撃呪文を使う
+    "attack_magic_min_tier": 0      // 敵の最大 tier がこの値以上なら敵数に関係なく攻撃呪文 (0 = 無効)
+  },
+  "encounters": {"mode": "table", "floor": 3}
+  // 固定パターンモードの場合:
+  // "encounters": {"mode": "fixed", "patterns": [{"goblin": 3}, {"slime": 2}]}
+  //   (patterns は種族ID→体数の辞書の配列。順番にループ供給される)
+}
+```
+
+- `table` モード: 指定フロアの `data/encounter_tables/floor_N.tres` から本番の編成生成ロジックで毎戦闘エンカウントを生成 (遭遇判定はスキップし、常に戦闘が発生)
+- 戦闘間には `OUTSIDE_OK` の回復呪文を MP が許す限り自動使用し、経験値・レベルアップも本番経路で反映されます
+
+### 出力
+
+CSV は 1 行 = 1 run × 1 battle の long format:
+
+| 列 | 意味 |
+|----|------|
+| `run` | 遠征の通し番号 (0 始まり) |
+| `battle` | 遠征内の戦闘番号 (1 始まり) |
+| `encounter` | エンカウントのラベル (`floor_3` / `pattern_0:goblin_x3` 等) |
+| `turns` | その戦闘のターン数 |
+| `hp_pct_before_heal` | 戦闘間回復**前**のパーティ合計 HP 割合 (0..1) |
+| `party_hp_pct` / `party_mp_pct` | 戦闘間回復**後**のパーティ合計 HP / MP 割合 (0..1) |
+| `deaths_cum` | 累計死亡者数 |
+| `outcome` | `CLEARED` / `WIPED` / `STALLED` |
+
+コンソールには全 run 集計のサマリ表 (battles survived / total turns / first death / MP exhausted の median・p10・p90 と end cause 比率) が出力されます。
+
+> **注意 (ノブ掃引):** PartyAi は実プレイヤーの最適行動を完全には模倣しません。単一の実行結果を真値として扱わず、AI ノブ (`heal_hp_threshold` 等) を掃引して楽観/悲観の幅として読んでください。
+
 ## ビルド
 
 ### デバッグビルド (デフォルト)
