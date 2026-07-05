@@ -41,11 +41,11 @@ TDD で進める: 各グループはテスト作成 → 失敗確認 → コミ�
 
 ## 7. ヘッドレス CLI と結線
 
-- [ ] 7.1 `src/simulation/expedition_cli.gd`(SceneTree 継承、`OS.get_cmdline_user_args()` パース、master_seed からの run シード導出、終了コード)を実装
-- [ ] 7.2 サンプル設定 `tmp/simulation/sample_config.json`(または `docs/` 配下)を作成し、`godot --headless -s src/simulation/expedition_cli.gd -- --config=...` の実行方法を README か docs に記載
-- [ ] 7.3 固定パターンモードとテーブルモードの両方で end-to-end 実行し、サマリ表と CSV の内容を目視確認(同一 config 2 回実行で CSV が一致することも確認)してコミット
+- [x] 7.1 `src/simulation/expedition_cli.gd`(SceneTree 継承、`OS.get_cmdline_user_args()` パース、master_seed からの run シード導出、終了コード)を実装
+- [x] 7.2 サンプル設定 `tmp/simulation/sample_config.json`(または `docs/` 配下)を作成し、`godot --headless -s src/simulation/expedition_cli.gd -- --config=...` の実行方法を README か docs に記載
+- [x] 7.3 固定パターンモードとテーブルモードの両方で end-to-end 実行し、サマリ表と CSV の内容を目視確認(同一 config 2 回実行で CSV が一致することも確認)してコミット
 
 ## 8. 仕上げ
 
-- [ ] 8.1 GUT 全テストスイートを実行し既存テストに回帰がないことを確認
-- [ ] 8.2 openspec の仕様シナリオとテストの対応を確認し、抜けがあればテストを追補してコミット
+- [x] 8.1 GUT 全テストスイートを実行し既存テストに回帰がないことを確認
+- [x] 8.2 openspec の仕様シナリオとテストの対応を確認し、抜けがあればテストを追補してコミット
