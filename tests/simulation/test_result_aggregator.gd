@@ -200,3 +200,55 @@ func test_format_is_deterministic() -> void:
 	var first := SummaryFormatter.format(_sample_summary(), _sample_meta())
 	var second := SummaryFormatter.format(_sample_summary(), _sample_meta())
 	assert_eq(first, second)
+
+
+# --- end-cause percentage rounding (largest remainder) ------------------------
+
+func _end_cause_line(text: String) -> String:
+	return _line_containing(text, "end cause")
+
+
+func _percent_sum(line: String) -> int:
+	var regex := RegEx.new()
+	regex.compile("(\\d+)%")
+	var total := 0
+	for m in regex.search_all(line):
+		total += int(m.get_string(1))
+	return total
+
+
+func test_format_end_cause_thirds_sum_to_100() -> void:
+	# 1/3 each floors to 33/33/33 = 99; the leftover point goes to the cause
+	# with the largest remainder, ties broken by declaration order (WIPED first).
+	var summary := _sample_summary()
+	summary["end_causes"] = {
+		"WIPED": 1.0 / 3.0, "MAX_BATTLES": 1.0 / 3.0, "STALLED": 1.0 / 3.0,
+	}
+	var line := _end_cause_line(SummaryFormatter.format(summary, _sample_meta()))
+	assert_eq(_percent_sum(line), 100, "percentages should sum to exactly 100")
+	assert_string_contains(line, "WIPED 34%")
+	assert_string_contains(line, "MAX_BATTLES 33%")
+	assert_string_contains(line, "STALLED 33%")
+
+
+func test_format_end_cause_largest_remainder_tie_break() -> void:
+	# Floors 33/33/33 leave one point; remainders 0.5/0.5/0.0 tie on the first
+	# two causes, and declaration order gives it to WIPED.
+	var summary := _sample_summary()
+	summary["end_causes"] = {"WIPED": 0.335, "MAX_BATTLES": 0.335, "STALLED": 0.33}
+	var line := _end_cause_line(SummaryFormatter.format(summary, _sample_meta()))
+	assert_eq(_percent_sum(line), 100)
+	assert_string_contains(line, "WIPED 34%")
+	assert_string_contains(line, "MAX_BATTLES 33%")
+	assert_string_contains(line, "STALLED 33%")
+
+
+func test_format_end_cause_zero_runs_all_zero_percent() -> void:
+	# Zero runs: empty end_causes must not crash and must not invent points.
+	var summary := _sample_summary()
+	summary["end_causes"] = {}
+	var line := _end_cause_line(SummaryFormatter.format(summary, _sample_meta()))
+	assert_string_contains(line, "WIPED 0%")
+	assert_string_contains(line, "MAX_BATTLES 0%")
+	assert_string_contains(line, "STALLED 0%")
+	assert_eq(_percent_sum(line), 0)
