@@ -7,7 +7,8 @@ extends RefCounted
 #   1. priest_school + wounded ally at/below heal_hp_threshold + affordable
 #      healing spell → CastCommand healing the lowest-HP-ratio living ally,
 #      picking the spell with minimal overheal.
-#   2. mage_school + affordable attack spell + MP-conservation knob satisfied
+#   2. mage_school + affordable damage spell (DamageSpellEffect /
+#      DamageWithStatusSpellEffect only) + MP-conservation knob satisfied
 #      (living enemies >= attack_magic_min_enemies, or max enemy tier >=
 #      attack_magic_min_tier when that knob is enabled) → attack CastCommand,
 #      preferring ENEMY_GROUP when 2+ enemies are alive.
@@ -117,6 +118,10 @@ static func _try_attack_magic(
 	var group_spell: SpellData = null
 	var single_spell: SpellData = null
 	for spell in _affordable_known_spells(member, ctx):
+		# Only damage-dealing effects qualify as attack magic; status-only
+		# spells (e.g. katino/sleep) must not be burned here.
+		if not _is_damage_effect(spell):
+			continue
 		match spell.target_type:
 			SpellData.TargetType.ENEMY_GROUP:
 				if group_spell == null:
@@ -132,6 +137,10 @@ static func _try_attack_magic(
 	if single_spell != null:
 		return CastCommand.new(single_spell.id, -1, target)
 	return null
+
+
+static func _is_damage_effect(spell: SpellData) -> bool:
+	return spell.effect is DamageSpellEffect or spell.effect is DamageWithStatusSpellEffect
 
 
 static func _knobs_allow_attack_magic(config: PartyAiConfig, enemies: Array) -> bool:
