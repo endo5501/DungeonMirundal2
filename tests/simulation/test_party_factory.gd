@@ -149,7 +149,11 @@ func test_unknown_race_produces_error_naming_field_and_value():
 
 # --- Determinism ---
 
-func test_same_seed_produces_identical_hp_mp_rolls():
+# build() is deterministic by construction: Character.create and the level-up
+# path derive HP/MP from job/stats with no random rolls, so two builds from
+# the same specs always produce identical characters (the rng parameter is
+# only a seam for future growth rolls and is never consumed today).
+func test_build_is_deterministic_for_same_specs():
 	var specs := [
 		_spec("F1", "human", "fighter", 3),
 		_spec("Pr", "human", "priest", 3, "back"),

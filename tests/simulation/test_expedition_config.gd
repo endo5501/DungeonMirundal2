@@ -87,6 +87,25 @@ func test_fixed_encounter_mode_parses_patterns():
 	assert_eq(int(cfg.encounter_patterns[1]["slime"]), 2)
 
 
+# Design D5 documents the flat form: each pattern IS the species -> count
+# dictionary (the nested {"species": {...}} form above is a tolerated legacy
+# alternative).
+func test_fixed_encounter_mode_parses_flat_documented_pattern_form():
+	var dict := _full_dict()
+	dict["encounters"] = {
+		"mode": "fixed",
+		"patterns": [{"goblin": 3}, {"slime": 2}],
+	}
+	var cfg := ExpeditionConfig.parse(dict)
+	assert_true(cfg.errors.is_empty(), "expected no errors, got: %s" % _errors_joined(cfg))
+	assert_eq(cfg.encounter_mode, "fixed")
+	assert_eq(cfg.encounter_patterns.size(), 2)
+	if cfg.encounter_patterns.size() != 2:
+		return
+	assert_eq(cfg.encounter_patterns[0], {"goblin": 3})
+	assert_eq(cfg.encounter_patterns[1], {"slime": 2})
+
+
 func test_table_encounter_mode_parses_floor():
 	var dict := _full_dict()
 	dict["encounters"] = {"mode": "table", "floor": 5}
