@@ -51,7 +51,16 @@ static func _format_row(row: Dictionary) -> String:
 		if column in PCT_COLUMNS:
 			cells.append("%.3f" % float(value))
 		elif column in STRING_COLUMNS:
-			cells.append(String(value))
+			cells.append(_escape_cell(String(value)))
 		else:
 			cells.append(str(int(value)))
 	return ",".join(cells)
+
+
+## Minimal RFC 4180 quoting: only cells containing a comma, double quote, or
+## CR/LF are wrapped in double quotes (embedded quotes doubled). Plain cells
+## are written as-is so existing outputs stay byte-identical.
+static func _escape_cell(cell: String) -> String:
+	if cell.contains(",") or cell.contains("\"") or cell.contains("\r") or cell.contains("\n"):
+		return "\"%s\"" % cell.replace("\"", "\"\"")
+	return cell

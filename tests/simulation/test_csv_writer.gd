@@ -106,6 +106,38 @@ func test_creates_missing_parent_directories() -> void:
 	)
 
 
+# --- RFC 4180 quoting of string cells -----------------------------------------
+
+func test_encounter_with_comma_is_quoted() -> void:
+	var row: Dictionary = _sample_rows()[0]
+	row["encounter"] = "a,b"
+	SimulationCsvWriter.write(TMP_REL + "/quoted.csv", [row])
+	var lines := _read_lines(_tmp_abs().path_join("quoted.csv"))
+	assert_eq(lines.size(), 2)
+	if lines.size() == 2:
+		assert_eq(lines[1], "1,1,\"a,b\",5,0.250,0.500,0.123,0,CLEARED")
+
+
+func test_encounter_with_embedded_quote_is_escaped() -> void:
+	var row: Dictionary = _sample_rows()[0]
+	row["encounter"] = "say \"hi\""
+	SimulationCsvWriter.write(TMP_REL + "/quoted.csv", [row])
+	var lines := _read_lines(_tmp_abs().path_join("quoted.csv"))
+	assert_eq(lines.size(), 2)
+	if lines.size() == 2:
+		assert_eq(lines[1], "1,1,\"say \"\"hi\"\"\",5,0.250,0.500,0.123,0,CLEARED")
+
+
+func test_plain_cells_are_written_without_quotes() -> void:
+	# Reproducibility guarantee: rows without special characters must remain
+	# byte-identical to the pre-quoting output.
+	SimulationCsvWriter.write(TMP_REL + "/plain.csv", _sample_rows())
+	var lines := _read_lines(_tmp_abs().path_join("plain.csv"))
+	assert_eq(lines.size(), 3)
+	for line in lines:
+		assert_false(String(line).contains("\""), "plain cells must not be quoted: " + String(line))
+
+
 func test_empty_rows_writes_header_only() -> void:
 	var ok := SimulationCsvWriter.write(TMP_REL + "/empty.csv", [])
 	assert_true(ok)

@@ -45,8 +45,41 @@ static func _metric_line(label: String, metric: Dictionary) -> String:
 
 
 static func _end_cause_line(end_causes: Dictionary) -> String:
+	var percents := _end_cause_percents(end_causes)
 	var parts: Array[String] = []
 	for cause in END_CAUSE_ORDER:
-		var fraction := float(end_causes.get(cause, 0.0))
-		parts.append("%s %d%%" % [cause, int(round(fraction * 100.0))])
+		parts.append("%s %d%%" % [cause, int(percents[cause])])
 	return "end cause: " + " / ".join(parts)
+
+
+## Largest-remainder (Hamilton) rounding: floor each fraction*100, then hand
+## the leftover points to the causes with the largest fractional remainders.
+## Ties are broken by declaration order in END_CAUSE_ORDER. The target total
+## is round(sum_of_fractions * 100), so zero runs (all fractions 0) yield
+## 0/0/0 rather than inventing points.
+static func _end_cause_percents(end_causes: Dictionary) -> Dictionary:
+	var percents: Dictionary = {}
+	var remainders: Array = []  # [fractional_remainder, declaration_index, cause]
+	var total_fraction := 0.0
+	var floor_sum := 0
+	for i in END_CAUSE_ORDER.size():
+		var cause: String = END_CAUSE_ORDER[i]
+		var fraction := float(end_causes.get(cause, 0.0))
+		total_fraction += fraction
+		var exact := fraction * 100.0
+		var whole := int(floor(exact))
+		percents[cause] = whole
+		floor_sum += whole
+		remainders.append([exact - float(whole), i, cause])
+	remainders.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return float(a[0]) > float(b[0])
+		return int(a[1]) < int(b[1])
+	)
+	var remaining := int(round(total_fraction * 100.0)) - floor_sum
+	for entry in remainders:
+		if remaining <= 0:
+			break
+		percents[entry[2]] = int(percents[entry[2]]) + 1
+		remaining -= 1
+	return percents
