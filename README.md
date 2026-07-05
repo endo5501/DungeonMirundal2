@@ -145,7 +145,7 @@ godot --headless -s src/simulation/expedition_cli.gd -- --config=docs/simulation
 
 ### 出力
 
-CSV は 1 行 = 1 run × 1 battle の long format:
+CSV は 1 行 = 1 run × 1 battle の long format です。`run` 列は 0 始まり、`battle` 列は 1 始まりです:
 
 | 列 | 意味 |
 |----|------|

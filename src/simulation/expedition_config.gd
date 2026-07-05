@@ -100,8 +100,9 @@ func _parse_encounters(dict: Dictionary) -> void:
 		if not (entry is Dictionary):
 			errors.append("encounters.patterns: each pattern must be an object")
 			continue
-		# Design D5 nests the composition under a "species" key; the stored
-		# pattern is the flat species -> count dictionary.
+		# Design D5 documents the flat form ({"goblin": 3}); a nested
+		# {"species": {"goblin": 3}} form is tolerated as a legacy alternative.
+		# Either way the stored pattern is the flat species -> count dictionary.
 		var species: Variant = entry.get("species", entry)
 		if not (species is Dictionary):
 			errors.append("encounters.patterns: 'species' must be an object mapping species to counts")

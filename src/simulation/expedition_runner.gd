@@ -54,10 +54,20 @@ static func run_expedition(
 	result.characters = characters
 	result.end_cause = "MAX_BATTLES"
 	for battle_number in range(1, config.max_battles + 1):
+		var monster_party := source.next(rng)
+		if monster_party == null or monster_party.is_empty():
+			# E.g. a fixed pattern whose species ids are all unknown. Running
+			# instantly-CLEARED battles against nobody would silently corrupt
+			# the metrics, so this is fatal — same contract as factory errors.
+			push_error(
+				"ExpeditionRunner: encounter source produced an empty encounter (battle %d, %s)"
+				% [battle_number, source.describe()]
+			)
+			return null
 		var engine := TurnEngine.new()
 		engine.spell_repo = spell_repo
 		engine.status_repo = status_repo
-		engine.start_battle(combatants, _build_monster_combatants(source.next(rng)))
+		engine.start_battle(combatants, _build_monster_combatants(monster_party))
 		var turns := _run_battle(engine, ai_config, spell_repo, rng, turn_limit)
 		var outcome_label := _outcome_label(engine)
 		var hp_pct_before_heal: float

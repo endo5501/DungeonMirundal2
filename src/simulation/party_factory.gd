@@ -2,8 +2,9 @@ class_name PartyFactory
 extends RefCounted
 
 # Builds simulation parties through the same code paths the game uses:
-#   1. Character.create(...) at level 1 (grants level-1 spells, rolls base
-#      HP/MP exactly like guild character creation).
+#   1. Character.create(...) at level 1 (grants level-1 spells and derives
+#      base HP/MP deterministically from job/stats — no random rolls —
+#      exactly like guild character creation).
 #   2. gain_experience(job.exp_to_reach_level(target_level)) — the same API
 #      ExperienceCalculator.award drives — so HP/MP growth and
 #      spell_progression-derived known_spells match real play.
