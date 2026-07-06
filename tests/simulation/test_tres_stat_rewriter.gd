@@ -22,6 +22,9 @@ const NEW_STATS := {
 
 
 func _sample_tres() -> String:
+	# .replace("\r\n", "\n") keeps the fixture LF-only even when this source
+	# file is checked out with CRLF (triple-quoted literals inherit the file's
+	# line endings), so the "\n"-based replaces below always match.
 	return """[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
@@ -46,7 +49,7 @@ resists = {
 default_row = 1
 attack_range = 1
 tier = 2
-"""
+""".replace("\r\n", "\n")
 
 
 func _joined(items: Array) -> String:

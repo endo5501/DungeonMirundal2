@@ -2,8 +2,8 @@ extends GutTest
 
 # Task 2.2: the shipped balance definition data/balance/monster_curve.json
 # must load with zero errors and cover every shipped monster species.
-# Normalization warnings are allowed (skeleton / witch intentionally deviate),
-# so nothing here asserts on `warnings`.
+# Normalization warnings are allowed (bat / skeleton / witch / wraith
+# intentionally deviate), so nothing here asserts on `warnings`.
 
 const SHIPPED_PATH := "res://data/balance/monster_curve.json"
 const SHIPPED_SPECIES: Array[String] = [

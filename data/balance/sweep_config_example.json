@@ -1,0 +1,25 @@
+{
+  "runs": 50,
+  "max_battles": 10,
+  "master_seed": 12345,
+  "party_template": [
+    { "race": "human",  "job": "fighter", "row": "front" },
+    { "race": "human",  "job": "fighter", "row": "front" },
+    { "race": "human",  "job": "fighter", "row": "front" },
+    { "race": "human",  "job": "priest",  "row": "back"  },
+    { "race": "elf",    "job": "mage",    "row": "back"  },
+    { "race": "hobbit", "job": "thief",   "row": "back"  }
+  ],
+  "levels": [4, 6],
+  "floors": [3, 5],
+  "sweep": {
+    "knob": "curves.attack.growth",
+    "from": 1.4,
+    "to": 2.0,
+    "steps": 4,
+    "scenarios": [
+      { "level": 4, "floor": 3 },
+      { "level": 6, "floor": 5 }
+    ]
+  }
+}

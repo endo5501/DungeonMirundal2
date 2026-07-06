@@ -59,6 +59,9 @@ func _monster_tres(
 	def: int = 2,
 	agi: int = 4
 ) -> String:
+	# .replace("\r\n", "\n") keeps the fixture LF-only even when this source
+	# file is checked out with CRLF (triple-quoted literals inherit the file's
+	# line endings), so the "\n"-based replaces in the tests always match.
 	return """[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/dungeon/data/monster_data.gd" id="1"]
@@ -81,7 +84,7 @@ resists = {}
 default_row = 1
 attack_range = 1
 tier = %d
-""" % [id, id, id.capitalize(), hp_min, hp_max, atk, def, agi, tier]
+""".replace("\r\n", "\n") % [id, id, id.capitalize(), hp_min, hp_max, atk, def, agi, tier]
 
 
 func _write_monster(id: String, tier: int) -> void:
