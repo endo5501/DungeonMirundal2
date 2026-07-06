@@ -27,6 +27,8 @@ func _remove_dir_recursive(path: String) -> void:
 	if not DirAccess.dir_exists_absolute(path):
 		return
 	var dir := DirAccess.open(path)
+	if dir == null:
+		return
 	for f in dir.get_files():
 		dir.remove(f)
 	for d in dir.get_directories():
@@ -259,10 +261,10 @@ func test_check_lists_diffs_and_writes_nothing():
 	var result := _generate(true)
 	assert_eq(int(result["exit_code"]), 0, "errors: %s" % _joined(result["errors"]))
 	var lines := _joined(result["lines"])
-	assert_string_contains(lines, "goblin")
-	assert_string_contains(lines, "attack")
-	assert_string_contains(lines, "5")
-	assert_string_contains(lines, "4")
+	assert_string_contains(lines, "goblin: max_hp_min 8 -> 10")
+	assert_string_contains(lines, "goblin: max_hp_max 12 -> 30")
+	assert_string_contains(lines, "goblin: attack 5 -> 4")
+	assert_string_contains(lines, "goblin: defense 2 -> 1")
 	assert_eq(_read_text(_monster_path("goblin")), before, "--check must not modify files")
 
 
@@ -304,4 +306,40 @@ func test_missing_tier_line_is_an_error():
 	_write_text(_monster_path("goblin"), _monster_tres("goblin", 2).replace("tier = 2\n", ""))
 	var result := _generate(false)
 	assert_eq(int(result["exit_code"]), 1)
-	assert_string_contains(_joined(result["errors"]), "tier")
+	assert_string_contains(_joined(result["errors"]), "tier line not found")
+
+
+func test_tier_zero_is_reported_as_out_of_range():
+	_write_balance(_valid_balance_dict())
+	_write_text(
+		_monster_path("goblin"), _monster_tres("goblin", 2).replace("tier = 2\n", "tier = 0\n")
+	)
+	var result := _generate(false)
+	assert_eq(int(result["exit_code"]), 1)
+	var errors := _joined(result["errors"])
+	assert_string_contains(errors, "must be >= 1")
+	assert_string_contains(errors, "got 0")
+
+
+# --- unreadable monster files ---
+# A file that is listed by DirAccess but fails to open cannot be fixtured
+# reliably on Windows (Godot opens files with permissive sharing), so the
+# read guard is unit-tested through the _read_monster_file helper instead.
+
+func test_read_monster_file_reports_unreadable_path():
+	var result: Dictionary = BalanceGeneratorCliScript._read_monster_file(
+		FIXTURE_ROOT + "/does_not_exist.tres"
+	)
+	assert_false(bool(result["ok"]), "unreadable file must not be reported as empty content")
+
+
+func test_read_monster_file_directory_path_is_unreadable():
+	var result: Dictionary = BalanceGeneratorCliScript._read_monster_file(MONSTERS_DIR)
+	assert_false(bool(result["ok"]), "a directory path must not read as empty content")
+
+
+func test_read_monster_file_reads_existing_file():
+	_write_monster("goblin", 2)
+	var result: Dictionary = BalanceGeneratorCliScript._read_monster_file(_monster_path("goblin"))
+	assert_true(bool(result["ok"]))
+	assert_string_contains(String(result["content"]), "monster_id = &\"goblin\"")

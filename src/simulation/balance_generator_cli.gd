@@ -15,9 +15,11 @@ extends SceneTree
 #   2  command-line usage error (missing --balance, unknown argument)
 #
 # Species listed in neither `species` nor `overrides` are skipped with a
-# warning (exit stays 0) so stale values never linger silently. Writes are
-# all-or-nothing: rewrites are planned for every file first and flushed to
-# disk only when no file produced an error.
+# warning (exit stays 0) so stale values never linger silently. Rewrites are
+# planned for every file first and flushed to disk only when planning
+# produced no error, so planning failures never leave partial output. A
+# write failure during the flush itself aborts immediately; files flushed
+# before it stay updated (this is reported in the error message).
 
 const USAGE := """Usage: godot --headless -s src/simulation/balance_generator_cli.gd -- --balance=<path> [--check]
 Options:
@@ -100,14 +102,23 @@ static func run_generator(
 	var diff_count := 0
 	for file_name in file_names:
 		var path := monsters_dir.path_join(file_name)
-		var content := FileAccess.get_file_as_string(path)
+		var read := _read_monster_file(path)
+		if not read["ok"]:
+			# Without this guard an unreadable file would read as "" and be
+			# silently skipped as an unknown species (exit 0).
+			errors.append("balance_generator: %s: cannot read file" % path)
+			continue
+		var content := String(read["content"])
 		var id := _extract_monster_id(content, file_name)
 		if not curve.species.has(id) and not curve.overrides.has(id):
 			lines.append("warning: %s: not in balance definition (species/overrides); skipped" % id)
 			continue
 		var tier := TresStatRewriter.extract_tier(content)
-		if tier < 1:
+		if tier == -1:
 			errors.append("balance_generator: %s: tier line not found" % path)
+			continue
+		if tier < 1:
+			errors.append("balance_generator: %s: tier: must be >= 1 (got %d)" % [path, tier])
 			continue
 		var target := _stats_to_fields(curve.compute_stats(id, tier))
 		if check_mode:
@@ -146,12 +157,27 @@ static func run_generator(
 	for entry in pending:
 		var file := FileAccess.open(String(entry["path"]), FileAccess.WRITE)
 		if file == null:
-			errors.append("balance_generator: cannot write '%s'" % entry["path"])
+			errors.append(
+				"balance_generator: cannot write '%s' (files flushed before it may already be updated — check git diff)"
+				% entry["path"]
+			)
 			return _result(1, lines, errors)
 		file.store_string(String(entry["content"]))
 		file.close()
 		lines.append("%s: updated" % entry["id"])
 	return _result(0, lines, errors)
+
+
+# Reads a monster .tres as text, distinguishing "cannot open the file" from
+# a legitimately empty file (FileAccess.get_file_as_string returns "" for
+# both). Returns {"ok": bool, "content": String}.
+static func _read_monster_file(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {"ok": false, "content": ""}
+	var content := file.get_as_text()
+	file.close()
+	return {"ok": true, "content": content}
 
 
 static func _result(exit_code: int, lines: Array[String], errors: Array[String]) -> Dictionary:

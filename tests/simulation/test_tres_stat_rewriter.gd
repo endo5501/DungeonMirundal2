@@ -126,6 +126,14 @@ func test_all_missing_lines_are_reported():
 	assert_string_contains(joined, "defense")
 
 
+func test_rewrite_duplicated_attack_line_is_an_error():
+	var duplicated := _sample_tres().replace("attack = 5\n", "attack = 5\nattack = 5\n")
+	var result := TresStatRewriter.rewrite(duplicated, NEW_STATS)
+	assert_false(bool(result["ok"]), "duplicated attack line must fail the rewrite")
+	assert_string_contains(_joined(result["errors"]), "more than once")
+	assert_eq(String(result["content"]), duplicated, "failed rewrite must not alter the content")
+
+
 # --- extract_stats ---
 
 func test_extract_stats_reads_current_values():
@@ -144,6 +152,15 @@ func test_extract_stats_missing_line_is_an_error():
 	var result := TresStatRewriter.extract_stats(broken)
 	assert_false(bool(result["ok"]))
 	assert_string_contains(_joined(result["errors"]), "agility")
+
+
+func test_extract_stats_duplicated_line_is_an_error():
+	# extract_stats must reject duplicates exactly like rewrite does, so that
+	# --check and generate mode agree on what counts as a malformed file.
+	var duplicated := _sample_tres().replace("attack = 5\n", "attack = 5\nattack = 5\n")
+	var result := TresStatRewriter.extract_stats(duplicated)
+	assert_false(bool(result["ok"]), "duplicated attack line must fail extraction")
+	assert_string_contains(_joined(result["errors"]), "more than once")
 
 
 # --- extract_tier ---

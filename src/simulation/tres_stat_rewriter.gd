@@ -40,14 +40,20 @@ static func rewrite(content: String, stats: Dictionary) -> Dictionary:
 
 # Reads the current values of the five combat stat lines. Returns
 # {"ok": bool, "stats": Dictionary, "errors": Array[String]}; `stats` holds
-# every field that was found even when others are missing.
+# every field that was found even when others are missing. Duplicated lines
+# are rejected with the same error as rewrite() so --check and generate mode
+# agree on what counts as a malformed file.
 static func extract_stats(content: String) -> Dictionary:
 	var errors: Array[String] = []
 	var stats := {}
 	for field in FIELD_NAMES:
-		var found := _value_line_regex(field).search(content)
+		var regex := _value_line_regex(field)
+		var found := regex.search(content)
 		if found == null:
 			errors.append("%s: value line not found" % field)
+			continue
+		if regex.search(content, found.get_end()) != null:
+			errors.append("%s: value line appears more than once" % field)
 			continue
 		stats[field] = found.get_string(1).to_int()
 	return {"ok": errors.is_empty(), "stats": stats, "errors": errors}
