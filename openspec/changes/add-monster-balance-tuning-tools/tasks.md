@@ -13,8 +13,8 @@ TDD 原則(CLAUDE.md)に従い、各グループとも「テスト作成 → 失
 
 ## 2. 初期バランス定義データ
 
-- [ ] 2.1 現状 `data/monsters/*.tres` の値にフィットする初期 `data/balance/monster_curve.json` を作成する(tier 曲線係数を現状値の回帰から決め、種ごとの役割係数で残差を吸収、dragon は overrides で表現)
-- [ ] 2.2 初期定義がロード時にエラー 0 件であることのテストを追加し、コミットする
+- [x] 2.1 現状 `data/monsters/*.tres` の値にフィットする初期 `data/balance/monster_curve.json` を作成する(tier 曲線係数を現状値の回帰から決め、種ごとの役割係数で残差を吸収、dragon は overrides で表現)
+- [x] 2.2 初期定義がロード時にエラー 0 件であることのテストを追加し、コミットする
 
 ## 3. ジェネレータ CLI(monster-tres-generator)
 
