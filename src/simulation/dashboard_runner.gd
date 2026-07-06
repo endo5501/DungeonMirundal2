@@ -3,8 +3,10 @@ extends RefCounted
 
 # Pure orchestration for the balance dashboard (design D6): evaluates the
 # heatmap / sweep grids and aggregates row dictionaries. No printing and no
-# file I/O — console rendering and CSV writing belong to balance_dashboard_cli
-# (via SimulationCsvWriter.write_table).
+# file writing — console rendering and CSV output belong to
+# balance_dashboard_cli (via SimulationCsvWriter.write_table). The encounter
+# tables are read from disk at most once per invocation and injected into
+# every run.
 #
 # Seed scheme (pinned by test_dashboard_runner): the RNG for run i of a cell
 # is seeded with
@@ -26,18 +28,22 @@ const RATE_COLUMNS: PackedStringArray = ["survival_rate", "stalled_rate"]
 
 # Runs the (levels x floors) survival grid. Returns {"ok": bool,
 # "error": String, "rows": Array}; rows are ordered level-major and carry
-# exactly the HEATMAP_COLUMNS keys.
+# exactly the HEATMAP_COLUMNS keys. `encounter_tables` is an optional
+# injection seam for tests; when empty, the tables are loaded from disk once
+# here and reused by every run (no per-run directory rescans).
 static func run_heatmap(
 	config: DashboardConfig,
 	monster_repo: MonsterRepository,
 	spell_repo: SpellRepository,
+	encounter_tables: Array = [],
 ) -> Dictionary:
+	var tables := _resolve_encounter_tables(encounter_tables)
 	var rows: Array = []
 	for level in config.levels:
 		for floor_number in config.floors:
 			var cell_key := "L%d:F%d" % [int(level), int(floor_number)]
 			var cell := _run_cell(
-				config, int(level), int(floor_number), cell_key, monster_repo, spell_repo
+				config, int(level), int(floor_number), cell_key, monster_repo, spell_repo, tables
 			)
 			if not cell["ok"]:
 				return {"ok": false, "error": cell["error"], "rows": []}
@@ -62,9 +68,19 @@ static func run_sweep(
 	balance: Dictionary,
 	base_monsters: Array,
 	spell_repo: SpellRepository,
+	encounter_tables: Array = [],
 ) -> Dictionary:
 	if not config.sweep_defined:
 		return {"ok": false, "error": "sweep: config declares no sweep block", "rows": []}
+	if config.sweep_steps < 2:
+		# sample_knob_values would yield nothing; failing here keeps a bad
+		# steps value from silently producing an empty (yet "successful") CSV.
+		return {
+			"ok": false,
+			"error": "sweep.steps: must be >= 2 (got %d)" % config.sweep_steps,
+			"rows": [],
+		}
+	var tables := _resolve_encounter_tables(encounter_tables)
 	var rows: Array = []
 	for value_variant in sample_knob_values(config.sweep_from, config.sweep_to, config.sweep_steps):
 		var value := float(value_variant)
@@ -90,7 +106,7 @@ static func run_sweep(
 			var cell_key := "%s=%s:L%d:F%d" % [
 				config.sweep_knob, "%.6f" % value, level, floor_number,
 			]
-			var cell := _run_cell(config, level, floor_number, cell_key, repo, spell_repo)
+			var cell := _run_cell(config, level, floor_number, cell_key, repo, spell_repo, tables)
 			if not cell["ok"]:
 				return {"ok": false, "error": cell["error"], "rows": []}
 			var summary: Dictionary = cell["summary"]
@@ -204,6 +220,7 @@ static func _run_cell(
 	cell_key: String,
 	monster_repo: MonsterRepository,
 	spell_repo: SpellRepository,
+	encounter_tables: Array,
 ) -> Dictionary:
 	var expedition_config := ExpeditionConfig.new()
 	expedition_config.party = config.party_specs_at_level(level)
@@ -216,7 +233,7 @@ static func _run_cell(
 		rng.seed = hash(str(config.master_seed) + ":" + cell_key + ":" + str(i))
 		var result := ExpeditionRunner.run_expedition(
 			expedition_config, i, rng, ExpeditionRunner.DEFAULT_TURN_LIMIT,
-			monster_repo, spell_repo
+			monster_repo, spell_repo, encounter_tables
 		)
 		if result == null:
 			return {
@@ -226,6 +243,16 @@ static func _run_cell(
 			}
 		run_stats.append(result.to_run_stats())
 	return {"ok": true, "error": "", "summary": summarize_cell(run_stats)}
+
+
+# Loads the encounter tables from disk exactly once per dashboard invocation
+# when the caller did not inject a set. ExpeditionRunner treats a non-empty
+# injected array as authoritative, so passing the loaded set through avoids
+# one directory rescan per run (6,000 scans for the shipped 5x12x100 config).
+static func _resolve_encounter_tables(encounter_tables: Array) -> Array:
+	if not encounter_tables.is_empty():
+		return encounter_tables
+	return DataLoader.new().load_all_encounter_tables()
 
 
 static func _knob_error(knob: String, segment: String) -> Dictionary:

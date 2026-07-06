@@ -110,7 +110,7 @@ func _parse_positive_int_array(dict: Dictionary, key: String) -> Array:
 	if raw.is_empty():
 		errors.append("%s: must contain at least one entry" % key)
 	for entry in raw:
-		if not _is_number(entry) or int(entry) < 1:
+		if not _is_positive_int(entry):
 			errors.append("%s: entries must be positive integers (got %s)" % [key, str(entry)])
 			continue
 		values.append(int(entry))
@@ -158,7 +158,7 @@ func _parse_scenarios(sweep: Dictionary) -> void:
 		var scenario: Dictionary = scenarios[i]
 		var valid := true
 		for key in ["level", "floor"]:
-			if not scenario.has(key) or not _is_number(scenario[key]) or int(scenario[key]) < 1:
+			if not scenario.has(key) or not _is_positive_int(scenario[key]):
 				errors.append(
 					"sweep.scenarios[%d].%s: expected a positive integer" % [i, key]
 				)
@@ -202,3 +202,10 @@ func _validate_member(index: int) -> void:
 
 func _is_number(value: Variant) -> bool:
 	return typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
+
+
+# JSON numbers always arrive as floats, so whole floats (2.0) count as
+# integers, but fractional values (2.7) are rejected instead of silently
+# truncating to 2.
+func _is_positive_int(value: Variant) -> bool:
+	return _is_number(value) and float(value) == float(int(value)) and int(value) >= 1

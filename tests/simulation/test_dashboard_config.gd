@@ -142,6 +142,24 @@ func test_non_positive_level_is_error():
 	assert_string_contains(_errors_text(cfg), "levels")
 
 
+func test_non_integer_level_is_error():
+	var dict := _valid_dict()
+	dict["levels"] = [2.7]
+	var cfg := DashboardConfig.parse(dict)
+	assert_string_contains(_errors_text(cfg), "levels")
+
+
+# JSON numbers always arrive as floats, so whole floats must stay accepted.
+func test_whole_float_levels_and_floors_are_accepted():
+	var dict := _valid_dict()
+	dict["levels"] = [2.0, 6.0]
+	dict["floors"] = [1.0, 3.0]
+	var cfg := DashboardConfig.parse(dict)
+	assert_true(cfg.errors.is_empty(), "unexpected errors: %s" % _errors_text(cfg))
+	assert_eq(cfg.levels, [2, 6])
+	assert_eq(cfg.floors, [1, 3])
+
+
 func test_missing_floors_is_error():
 	var dict := _valid_dict()
 	dict.erase("floors")
@@ -152,6 +170,13 @@ func test_missing_floors_is_error():
 func test_non_positive_floor_is_error():
 	var dict := _valid_dict()
 	dict["floors"] = [-2]
+	var cfg := DashboardConfig.parse(dict)
+	assert_string_contains(_errors_text(cfg), "floors")
+
+
+func test_non_integer_floor_is_error():
+	var dict := _valid_dict()
+	dict["floors"] = [1.5]
 	var cfg := DashboardConfig.parse(dict)
 	assert_string_contains(_errors_text(cfg), "floors")
 
@@ -225,6 +250,13 @@ func test_sweep_scenario_missing_floor_is_error():
 func test_sweep_scenario_non_positive_level_is_error():
 	var dict := _sweep_dict()
 	dict["sweep"]["scenarios"] = [{"level": 0, "floor": 1}]
+	var cfg := DashboardConfig.parse(dict)
+	assert_string_contains(_errors_text(cfg), "sweep.scenarios[0]")
+
+
+func test_sweep_scenario_non_integer_level_is_error():
+	var dict := _sweep_dict()
+	dict["sweep"]["scenarios"] = [{"level": 2.5, "floor": 1}]
 	var cfg := DashboardConfig.parse(dict)
 	assert_string_contains(_errors_text(cfg), "sweep.scenarios[0]")
 

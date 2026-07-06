@@ -215,6 +215,26 @@ func test_run_heatmap_seed_derivation_is_pinned():
 	)
 
 
+# The dashboard loads the encounter tables once per invocation and injects
+# them into every run (no per-run directory rescans). Floor 99 exists only in
+# the injected array, so this cell can succeed only through the seam.
+func test_run_heatmap_uses_injected_encounter_tables():
+	var table := EncounterTableData.new()
+	table.floor = 99
+	table.tier_weights = {1: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 1
+	table.count_per_species_max = 1
+	var cfg := _make_config([3], [99], 2, 1)
+	var out := DashboardRunner.run_heatmap(cfg, _real_repo, _spell_repo, [table])
+	assert_true(bool(out.get("ok", false)), "error: %s" % str(out.get("error", "")))
+	var rows: Array = out.get("rows", [])
+	assert_eq(rows.size(), 1)
+	if rows.size() == 1:
+		assert_eq(int((rows[0] as Dictionary).get("floor", -1)), 99)
+
+
 # --- sweep (spec: one row per knob value x scenario) ---
 
 func test_run_sweep_produces_rows_per_knob_value_and_scenario():
@@ -254,6 +274,22 @@ func test_run_sweep_is_deterministic():
 	var second := DashboardRunner.run_sweep(cfg, balance, base_monsters, _spell_repo)
 	assert_true(bool(first.get("ok", false)), "error: %s" % str(first.get("error", "")))
 	assert_eq(first.get("rows", []), second.get("rows", []))
+
+
+# A steps value below 2 cannot sample a range; returning ok with zero rows
+# would silently produce an empty CSV, so it must fail like other config
+# problems instead.
+func test_run_sweep_steps_below_two_fails():
+	var cfg := _add_sweep(
+		_make_config([3], [1], 1, 1),
+		"hp_spread", 0.1, 0.3, 1,
+		[{"level": 3, "floor": 1}]
+	)
+	var out := DashboardRunner.run_sweep(
+		cfg, _shipped_balance_dict(), _loader.load_all_monsters(), _spell_repo
+	)
+	assert_false(bool(out.get("ok", true)), "steps < 2 must fail, not return empty rows")
+	assert_string_contains(String(out.get("error", "")), "steps")
 
 
 func test_run_sweep_unknown_knob_path_fails():

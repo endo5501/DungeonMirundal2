@@ -446,6 +446,57 @@ func test_empty_encounter_from_unknown_species_is_fatal():
 	assert_push_error("empty encounter")
 
 
+# --- Encounter table injection seam ---
+
+# Single-tier table fixture for the injection tests: one species, one monster.
+func _make_table(floor_number: int) -> EncounterTableData:
+	var table := EncounterTableData.new()
+	table.floor = floor_number
+	table.tier_weights = {1: 1}
+	table.species_count_min = 1
+	table.species_count_max = 1
+	table.count_per_species_min = 1
+	table.count_per_species_max = 1
+	return table
+
+
+# Floor 99 has no .tres table on disk, so this run can only succeed if the
+# injected array is actually consulted (the dashboard injects the table set
+# once per invocation instead of rescanning the directory every run).
+func test_injected_encounter_tables_are_used_instead_of_disk():
+	var cfg := ExpeditionConfig.new()
+	cfg.max_battles = 1
+	cfg.party = [_spec("F1", "human", "fighter", 3)]
+	cfg.encounter_mode = "table"
+	cfg.encounter_floor = 99
+	var result: ExpeditionResult = ExpeditionRunner.run_expedition(
+		cfg, 0, _make_rng(), 100,
+		_make_monster_repo([_slime()]), _make_spell_repo(), [_make_table(99)]
+	)
+	assert_not_null(result, "floor 99 exists only in the injected table array")
+	if result == null:
+		return
+	assert_eq(result.battle_rows.size(), 1)
+	if result.battle_rows.size() == 1:
+		assert_eq(result.battle_rows[0]["encounter"], "floor_99")
+
+
+# A non-empty injected set is authoritative, mirroring the monster_repo seam:
+# floor 1 exists on disk, but the injected array (floor 99 only) must win.
+func test_non_empty_injected_tables_do_not_fall_back_to_disk():
+	var cfg := ExpeditionConfig.new()
+	cfg.max_battles = 1
+	cfg.party = [_spec("F1", "human", "fighter", 3)]
+	cfg.encounter_mode = "table"
+	cfg.encounter_floor = 1
+	var result: ExpeditionResult = ExpeditionRunner.run_expedition(
+		cfg, 0, _make_rng(), 100,
+		_make_monster_repo([_slime()]), _make_spell_repo(), [_make_table(99)]
+	)
+	assert_null(result, "injected tables must replace the disk set, not extend it")
+	assert_push_error("no encounter table")
+
+
 # --- Production (no-injection) path with a table source ---
 
 func test_table_mode_loads_floor_table_through_data_loader():
