@@ -36,6 +36,13 @@ static func write(path: String, rows: Array) -> bool:
 	return true
 
 
+## Generic table writer for the balance dashboard: `rows` is an Array of
+## Dictionaries mapping each column name to an ALREADY-FORMATTED String cell.
+## Red-phase stub: not implemented yet.
+static func write_table(_path: String, _columns: PackedStringArray, _rows: Array) -> bool:
+	return false
+
+
 static func _resolve_path(path: String) -> String:
 	if path.begins_with("res://") or path.begins_with("user://"):
 		return ProjectSettings.globalize_path(path)
