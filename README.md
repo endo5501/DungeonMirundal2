@@ -162,6 +162,47 @@ CSV は 1 行 = 1 run × 1 battle の long format です。`run` 列は 0 始ま
 
 > **注意 (ノブ掃引):** PartyAi は実プレイヤーの最適行動を完全には模倣しません。単一の実行結果を真値として扱わず、AI ノブ (`heal_hp_threshold` 等) を掃引して楽観/悲観の幅として読んでください。
 
+## モンスターバランス調整ツール
+
+モンスターの戦闘4値 (HP レンジ/攻撃/防御/敏捷) を、個別の `.tres` 手編集ではなく 1 つの曲線定義 `data/balance/monster_curve.json` から一括調整するためのツール群です。
+
+### バランス曲線定義 (`data/balance/monster_curve.json`)
+
+各ステータスは tier の幾何級数 `base × growth^(tier-1)` に種ごとの役割係数 (`species.<id>.hp` 等、省略時 1.0) を掛けて決まります。HP は中央値を `hp_spread` (種別上書き可) で `hp_min..hp_max` に展開します。曲線に乗らない種 (dragon) は `overrides` で 5 値を直接指定します。役割係数の幾何平均が 1.0 から大きく外れると警告が出ますが処理は続行されます (意図的に外している種: bat / skeleton / witch / wraith)。
+
+### ジェネレータ (`.tres` の戦闘値を再生成)
+
+```bash
+# 1. まず --check で差分をプレビュー (ファイルは書き換えない)
+godot --headless -s src/simulation/balance_generator_cli.gd -- --balance=data/balance/monster_curve.json --check
+
+# 2. 納得したら --check を外して生成
+godot --headless -s src/simulation/balance_generator_cli.gd -- --balance=data/balance/monster_curve.json
+
+# 3. git diff で書き換え結果を確認してからコミット
+git diff data/monsters/
+```
+
+置換されるのは戦闘4値の行のみで、他のフィールド・書式はバイト単位で保持されます。定義に載っていない種は警告付きでスキップされ (exit 0)、定義が無効な場合は何も書かずに exit 1 で終了します。
+
+### 計器盤 (生存率ヒートマップ / ノブ掃引)
+
+パーティレベル × フロアのグリッドで「`max_battles` 連戦を生き残った割合」を測るツールです。`--balance` を渡すと曲線をメモリ上でのみ適用します (`data/monsters/*.tres` は一切書き換えません。省略時は現状の `.tres` 値で測定)。
+
+```bash
+# heatmap: レベル×フロアの生存率グリッド (コンソール表示 + CSV)
+godot --headless -s src/simulation/balance_dashboard_cli.gd -- --config=data/balance/dashboard_config.json --mode=heatmap --balance=data/balance/monster_curve.json
+
+# sweep: 曲線ノブ (例: curves.attack.growth) を範囲掃引して感度を見る
+godot --headless -s src/simulation/balance_dashboard_cli.gd -- --config=data/balance/sweep_config_example.json --mode=sweep --balance=data/balance/monster_curve.json
+```
+
+- CSV 出力先は `--csv=<path>` で指定 (省略時 `tmp/simulation/dashboard_<mode>.csv`)。同一 config・同一 balance なら CSV はバイト単位で一致します
+- **粗い設定 → 精密設定の順で見る:** まず levels/floors を広く・`runs` を小さくして全体の傾向を掴み、気になるセルに levels/floors を絞って `runs` を増やして精査してください。`runs` が小さいと ±0.05 程度のノイズで単調性が崩れて見えることがあります
+- 実行時間の目安 (実測): heatmap 5 レベル × 12 フロア × 100 runs ≈ 2 分、sweep 4 点 × 2 シナリオ × 50 runs ≈ 12 秒
+
+運用としては「sweep や heatmap で曲線を決める → ジェネレータ `--check` → 生成 → `git diff` → コミット」の順に回します。
+
 ## ビルド
 
 ### デバッグビルド (デフォルト)

@@ -1,0 +1,25 @@
+{
+  "curves": {
+    "hp":      { "base": 5.95, "growth": 1.545 },
+    "attack":  { "base": 2.92, "growth": 1.309 },
+    "defense": { "base": 0.92, "growth": 1.649 },
+    "agility": { "base": 3.84, "growth": 1.332 }
+  },
+  "hp_spread": 0.25,
+  "species": {
+    "slime":         { "hp": 1.26, "attack": 1.03, "defense": 1.08, "agility": 0.52 },
+    "bat":           { "hp": 0.76, "attack": 0.68, "defense": 0.54, "agility": 1.82 },
+    "goblin":        { "hp": 1.09, "attack": 1.31, "defense": 1.31, "agility": 0.78 },
+    "skeleton":      { "hp": 1.41, "attack": 1.57, "defense": 1.97, "agility": 0.98 },
+    "imp":           { "hp": 0.85, "attack": 0.80, "defense": 0.80, "agility": 1.61 },
+    "goblin_shaman": { "hp": 0.99, "attack": 1.00, "defense": 1.20, "agility": 1.17 },
+    "ghost":         { "hp": 0.77, "attack": 1.00, "defense": 0.80, "agility": 0.88 },
+    "dark_priest":   { "hp": 0.93, "attack": 0.92, "defense": 0.97, "agility": 0.77 },
+    "witch":         { "hp": 0.78, "attack": 0.76, "defense": 0.72, "agility": 0.99 },
+    "wraith":        { "hp": 1.09, "attack": 1.07, "defense": 1.21, "agility": 1.32 },
+    "lich":          { "hp": 1.33, "attack": 1.17, "defense": 1.03, "agility": 0.83 }
+  },
+  "overrides": {
+    "dragon": { "hp_min": 60, "hp_max": 100, "attack": 25, "defense": 10, "agility": 8 }
+  }
+}
