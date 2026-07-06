@@ -118,12 +118,23 @@ func _parse_curves(dict: Dictionary) -> void:
 func _parse_hp_spread(dict: Dictionary) -> void:
 	if not dict.has("hp_spread"):
 		return
-	if not _is_number(dict["hp_spread"]):
-		errors.append("hp_spread: expected a number in [0.0, 1.0)")
-		return
-	hp_spread = float(dict["hp_spread"])
-	if hp_spread < 0.0 or hp_spread >= 1.0:
-		errors.append("hp_spread: must be in [0.0, 1.0) (got %s)" % str(hp_spread))
+	var spread := _parse_spread_value(dict["hp_spread"], "hp_spread")
+	if spread >= 0.0:
+		hp_spread = spread
+
+
+# Shared validation for the global `hp_spread` and per-species overrides so the
+# accepted range and error message cannot drift apart. Appends an error naming
+# `field` and returns -1.0 when the value is invalid.
+func _parse_spread_value(value: Variant, field: String) -> float:
+	if not _is_number(value):
+		errors.append("%s: expected a number in [0.0, 1.0)" % field)
+		return -1.0
+	var spread := float(value)
+	if spread < 0.0 or spread >= 1.0:
+		errors.append("%s: must be in [0.0, 1.0) (got %s)" % [field, str(spread)])
+		return -1.0
+	return spread
 
 
 func _parse_species(dict: Dictionary) -> void:
@@ -142,16 +153,9 @@ func _parse_species(dict: Dictionary) -> void:
 		for key in entry:
 			var key_name := String(key)
 			if key_name == "hp_spread":
-				if not _is_number(entry[key]):
-					errors.append("species.%s.hp_spread: expected a number in [0.0, 1.0)" % species_id)
-					continue
-				var spread := float(entry[key])
-				if spread < 0.0 or spread >= 1.0:
-					errors.append(
-						"species.%s.hp_spread: must be in [0.0, 1.0) (got %s)" % [species_id, str(spread)]
-					)
-					continue
-				parsed["hp_spread"] = spread
+				var spread := _parse_spread_value(entry[key], "species.%s.hp_spread" % species_id)
+				if spread >= 0.0:
+					parsed["hp_spread"] = spread
 			elif STAT_KEYS.has(key_name):
 				if not _is_number(entry[key]):
 					errors.append("species.%s.%s: expected a positive number" % [species_id, key_name])
@@ -189,7 +193,25 @@ func _parse_overrides(dict: Dictionary) -> void:
 			if not _is_number(entry[key]):
 				errors.append("overrides.%s.%s: expected an integer" % [species_id, key_name])
 				continue
-			parsed[key_name] = int(entry[key])
+			# JSON numbers arrive as floats; whole floats (25.0) are fine but
+			# fractional values would silently truncate, so reject them.
+			var value := float(entry[key])
+			if value != floorf(value):
+				errors.append(
+					"overrides.%s.%s: expected an integer (got %s)" % [species_id, key_name, str(value)]
+				)
+				continue
+			if value < 0.0:
+				errors.append(
+					"overrides.%s.%s: must be non-negative (got %d)" % [species_id, key_name, int(value)]
+				)
+				continue
+			parsed[key_name] = int(value)
+		if parsed.has("hp_min") and parsed.has("hp_max") and parsed["hp_min"] > parsed["hp_max"]:
+			errors.append(
+				"overrides.%s: hp_min (%d) must not exceed hp_max (%d)"
+				% [species_id, parsed["hp_min"], parsed["hp_max"]]
+			)
 		overrides[species_id] = parsed
 
 
@@ -201,7 +223,7 @@ func _collect_normalization_warnings() -> void:
 		var product := 1.0
 		for stat in STAT_KEYS:
 			product *= float(entry.get(stat, 1.0))
-		var mean := pow(product, 0.25)
+		var mean := pow(product, 1.0 / STAT_KEYS.size())
 		if absf(mean - 1.0) > NORMALIZATION_TOLERANCE:
 			warnings.append(
 				"species.%s: role modifier geometric mean %.2f deviates from 1.0 by more than %.2f"

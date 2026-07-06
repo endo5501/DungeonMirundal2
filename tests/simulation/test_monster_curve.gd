@@ -51,6 +51,19 @@ func _full_dict() -> Dictionary:
 	}
 
 
+# Safety net for the file-loading tests below: they clean up after themselves
+# on the happy path, but a mid-test script error would otherwise leak the
+# user:// fixture into later runs.
+func after_each():
+	for path in [
+		"user://test_monster_curve_valid.json",
+		"user://test_monster_curve_broken.json",
+		"user://test_monster_curve_array.json",
+	]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
+
+
 func _errors_joined(curve: MonsterCurve) -> String:
 	return "\n".join(curve.errors)
 
@@ -371,3 +384,40 @@ func test_lopsided_modifiers_produce_warning_but_remain_usable():
 	assert_string_contains(_warnings_joined(curve), "2.0")
 	# Warnings never block: stats are still computed.
 	assert_eq(curve.compute_stats("big_boy", 1)["attack"], 4)
+
+
+# --- Override value validation ---
+
+func test_negative_override_value_is_error_naming_field():
+	var dict := _full_dict()
+	dict["overrides"]["dragon"]["attack"] = -5
+	var curve := MonsterCurve.parse(dict)
+	assert_false(curve.errors.is_empty())
+	assert_string_contains(_errors_joined(curve), "overrides.dragon.attack")
+
+
+func test_inverted_override_hp_range_is_error_naming_field():
+	var dict := _full_dict()
+	dict["overrides"] = {"golem": {"hp_min": 40, "hp_max": 10}}
+	var curve := MonsterCurve.parse(dict)
+	assert_false(curve.errors.is_empty())
+	assert_string_contains(_errors_joined(curve), "overrides.golem")
+	assert_string_contains(_errors_joined(curve), "hp_min")
+
+
+func test_fractional_override_value_is_error_naming_field():
+	var dict := _full_dict()
+	dict["overrides"]["dragon"]["attack"] = 25.7
+	var curve := MonsterCurve.parse(dict)
+	assert_false(curve.errors.is_empty())
+	assert_string_contains(_errors_joined(curve), "overrides.dragon.attack")
+
+
+# JSON numbers arrive as floats, so whole floats must stay accepted.
+func test_whole_float_override_value_is_accepted():
+	var dict := _full_dict()
+	dict["overrides"]["dragon"]["attack"] = 25.0
+	var curve := MonsterCurve.parse(dict)
+	assert_true(curve.errors.is_empty(), "expected no errors, got: %s" % _errors_joined(curve))
+	assert_eq(int(curve.overrides["dragon"]["attack"]), 25)
+	assert_eq(curve.compute_stats("dragon", 3)["attack"], 25)
