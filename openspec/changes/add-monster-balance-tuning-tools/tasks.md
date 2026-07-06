@@ -4,12 +4,12 @@ TDD 原則(CLAUDE.md)に従い、各グループとも「テスト作成 → 失
 
 ## 1. 曲線モデルと計算器(monster-balance-curve)
 
-- [ ] 1.1 `MonsterCurve`(定義ロード+検証)の GUT テストを作成する — 正常ロード、curve キー欠落、非正の growth、`hp_spread` 範囲外、不正 JSON→null、`errors` 収集パターン
-- [ ] 1.2 曲線計算器の GUT テストを作成する — 幾何級数、役割係数の乗算、省略キー=1.0、HP レンジ展開(spread・種別上書き)、四捨五入とクランプ(HP/攻撃≥1、防御/敏捷≥0)、`hp_min <= hp_max`、決定性
-- [ ] 1.3 overrides 優先と正規化警告の GUT テストを作成する — override が曲線と係数を無視する、非 override ステータスは曲線に従う、幾何平均が許容幅超で `warnings` に追加・処理は続行
-- [ ] 1.4 テストの失敗を確認しコミットする
-- [ ] 1.5 `src/simulation/monster_curve.gd`(RefCounted: ロード・検証・警告)と計算器を実装し、全テストを通す
-- [ ] 1.6 実装をコミットする
+- [x] 1.1 `MonsterCurve`(定義ロード+検証)の GUT テストを作成する — 正常ロード、curve キー欠落、非正の growth、`hp_spread` 範囲外、不正 JSON→null、`errors` 収集パターン
+- [x] 1.2 曲線計算器の GUT テストを作成する — 幾何級数、役割係数の乗算、省略キー=1.0、HP レンジ展開(spread・種別上書き)、四捨五入とクランプ(HP/攻撃≥1、防御/敏捷≥0)、`hp_min <= hp_max`、決定性
+- [x] 1.3 overrides 優先と正規化警告の GUT テストを作成する — override が曲線と係数を無視する、非 override ステータスは曲線に従う、幾何平均が許容幅超で `warnings` に追加・処理は続行
+- [x] 1.4 テストの失敗を確認しコミットする
+- [x] 1.5 `src/simulation/monster_curve.gd`(RefCounted: ロード・検証・警告)と計算器を実装し、全テストを通す
+- [x] 1.6 実装をコミットする
 
 ## 2. 初期バランス定義データ
 
