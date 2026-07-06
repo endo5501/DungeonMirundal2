@@ -26,14 +26,14 @@ TDD 原則(CLAUDE.md)に従い、各グループとも「テスト作成 → 失
 
 ## 4. 計器盤 CLI(balance-dashboard)
 
-- [ ] 4.1 ダッシュボード設定ローダの GUT テストを作成する — `party_template`/`levels`/`floors`/`runs`/`max_battles`/`master_seed` の検証、sweep 用 `knob`/`from`/`to`/`steps`/`scenarios` の検証、未知 knob パスのエラー
-- [ ] 4.2 メモリ上の曲線適用(`MonsterData` 複製+戦闘4値上書きでリポジトリ再構成)の GUT テストを作成する — 元リソース・`.tres` ファイル無変更、`--balance` 省略時は現状値
-- [ ] 4.3 heatmap 集計の GUT テストを作成する — `survival_rate` = MAX_BATTLES 割合、`stalled_rate` 分離、セルごとの CSV 行(level/floor/runs/survival_rate/stalled_rate/median_battles_survived)、シード導出の決定性
-- [ ] 4.4 sweep 集計の GUT テストを作成する — 範囲の等間隔サンプリング(両端含む)、knob 値×シナリオごとの CSV 行、`--balance` 必須(なければ exit 2)
-- [ ] 4.5 テストの失敗を確認しコミットする
-- [ ] 4.6 `src/simulation/balance_dashboard_cli.gd`(モード分岐・引数解析・コンソールグリッド表示)と設定ローダ・集計を実装し、全テストを通す
-- [ ] 4.7 サンプル設定 `data/balance/dashboard_config.json`(fighter×3/priest/mage/thief、levels/floors/runs のデフォルト)を追加する
-- [ ] 4.8 実装をコミットする
+- [x] 4.1 ダッシュボード設定ローダの GUT テストを作成する — `party_template`/`levels`/`floors`/`runs`/`max_battles`/`master_seed` の検証、sweep 用 `knob`/`from`/`to`/`steps`/`scenarios` の検証、未知 knob パスのエラー
+- [x] 4.2 メモリ上の曲線適用(`MonsterData` 複製+戦闘4値上書きでリポジトリ再構成)の GUT テストを作成する — 元リソース・`.tres` ファイル無変更、`--balance` 省略時は現状値
+- [x] 4.3 heatmap 集計の GUT テストを作成する — `survival_rate` = MAX_BATTLES 割合、`stalled_rate` 分離、セルごとの CSV 行(level/floor/runs/survival_rate/stalled_rate/median_battles_survived)、シード導出の決定性
+- [x] 4.4 sweep 集計の GUT テストを作成する — 範囲の等間隔サンプリング(両端含む)、knob 値×シナリオごとの CSV 行、`--balance` 必須(なければ exit 2)
+- [x] 4.5 テストの失敗を確認しコミットする
+- [x] 4.6 `src/simulation/balance_dashboard_cli.gd`(モード分岐・引数解析・コンソールグリッド表示)と設定ローダ・集計を実装し、全テストを通す
+- [x] 4.7 サンプル設定 `data/balance/dashboard_config.json`(fighter×3/priest/mage/thief、levels/floors/runs のデフォルト)を追加する
+- [x] 4.8 実装をコミットする
 
 ## 5. 統合確認と仕上げ
 

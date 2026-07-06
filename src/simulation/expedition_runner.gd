@@ -18,8 +18,11 @@ const DEFAULT_TURN_LIMIT: int = 100
 
 # Runs one expedition and returns its ExpeditionResult, or null on fatal
 # configuration problems (party factory errors, missing encounter table).
-# `monster_repo` / `spell_repo` are optional injection seams for tests; the
-# production path loads both through DataLoader when they are null.
+# `monster_repo` / `spell_repo` / `encounter_tables` are optional injection
+# seams; the production path loads them through DataLoader when they are
+# null / empty. A non-empty `encounter_tables` array REPLACES the disk set
+# (no fallback), letting batch callers like the dashboard load the tables
+# once instead of rescanning the directory every run.
 static func run_expedition(
 	config: ExpeditionConfig,
 	run_index: int,
@@ -27,6 +30,7 @@ static func run_expedition(
 	turn_limit: int = DEFAULT_TURN_LIMIT,
 	monster_repo: MonsterRepository = null,
 	spell_repo: SpellRepository = null,
+	encounter_tables: Array = [],
 ) -> ExpeditionResult:
 	if config == null or rng == null:
 		push_error("ExpeditionRunner: config and rng are required")
@@ -43,7 +47,7 @@ static func run_expedition(
 	if spell_repo == null:
 		spell_repo = DataLoader.new().load_spell_repository()
 	var status_repo := DataLoader.new().load_status_repository()
-	var source := _build_encounter_source(config, monster_repo)
+	var source := _build_encounter_source(config, monster_repo, encounter_tables)
 	if source == null:
 		return null
 	var ai_config := _build_ai_config(config)
@@ -143,11 +147,12 @@ static func _outcome_label(engine: TurnEngine) -> String:
 static func _build_encounter_source(
 	config: ExpeditionConfig,
 	monster_repo: MonsterRepository,
+	encounter_tables: Array,
 ) -> EncounterSource:
 	if config.encounter_mode == "fixed":
 		return FixedPatternSource.new(config.encounter_patterns, monster_repo)
 	if config.encounter_mode == "table":
-		var table := _find_encounter_table(config.encounter_floor)
+		var table := _find_encounter_table(config.encounter_floor, encounter_tables)
 		if table == null:
 			push_error(
 				"ExpeditionRunner: no encounter table for floor %d" % config.encounter_floor
@@ -158,9 +163,15 @@ static func _build_encounter_source(
 	return null
 
 
-static func _find_encounter_table(floor_number: int) -> EncounterTableData:
-	for table in DataLoader.new().load_all_encounter_tables():
-		if table != null and table.floor == floor_number:
+# An empty `encounter_tables` means load-on-demand from disk (the pre-seam
+# behavior); a non-empty array is authoritative, mirroring the monster_repo
+# injection contract.
+static func _find_encounter_table(floor_number: int, encounter_tables: Array) -> EncounterTableData:
+	var tables := encounter_tables
+	if tables.is_empty():
+		tables = DataLoader.new().load_all_encounter_tables()
+	for table in tables:
+		if table is EncounterTableData and table.floor == floor_number:
 			return table
 	return null
 
